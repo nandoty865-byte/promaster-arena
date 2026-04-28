@@ -25,6 +25,9 @@ model Tournament {
   status      String   @default("draft")
   tableCount  Int
   createdAt   DateTime @default(now())
+organizationId Int?
+organization   Organization? @relation(fields: [organizationId], references: [id])
+publicSlug     String? @unique
 
   sport   Sport   @relation(fields: [sportId], references: [id])
   players Player[]
@@ -66,4 +69,25 @@ model TournamentTemplate {
   eliminationType String
 
   sport Sport @relation(fields: [sportId], references: [id])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+organizationId Int?
+organization   Organization? @relation(fields: [organizationId], references: [id])
+}
+
+model Organization {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  users       User[]
+  tournaments Tournament[]
 }
