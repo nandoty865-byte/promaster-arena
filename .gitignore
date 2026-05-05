@@ -1,0 +1,10 @@
+node_modules
+.env
+dist
+.npm-cache
+logs
+*.log
+db.sql
+uploads
+*.save
+*.backup*
