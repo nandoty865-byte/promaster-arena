@@ -517,13 +517,6 @@ app.get('/tournaments/:id/ranking', async (req, res) => {
     res.status(500).json({ error: 'Erro ao gerar ranking' })
   }
 })
-
-    res.json({
-      ok: true,
-      organization
-    })
- 
-
 app.post('/organizations/:organizationId/tournaments/create',
   auth,
   requireRole('admin', 'operator'),
