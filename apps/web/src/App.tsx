@@ -1136,7 +1136,7 @@ function PublicTournament() {
             <span className="publicCardLabel">Placar</span>
             <h2>Resultados</h2>
             {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
-            {finished.slice(-8).reverse().map((match: any) => (
+            {finished.slice(-5).reverse().map((match: any) => (
               <div key={match.id} className="publicMatchCard done">
                 <strong>Jogo #{match.matchNumber || match.id}</strong>
                 <span>
