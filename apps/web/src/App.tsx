@@ -952,7 +952,6 @@ function PublicTournament() {
     (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
   )
   const playing = matches.filter((match: any) => match.status === 'playing')
-  const pending = matches.filter((match: any) => match.status === 'pending')
   const finished = matches.filter((match: any) => match.status === 'finished')
   const finalRound = rounds?.[rounds.length - 1]
   const champion = finalRound?.matches?.[0]?.winner
@@ -963,57 +962,26 @@ function PublicTournament() {
       <header className="publicHero">
         <span>🎱 ProMaster Arena</span>
         <h1>{tournament.name}</h1>
-        <p>
-          {tournament.location && `Local: ${tournament.location}`}
-          {tournament.eventDate && ` • Data: ${new Date(tournament.eventDate).toLocaleDateString()}`}
-          {tournament.eventTime && ` • Horário: ${tournament.eventTime}`}
-        </p>
 
         {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
       </header>
 
-      <section className="publicInfoGrid">
-        <div>
-          <h2>Dados do torneio</h2>
-          <p>Status: {tournament.status}</p>
-          {tournament.prize && <p>Premiação: {tournament.prize}</p>}
-          {tournament.rules && <p>Regras: {tournament.rules}</p>}
-        </div>
-
-        <div>
-          <h2>Placar</h2>
-          {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
-          {finished.slice(-6).reverse().map((match: any) => (
-            <div key={match.id} className="publicScoreRow">
-              <span>
-                {match.winner === match.playerA ? `🏆 ${match.playerA}` : match.playerA}
-                {' x '}
-                {match.winner === match.playerB ? `🏆 ${match.playerB}` : match.playerB}
-              </span>
-              <strong>Jogo #{match.matchNumber || match.id}</strong>
+      <main className="publicLayout">
+        <div className="publicLeftColumn">
+          <section className="publicCard">
+            <h2>Dados do torneio</h2>
+            <div className="publicInfoList">
+              <div><span>Status</span><strong>{tournament.status}</strong></div>
+              <div><span>Local</span><strong>{tournament.location || '-'}</strong></div>
+              <div><span>Data</span><strong>{tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong></div>
+              <div><span>Horário</span><strong>{tournament.eventTime || '-'}</strong></div>
+              <div><span>Premiação</span><strong>{tournament.prize || '-'}</strong></div>
+              <div><span>Regras</span><strong>{tournament.rules || '-'}</strong></div>
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
 
-      {embedUrl && (
-        <section className="publicVideo">
-          <h2>Transmissão ao vivo</h2>
-          <iframe
-            src={embedUrl}
-            title="Transmissão ao vivo"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </section>
-      )}
-
-      <section className="publicMatches">
-        <h2>Andamento dos jogos</h2>
-
-        <div className="publicColumns">
-          <div>
-            <h3>Jogando</h3>
+          <section className="publicCard">
+            <h2>Jogos em andamento</h2>
             {playing.length === 0 && <p>Nenhum jogo em andamento.</p>}
             {playing.map((match: any) => (
               <div key={match.id} className="publicMatchCard live">
@@ -1022,31 +990,53 @@ function PublicTournament() {
                 <small>Mesa {match.table}</small>
               </div>
             ))}
-          </div>
+          </section>
+        </div>
 
-          <div>
-            <h3>Próximos</h3>
-            {pending.slice(0, 8).map((match: any) => (
-              <div key={match.id} className="publicMatchCard">
-                <strong>Jogo #{match.matchNumber || match.id}</strong>
-                <span>{match.playerA} x {match.playerB}</span>
-                <small>Mesa {match.table}</small>
-              </div>
-            ))}
-          </div>
-
-          <div>
-            <h3>Finalizados</h3>
-            {finished.slice(-8).reverse().map((match: any) => (
+        <aside className="publicRightColumn">
+          {embedUrl ? (
+            <section className="publicCard publicVideo">
+              <h2>Transmissão ao vivo</h2>
+              <iframe
+                src={embedUrl}
+                title="Transmissão ao vivo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </section>
+          ) : (
+            <section className="publicCard">
+              <h2>Resultados</h2>
+              {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
+              {finished.slice(-10).reverse().map((match: any) => (
               <div key={match.id} className="publicMatchCard done">
                 <strong>Jogo #{match.matchNumber || match.id}</strong>
-                <span>{match.playerA} x {match.playerB}</span>
+                <span>
+                  {match.winner === match.playerA ? `🏆 ${match.playerA}` : match.playerA}
+                  {' x '}
+                  {match.winner === match.playerB ? `🏆 ${match.playerB}` : match.playerB}
+                </span>
                 <small>Vencedor: {match.winner}</small>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              ))}
+            </section>
+          )}
+
+          {embedUrl && (
+            <section className="publicCard">
+              <h2>Resultados</h2>
+              {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
+              {finished.slice(-5).reverse().map((match: any) => (
+                <div key={match.id} className="publicMatchCard done">
+                  <strong>Jogo #{match.matchNumber || match.id}</strong>
+                  <span>{match.playerA} x {match.playerB}</span>
+                  <small>Vencedor: {match.winner}</small>
+                </div>
+              ))}
+            </section>
+          )}
+        </aside>
+      </main>
     </div>
   )
 }

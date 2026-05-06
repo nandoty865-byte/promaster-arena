@@ -929,29 +929,50 @@ button:hover {
   font-weight: 900;
 }
 
-.publicInfoGrid,
-.publicColumns {
+.publicLayout {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(320px, .85fr) minmax(420px, 1.15fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.publicLeftColumn,
+.publicRightColumn {
+  display: grid;
   gap: 18px;
 }
 
-.publicInfoGrid {
-  grid-template-columns: 1fr 1fr;
-}
-
-.publicInfoGrid > div,
-.publicColumns > div,
-.publicVideo,
-.publicMatches {
+.publicCard {
   background: #0f172a;
   border: 1px solid #1e293b;
   border-radius: 18px;
   padding: 20px;
 }
 
-.publicVideo {
-  margin: 24px 0;
+.publicCard h2 {
+  margin-top: 0;
+}
+
+.publicInfoList {
+  display: grid;
+  gap: 10px;
+}
+
+.publicInfoList div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #1e293b;
+}
+
+.publicInfoList div:last-child {
+  border-bottom: 0;
+}
+
+.publicInfoList span {
+  color: #94a3b8;
+  font-weight: 800;
 }
 
 .publicVideo iframe {
@@ -1263,8 +1284,7 @@ button:hover {
   .plansGrid,
   .billingPlansGrid,
   .settingsGrid,
-  .publicInfoGrid,
-  .publicColumns {
+  .publicLayout {
     grid-template-columns: 1fr;
   }
 
