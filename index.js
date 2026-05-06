@@ -1030,6 +1030,21 @@ await prisma.payment.updateMany({
   }
 })
 
+app.get('/me/payments', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const payments = await prisma.payment.findMany({
+      where: { organizationId: req.user.organizationId },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+    })
+
+    res.json(payments)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar pagamentos' })
+  }
+})
+
 app.get('/admin/finance/summary', auth, requireRole('superadmin'), async (req, res) => {
   try {
     const payments = await prisma.payment.findMany({

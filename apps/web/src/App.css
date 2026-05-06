@@ -800,7 +800,7 @@ button:hover {
 
 .planSummary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(130px, 1fr)) minmax(280px, 1.3fr);
+  grid-template-columns: repeat(3, minmax(130px, 1fr));
   gap: 12px;
   margin: 18px 0;
 }
@@ -834,6 +834,36 @@ button:hover {
 
 .planActions button {
   width: auto;
+}
+
+.planSummaryWide {
+  grid-template-columns: repeat(3, minmax(130px, 1fr)) minmax(320px, 1.4fr);
+}
+
+.paymentHistoryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 10px;
+}
+
+.paymentHistoryRow div {
+  display: grid;
+  gap: 4px;
+}
+
+.paymentHistoryRow div:last-child {
+  text-align: right;
+}
+
+.paymentHistoryRow span {
+  color: #94a3b8;
+  font-size: 13px;
 }
 
 .saasLayout {
@@ -873,6 +903,10 @@ button:hover {
 }
 
 .sidebar button:last-child {
+  margin-top: auto;
+}
+
+.sidebarFooterButton {
   margin-top: auto;
 }
 
@@ -1994,13 +2028,15 @@ button:hover {
 
 .tvBracket {
   display: flex;
-  gap: 34px;
+  gap: 42px;
   overflow-x: auto;
   padding-bottom: 24px;
+  align-items: flex-start;
 }
 
 .tvBracketRound {
   min-width: 260px;
+  padding-top: var(--tv-round-offset, 0);
 }
 
 .tvBracketRound h3 {
@@ -2010,21 +2046,26 @@ button:hover {
   margin-bottom: 14px;
 }
 
+.tvBracketRoundMatches {
+  display: grid;
+  gap: var(--tv-match-gap, 18px);
+}
+
 .tvBracketMatch {
   position: relative;
   background: #020617;
   border: 1px solid #334155;
   border-radius: 14px;
   padding: 10px;
-  margin-bottom: 16px;
+  min-height: 132px;
 }
 
 .tvBracketRound:not(:last-child) .tvBracketMatch::after {
   content: "";
   position: absolute;
-  right: -34px;
+  right: -42px;
   top: 50%;
-  width: 34px;
+  width: 42px;
   height: 1px;
   background: rgba(147, 197, 253, .45);
 }

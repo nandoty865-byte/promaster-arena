@@ -311,7 +311,7 @@ function Dashboard({ user }: any) {
 
         <button onClick={() => navigate('/app')}>Dashboard</button>
         <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
-        <button onClick={() => navigate('/upgrade')}>Planos</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
         {isMasterPlan && (
           <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
         )}
@@ -356,11 +356,6 @@ function Dashboard({ user }: any) {
               </strong>
             </div>
 
-            <div className="planActions">
-              <button onClick={() => navigate('/upgrade')}>Upgrade</button>
-              <button onClick={() => alert('Downgrade em implantação. Entre em contato com o suporte.')}>Downgrade</button>
-              <button onClick={() => alert('Cancelamento em implantação. Entre em contato com o suporte.')}>Cancelar</button>
-            </div>
           </div>
 
           <button className="primaryButton" onClick={() => navigate('/criar-torneio')}>
@@ -443,6 +438,12 @@ function Dashboard({ user }: any) {
 function Upgrade() {
   const [pixData, setPixData] = useState<any>(null)
   const [pixLoading, setPixLoading] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [payments, setPayments] = useState<any[]>([])
+
+  const plan = user?.organization?.plan || 'free'
+  const trialEndsAt = user?.organization?.trialEndsAt
+  const planExpiresAt = user?.organization?.planExpiresAt
 
   function createPix(plan: string) {
     setPixLoading(true)
@@ -458,6 +459,16 @@ function Upgrade() {
   }
 
   useEffect(() => {
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setUser(data.user))
+
+    fetch(`${API}/me/payments`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setPayments(Array.isArray(data) ? data : []))
+  }, [])
+
+  useEffect(() => {
     if (!pixData?.paymentId) return
 
     const interval = setInterval(() => {
@@ -468,7 +479,7 @@ function Upgrade() {
         .then(data => {
           if (data.status === 'approved') {
             alert('Pagamento aprovado! Plano ativado.')
-            window.location.href = '/'
+            window.location.href = '/upgrade'
           }
         })
     }, 5000)
@@ -480,9 +491,42 @@ function Upgrade() {
     <div className="app">
       <header className="hero">
         <div className="badge">💳 ProMaster Arena</div>
-        <h1>Upgrade de Plano</h1>
-        <p>Escolha seu plano e pague via Pix</p>
+        <h1>Planos e pagamentos</h1>
+        <p>Consulte seu plano, vencimento, alterações e histórico financeiro.</p>
       </header>
+
+      <div className="panel" style={{ maxWidth: 980, margin: '0 auto 24px' }}>
+        <h2>Plano atual</h2>
+
+        <div className="planSummary planSummaryWide">
+          <div>
+            <span>Plano</span>
+            <strong>{plan.toUpperCase()}</strong>
+          </div>
+
+          <div>
+            <span>Início</span>
+            <strong>{user?.organization?.createdAt ? new Date(user.organization.createdAt).toLocaleDateString() : '-'}</strong>
+          </div>
+
+          <div>
+            <span>Vencimento</span>
+            <strong>
+              {planExpiresAt
+                ? new Date(planExpiresAt).toLocaleDateString()
+                : trialEndsAt
+                  ? new Date(trialEndsAt).toLocaleDateString()
+                  : 'Sem vencimento'}
+            </strong>
+          </div>
+
+          <div className="planActions">
+            <button onClick={() => window.scrollTo({ top: 420, behavior: 'smooth' })}>Upgrade</button>
+            <button onClick={() => alert('Downgrade em implantação. Entre em contato com o suporte.')}>Downgrade</button>
+            <button onClick={() => alert('Cancelamento em implantação. Entre em contato com o suporte.')}>Cancelar</button>
+          </div>
+        </div>
+      </div>
 
       <div className="adminGrid">
         <div className="panel">
@@ -542,6 +586,25 @@ function Upgrade() {
           )}
         </div>
       )}
+
+      <div className="panel" style={{ maxWidth: 980, margin: '30px auto' }}>
+        <h2>Histórico de pagamentos</h2>
+
+        {payments.length === 0 && <p>Nenhum pagamento registrado.</p>}
+
+        {payments.map(payment => (
+          <div key={payment.id} className="paymentHistoryRow">
+            <div>
+              <strong>{payment.plan?.toUpperCase()}</strong>
+              <span>{new Date(payment.createdAt).toLocaleDateString()}</span>
+            </div>
+            <div>
+              <strong>R$ {Number(payment.amount).toFixed(2).replace('.', ',')}</strong>
+              <span>{payment.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -819,6 +882,7 @@ function CreateTournament({ user }: any) {
         <div className="sidebarLogo">🎱 ProMaster</div>
         <button onClick={() => navigate('/app')}>Dashboard</button>
         <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
       </aside>
 
       <main className="saasMain">
@@ -1118,6 +1182,18 @@ function TelaoTV() {
 
   const finalRound = rounds[rounds.length - 1]
   const champion = finalRound?.matches?.[0]?.winner
+  const bracketCardHeight = 132
+  const bracketBaseGap = 18
+
+  function bracketRoundStyle(roundIndex: number) {
+    const scale = Math.pow(2, roundIndex)
+    const unit = bracketCardHeight + bracketBaseGap
+
+    return {
+      '--tv-round-offset': `${roundIndex === 0 ? 0 : ((scale - 1) * unit) / 2}px`,
+      '--tv-match-gap': `${bracketBaseGap + (scale - 1) * unit}px`,
+    } as any
+  }
 
   return (
     <div className="tvMode">
@@ -1224,7 +1300,11 @@ function TelaoTV() {
 
           <div className="tvBracket">
             {rounds.map((round, roundIndex) => (
-              <div key={round.round} className="tvBracketRound">
+              <div
+                key={round.round}
+                className="tvBracketRound"
+                style={bracketRoundStyle(roundIndex)}
+              >
                 <h3>
                   {roundIndex === rounds.length - 1
                     ? 'Final'
@@ -1233,22 +1313,24 @@ function TelaoTV() {
                       : `Rodada ${round.round}`}
                 </h3>
 
-                {round.matches.map((match: any) => (
-                  <div key={match.id} className={`tvBracketMatch ${match.status}`}>
-                    <div className="matchMeta">
-                      <span>Jogo #{match.matchNumber || match.id}</span>
-                      <span>Mesa {match.table}</span>
-                    </div>
+                <div className="tvBracketRoundMatches">
+                  {round.matches.map((match: any) => (
+                    <div key={match.id} className={`tvBracketMatch ${match.status}`}>
+                      <div className="matchMeta">
+                        <span>Jogo #{match.matchNumber || match.id}</span>
+                        <span>Mesa {match.table}</span>
+                      </div>
 
-                    <div className={match.winner === match.playerA ? 'tvBracketPlayer winner' : 'tvBracketPlayer'}>
-                      {match.playerA}
-                    </div>
+                      <div className={match.winner === match.playerA ? 'tvBracketPlayer winner' : 'tvBracketPlayer'}>
+                        {match.playerA}
+                      </div>
 
-                    <div className={match.winner === match.playerB ? 'tvBracketPlayer winner' : 'tvBracketPlayer'}>
-                      {match.playerB}
+                      <div className={match.winner === match.playerB ? 'tvBracketPlayer winner' : 'tvBracketPlayer'}>
+                        {match.playerB}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             ))}
           </div>
