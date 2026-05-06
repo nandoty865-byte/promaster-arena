@@ -1051,20 +1051,22 @@ function PublicTournament() {
           </div>
 
           <div className="publicCard publicMiniInfoCard">
-            <span className="publicCardLabel">Local</span>
+            <span className="publicCardLabel">Status</span>
             <strong>{tournament.status}</strong>
             <p>{tournament.location || 'Local não informado'}</p>
-          </div>
-
-          <div className="publicCard publicMiniInfoCard">
-            <span className="publicCardLabel">Data</span>
-            <strong>{tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong>
-            <p>{tournament.eventTime || 'Horário não informado'}</p>
+            <p>
+              {tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : 'Data não informada'}
+              {tournament.eventTime ? ` • ${tournament.eventTime}` : ''}
+            </p>
           </div>
 
           <div className="publicCard publicMiniInfoCard">
             <span className="publicCardLabel">Premiação</span>
             <strong>{tournament.prize || '-'}</strong>
+          </div>
+
+          <div className="publicCard publicMiniInfoCard">
+            <span className="publicCardLabel">Regras</span>
             <p>{tournament.rules || 'Regras não informadas'}</p>
           </div>
         </section>
