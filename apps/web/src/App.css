@@ -1043,7 +1043,7 @@ button:hover {
 .publicSideStack {
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 18px;
+  gap: 12px;
 }
 
 .publicNoVideoGrid {
@@ -1132,13 +1132,29 @@ button:hover {
 .publicVideoLarge {
   display: flex;
   flex-direction: column;
-  min-height: 420px;
+  min-height: 300px;
 }
 
 .publicVideoLarge iframe {
   flex: 1;
-  min-height: 320px;
-  margin-top: 12px;
+  min-height: 220px;
+  margin-top: 10px;
+}
+
+.publicBroadcastGrid .publicCard {
+  padding: 16px;
+}
+
+.publicBroadcastGrid .publicTitleCard h1 {
+  font-size: clamp(24px, 2.4vw, 36px);
+}
+
+.publicBroadcastGrid .publicInfoList {
+  gap: 7px;
+}
+
+.publicBroadcastGrid .publicInfoList div {
+  padding: 8px 10px;
 }
 
 .publicVideoEmpty {
