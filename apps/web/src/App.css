@@ -826,14 +826,14 @@ button:hover {
 }
 
 .planActions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  flex-wrap: wrap;
   align-items: center;
 }
 
 .planActions button {
-  width: auto;
+  width: 100%;
 }
 
 .planSummaryWide {

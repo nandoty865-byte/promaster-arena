@@ -1002,6 +1002,7 @@ function TournamentBracket() {
   const navigate = useNavigate()
 
   const [rounds, setRounds] = useState<any[]>([])
+  const [panelMode, setPanelMode] = useState<'board' | 'bracket'>('board')
   const matches = rounds.flatMap(round =>
     (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
   )
@@ -1091,6 +1092,25 @@ function TournamentBracket() {
     )
   }
 
+  function renderBracketCard(match: any) {
+    return (
+      <div key={match.id} className={`proMatch ${match.status} ${match.winner ? 'hasWinner' : ''}`}>
+        <div className="matchMeta">
+          <span>Jogo #{match.matchNumber || match.id}</span>
+          <span>Mesa {match.table}</span>
+        </div>
+
+        <div className={match.winner === match.playerA ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerA}</span>
+        </div>
+
+        <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerB}</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="saasLayout">
       <aside className="sidebar">
@@ -1111,10 +1131,15 @@ function TournamentBracket() {
     <button onClick={() => window.open(`/telao/${id}`, '_blank')}>
       Abrir Telão
     </button>
+
+    <button onClick={() => setPanelMode(panelMode === 'board' ? 'bracket' : 'board')}>
+      {panelMode === 'board' ? 'Chaveamento' : 'Painel'}
+    </button>
   </div>
 </header>
 
-        <div className="matchBoard">
+        {panelMode === 'board' ? (
+          <div className="matchBoard">
           <section className="matchColumn pending">
             <h2>Aguardando</h2>
             {pendingMatches.length === 0 && <p className="emptyColumn">Nenhum jogo aguardando.</p>}
@@ -1139,6 +1164,25 @@ function TournamentBracket() {
             </div>
           </section>
         </div>
+        ) : (
+          <div className="proBracket">
+            {rounds.map((round, roundIndex) => (
+              <div key={round.round} className="proRound">
+                <h2>
+                  {roundIndex === rounds.length - 1
+                    ? 'Final'
+                    : roundIndex === rounds.length - 2
+                      ? 'Semifinal'
+                      : `Rodada ${round.round}`}
+                </h2>
+
+                <div className="roundMatches">
+                  {round.matches.map(renderBracketCard)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   )
