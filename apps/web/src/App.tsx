@@ -1211,6 +1211,14 @@ function TelaoTV() {
   const publicUrl = tournament?.publicSlug
     ? `https://www.promasterarena.com.br/public/${tournament.publicSlug}`
     : null
+  const matches = rounds.flatMap(r => r.matches || [])
+  const playing = matches.filter(m => m.status === 'playing')
+  const pending = matches.filter(m => m.status === 'pending')
+  const finished = matches.filter(m => m.status === 'finished')
+  const destaque = playing[0] || pending[0]
+
+  const finalRound = rounds[rounds.length - 1]
+  const champion = finalRound?.matches?.[0]?.winner
 
   function loadBracket() {
     fetch(`${API}/tournaments/${id}/bracket`)
@@ -1230,23 +1238,15 @@ function TelaoTV() {
     const updateInterval = setInterval(loadBracket, 4000)
 
     const rotateInterval = setInterval(() => {
-      setView(v => (v + 1) % 2)
+      setView(v => (v + 1) % (champion ? 3 : 2))
     }, 15000)
 
     return () => {
       clearInterval(updateInterval)
       clearInterval(rotateInterval)
     }
-  }, [id])
+  }, [id, champion])
 
-  const matches = rounds.flatMap(r => r.matches || [])
-  const playing = matches.filter(m => m.status === 'playing')
-  const pending = matches.filter(m => m.status === 'pending')
-  const finished = matches.filter(m => m.status === 'finished')
-  const destaque = playing[0] || pending[0]
-
-  const finalRound = rounds[rounds.length - 1]
-  const champion = finalRound?.matches?.[0]?.winner
   const bracketCardHeight = 132
   const bracketBaseGap = 18
 
@@ -1403,6 +1403,26 @@ function TelaoTV() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {view === 2 && champion && (
+        <div className="tvCelebration">
+          <div className="confettiLayer">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <span key={i} style={{ '--i': i } as any}></span>
+            ))}
+          </div>
+
+          <div className="fireworksLayer">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div className="championTrophy">🏆</div>
+          <p>Campeão do torneio</p>
+          <h2>{champion}</h2>
         </div>
       )}
     </div>
