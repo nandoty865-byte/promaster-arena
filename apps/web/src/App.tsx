@@ -1092,7 +1092,7 @@ function TournamentBracket() {
     )
   }
 
-  function renderBracketCard(match: any) {
+  function renderBracketCard(match: any, isFinalRound = false) {
     return (
       <div key={match.id} className={`proMatch ${match.status} ${match.winner ? 'hasWinner' : ''}`}>
         <div className="matchMeta">
@@ -1107,6 +1107,12 @@ function TournamentBracket() {
         <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
           <span>{match.playerB}</span>
         </div>
+
+        {match.winner && (
+          <div className={isFinalRound ? 'advanceLine championLine' : 'advanceLine'}>
+            {isFinalRound ? `🏆 ${match.winner} campeão` : `${match.winner} avançou`}
+          </div>
+        )}
       </div>
     )
   }
@@ -1177,7 +1183,7 @@ function TournamentBracket() {
                 </h2>
 
                 <div className="roundMatches">
-                  {round.matches.map(renderBracketCard)}
+                  {round.matches.map((match: any) => renderBracketCard(match, roundIndex === rounds.length - 1))}
                 </div>
               </div>
             ))}

@@ -1581,6 +1581,12 @@ button:hover {
   animation: fadeUp .35s ease both;
 }
 
+.championLine {
+  color: #facc15;
+  border-color: rgba(250, 204, 21, .4);
+  background: rgba(250, 204, 21, .08);
+}
+
 .proBracket {
   display: flex;
   align-items: stretch;
