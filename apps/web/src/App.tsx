@@ -295,6 +295,7 @@ function Dashboard({ user }: any) {
   const navigate = useNavigate()
   const [tournaments, setTournaments] = useState<any[]>([])
   const [qrUrl, setQrUrl] = useState<string | null>(null)
+  const [detailsTournament, setDetailsTournament] = useState<any>(null)
   const plan = user?.organization?.plan || 'free'
   const isMasterPlan = plan === 'master'
   const trialEndsAt = user?.organization?.trialEndsAt
@@ -398,21 +399,17 @@ function Dashboard({ user }: any) {
                   <span className={`statusBadge ${t.status}`}>{t.status}</span>
                 </div>
 
-                <p>{t.playerCount} jogadores</p>
-
-                <div className="eventInfo">
-                  {t.location && <span>📍 {t.location}</span>}
-                  {t.eventDate && (
-                    <span>📅 {new Date(t.eventDate).toLocaleDateString()}</span>
-                  )}
-                  {t.eventTime && <span>⏰ {t.eventTime}</span>}
-                  {t.prize && <span>🏆 Premiação: {t.prize}</span>}
-                  {t.rules && <span>📋 Regras: {t.rules}</span>}
-                </div>
+                <p className="tournamentLocation">
+                  {t.location ? `📍 ${t.location}` : 'Local não informado'}
+                </p>
 
                 <div className="tournamentActions">
                   <button onClick={() => navigate(`/tournament/${t.id}`)}>
                     Painel
+                  </button>
+
+                  <button onClick={() => setDetailsTournament(t)}>
+                    Detalhes
                   </button>
 
                   <button onClick={() => window.open(`/telao/${t.id}`, '_blank')}>
@@ -451,6 +448,67 @@ function Dashboard({ user }: any) {
               <QRCodeCanvas value={qrUrl} size={220} />
               <p>{qrUrl}</p>
               <button onClick={() => setQrUrl(null)}>Fechar</button>
+            </div>
+          </div>
+        )}
+
+        {detailsTournament && (
+          <div className="qrModal" onClick={() => setDetailsTournament(null)}>
+            <div className="detailsContent" onClick={e => e.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Detalhes do torneio</span>
+                  <h3>{detailsTournament.name}</h3>
+                </div>
+                <button onClick={() => setDetailsTournament(null)}>Fechar</button>
+              </div>
+
+              <div className="detailsList">
+                <div>
+                  <span>Status</span>
+                  <strong>{detailsTournament.status}</strong>
+                </div>
+                <div>
+                  <span>Jogadores</span>
+                  <strong>{detailsTournament.playerCount}</strong>
+                </div>
+                <div>
+                  <span>Data</span>
+                  <strong>{detailsTournament.eventDate ? new Date(detailsTournament.eventDate).toLocaleDateString() : '-'}</strong>
+                </div>
+                <div>
+                  <span>Horário</span>
+                  <strong>{detailsTournament.eventTime || '-'}</strong>
+                </div>
+                <div>
+                  <span>Premiação</span>
+                  <strong>{detailsTournament.prize || '-'}</strong>
+                </div>
+                <div>
+                  <span>Transmissão</span>
+                  <strong>{detailsTournament.youtubeUrl ? 'YouTube configurado' : 'Não configurada'}</strong>
+                </div>
+                {detailsTournament.youtubeUrl && (
+                  <div>
+                    <span>Link YouTube</span>
+                    <a href={detailsTournament.youtubeUrl} target="_blank" rel="noreferrer">
+                      Abrir transmissão
+                    </a>
+                  </div>
+                )}
+                {detailsTournament.publicSlug && (
+                  <div>
+                    <span>Página pública</span>
+                    <a href={`https://www.promasterarena.com.br/public/${detailsTournament.publicSlug}`} target="_blank" rel="noreferrer">
+                      Abrir página
+                    </a>
+                  </div>
+                )}
+                <div className="detailsRules">
+                  <span>Regras</span>
+                  <strong>{detailsTournament.rules || '-'}</strong>
+                </div>
+              </div>
             </div>
           </div>
         )}
