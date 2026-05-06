@@ -1,2666 +1,1977 @@
-* {
-  box-sizing: border-box;
-}
+import { useEffect, useState } from 'react'
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { QRCodeCanvas } from 'qrcode.react'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from 'recharts'
+import './App.css'
 
-body {
-  margin: 0;
-  background:
-    radial-gradient(circle at top, rgba(34, 197, 94, 0.18), transparent 28%),
-    linear-gradient(135deg, #050816, #0b1020 55%, #050816);
-  color: white;
-  font-family: Inter, Arial, sans-serif;
-}
+const API = '/api'
 
-.app {
-  min-height: 100vh;
-  padding: 28px;
-}
-
-.hero {
-  text-align: center;
-  margin-bottom: 34px;
-}
-
-.badge {
-  display: inline-block;
-  padding: 8px 16px;
-  border: 1px solid rgba(34, 197, 94, 0.45);
-  border-radius: 999px;
-  color: #86efac;
-  background: rgba(34, 197, 94, 0.08);
-  font-weight: 700;
-}
-
-.hero h1 {
-  margin: 14px 0 4px;
-  font-size: 42px;
-  letter-spacing: -1px;
-}
-
-.hero p {
-  margin: 0;
-  color: #aab2d5;
-  font-size: 18px;
-}
-
-.champion {
-  margin: 30px auto 0;
-  max-width: 420px;
-  padding: 22px;
-  border-radius: 20px;
-  text-align: center;
-
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  color: white;
-
-  box-shadow: 0 20px 60px rgba(34, 197, 94, 0.4);
-  animation: glow 2s infinite alternate;
-}
-
-@keyframes glow {
-  from { box-shadow: 0 0 20px rgba(34,197,94,0.4); }
-  to { box-shadow: 0 0 40px rgba(34,197,94,0.8); }
-}
-
-.champion span {
-  display: block;
-  color: #bbf7d0;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.champion strong {
-  display: block;
-  margin-top: 4px;
-  font-size: 28px;
-}
-
-.bracket {
-  display: flex;
-  gap: 28px;
-  overflow-x: auto;
-  padding-bottom: 30px;
-  align-items: flex-start;
-}
-
-.round {
-  min-width: 280px;
-  position: relative;
-}
-
-.round h2 {
-  text-align: center;
-  color: #dbeafe;
-  font-size: 18px;
-  margin-bottom: 14px;
-}
-
-.roundMatches {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.round:nth-child(2) .roundMatches {
-  padding-top: 58px;
-}
-
-.round:nth-child(3) .roundMatches {
-  padding-top: 154px;
-}
-
-.round:nth-child(4) .roundMatches {
-  padding-top: 250px;
-}
-
-.match {
-  position: relative;
-  background: rgba(21, 27, 51, 0.92);
-  border: 1px solid rgba(96, 120, 190, 0.4);
-  border-radius: 20px;
-  padding: 14px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-}
-
-.match::after {
-  content: "";
-  position: absolute;
-  right: -28px;
-  top: 50%;
-  width: 28px;
-  height: 2px;
-  background: #60a5fa;
-}
-
-.match::before {
-  content: "";
-  position: absolute;
-  right: -28px;
-  top: 0;
-  height: 100%;
-  width: 2px;
-  background: #60a5fa;
-  opacity: 0.3;
-}
-
-.round:last-child .match::after {
-  display: none;
-}
-
-.matchTop {
-  display: flex;
-  justify-content: space-between;
-  color: #93c5fd;
-  font-size: 12px;
-  margin-bottom: 10px;
-}
-
-.player {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #0b1020;
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 8px;
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.player b {
-  font-size: 11px;
-  color: #dcfce7;
-  text-transform: uppercase;
-}
-
-.winner {
-  background: linear-gradient(135deg, #15803d, #22c55e);
-  animation: winnerPop 0.4s ease;
-}
-
-@keyframes winnerPop {
-  from {
-    transform: scale(0.95);
-    opacity: 0.6;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer ' + localStorage.getItem('token'),
   }
 }
 
-@media (max-width: 768px) {
-  .hero h1 {
-    font-size: 30px;
+function getToken() {
+  return localStorage.getItem('token')
+}
+
+function isLoggedIn() {
+  return !!getToken()
+}
+
+function goHome() {
+  window.location.href = '/'
+}
+
+function youtubeEmbedUrl(url?: string) {
+  if (!url) return ''
+
+  const patterns = [
+    /youtube\.com\/watch\?v=([^&]+)/,
+    /youtu\.be\/([^?]+)/,
+    /youtube\.com\/live\/([^?]+)/,
+    /youtube\.com\/embed\/([^?]+)/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match?.[1]) return `https://www.youtube.com/embed/${match[1]}`
   }
 
-  .bracket {
-    gap: 18px;
+  return url
+}
+
+function isPublicPath(path: string) {
+  return (
+    path === '/' ||
+    path === '/login' ||
+    path === '/register' ||
+    path === '/forgot-password' ||
+    path.startsWith('/telao/') ||
+    path.startsWith('/public/')
+  )
+}
+
+export default function App() {
+  const [user, setUser] = useState<any>(null)
+  const [loadingUser, setLoadingUser] = useState(true)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const path = window.location.pathname
+
+    if (!token) {
+      setLoadingUser(false)
+
+      if (!isPublicPath(path)) {
+        window.location.href = `/login?redirect=${encodeURIComponent(path)}`
+      }
+
+  return
+}
+
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => {
+        if (!res.ok) {
+          localStorage.removeItem('token')
+          window.location.href = `/login?redirect=${encodeURIComponent(path)}`
+          return null
+        }
+        return res.json()
+      })
+      .then(data => {
+        if (data?.user) setUser(data.user)
+      })
+      .catch(() => {
+        localStorage.removeItem('token')
+        window.location.href = '/login'
+      })
+      .finally(() => setLoadingUser(false))
+  }, [])
+
+  if (loadingUser && !isPublicPath(window.location.pathname)) {
+    return <div className="app">Carregando sistema...</div>
   }
 
-  .round {
-    min-width: 260px;
-  }
-}
-.adminGrid {
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 24px;
-  margin-bottom: 36px;
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/app" element={<Dashboard user={user} />} />
+      <Route path="/upgrade" element={<Upgrade />} />
+      <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
+      <Route path="/tournament/:id/settings" element={<TournamentSettings />} />
+      <Route path="/public/:slug" element={<PublicTournament />} />
+      <Route path="/admin/financeiro" element={<Financeiro />} />
+      <Route path="/admin/clientes" element={<AdminClientes />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="*" element={<Navigate to="/" />} />
+<Route path="/tournament/:id" element={<TournamentBracket />} />
+<Route path="/telao/:id" element={<TelaoTV />} />
+<Route path="/register" element={<Register />} />
+
+    </Routes>
+  )
 }
 
-.panel {
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(96, 165, 250, 0.25);
-  border-radius: 22px;
-  padding: 20px;
-  box-shadow: 0 18px 50px rgba(0,0,0,0.3);
-}
+function Register() {
+  const [organizationName, setOrganizationName] = useState('')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [address, setAddress] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
 
-.panel h2 {
-  margin-top: 0;
-}
+  function register() {
+    if (!organizationName || !email || !phone || !password) {
+      alert('Preencha organização, e-mail, telefone e senha')
+      return
+    }
 
-.panel input,
-.panel select,
-.panel textarea {
-  width: 100%;
-  margin-bottom: 12px;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #334155;
-  background: #020617;
-  color: white;
-}
+    if (password !== confirmPassword) {
+      alert('As senhas não conferem')
+      return
+    }
 
-.panel textarea {
-  min-height: 120px;
-  resize: vertical;
-}
+    setLoading(true)
 
-.checkboxLine {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 12px 0;
-  color: #dbeafe;
-  font-weight: 800;
-}
+    fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        organizationName,
+        name,
+        email,
+        phone,
+        address,
+        password,
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
 
-.panel .checkboxLine input {
-  width: auto;
-  margin: 0;
-}
-
-.helperText {
-  margin-top: -4px;
-  margin-bottom: 16px;
-  color: #94a3b8;
-  font-size: 14px;
-}
-
-.loginLinks {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 16px;
-  font-size: 14px;
-}
-
-.loginLinks a {
-  color: #93c5fd;
-  text-decoration: none;
-  font-weight: 800;
-}
-
-.primaryButton,
-.tournament {
-  width: 100%;
-  padding: 12px;
-  border-radius: 14px;
-  border: 0;
-  cursor: pointer;
-  font-weight: 800;
-}
-
-.primaryButton {
-  background: #22c55e;
-  color: #052e16;
-}
-
-.tournament {
-  display: block;
-  text-align: left;
-  margin-bottom: 10px;
-  background: #0f172a;
-  color: white;
-  border: 1px solid #334155;
-}
-
-.tournament span {
-  display: block;
-  color: #94a3b8;
-  margin-top: 4px;
-}
-
-.tournament.active {
-  border-color: #22c55e;
-  background: rgba(34, 197, 94, 0.16);
-}
-
-.player button {
-  border: 0;
-  border-radius: 8px;
-  padding: 6px 9px;
-  background: #2563eb;
-  color: white;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.bracket {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: visible;
-  padding: 20px 40px 60px;
-  display: flex;
-  gap: 40px;
-  align-items: flex-start;
-}
-
-.round {
-  min-width: 320px;
-  flex: 0 0 320px;
-  position: relative;
-}
-
-.match {
-  min-height: 150px;
-  overflow: visible;
-}
-
-.match::after {
-  content: "";
-  position: absolute;
-  right: -40px;
-  top: 50%;
-  width: 40px;
-  height: 2px;
-  background: #60a5fa;
-  opacity: 0.8;
-}
-
-.round:last-child .match::after {
-  display: none;
-}
-
-.roundMatches {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-
-.round:nth-child(2) .roundMatches {
-  padding-top: 58px;
-}
-
-.round:nth-child(3) .roundMatches {
-  padding-top: 178px;
-}
-
-.round:nth-child(4) .roundMatches {
-  padding-top: 330px;
-}
-
-.startButton {
-  display: block;
-  width: 100%;
-  margin-top: 10px;
-}
-
-.telao {
-  min-height: 100vh;
-  padding: 48px;
-  text-align: center;
-  background:
-    radial-gradient(circle at top, rgba(34, 197, 94, 0.22), transparent 30%),
-    #020617;
-  color: white;
-}
-
-.telao h1 {
-  font-size: 64px;
-  margin: 0;
-}
-
-.telao p {
-  font-size: 24px;
-  color: #bfdbfe;
-}
-
-.telaoChampion {
-  margin: 28px auto;
-  max-width: 700px;
-  padding: 24px;
-  border-radius: 28px;
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  font-size: 38px;
-  font-weight: 900;
-  box-shadow: 0 0 50px rgba(34, 197, 94, 0.45);
-}
-
-.telaoSection {
-  max-width: 900px;
-  margin: 36px auto;
-  padding: 28px;
-  border-radius: 28px;
-  background: rgba(15, 23, 42, 0.86);
-  border: 1px solid rgba(96, 165, 250, 0.35);
-}
-
-.telaoSection h2 {
-  font-size: 34px;
-  margin-top: 0;
-}
-
-.telaoMatch {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 16px 0;
-  padding: 24px;
-  border-radius: 20px;
-  background: #0f172a;
-  font-size: 30px;
-}
-
-.telaoMatch span {
-  color: #86efac;
-}
-
-.telaoNext {
-  margin: 12px 0;
-  padding: 18px;
-  border-radius: 16px;
-  background: #020617;
-  font-size: 24px;
-  color: #dbeafe;
-}
-
-.telaoPro {
-  min-height: 100vh;
-  padding: 42px;
-  background:
-    radial-gradient(circle at top left, rgba(34, 197, 94, 0.24), transparent 28%),
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.20), transparent 28%),
-    linear-gradient(135deg, #020617, #06111f 55%, #020617);
-  color: white;
-  overflow: hidden;
-}
-
-.telaoTop {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.telaoLogo {
-  padding: 10px 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(34, 197, 94, 0.5);
-  background: rgba(34, 197, 94, 0.12);
-  color: #86efac;
-  font-weight: 900;
-  font-size: 22px;
-}
-
-.telaoLive {
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: #dc2626;
-  color: white;
-  font-weight: 900;
-  letter-spacing: 1px;
-  box-shadow: 0 0 30px rgba(220, 38, 38, 0.7);
-  animation: livePulse 1.4s infinite alternate;
-}
-
-@keyframes livePulse {
-  from { transform: scale(1); opacity: 0.75; }
-  to { transform: scale(1.08); opacity: 1; }
-}
-
-.telaoHero {
-  margin-top: 44px;
-  text-align: center;
-}
-
-.telaoHero h1 {
-  margin: 0;
-  font-size: 68px;
-  letter-spacing: -2px;
-}
-
-.telaoHero p {
-  margin-top: 10px;
-  font-size: 24px;
-  color: #bfdbfe;
-}
-
-.telaoChampionPro {
-  max-width: 620px;
-  margin: 34px auto 0;
-  padding: 24px;
-  border-radius: 28px;
-  text-align: center;
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  box-shadow: 0 0 70px rgba(34, 197, 94, 0.45);
-}
-
-.telaoChampionPro span {
-  display: block;
-  font-size: 16px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.telaoChampionPro strong {
-  display: block;
-  margin-top: 6px;
-  font-size: 44px;
-}
-
-.featuredMatch {
-  max-width: 1000px;
-  margin: 40px auto 0;
-  padding: 32px;
-  border-radius: 34px;
-  border: 1px solid rgba(96, 165, 250, 0.35);
-  background: rgba(15, 23, 42, 0.86);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
-}
-
-.featuredHeader {
-  display: flex;
-  justify-content: space-between;
-  color: #93c5fd;
-  font-size: 22px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.featuredHeader strong {
-  color: #86efac;
-}
-
-.versus {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 24px;
-  margin-top: 26px;
-}
-
-.versus div {
-  padding: 30px;
-  border-radius: 24px;
-  background: #020617;
-  font-size: 42px;
-  font-weight: 900;
-  text-align: center;
-}
-
-.versus span {
-  color: #22c55e;
-  font-size: 38px;
-  font-weight: 900;
-}
-
-.telaoGrid {
-  max-width: 1200px;
-  margin: 36px auto 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-}
-
-.telaoCard {
-  padding: 24px;
-  border-radius: 28px;
-  background: rgba(15, 23, 42, 0.78);
-  border: 1px solid rgba(96, 165, 250, 0.22);
-}
-
-.telaoCard h2 {
-  margin: 0 0 18px;
-  font-size: 28px;
-}
-
-.miniMatch {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 12px;
-  padding: 18px;
-  border-radius: 18px;
-  background: #020617;
-  font-size: 22px;
-}
-
-.miniMatch strong {
-  color: #86efac;
-  white-space: nowrap;
-}
-
-.empty {
-  color: #94a3b8;
-  font-size: 22px;
-}
-
-@media (max-width: 900px) {
-  .telaoHero h1 {
-    font-size: 42px;
+        alert('Cadastro criado! Você já pode entrar com seu e-mail e senha.')
+        window.location.href = '/login'
+      })
+      .finally(() => setLoading(false))
   }
 
-  .versus {
-    grid-template-columns: 1fr;
+  return (
+    <div className="registerPage">
+      <div className="registerCard">
+        <div className="badge">🎱 ProMaster Arena</div>
+        <h1>Comece grátis</h1>
+        <p>Crie sua arena e teste por 7 dias.</p>
+
+        <label>Nome da organização *</label>
+        <input value={organizationName} onChange={e => setOrganizationName(e.target.value)} />
+
+        <label>Seu nome</label>
+        <input value={name} onChange={e => setName(e.target.value)} />
+
+        <label>E-mail *</label>
+        <input value={email} onChange={e => setEmail(e.target.value)} />
+
+        <label>Telefone *</label>
+        <input value={phone} onChange={e => setPhone(e.target.value)} />
+
+        <label>Endereço</label>
+        <input value={address} onChange={e => setAddress(e.target.value)} />
+
+        <label>Senha *</label>
+        <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
+
+        <label>Confirmar senha *</label>
+        <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+
+        <button className="primaryButton" onClick={register} disabled={loading}>
+          {loading ? 'Criando...' : 'Criar conta grátis'}
+        </button>
+
+        <a href="/login">Já tenho conta</a>
+      </div>
+    </div>
+  )
+}
+
+function Login() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  function login() {
+    fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+      .then(res => res.json())
+      .then(data => {
+  if (!data.token) {
+    alert(data.error || 'Login inválido')
+    return
   }
 
-  .telaoGrid {
-    grid-template-columns: 1fr;
+  localStorage.setItem('token', data.token)
+  const redirect = new URLSearchParams(window.location.search).get('redirect')
+
+  if (data.user?.role === 'superadmin') {
+    window.location.href = '/admin'
+  } else if (redirect && redirect !== '/login') {
+    window.location.href = redirect
+  } else {
+    window.location.href = '/app'
   }
-}
-
-.qrBox {
-  position: fixed;
-  right: 32px;
-  bottom: 32px;
-  background: white;
-  color: #020617;
-  padding: 14px;
-  border-radius: 18px;
-  text-align: center;
-  font-weight: 800;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
-}
-
-.qrBox span {
-  display: block;
-  margin-top: 8px;
-  font-size: 12px;
-}
-
-.tournamentCard {
-  background: #020617;
-  border: 1px solid #334155;
-  padding: 16px;
-  border-radius: 16px;
-  margin-bottom: 12px;
-}
-
-.tournamentHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.tournamentTitleBlock {
-  display: grid;
-  gap: 6px;
-  text-align: left;
-}
-
-.tournamentTitleBlock span {
-  color: #bfdbfe;
-  font-size: 14px;
-}
-
-.statusBadge {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.statusBadge.draft {
-  background: #64748b;
-}
-
-.statusBadge.running {
-  background: #22c55e;
-}
-
-.statusBadge.finished {
-  background: #dc2626;
-}
-
-.tournamentActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.tournamentActions button {
-  border: 0;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: #2563eb;
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.qrModal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.qrContent {
-  background: #020617;
-  padding: 20px;
-  border-radius: 16px;
-  text-align: center;
-}
-
-.detailsContent {
-  width: min(620px, calc(100vw - 32px));
-  max-height: calc(100vh - 48px);
-  overflow: auto;
-  background: #020617;
-  border: 1px solid #334155;
-  border-radius: 18px;
-  padding: 20px;
-  box-shadow: 0 24px 80px rgba(0,0,0,.55);
-}
-
-.detailsHeader {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
-  margin-bottom: 18px;
-}
-
-.detailsHeader span {
-  color: #93c5fd;
-  font-weight: 900;
-  text-transform: uppercase;
-  font-size: 12px;
-}
-
-.detailsHeader h3 {
-  margin: 6px 0 0;
-  font-size: 28px;
-}
-
-.detailsList {
-  display: grid;
-  gap: 10px;
-}
-
-.detailsList div {
-  display: grid;
-  grid-template-columns: 130px 1fr;
-  gap: 14px;
-  padding: 12px;
-  border-radius: 12px;
-  background: #0f172a;
-  border: 1px solid #1e293b;
-}
-
-.detailsList span {
-  color: #94a3b8;
-  font-weight: 800;
-}
-
-.detailsList a {
-  color: #60a5fa;
-  font-weight: 900;
-  text-decoration: none;
-}
-
-.detailsRules strong {
-  white-space: pre-wrap;
-  line-height: 1.5;
-}
-
-.financeGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-  margin-bottom: 28px;
-}
-
-.financeCard {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  border-radius: 20px;
-  padding: 22px;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.28);
-}
-
-.financeCard span {
-  display: block;
-  color: #94a3b8;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.financeCard strong {
-  font-size: 30px;
-  color: #86efac;
-}
-
-.paymentRow {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 16px;
-  border-radius: 14px;
-  background: #020617;
-  border: 1px solid #334155;
-  margin-bottom: 10px;
-}
-
-.paymentRow span {
-  display: block;
-  color: #94a3b8;
-  margin-top: 4px;
-}
-
-.statusBadge.pending {
-  background: #f59e0b;
-  color: #111827;
-}
-
-.statusBadge.approved {
-  background: #22c55e;
-  color: #052e16;
-}
-
-@media (max-width: 900px) {
-  .financeGrid {
-    grid-template-columns: 1fr;
+})
   }
 
-  .paymentRow {
-    flex-direction: column;
-  }
-}
-
-.tournamentCard {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  border-radius: 20px;
-  padding: 20px;
-  margin-bottom: 16px;
-}
-
-.tournamentHeader {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.tournamentActions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-button {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: none;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.85;
-}
-
-.planBadge {
-  margin-top: 8px;
-  color: #94a3b8;
-}
-
-.planSummary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(130px, 1fr));
-  gap: 12px;
-  margin: 18px 0;
-}
-
-.planSummary > div {
-  background: #020617;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.planSummary span {
-  display: block;
-  color: #94a3b8;
-  font-size: 12px;
-  font-weight: 800;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-}
-
-.planSummary strong {
-  color: white;
-}
-
-.planActions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  align-items: center;
-}
-
-.planActions button {
-  width: 100%;
-}
-
-.planSummaryWide {
-  grid-template-columns: repeat(3, minmax(130px, 1fr)) minmax(320px, 1.4fr);
-}
-
-.paymentHistoryRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  background: #020617;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
-  padding: 14px;
-  margin-top: 10px;
-}
-
-.paymentHistoryRow div {
-  display: grid;
-  gap: 4px;
-}
-
-.paymentHistoryRow div:last-child {
-  text-align: right;
-}
-
-.paymentHistoryRow span {
-  color: #94a3b8;
-  font-size: 13px;
-}
-
-.billingPlansGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 24px;
-}
-
-.billingPlanCard {
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
-}
-
-.billingPlanCard button {
-  margin-top: auto;
-}
-
-.settingsPanel {
-  max-width: 860px;
-}
-
-.settingsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.publicPage {
-  min-height: 100vh;
-  background:
-    linear-gradient(135deg, rgba(236, 72, 153, .16), transparent 24%),
-    linear-gradient(225deg, rgba(56, 189, 248, .14), transparent 28%),
-    #09071d;
-  color: white;
-  padding: 32px;
-}
-
-.publicHero {
-  background: rgba(18, 12, 48, .86);
-  border: 2px solid #ec4899;
-  box-shadow: inset 0 0 0 1px rgba(56, 189, 248, .55), 0 0 26px rgba(236, 72, 153, .28);
-  clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px);
-  padding: 14px 22px;
-  margin-bottom: 18px;
-}
-
-.publicHero span {
-  color: #67e8f9;
-  font-weight: 900;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.publicChampion {
-  display: inline-flex;
-  margin-top: 14px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(250, 204, 21, .12);
-  border: 1px solid rgba(250, 204, 21, .42);
-  color: #facc15;
-  font-weight: 900;
-}
-
-.publicShowcase {
-  display: grid;
-  grid-template-columns: minmax(320px, .95fr) minmax(420px, 1.05fr);
-  gap: 22px;
-  margin-bottom: 22px;
-}
-
-.publicBroadcastGrid {
-  display: grid;
-  grid-template-columns: minmax(520px, 1.65fr) minmax(280px, .65fr);
-  gap: 18px;
-  margin-bottom: 18px;
-  align-items: stretch;
-}
-
-.publicSideStack {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 18px;
-}
-
-.publicNoVideoGrid {
-  display: grid;
-  grid-template-columns: minmax(280px, 1.25fr) repeat(3, minmax(220px, 1fr));
-  gap: 18px;
-  align-items: start;
-}
-
-.publicMatchColumns {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.publicCard {
-  position: relative;
-  background: rgba(18, 12, 48, .9);
-  border: 2px solid #38bdf8;
-  border-top-color: #ec4899;
-  box-shadow: inset 0 0 0 1px rgba(236, 72, 153, .35), 0 14px 34px rgba(0, 0, 0, .34);
-  clip-path: polygon(16px 0, calc(100% - 26px) 0, 100% 18px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 18px), 0 16px);
-  padding: 20px;
-}
-
-.publicInfoCard {
-  min-height: 100%;
-}
-
-.publicTitleCard h1,
-.publicInfoCard h1 {
-  margin: 12px 0 0;
-  font-size: clamp(28px, 3.2vw, 48px);
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.publicCard h2 {
-  margin: 8px 0 18px;
-  text-transform: uppercase;
-}
-
-.publicCardLabel {
-  display: inline-flex;
-  width: fit-content;
-  padding: 6px 10px;
-  background: linear-gradient(90deg, #ec4899, #38bdf8);
-  color: white;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
-}
-
-.publicInfoList {
-  display: grid;
-  gap: 10px;
-}
-
-.publicInfoList div {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(2, 6, 23, .72);
-  border: 1px solid rgba(56, 189, 248, .18);
-}
-
-.publicInfoList div:last-child {
-  border-bottom: 1px solid rgba(56, 189, 248, .18);
-}
-
-.publicInfoList span {
-  color: #67e8f9;
-  font-weight: 800;
-}
-
-.publicVideo iframe {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border: 1px solid rgba(236, 72, 153, .42);
-  background: #020617;
-}
-
-.publicVideoLarge {
-  display: flex;
-  flex-direction: column;
-  min-height: 420px;
-}
-
-.publicVideoLarge iframe {
-  flex: 1;
-  min-height: 320px;
-  margin-top: 12px;
-}
-
-.publicVideoEmpty {
-  min-height: 260px;
-  display: grid;
-  place-items: center;
-  gap: 8px;
-  text-align: center;
-  background: rgba(2, 6, 23, .65);
-  border: 1px solid rgba(236, 72, 153, .35);
-}
-
-.publicVideoEmpty strong {
-  font-size: 28px;
-}
-
-.publicVideoEmpty span {
-  color: #93c5fd;
-}
-
-.publicScoreRow,
-.publicMatchCard {
-  display: grid;
-  gap: 6px;
-  background: rgba(2, 6, 23, .78);
-  border: 1px solid rgba(56, 189, 248, .22);
-  padding: 12px;
-  margin-top: 10px;
-}
-
-.publicMatchColumn {
-  min-height: 300px;
-}
-
-.publicMatchColumn.next {
-  border-color: #60a5fa;
-}
-
-.publicMatchColumn.live {
-  border-color: #22c55e;
-}
-
-.publicMatchColumn.done {
-  border-color: #facc15;
-}
-
-.publicMatchCard.live {
-  border-color: rgba(34, 197, 94, .45);
-}
-
-.publicMatchCard.done {
-  border-color: rgba(250, 204, 21, .35);
-}
-
-.publicMatchCard small {
-  color: #94a3b8;
-}
-
-.saasLayout {
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  background: #020617;
-  color: white;
-}
-
-.sidebar {
-  border-right: 1px solid #1e293b;
-  background: #020617;
-  padding: 24px 16px;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebarLogo {
-  font-size: 22px;
-  font-weight: 900;
-  margin-bottom: 28px;
-  color: #86efac;
-}
-
-.sidebar button {
-  width: 100%;
-  margin-bottom: 10px;
-  padding: 12px;
-  border-radius: 12px;
-  background: #0f172a;
-  color: white;
-  text-align: left;
-}
-
-.sidebar button:last-child {
-  margin-top: auto;
-}
-
-.sidebarFooterButton {
-  margin-top: auto;
-}
-
-.saasMain {
-  padding: 32px;
-}
-
-.saasMain .hero {
-  text-align: left;
-  padding: 24px;
-  border-radius: 24px;
-  background: radial-gradient(circle at top left, rgba(34,197,94,.18), transparent 40%), #0f172a;
-  border: 1px solid #1e293b;
-  margin-bottom: 24px;
-}
-
-.saasMain .panel {
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 24px;
-  padding: 24px;
-}
-
-.saasMain .tournamentCard {
-  background: #020617;
-  border: 1px solid #334155;
-  border-radius: 20px;
-  padding: 20px;
-  margin-bottom: 16px;
-}
-
-.saasMain .tournamentHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.saasMain .tournamentActions {
-  margin-top: 16px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.saasMain button {
-  padding: 9px 13px;
-  border-radius: 10px;
-  border: 0;
-  background: #2563eb;
-  color: white;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.saasMain button:hover {
-  opacity: .85;
-}
-
-@media (max-width: 900px) {
-  .saasLayout {
-    grid-template-columns: 1fr;
+  return (
+    <div className="app">
+      <div className="panel" style={{ maxWidth: 420, margin: '80px auto' }}>
+        <h1>Login</h1>
+        <p>ProMaster Arena</p>
+
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" />
+        <input
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="Senha"
+          type="password"
+        />
+
+        <button className="primaryButton" onClick={login}>Entrar</button>
+        <div className="loginLinks">
+          <a href="/forgot-password">Esqueci minha senha</a>
+          <a href="/register">Criar nova conta</a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ForgotPassword() {
+  const [email, setEmail] = useState('')
+
+  return (
+    <div className="app">
+      <div className="panel" style={{ maxWidth: 420, margin: '80px auto' }}>
+        <h1>Recuperar senha</h1>
+        <p>Informe seu e-mail. A recuperação automática ainda está em implantação.</p>
+
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" />
+
+        <button
+          className="primaryButton"
+          onClick={() => alert('Recuperação de senha em implantação. Entre em contato com o suporte para redefinir o acesso.')}
+        >
+          Solicitar recuperação
+        </button>
+
+        <div className="loginLinks">
+          <a href="/login">Voltar ao login</a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Dashboard({ user }: any) {
+  const navigate = useNavigate()
+  const [tournaments, setTournaments] = useState<any[]>([])
+  const [qrUrl, setQrUrl] = useState<string | null>(null)
+  const [detailsTournament, setDetailsTournament] = useState<any>(null)
+  const plan = user?.organization?.plan || 'free'
+  const isMasterPlan = plan === 'master'
+  const trialEndsAt = user?.organization?.trialEndsAt
+  const planExpiresAt = user?.organization?.planExpiresAt
+
+  function logout() {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
   }
 
-  .sidebar {
-    position: relative;
-    height: auto;
-  }
-}
-
-.landing {
-  min-height: 100vh;
-  background: radial-gradient(circle at top, rgba(34,197,94,.16), transparent 35%), #020617;
-  color: white;
-  padding: 28px;
-}
-
-.landingHeader {
-  max-width: 1180px;
-  margin: 0 auto 70px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.landingLogo {
-  font-size: 24px;
-  font-weight: 900;
-  color: #86efac;
-}
-
-.landingActions {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
-
-.landingActions a {
-  color: white;
-  text-decoration: none;
-  font-weight: 800;
-}
-
-.landingButton {
-  display: inline-block;
-  background: #22c55e;
-  color: #052e16 !important;
-  padding: 12px 18px;
-  border-radius: 14px;
-  font-weight: 900;
-  text-decoration: none;
-}
-
-.landingHero {
-  max-width: 1180px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1.2fr .8fr;
-  gap: 42px;
-  align-items: center;
-}
-
-.landingBadge {
-  display: inline-block;
-  background: rgba(34,197,94,.14);
-  border: 1px solid rgba(34,197,94,.35);
-  color: #86efac;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-weight: 900;
-  margin-bottom: 18px;
-}
-
-.landingHero h1 {
-  font-size: 58px;
-  line-height: 1;
-  margin: 0 0 20px;
-}
-
-.landingHero p {
-  font-size: 20px;
-  color: #cbd5e1;
-  max-width: 680px;
-}
-
-.landingCtas {
-  display: flex;
-  gap: 14px;
-  margin-top: 28px;
-}
-
-.landingSecondary {
-  color: white;
-  border: 1px solid #334155;
-  padding: 12px 18px;
-  border-radius: 14px;
-  text-decoration: none;
-  font-weight: 900;
-}
-
-.landingPreview {
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 28px;
-  padding: 26px;
-  box-shadow: 0 24px 80px rgba(0,0,0,.35);
-}
-
-.previewMatch {
-  background: #020617;
-  padding: 20px;
-  border-radius: 18px;
-  margin-bottom: 14px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 20px;
-}
-
-.previewCard {
-  background: rgba(34,197,94,.12);
-  border: 1px solid rgba(34,197,94,.25);
-  padding: 14px;
-  border-radius: 14px;
-  margin-top: 10px;
-  font-weight: 800;
-}
-
-.playersTextarea {
-  min-height: 320px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  line-height: 1.7;
-  white-space: pre;
-}
-
-.landingFeatures,
-.plansGrid {
-  max-width: 1180px;
-  margin: 70px auto 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
-}
-
-.landingFeatures div,
-.planCard {
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 22px;
-  padding: 24px;
-}
-
-.landingPlans {
-  max-width: 1180px;
-  margin: 80px auto;
-}
-
-.landingPlans h2 {
-  font-size: 38px;
-}
-
-.planCard strong {
-  display: block;
-  font-size: 24px;
-  color: #86efac;
-  margin-bottom: 10px;
-}
-
-.planCard.featured {
-  border-color: #22c55e;
-  transform: scale(1.03);
-}
-
-@media (max-width: 900px) {
-  .landingHero,
-  .landingFeatures,
-  .plansGrid,
-  .billingPlansGrid,
-  .settingsGrid,
-  .publicShowcase,
-  .publicBroadcastGrid,
-  .publicNoVideoGrid,
-  .publicMatchColumns {
-    grid-template-columns: 1fr;
+  function loadMyTournaments() {
+    fetch(`${API}/me/tournaments`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setTournaments(Array.isArray(data) ? data : []))
   }
 
-  .landingHero h1 {
-    font-size: 40px;
+  useEffect(() => {
+  if (!isLoggedIn()) {
+    goHome()
+    return
   }
 
-  .landingHeader {
-    flex-direction: column;
-    gap: 18px;
-  }
-}
+  loadMyTournaments()
+}, [])
 
-.proBracket {
-  display: flex;
-  gap: 34px;
-  overflow-x: auto;
-  padding: 24px 0;
-  align-items: flex-start;
-}
-
-.matchBoard {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(280px, 1fr));
-  gap: 22px;
-  align-items: start;
-}
-
-.matchColumn {
-  min-height: 420px;
-  background: rgba(15, 23, 42, .7);
-  border: 1px solid #1e293b;
-  border-radius: 18px;
-  padding: 18px;
-}
-
-.matchColumn h2 {
-  margin: 0 0 16px;
-  color: #bfdbfe;
-  text-transform: uppercase;
-  font-size: 15px;
-  letter-spacing: .04em;
-}
-
-.matchColumn.pending h2 {
-  color: #93c5fd;
-}
-
-.matchColumn.playing h2 {
-  color: #86efac;
-}
-
-.matchColumn.finished h2 {
-  color: #facc15;
-}
-
-.emptyColumn {
-  color: #64748b;
-  margin: 0;
-}
-
-.proRound {
-  min-width: 300px;
-  position: relative;
-}
-
-.proRound h2 {
-  text-align: center;
-  color: #bfdbfe;
-  margin-bottom: 22px;
-}
-
-.roundMatches {
-  display: grid;
-  gap: 18px;
-}
-
-.proMatch {
-  position: relative;
-  background: linear-gradient(180deg, #0f172a, #020617);
-  border: 1px solid #334155;
-  border-radius: 22px;
-  padding: 16px;
-  box-shadow: 0 20px 45px rgba(0,0,0,.35);
-  animation: fadeUp .35s ease both;
-}
-
-.proMatch::after {
-  display: none;
-}
-
-.proRound:last-child .proMatch::after {
-  display: none;
-}
-
-.matchMeta {
-  display: flex;
-  justify-content: space-between;
-  color: #93c5fd;
-  font-size: 13px;
-  margin-bottom: 10px;
-}
-
-.matchStatus {
-  text-align: center;
-  font-weight: 900;
-  color: #cbd5e1;
-  margin-bottom: 12px;
-}
-
-.proMatch.playing {
-  border-color: #22c55e;
-  box-shadow: 0 0 35px rgba(34,197,94,.25);
-}
-
-.proMatch.playing .matchStatus {
-  color: #86efac;
-  animation: pulseLive 1.4s infinite;
-}
-
-.proMatch.finished {
-  opacity: .9;
-  border-color: rgba(250, 204, 21, .45);
-}
-
-.proPlayer {
-  background: #020617;
-  border: 1px solid #1e293b;
-  border-radius: 14px;
-  padding: 12px;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 900;
-}
-
-.proPlayer.winner {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  color: white;
-  box-shadow: 0 12px 30px rgba(34,197,94,.28);
-}
-
-.proPlayer button {
-  padding: 6px 9px;
-  font-size: 12px;
-}
-
-.startButton {
-  width: 100%;
-  margin-top: 4px;
-}
-
-@media (max-width: 1180px) {
-  .matchBoard {
-    grid-template-columns: 1fr;
-  }
-}
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulseLive {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .45;
-  }
-}
-
-.tvMode {
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(34,197,94,.22), transparent 34%),
-    radial-gradient(circle at bottom right, rgba(37,99,235,.18), transparent 30%),
-    #020617;
-  color: white;
-  padding: 42px;
-  overflow: hidden;
-}
-
-.tvHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.tvBadge {
-  display: inline-block;
-  background: rgba(34,197,94,.14);
-  border: 1px solid rgba(34,197,94,.45);
-  color: #86efac;
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-weight: 900;
-}
-
-.tvHeader h1 {
-  font-size: 62px;
-  margin: 18px 0 0;
-  letter-spacing: -2px;
-}
-
-.tvLive {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(239,68,68,.18);
-  border: 1px solid rgba(239,68,68,.5);
-  color: #fecaca;
-  padding: 14px 20px;
-  border-radius: 999px;
-  font-weight: 900;
-}
-
-.tvLive span {
-  width: 12px;
-  height: 12px;
-  background: #ef4444;
-  border-radius: 999px;
-  animation: pulseLive 1.1s infinite;
-}
-
-.tvChampion {
-  margin: 28px 0;
-  padding: 24px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #f59e0b, #facc15);
-  color: #111827;
-  font-size: 34px;
-  font-weight: 1000;
-  text-align: center;
-}
-
-.tvCelebration {
-  position: relative;
-  min-height: 68vh;
-  margin-top: 26px;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 34px;
-  border: 1px solid rgba(250, 204, 21, .38);
-  background:
-    radial-gradient(circle at 50% 18%, rgba(250, 204, 21, .22), transparent 26%),
-    radial-gradient(circle at 20% 30%, rgba(34, 197, 94, .18), transparent 22%),
-    radial-gradient(circle at 80% 34%, rgba(37, 99, 235, .22), transparent 24%),
-    rgba(15, 23, 42, .86);
-  text-align: center;
-}
-
-.tvCelebration p {
-  margin: 0;
-  color: #fde68a;
-  font-size: 30px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.tvCelebration h2 {
-  margin: 12px 0 0;
-  font-size: clamp(64px, 9vw, 138px);
-  color: white;
-  text-shadow: 0 0 42px rgba(250, 204, 21, .55);
-}
-
-.championTrophy {
-  font-size: clamp(90px, 12vw, 180px);
-  animation: trophyPop 1.3s ease-in-out infinite alternate;
-}
-
-.confettiLayer,
-.fireworksLayer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.confettiLayer span {
-  position: absolute;
-  top: -30px;
-  left: calc((var(--i) * 4.17%) - 2%);
-  width: 12px;
-  height: 22px;
-  border-radius: 3px;
-  background: hsl(calc(var(--i) * 35), 90%, 58%);
-  animation: confettiFall 3.8s linear infinite;
-  animation-delay: calc(var(--i) * -0.16s);
-}
-
-.fireworksLayer span {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #facc15;
-  box-shadow:
-    0 -48px #facc15,
-    34px -34px #60a5fa,
-    48px 0 #22c55e,
-    34px 34px #f472b6,
-    0 48px #fb923c,
-    -34px 34px #a78bfa,
-    -48px 0 #38bdf8,
-    -34px -34px #fde68a;
-  animation: fireworkBurst 1.7s ease-out infinite;
-}
-
-.fireworksLayer span:nth-child(1) {
-  left: 18%;
-  top: 28%;
-}
-
-.fireworksLayer span:nth-child(2) {
-  right: 18%;
-  top: 26%;
-  animation-delay: .55s;
-}
-
-.fireworksLayer span:nth-child(3) {
-  left: 50%;
-  bottom: 22%;
-  animation-delay: 1.05s;
-}
-
-@keyframes trophyPop {
-  from {
-    transform: scale(.96) rotate(-2deg);
-  }
-  to {
-    transform: scale(1.05) rotate(2deg);
-  }
-}
-
-@keyframes confettiFall {
-  0% {
-    transform: translateY(-20px) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(78vh) rotate(540deg);
-    opacity: .8;
-  }
-}
-
-@keyframes fireworkBurst {
-  0% {
-    transform: scale(.12);
-    opacity: 0;
-  }
-  35% {
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
-}
-
-.tvFeatured {
-  margin-top: 28px;
-  background: rgba(15,23,42,.88);
-  border: 1px solid rgba(34,197,94,.35);
-  border-radius: 32px;
-  padding: 34px;
-  text-align: center;
-  box-shadow: 0 30px 90px rgba(0,0,0,.35);
-}
-
-.tvFeatured h2 {
-  color: #86efac;
-  margin: 0 0 20px;
-  font-size: 28px;
-}
-
-.tvVersus {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 28px;
-}
-
-.tvVersus strong {
-  font-size: 54px;
-}
-
-.tvVersus span {
-  background: #2563eb;
-  padding: 14px 18px;
-  border-radius: 999px;
-  font-size: 24px;
-  font-weight: 1000;
-}
-
-.tvFeatured p {
-  font-size: 28px;
-  color: #cbd5e1;
-}
-
-.tvGrid {
-  margin-top: 32px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.tvPanel {
-  background: rgba(15,23,42,.82);
-  border: 1px solid #334155;
-  border-radius: 26px;
-  padding: 22px;
-  min-height: 260px;
-}
-
-.tvPanel h3 {
-  margin-top: 0;
-  color: #bfdbfe;
-  font-size: 24px;
-}
-
-.tvRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #020617;
-  border: 1px solid #1e293b;
-  border-radius: 16px;
-  padding: 14px;
-  margin-bottom: 10px;
-  font-weight: 800;
-}
-
-.tvRow.live {
-  border-color: #22c55e;
-  box-shadow: 0 0 24px rgba(34,197,94,.18);
-}
-
-@media (max-width: 1000px) {
-  .tvGrid {
-    grid-template-columns: 1fr;
+    if (!user) {
+    return <div className="app">Carregando dashboard...</div>
   }
 
-  .tvVersus {
-    grid-template-columns: 1fr;
+  return (
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">🎱 ProMaster</div>
+
+        <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        {isMasterPlan && (
+          <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
+        )}
+        <button onClick={logout}>Sair</button>
+      </aside>
+
+      <main className="saasMain">
+        <header className="hero">
+	  <div className="profileMenu">
+  <button onClick={() => navigate('/app/perfil')}>
+    👤 {user?.name || 'Perfil'}
+  </button>
+</div>
+          <div className="badge">🎱 ProMaster Arena</div>
+
+          {user?.organization?.logoUrl && (
+            <img src={user.organization.logoUrl} className="logo" />
+          )}
+
+          <h1>Painel da Arena</h1>
+          <p>{user?.organization?.name}</p>
+
+          <div className="planSummary">
+            <div>
+              <span>Plano atual</span>
+              <strong>{plan.toUpperCase()}</strong>
+            </div>
+
+            <div>
+              <span>Início</span>
+              <strong>{new Date(user?.organization?.createdAt).toLocaleDateString()}</strong>
+            </div>
+
+            <div>
+              <span>Vencimento</span>
+              <strong>
+                {planExpiresAt
+                  ? new Date(planExpiresAt).toLocaleDateString()
+                  : trialEndsAt
+                    ? new Date(trialEndsAt).toLocaleDateString()
+                    : 'Sem vencimento'}
+              </strong>
+            </div>
+
+          </div>
+
+          <button className="primaryButton" onClick={() => navigate('/criar-torneio')}>
+            + Criar Torneio
+          </button>
+        </header>
+
+        <div className="panel">
+          <h2>Meus Torneios</h2>
+
+          {tournaments.length === 0 && <p>Nenhum torneio encontrado.</p>}
+
+          {tournaments.map(t => {
+            const publicUrl = `https://www.promasterarena.com.br/public/${t.publicSlug}`
+
+            return (
+              <div key={t.id} className="tournamentCard">
+                <div className="tournamentHeader">
+                  <div className="tournamentTitleBlock">
+                    <strong>{t.name}</strong>
+                    <span>{t.location ? `📍 ${t.location}` : 'Local não informado'}</span>
+                  </div>
+                  <span className={`statusBadge ${t.status}`}>{t.status}</span>
+                </div>
+
+                <div className="tournamentActions">
+                  <button onClick={() => navigate(`/tournament/${t.id}`)}>
+                    Painel
+                  </button>
+
+                  <button onClick={() => setDetailsTournament(t)}>
+                    Detalhes
+                  </button>
+
+                  <button onClick={() => window.open(`/telao/${t.id}`, '_blank')}>
+                    Telão
+                  </button>
+
+                    <button onClick={() => navigate(`/tournament/${t.id}/settings`)}>
+                      Editar
+                  </button>
+
+                  {t.publicSlug && (
+                    <>
+                      <button onClick={() => navigator.clipboard.writeText(publicUrl)}>
+                        Copiar link
+                      </button>
+
+                      <button onClick={() => window.open(publicUrl, '_blank')}>
+                        Público
+                      </button>
+
+                      <button onClick={() => setQrUrl(publicUrl)}>
+                        QR Code
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {qrUrl && (
+          <div className="qrModal" onClick={() => setQrUrl(null)}>
+            <div className="qrContent" onClick={e => e.stopPropagation()}>
+              <h3>QR Code do Torneio</h3>
+              <QRCodeCanvas value={qrUrl} size={220} />
+              <p>{qrUrl}</p>
+              <button onClick={() => setQrUrl(null)}>Fechar</button>
+            </div>
+          </div>
+        )}
+
+        {detailsTournament && (
+          <div className="qrModal" onClick={() => setDetailsTournament(null)}>
+            <div className="detailsContent" onClick={e => e.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Detalhes do torneio</span>
+                  <h3>{detailsTournament.name}</h3>
+                </div>
+                <button onClick={() => setDetailsTournament(null)}>Fechar</button>
+              </div>
+
+              <div className="detailsList">
+                <div>
+                  <span>Status</span>
+                  <strong>{detailsTournament.status}</strong>
+                </div>
+                <div>
+                  <span>Jogadores</span>
+                  <strong>{detailsTournament.playerCount}</strong>
+                </div>
+                <div>
+                  <span>Data</span>
+                  <strong>{detailsTournament.eventDate ? new Date(detailsTournament.eventDate).toLocaleDateString() : '-'}</strong>
+                </div>
+                <div>
+                  <span>Horário</span>
+                  <strong>{detailsTournament.eventTime || '-'}</strong>
+                </div>
+                <div>
+                  <span>Premiação</span>
+                  <strong>{detailsTournament.prize || '-'}</strong>
+                </div>
+                <div>
+                  <span>Transmissão</span>
+                  <strong>{detailsTournament.youtubeUrl ? 'YouTube configurado' : 'Não configurada'}</strong>
+                </div>
+                {detailsTournament.youtubeUrl && (
+                  <div>
+                    <span>Link YouTube</span>
+                    <a href={detailsTournament.youtubeUrl} target="_blank" rel="noreferrer">
+                      Abrir transmissão
+                    </a>
+                  </div>
+                )}
+                {detailsTournament.publicSlug && (
+                  <div>
+                    <span>Página pública</span>
+                    <a href={`https://www.promasterarena.com.br/public/${detailsTournament.publicSlug}`} target="_blank" rel="noreferrer">
+                      Abrir página
+                    </a>
+                  </div>
+                )}
+                <div className="detailsRules">
+                  <span>Regras</span>
+                  <strong>{detailsTournament.rules || '-'}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}
+
+function Upgrade() {
+  const navigate = useNavigate()
+  const [pixData, setPixData] = useState<any>(null)
+  const [pixLoading, setPixLoading] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [payments, setPayments] = useState<any[]>([])
+
+  const plan = user?.organization?.plan || 'free'
+  const trialEndsAt = user?.organization?.trialEndsAt
+  const planExpiresAt = user?.organization?.planExpiresAt
+
+  function createPix(plan: string) {
+    setPixLoading(true)
+
+    fetch(`${API}/billing/create-pix`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ plan }),
+    })
+      .then(res => res.json())
+      .then(data => setPixData(data))
+      .finally(() => setPixLoading(false))
   }
 
-  .tvHeader h1 {
-    font-size: 42px;
+  useEffect(() => {
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setUser(data.user))
+
+    fetch(`${API}/me/payments`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setPayments(Array.isArray(data) ? data : []))
+  }, [])
+
+  useEffect(() => {
+    if (!pixData?.paymentId) return
+
+    const interval = setInterval(() => {
+      fetch(`${API}/billing/payment/${pixData.paymentId}/status`, {
+        headers: authHeaders(),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'approved') {
+            alert('Pagamento aprovado! Plano ativado.')
+            window.location.href = '/upgrade'
+          }
+        })
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [pixData?.paymentId])
+
+  return (
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">🎱 ProMaster</div>
+        <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
+      </aside>
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">💳 ProMaster Arena</div>
+          <h1>Planos e pagamentos</h1>
+          <p>Consulte seu plano, vencimento, alterações e histórico financeiro.</p>
+        </header>
+
+      <div className="panel">
+        <h2>Plano atual</h2>
+
+        <div className="planSummary planSummaryWide">
+          <div>
+            <span>Plano</span>
+            <strong>{plan.toUpperCase()}</strong>
+          </div>
+
+          <div>
+            <span>Início</span>
+            <strong>{user?.organization?.createdAt ? new Date(user.organization.createdAt).toLocaleDateString() : '-'}</strong>
+          </div>
+
+          <div>
+            <span>Vencimento</span>
+            <strong>
+              {planExpiresAt
+                ? new Date(planExpiresAt).toLocaleDateString()
+                : trialEndsAt
+                  ? new Date(trialEndsAt).toLocaleDateString()
+                  : 'Sem vencimento'}
+            </strong>
+          </div>
+
+          <div className="planActions">
+            <button onClick={() => window.scrollTo({ top: 420, behavior: 'smooth' })}>Upgrade</button>
+            <button onClick={() => alert('Downgrade em implantação. Entre em contato com o suporte.')}>Downgrade</button>
+            <button onClick={() => alert('Cancelamento em implantação. Entre em contato com o suporte.')}>Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="billingPlansGrid">
+        <div className="panel billingPlanCard">
+          <h2>PRO</h2>
+          <p>R$ 29,90/mês</p>
+          <p>Torneios ilimitados até 64 jogadores.</p>
+          <button className="primaryButton" onClick={() => createPix('pro')}>
+            Gerar Pix PRO
+          </button>
+        </div>
+
+        <div className="panel billingPlanCard">
+          <h2>MASTER</h2>
+          <p>R$ 59,90/mês</p>
+          <p>Até 128 jogadores ou 32 times.</p>
+          <button className="upgradeButton" onClick={() => createPix('master')}>
+            Gerar Pix MASTER
+          </button>
+        </div>
+
+        <div className="panel billingPlanCard">
+          <h2>Avulso</h2>
+          <p>R$ 9,90 por torneio</p>
+          <p>Ideal para eventos únicos.</p>
+          <button onClick={() => createPix('avulso')}>
+            Gerar Pix Avulso
+          </button>
+        </div>
+      </div>
+
+      {pixLoading && <p>Gerando Pix...</p>}
+
+      {pixData?.qrCodeBase64 && (
+        <div className="panel" style={{ maxWidth: 520, margin: '30px auto' }}>
+          <h2>Pix gerado</h2>
+          <p>Status: aguardando pagamento...</p>
+
+          <img
+            src={`data:image/png;base64,${pixData.qrCodeBase64}`}
+            style={{ width: 260, maxWidth: '100%', background: 'white', padding: 12 }}
+          />
+
+          <textarea
+            readOnly
+            value={pixData.qrCode}
+            style={{ width: '100%', height: 120, marginTop: 16 }}
+          />
+
+          <button className="primaryButton" onClick={() => navigator.clipboard.writeText(pixData.qrCode)}>
+            Copiar Pix
+          </button>
+
+          {pixData.ticketUrl && (
+            <button onClick={() => window.open(pixData.ticketUrl, '_blank')}>
+              Abrir pagamento
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="panel" style={{ marginTop: 30 }}>
+        <h2>Histórico de pagamentos</h2>
+
+        {payments.length === 0 && <p>Nenhum pagamento registrado.</p>}
+
+        {payments.map(payment => (
+          <div key={payment.id} className="paymentHistoryRow">
+            <div>
+              <strong>{payment.plan?.toUpperCase()}</strong>
+              <span>{new Date(payment.createdAt).toLocaleDateString()}</span>
+            </div>
+            <div>
+              <strong>R$ {Number(payment.amount).toFixed(2).replace('.', ',')}</strong>
+              <span>{payment.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      </main>
+    </div>
+  )
+}
+
+function TournamentSettings() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [playersText, setPlayersText] = useState('')
+  const [form, setForm] = useState<any>({
+    name: '',
+    location: '',
+    eventDate: '',
+    eventTime: '',
+    prize: '',
+    rules: '',
+    youtubeUrl: '',
+  })
+
+  useEffect(() => {
+    fetch(`${API}/tournaments/${id}`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        setForm({
+          name: data.name || '',
+          location: data.location || '',
+          eventDate: data.eventDate ? data.eventDate.slice(0, 10) : '',
+          eventTime: data.eventTime || '',
+          prize: data.prize || '',
+          rules: data.rules || '',
+          youtubeUrl: data.youtubeUrl || '',
+        })
+        setPlayersText(Array.isArray(data.players)
+          ? data.players.map((player: any) => player.name).join('\n')
+          : '')
+      })
+  }, [id])
+
+  function updateField(field: string, value: string) {
+    setForm((current: any) => ({ ...current, [field]: value }))
   }
 
-  .tvVersus strong {
-    font-size: 36px;
+  function saveSettings() {
+    const players = playersText
+      .split('\n')
+      .map(player => player.trim())
+      .filter(Boolean)
+
+    fetch(`${API}/tournaments/${id}/settings`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ ...form, players }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        alert('Configurações salvas.')
+        navigate('/app')
+      })
   }
+
+  return (
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">🎱 ProMaster</div>
+        <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
+      </aside>
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">✏️ Editar torneio</div>
+          <h1>Editar torneio</h1>
+          <p>Atualize dados públicos, jogadores, regras, premiação e transmissão ao vivo.</p>
+        </header>
+
+        <div className="panel settingsPanel">
+          <label>Nome do torneio</label>
+          <input value={form.name} onChange={e => updateField('name', e.target.value)} />
+
+          <label>Local</label>
+          <input value={form.location} onChange={e => updateField('location', e.target.value)} />
+
+          <div className="settingsGrid">
+            <div>
+              <label>Data</label>
+              <input type="date" value={form.eventDate} onChange={e => updateField('eventDate', e.target.value)} />
+            </div>
+
+            <div>
+              <label>Horário</label>
+              <input type="time" value={form.eventTime} onChange={e => updateField('eventTime', e.target.value)} />
+            </div>
+          </div>
+
+          <label>Premiação</label>
+          <input value={form.prize} onChange={e => updateField('prize', e.target.value)} />
+
+          <label>Link da transmissão YouTube</label>
+          <input
+            value={form.youtubeUrl}
+            onChange={e => updateField('youtubeUrl', e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=..."
+          />
+
+          <label>Regras</label>
+          <textarea value={form.rules} onChange={e => updateField('rules', e.target.value)} />
+
+          <label>Jogadores</label>
+          <textarea
+            className="playersTextarea"
+            value={playersText}
+            onChange={e => setPlayersText(e.target.value)}
+            spellCheck={false}
+            placeholder="Um jogador por linha"
+          />
+          <p className="helperText">
+            Para manter a chave segura, edite os nomes mantendo a mesma quantidade de jogadores.
+          </p>
+
+          <button className="primaryButton" onClick={saveSettings}>Salvar edição</button>
+        </div>
+      </main>
+    </div>
+  )
 }
 
-.proPlayer.winner {
-  position: relative;
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  color: white;
-  box-shadow: 0 0 28px rgba(34,197,94,.45);
-  animation: winnerPop .45s ease both;
-}
+function Financeiro() {
+  const [finance, setFinance] = useState<any>(null)
+  const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([])
 
-.proPlayer.winner::after {
-  content: "AVANÇOU";
-  position: absolute;
-  right: 10px;
-  top: -12px;
-  background: #facc15;
-  color: #111827;
-  font-size: 10px;
-  font-weight: 1000;
-  padding: 4px 8px;
-  border-radius: 999px;
-  animation: slideBadge .5s ease both;
-}
-
-.proMatch.finished {
-  border-color: rgba(34,197,94,.55);
-}
-
-.proMatch.finished::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: 22px;
-  background: linear-gradient(90deg, transparent, rgba(34,197,94,.45), transparent);
-  animation: sweepLine 1.2s ease forwards;
-  pointer-events: none;
-}
-
-@keyframes winnerPop {
-  from {
-    transform: scale(.96);
-    opacity: .7;
+  function loadFinance() {
+    fetch(`${API}/admin/finance/summary`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setFinance(data))
   }
-  to {
-    transform: scale(1);
-    opacity: 1;
+
+  function loadMonthlyRevenue() {
+    fetch(`${API}/admin/finance/monthly`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setMonthlyRevenue(Array.isArray(data) ? data : []))
   }
-}
 
-@keyframes slideBadge {
-  from {
-    transform: translateX(16px);
-    opacity: 0;
+  useEffect(() => {
+  if (!isLoggedIn()) {
+    goHome()
+    return
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
+
+  fetch(`${API}/me`, { headers: authHeaders() })
+    .then(res => res.json())
+    .then(data => {
+      if (data.user?.role !== 'superadmin') {
+        goHome()
+        return
+      }
+
+      loadFinance()
+      loadMonthlyRevenue()
+    })
+}, [])
+
+  return (
+    <div className="app">
+      <header className="hero">
+        <div className="badge">💰 ProMaster Arena</div>
+        <h1>Painel Financeiro</h1>
+        <p>Resumo de cobranças Pix e faturamento</p>
+      </header>
+
+      <div className="financeGrid">
+        <div className="financeCard">
+          <span>Faturamento aprovado</span>
+          <strong>R$ {(finance?.totalRevenue || 0).toFixed(2)}</strong>
+        </div>
+
+        <div className="financeCard">
+          <span>Pendente</span>
+          <strong>R$ {(finance?.pendingRevenue || 0).toFixed(2)}</strong>
+        </div>
+
+        <div className="financeCard">
+          <span>Pagamentos aprovados</span>
+          <strong>{finance?.approvedCount || 0}</strong>
+        </div>
+
+        <div className="financeCard">
+          <span>Pagamentos pendentes</span>
+          <strong>{finance?.pendingCount || 0}</strong>
+        </div>
+      </div>
+
+      <div className="panel">
+        <h2>Faturamento mensal</h2>
+
+        <div style={{ width: '100%', height: 320 }}>
+          <ResponsiveContainer>
+            <LineChart data={monthlyRevenue}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="total" strokeWidth={3} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="panel">
+        <h2>Histórico de pagamentos</h2>
+
+        {(finance?.payments || []).map((p: any) => (
+          <div key={p.id} className="paymentRow">
+            <div>
+              <strong>{p.plan?.toUpperCase()}</strong>
+              <span>MP: {p.mercadoPagoId || '-'}</span>
+            </div>
+
+            <div>
+              <strong>R$ {Number(p.amount).toFixed(2)}</strong>
+              <span className={`statusBadge ${p.status}`}>{p.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Landing() {
+  return (
+    <div className="landing">
+      <header className="landingHeader">
+        <div className="landingLogo">🎱 ProMaster Arena</div>
+
+        <div className="landingActions">
+          <a href="/login">Entrar</a>
+          <a className="landingButton" href="/register">Começar grátis</a>
+        </div>
+      </header>
+
+      <section className="landingHero">
+        <div>
+          <span className="landingBadge">Sistema SaaS para torneios</span>
+
+          <h1>Organize torneios profissionais com chave, telão, ranking e Pix.</h1>
+
+          <p>
+            Plataforma para clubes, bares, arenas e organizadores criarem torneios
+            de sinuca e esportes com visual profissional, QR Code público e gestão online.
+          </p>
+
+          <div className="landingCtas">
+            <a className="landingButton" href="/register">Testar grátis por 7 dias</a>
+            <a className="landingSecondary" href="#planos">Ver planos</a>
+          </div>
+        </div>
+
+        <div className="landingPreview">
+          <h3>🏆 Torneio ao vivo</h3>
+          <div className="previewMatch">João <strong>VS</strong> Carlos</div>
+          <div className="previewCard">Ranking em tempo real</div>
+          <div className="previewCard">QR Code para público</div>
+          <div className="previewCard">Telão profissional</div>
+        </div>
+      </section>
+
+      <section className="landingFeatures">
+        <div>
+          <h2>Chave automática</h2>
+          <p>Crie torneios com jogadores reais e sorteio automático.</p>
+        </div>
+
+        <div>
+          <h2>Telão público</h2>
+          <p>Exiba partidas, status e ranking em TV ou projetor.</p>
+        </div>
+
+        <div>
+          <h2>Pix integrado</h2>
+          <p>Venda planos, torneios avulsos e acompanhe o financeiro.</p>
+        </div>
+      </section>
+
+      <section id="planos" className="landingPlans">
+        <h2>Planos</h2>
+
+        <div className="plansGrid">
+          <div className="planCard">
+            <h3>Free</h3>
+            <strong>7 dias grátis</strong>
+            <p>1 torneio até 16 jogadores.</p>
+          </div>
+
+          <div className="planCard featured">
+            <h3>Pro</h3>
+            <strong>R$ 29,90/mês</strong>
+            <p>Torneios ilimitados até 64 jogadores.</p>
+          </div>
+
+          <div className="planCard">
+            <h3>Master</h3>
+            <strong>R$ 59,90/mês</strong>
+            <p>Até 128 jogadores ou 32 times.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function PublicTournament() {
+  const { slug } = useParams()
+  const [data, setData] = useState<any>(null)
+
+  useEffect(() => {
+    fetch(`${API}/public/${slug}`)
+      .then(res => res.json())
+      .then(setData)
+  }, [slug])
+
+  if (!data?.tournament) {
+    return <div className="publicPage">Carregando torneio...</div>
   }
+
+  const { tournament, rounds } = data
+  const matches = (rounds || []).flatMap((round: any) =>
+    (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
+  )
+  const pending = matches.filter((match: any) => match.status === 'pending')
+  const playing = matches.filter((match: any) => match.status === 'playing')
+  const finished = matches.filter((match: any) => match.status === 'finished')
+  const finalRound = rounds?.[rounds.length - 1]
+  const champion = finalRound?.matches?.[0]?.winner
+  const embedUrl = youtubeEmbedUrl(tournament.youtubeUrl)
+
+  return (
+    <div className="publicPage">
+      <header className="publicHero">
+        <span>AO VIVO • ProMaster Arena</span>
+      </header>
+
+      <main>
+        {embedUrl ? (
+          <>
+            <section className="publicBroadcastGrid">
+              <div className="publicCard publicVideo publicVideoLarge">
+                <span className="publicCardLabel">Transmissão</span>
+                <iframe
+                  src={embedUrl}
+                  title="Transmissão ao vivo"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+
+              <aside className="publicSideStack">
+                <div className="publicCard publicTitleCard">
+                  <span className="publicCardLabel">Torneio</span>
+                  <h1>{tournament.name}</h1>
+                  {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
+                </div>
+
+                <div className="publicCard publicInfoCard">
+                  <span className="publicCardLabel">Informações</span>
+                  <div className="publicInfoList">
+                    <div><span>Status</span><strong>{tournament.status}</strong></div>
+                    <div><span>Local</span><strong>{tournament.location || '-'}</strong></div>
+                    <div><span>Data</span><strong>{tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong></div>
+                    <div><span>Horário</span><strong>{tournament.eventTime || '-'}</strong></div>
+                    <div><span>Premiação</span><strong>{tournament.prize || '-'}</strong></div>
+                    <div><span>Regras</span><strong>{tournament.rules || '-'}</strong></div>
+                  </div>
+                </div>
+              </aside>
+            </section>
+
+            <section className="publicMatchColumns">
+              <div className="publicCard publicMatchColumn next">
+                <span className="publicCardLabel">Agenda</span>
+                <h2>Próximos jogos</h2>
+                {pending.length === 0 && <p>Nenhum próximo jogo.</p>}
+                {pending.slice(0, 8).map((match: any) => (
+                  <div key={match.id} className="publicMatchCard">
+                    <strong>Jogo #{match.matchNumber || match.id}</strong>
+                    <span>{match.playerA} x {match.playerB}</span>
+                    <small>Mesa {match.table}</small>
+                  </div>
+                ))}
+              </div>
+
+              <div className="publicCard publicMatchColumn live">
+                <span className="publicCardLabel">Agora</span>
+                <h2>Em andamento</h2>
+                {playing.length === 0 && <p>Nenhum jogo em andamento.</p>}
+                {playing.map((match: any) => (
+                  <div key={match.id} className="publicMatchCard live">
+                    <strong>Jogo #{match.matchNumber || match.id}</strong>
+                    <span>{match.playerA} x {match.playerB}</span>
+                    <small>Mesa {match.table}</small>
+                  </div>
+                ))}
+              </div>
+
+              <div className="publicCard publicMatchColumn done">
+                <span className="publicCardLabel">Placar</span>
+                <h2>Resultados</h2>
+                {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
+                {finished.slice(-8).reverse().map((match: any) => (
+                  <div key={match.id} className="publicMatchCard done">
+                    <strong>Jogo #{match.matchNumber || match.id}</strong>
+                    <span>
+                      {match.winner === match.playerA ? `🏆 ${match.playerA}` : match.playerA}
+                      {' x '}
+                      {match.winner === match.playerB ? `🏆 ${match.playerB}` : match.playerB}
+                    </span>
+                    <small>Vencedor: {match.winner}</small>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        ) : (
+          <section className="publicNoVideoGrid">
+            <div className="publicCard publicInfoCard">
+              <span className="publicCardLabel">Torneio</span>
+              <h1>{tournament.name}</h1>
+              {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
+              <div className="publicInfoList">
+                <div><span>Status</span><strong>{tournament.status}</strong></div>
+                <div><span>Local</span><strong>{tournament.location || '-'}</strong></div>
+                <div><span>Data</span><strong>{tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong></div>
+                <div><span>Horário</span><strong>{tournament.eventTime || '-'}</strong></div>
+                <div><span>Premiação</span><strong>{tournament.prize || '-'}</strong></div>
+                <div><span>Regras</span><strong>{tournament.rules || '-'}</strong></div>
+              </div>
+            </div>
+
+          <div className="publicCard publicMatchColumn next">
+            <span className="publicCardLabel">Agenda</span>
+            <h2>Próximos jogos</h2>
+            {pending.length === 0 && <p>Nenhum próximo jogo.</p>}
+            {pending.slice(0, 8).map((match: any) => (
+              <div key={match.id} className="publicMatchCard">
+                <strong>Jogo #{match.matchNumber || match.id}</strong>
+                <span>{match.playerA} x {match.playerB}</span>
+                <small>Mesa {match.table}</small>
+              </div>
+            ))}
+          </div>
+
+          <div className="publicCard publicMatchColumn live">
+            <span className="publicCardLabel">Agora</span>
+            <h2>Em andamento</h2>
+            {playing.length === 0 && <p>Nenhum jogo em andamento.</p>}
+            {playing.map((match: any) => (
+              <div key={match.id} className="publicMatchCard live">
+                <strong>Jogo #{match.matchNumber || match.id}</strong>
+                <span>{match.playerA} x {match.playerB}</span>
+                <small>Mesa {match.table}</small>
+              </div>
+            ))}
+          </div>
+
+          <div className="publicCard publicMatchColumn done">
+            <span className="publicCardLabel">Placar</span>
+            <h2>Resultados</h2>
+            {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
+            {finished.slice(-8).reverse().map((match: any) => (
+              <div key={match.id} className="publicMatchCard done">
+                <strong>Jogo #{match.matchNumber || match.id}</strong>
+                <span>
+                  {match.winner === match.playerA ? `🏆 ${match.playerA}` : match.playerA}
+                  {' x '}
+                  {match.winner === match.playerB ? `🏆 ${match.playerB}` : match.playerB}
+                </span>
+                <small>Vencedor: {match.winner}</small>
+              </div>
+            ))}
+          </div>
+          </section>
+        )}
+      </main>
+    </div>
+  )
 }
 
-@keyframes sweepLine {
-  from {
-    opacity: 1;
-    transform: translateX(-40%);
+function CreateTournament({ user }: any) {
+  const navigate = useNavigate()
+
+  const [templates, setTemplates] = useState<any[]>([])
+  const [name, setName] = useState('Novo Torneio')
+  const [templateId, setTemplateId] = useState(1)
+  const [tableCount, setTableCount] = useState(4)
+
+  const [location, setLocation] = useState('')
+  const [eventDate, setEventDate] = useState('')
+  const [eventTime, setEventTime] = useState('')
+  const [prize, setPrize] = useState('')
+  const [rules, setRules] = useState('')
+  const [hasYoutube, setHasYoutube] = useState(false)
+  const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [playersText, setPlayersText] = useState('')
+
+  useEffect(() => {
+    fetch(`${API}/templates`)
+      .then(res => res.json())
+      .then(data => setTemplates(Array.isArray(data) ? data : []))
+  }, [])
+
+  function createTournament() {
+  const organizationId = user?.organizationId
+
+  if (user?.organization?.plan === 'free') {
+  alert('Seu plano permite apenas 1 torneio. Faça upgrade.')
+  navigate('/upgrade')
+  return
+}
+
+  if (!organizationId) {
+    alert('Usuário sem organização')
+    return
   }
-  to {
-    opacity: 0;
-    transform: translateX(40%);
+
+  if (!name) {
+    alert('Informe o nome do torneio')
+    return
   }
-}
 
-.advanceLine {
-  margin: 8px 0 12px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(34,197,94,.14);
-  border: 1px solid rgba(34,197,94,.35);
-  color: #86efac;
-  font-size: 12px;
-  font-weight: 900;
-  text-align: center;
-  animation: fadeUp .35s ease both;
-}
-
-.championLine {
-  color: #facc15;
-  border-color: rgba(250, 204, 21, .4);
-  background: rgba(250, 204, 21, .08);
-}
-
-.championBanner {
-  display: inline-flex;
-  align-items: center;
-  margin: 14px 0 4px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(250, 204, 21, .38);
-  background: rgba(250, 204, 21, .08);
-  color: #facc15;
-  font-weight: 900;
-}
-
-.proBracket {
-  display: flex;
-  align-items: stretch;
-  gap: 46px;
-  overflow-x: auto;
-  padding: 30px 20px 60px;
-}
-
-.proRound {
-  min-width: 280px;
-  display: flex;
-  flex-direction: column;
-}
-
-.proRound h2 {
-  text-align: left;
-  font-size: 16px;
-  color: #93c5fd;
-  margin-bottom: 18px;
-}
-
-.roundMatches {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  flex: 1;
-  gap: 24px;
-  min-height: 720px;
-}
-
-.proRound:nth-child(1) .roundMatches {
-  gap: 18px;
-}
-
-.proRound:nth-child(2) .roundMatches {
-  padding-top: 46px;
-  padding-bottom: 46px;
-}
-
-.proRound:nth-child(3) .roundMatches {
-  padding-top: 115px;
-  padding-bottom: 115px;
-}
-
-.proRound:nth-child(4) .roundMatches {
-  padding-top: 250px;
-  padding-bottom: 250px;
-}
-
-.proMatch {
-  min-height: 118px;
-  position: relative;
-  background: #020617;
-  border: 1px solid #64748b;
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow: none;
-}
-
-.proMatch::after {
-  content: "";
-  position: absolute;
-  right: -46px;
-  top: 50%;
-  width: 46px;
-  height: 2px;
-  background: #60a5fa;
-}
-
-.proRound:last-child .proMatch::after {
-  display: none;
-}
-
-.proMatch::before {
-  content: "";
-  position: absolute;
-  right: -46px;
-  top: 50%;
-  height: calc(100% + 28px);
-  width: 2px;
-  border-right: 2px solid #60a5fa;
-  transform: translateY(-50%);
-  opacity: .45;
-}
-
-.proRound:last-child .proMatch::before {
-  display: none;
-}
-
-.proPlayer {
-  border-radius: 4px;
-  padding: 8px 10px;
-  margin-bottom: 4px;
-}
-
-.matchMeta {
-  font-size: 11px;
-  margin-bottom: 6px;
-}
-
-.matchStatus {
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-
-.tournamentTopActions {
-  display: flex;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.proBracket {
-  display: flex;
-  gap: 52px;
-  overflow-x: auto;
-  padding: 32px 16px 70px;
-  align-items: stretch;
-}
-
-.proRound {
-  min-width: 290px;
-  display: flex;
-  flex-direction: column;
-}
-
-.proRound h2 {
-  font-size: 15px;
-  color: #93c5fd;
-  margin-bottom: 22px;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
-.roundMatches {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  flex: 1;
-  gap: 24px;
-  min-height: 760px;
-}
-
-.proRound:nth-child(1) .roundMatches {
-  gap: 18px;
-}
-
-.proRound:nth-child(2) .roundMatches {
-  padding-top: 58px;
-  padding-bottom: 58px;
-}
-
-.proRound:nth-child(3) .roundMatches {
-  padding-top: 140px;
-  padding-bottom: 140px;
-}
-
-.proRound:nth-child(4) .roundMatches {
-  padding-top: 300px;
-  padding-bottom: 300px;
-}
-
-.proMatch {
-  position: relative;
-  min-height: 124px;
-  background: #020617;
-  border: 1px solid #475569;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 16px 35px rgba(0,0,0,.3);
-  animation: fadeUp .25s ease both;
-}
-
-.proMatch::after {
-  content: "";
-  position: absolute;
-  right: -52px;
-  top: 50%;
-  width: 52px;
-  height: 2px;
-  background: #60a5fa;
-  opacity: .85;
-}
-
-.proRound:last-child .proMatch::after {
-  display: none;
-}
-
-.matchMeta {
-  display: flex;
-  justify-content: space-between;
-  color: #93c5fd;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-.matchStatus {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 900;
-  color: #cbd5e1;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-}
-
-.proMatch.playing {
-  border-color: #22c55e;
-  box-shadow: 0 0 35px rgba(34,197,94,.22);
-}
-
-.proMatch.playing .matchStatus {
-  color: #86efac;
-  animation: pulseLive 1.3s infinite;
-}
-
-.proMatch.finished {
-  border-color: rgba(34,197,94,.45);
-}
-
-.proPlayer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 9px 10px;
-  margin-bottom: 6px;
-  font-weight: 900;
-}
-
-.proPlayer.winner {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  color: white;
-  box-shadow: 0 0 24px rgba(34,197,94,.35);
-}
-
-.proPlayer button {
-  font-size: 11px;
-  padding: 5px 8px;
-}
-
-.startButton {
-  width: 100%;
-  margin-top: 8px;
-  background: #2563eb;
-}
-
-.advanceLine {
-  margin: 8px 0 10px;
-  padding: 7px 9px;
-  border-radius: 10px;
-  background: rgba(34,197,94,.13);
-  border: 1px solid rgba(34,197,94,.3);
-  color: #86efac;
-  font-size: 12px;
-  font-weight: 900;
-  text-align: center;
-}
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
+  if (!playersText.trim()) {
+    alert('Adicione jogadores')
+    return
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  const players = playersText
+    .split('\n')
+    .map(p => p.trim())
+    .filter(Boolean)
+
+  if (players.length < 2) {
+    alert('Mínimo 2 jogadores')
+    return
   }
+
+  // 🔥 AQUI FICA O FETCH
+  fetch(`${API}/organizations/${organizationId}/tournaments/create`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      name,
+      templateId,
+      tableCount,
+      location,
+      eventDate,
+      eventTime,
+      prize,
+      rules,
+      youtubeUrl: hasYoutube ? youtubeUrl : '',
+      players,
+    }),
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert(data.error)
+        return
+      }
+
+      // 🚀 REDIRECIONAMENTO PROFISSIONAL
+      navigate(`/tournament/${data.tournament.id}`)
+    })
 }
 
-@keyframes pulseLive {
-  0%, 100% {
-    opacity: 1;
+  return (
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">🎱 ProMaster</div>
+        <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
+      </aside>
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">🏆 Novo Torneio</div>
+          <h1>Criar Torneio</h1>
+          <p>Configure o evento e informe os participantes do torneio.</p>
+        </header>
+
+        <div className="createGrid">
+          <div className="panel">
+            <h2>Dados principais</h2>
+
+            <label>Nome do torneio</label>
+            <input value={name} onChange={e => setName(e.target.value)} />
+
+            <label>Modelo</label>
+            <select value={templateId} onChange={e => setTemplateId(Number(e.target.value))}>
+              {templates.map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+
+            <label>Número de mesas</label>
+            <input
+              type="number"
+              value={tableCount}
+              onChange={e => setTableCount(Number(e.target.value))}
+            />
+
+            <label>Local</label>
+            <input
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              placeholder="Ex: Bar do João, Mesa 1..."
+            />
+
+            <label>Data</label>
+            <input
+              type="date"
+              value={eventDate}
+              onChange={e => setEventDate(e.target.value)}
+            />
+
+            <label>Horário</label>
+            <input
+              type="time"
+              value={eventTime}
+              onChange={e => setEventTime(e.target.value)}
+            />
+
+            <label>Premiação</label>
+            <input
+              value={prize}
+              onChange={e => setPrize(e.target.value)}
+              placeholder="Ex: R$ 500 + troféu"
+            />
+
+            <label>Regras gerais</label>
+            <textarea
+              value={rules}
+              onChange={e => setRules(e.target.value)}
+              placeholder="Ex: Melhor de 3, atraso máximo 10 minutos..."
+            />
+
+            <label className="checkboxLine">
+              <input
+                type="checkbox"
+                checked={hasYoutube}
+                onChange={e => setHasYoutube(e.target.checked)}
+              />
+              Transmissão YouTube
+            </label>
+
+            {hasYoutube && (
+              <>
+                <label>Link da transmissão</label>
+                <input
+                  value={youtubeUrl}
+                  onChange={e => setYoutubeUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+              </>
+            )}
+          </div>
+
+          <div className="panel">
+            <h2>Jogadores</h2>
+
+            <p>Digite ou cole um jogador por linha. A ordem será embaralhada ao gerar a chave.</p>
+
+            <textarea
+              className="playersTextarea"
+              value={playersText}
+              onChange={e => setPlayersText(e.target.value)}
+              spellCheck={false}
+              placeholder={`João Silva\nCarlos "Cacá"\nMarcos de Santos\nPedro Bola 8`}
+            />
+
+            <p style={{ marginTop: 10, color: '#94a3b8' }}>
+               Jogadores: {playersText.split('\n').filter(p => p.trim()).length}
+          </p>
+
+           <div className="previewCard">
+  <h3>Resumo</h3>
+  <p><strong>{name}</strong></p>
+  <p>{playersText.split('\n').filter(p => p.trim()).length} jogadores</p>
+  {location && <p>📍 {location}</p>}
+  {eventDate && <p>📅 {eventDate}</p>}
+  {eventTime && <p>⏰ {eventTime}</p>}
+  {hasYoutube && youtubeUrl && <p>Transmissão YouTube configurada</p>}
+</div>
+
+            <button className="primaryButton" onClick={createTournament}>
+              Criar torneio e gerar chave
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+function TournamentBracket() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+
+  const [rounds, setRounds] = useState<any[]>([])
+  const [panelMode, setPanelMode] = useState<'board' | 'bracket'>('board')
+  const matches = rounds.flatMap(round =>
+    (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
+  )
+  const finalRound = rounds[rounds.length - 1]
+  const champion = finalRound?.matches?.[0]?.winner
+  const pendingMatches = matches.filter((match: any) => match.status === 'pending')
+  const playingMatches = matches.filter((match: any) => match.status === 'playing')
+  const finishedMatches = matches.filter((match: any) => match.status === 'finished')
+
+  function loadBracket() {
+    fetch(`${API}/tournaments/${id}/bracket`, {
+      headers: authHeaders(),
+    })
+      .then(res => res.json())
+      .then(data => setRounds(data.rounds || []))
   }
-  50% {
-    opacity: .45;
+
+  function startMatch(matchId: number) {
+    fetch(`${API}/matches/${matchId}/start`, {
+      method: 'POST',
+      headers: authHeaders(),
+    }).then(loadBracket)
   }
-}
 
-.tournamentTopActions {
-  display: flex;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.proBracket {
-  display: flex;
-  gap: 52px;
-  overflow-x: auto;
-  padding: 32px 16px 70px;
-  align-items: stretch;
-}
-
-.proRound {
-  min-width: 290px;
-  display: flex;
-  flex-direction: column;
-}
-
-.proRound h2 {
-  font-size: 15px;
-  color: #93c5fd;
-  margin-bottom: 22px;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
-.roundMatches {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  flex: 1;
-  gap: 24px;
-  min-height: 760px;
-}
-
-.proRound:nth-child(1) .roundMatches {
-  gap: 18px;
-}
-
-.proRound:nth-child(2) .roundMatches {
-  padding-top: 58px;
-  padding-bottom: 58px;
-}
-
-.proRound:nth-child(3) .roundMatches {
-  padding-top: 140px;
-  padding-bottom: 140px;
-}
-
-.proRound:nth-child(4) .roundMatches {
-  padding-top: 300px;
-  padding-bottom: 300px;
-}
-
-.proMatch {
-  position: relative;
-  min-height: 124px;
-  background: #020617;
-  border: 1px solid #475569;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 16px 35px rgba(0,0,0,.3);
-  animation: fadeUp .25s ease both;
-}
-
-.proMatch::after {
-  content: "";
-  position: absolute;
-  right: -52px;
-  top: 50%;
-  width: 52px;
-  height: 2px;
-  background: #60a5fa;
-  opacity: .85;
-}
-
-.proRound:last-child .proMatch::after {
-  display: none;
-}
-
-.matchMeta {
-  display: flex;
-  justify-content: space-between;
-  color: #93c5fd;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-.matchStatus {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 900;
-  color: #cbd5e1;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-}
-
-.proMatch.playing {
-  border-color: #22c55e;
-  box-shadow: 0 0 35px rgba(34,197,94,.22);
-}
-
-.proMatch.playing .matchStatus {
-  color: #86efac;
-  animation: pulseLive 1.3s infinite;
-}
-
-.proMatch.finished {
-  border-color: rgba(34,197,94,.45);
-}
-
-.proPlayer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 9px 10px;
-  margin-bottom: 6px;
-  font-weight: 900;
-}
-
-.proPlayer.winner {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  color: white;
-  box-shadow: 0 0 24px rgba(34,197,94,.35);
-}
-
-.proPlayer button {
-  font-size: 11px;
-  padding: 5px 8px;
-}
-
-.startButton {
-  width: 100%;
-  margin-top: 8px;
-  background: #2563eb;
-}
-
-.advanceLine {
-  margin: 8px 0 10px;
-  padding: 7px 9px;
-  border-radius: 10px;
-  background: rgba(34,197,94,.13);
-  border: 1px solid rgba(34,197,94,.3);
-  color: #86efac;
-  font-size: 12px;
-  font-weight: 900;
-  text-align: center;
-}
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
+  function finishMatch(matchId: number, winnerId: number) {
+    fetch(`${API}/matches/${matchId}/result`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ winnerId }),
+    }).then(loadBracket)
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  useEffect(() => {
+    loadBracket()
+
+    const interval = setInterval(loadBracket, 5000)
+    return () => clearInterval(interval)
+  }, [id])
+
+  function renderMatchCard(match: any) {
+    return (
+      <div
+        key={match.id}
+        className={`proMatch ${match.status} ${match.winner ? 'hasWinner' : ''}`}
+      >
+        <div className="matchMeta">
+          <span>Jogo #{match.matchNumber || match.id}</span>
+          <span>Mesa {match.table}</span>
+        </div>
+
+        <div className="matchStatus">
+          {match.status === 'playing'
+            ? 'JOGANDO'
+            : match.status === 'finished'
+              ? 'FINALIZADO'
+              : 'AGUARDANDO'}
+        </div>
+
+        <div className={match.winner === match.playerA ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerA}</span>
+          {match.status !== 'finished' && (
+            <button onClick={() => finishMatch(match.id, match.playerAId)}>
+              Venceu
+            </button>
+          )}
+        </div>
+
+        <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerB}</span>
+          {match.status !== 'finished' && (
+            <button onClick={() => finishMatch(match.id, match.playerBId)}>
+              Venceu
+            </button>
+          )}
+        </div>
+
+        {match.status === 'pending' && (
+          <button className="startButton" onClick={() => startMatch(match.id)}>
+            Iniciar jogo
+          </button>
+        )}
+
+        {match.winner && (
+          <div className={match.winner === champion ? 'advanceLine championLine' : 'advanceLine'}>
+            {match.winner === champion ? `🏆 Campeão: ${match.winner}` : `${match.winner} avançou`}
+          </div>
+        )}
+      </div>
+    )
   }
-}
 
-@keyframes pulseLive {
-  0%, 100% {
-    opacity: 1;
+  function renderBracketCard(match: any, isFinalRound = false) {
+    return (
+      <div key={match.id} className={`proMatch ${match.status} ${match.winner ? 'hasWinner' : ''}`}>
+        <div className="matchMeta">
+          <span>Jogo #{match.matchNumber || match.id}</span>
+          <span>Mesa {match.table}</span>
+        </div>
+
+        <div className={match.winner === match.playerA ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerA}</span>
+        </div>
+
+        <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerB}</span>
+        </div>
+
+        {match.winner && (
+          <div className={isFinalRound ? 'advanceLine championLine' : 'advanceLine'}>
+            {isFinalRound ? `🏆 Campeão: ${match.winner}` : `${match.winner} avançou`}
+          </div>
+        )}
+      </div>
+    )
   }
-  50% {
-    opacity: .45;
+
+  return (
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">🎱 ProMaster</div>
+        <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate('/app')}>Voltar</button>
+      </aside>
+
+      <main className="saasMain">
+       <header className="hero">
+  <div className="badge">🏆 Painel do Torneio</div>
+
+  <h1>Painel Torneio</h1>
+  <p>Controle os jogos por status: aguardando, jogando e finalizados.</p>
+
+  {champion && (
+    <div className="championBanner">
+      🏆 Campeão: {champion}
+    </div>
+  )}
+
+  <div className="tournamentTopActions">
+    <button onClick={() => window.open(`/telao/${id}`, '_blank')}>
+      Abrir Telão
+    </button>
+
+    <button onClick={() => setPanelMode(panelMode === 'board' ? 'bracket' : 'board')}>
+      {panelMode === 'board' ? 'Chaveamento' : 'Painel'}
+    </button>
+  </div>
+</header>
+
+        {panelMode === 'board' ? (
+          <div className="matchBoard">
+          <section className="matchColumn pending">
+            <h2>Aguardando</h2>
+            {pendingMatches.length === 0 && <p className="emptyColumn">Nenhum jogo aguardando.</p>}
+            <div className="roundMatches">
+              {pendingMatches.map(renderMatchCard)}
+            </div>
+          </section>
+
+          <section className="matchColumn playing">
+            <h2>Jogando</h2>
+            {playingMatches.length === 0 && <p className="emptyColumn">Nenhum jogo em andamento.</p>}
+            <div className="roundMatches">
+              {playingMatches.map(renderMatchCard)}
+            </div>
+          </section>
+
+          <section className="matchColumn finished">
+            <h2>Finalizados</h2>
+            {finishedMatches.length === 0 && <p className="emptyColumn">Nenhum jogo finalizado.</p>}
+            <div className="roundMatches">
+              {finishedMatches.map(renderMatchCard)}
+            </div>
+          </section>
+        </div>
+        ) : (
+          <div className="proBracket">
+            {rounds.map((round, roundIndex) => (
+              <div key={round.round} className="proRound">
+                <h2>
+                  {roundIndex === rounds.length - 1
+                    ? 'Final'
+                    : roundIndex === rounds.length - 2
+                      ? 'Semifinal'
+                      : `Rodada ${round.round}`}
+                </h2>
+
+                <div className="roundMatches">
+                  {round.matches.map((match: any) => renderBracketCard(match, roundIndex === rounds.length - 1))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}
+
+function TelaoTV() {
+  const { id } = useParams()
+  const [rounds, setRounds] = useState<any[]>([])
+  const [tournament, setTournament] = useState<any>(null)
+  const [view, setView] = useState(0)
+
+  const publicUrl = tournament?.publicSlug
+    ? `https://www.promasterarena.com.br/public/${tournament.publicSlug}`
+    : null
+  const matches = rounds.flatMap(r => r.matches || [])
+  const playing = matches.filter(m => m.status === 'playing')
+  const pending = matches.filter(m => m.status === 'pending')
+  const finished = matches.filter(m => m.status === 'finished')
+  const destaque = playing[0] || pending[0]
+
+  const finalRound = rounds[rounds.length - 1]
+  const champion = finalRound?.matches?.[0]?.winner
+
+  function loadBracket() {
+    fetch(`${API}/tournaments/${id}/bracket`)
+      .then(res => res.json())
+      .then(data => setRounds(data.rounds || []))
   }
-}
 
-.tvBracketView {
-  margin-top: 28px;
-}
+  useEffect(() => {
+    loadBracket()
 
-.tvBracketView h2 {
-  font-size: 36px;
-  margin-bottom: 22px;
-  color: #bfdbfe;
-}
+    fetch(`${API}/tournaments/${id}`)
+      .then(res => res.json())
+      .then(data => setTournament(data))
 
-.tvBracket {
-  display: flex;
-  gap: 42px;
-  overflow-x: auto;
-  padding-bottom: 24px;
-  align-items: flex-start;
-}
+    document.documentElement.requestFullscreen?.().catch(() => {})
 
-.tvBracketRound {
-  min-width: 260px;
-  padding-top: var(--tv-round-offset, 0);
-}
+    const updateInterval = setInterval(loadBracket, 4000)
 
-.tvBracketRound h3 {
-  color: #93c5fd;
-  text-transform: uppercase;
-  font-size: 15px;
-  margin-bottom: 14px;
-}
+    const rotateInterval = setInterval(() => {
+      setView(v => (v + 1) % (champion ? 3 : 2))
+    }, 15000)
 
-.tvBracketRoundMatches {
-  display: grid;
-  gap: var(--tv-match-gap, 18px);
-}
+    return () => {
+      clearInterval(updateInterval)
+      clearInterval(rotateInterval)
+    }
+  }, [id, champion])
 
-.tvBracketMatch {
-  position: relative;
-  background: #020617;
-  border: 1px solid #334155;
-  border-radius: 14px;
-  padding: 10px;
-  min-height: 132px;
-}
+  const bracketCardHeight = 132
+  const bracketBaseGap = 18
 
-.tvBracketRound:not(:last-child) .tvBracketMatch::after {
-  content: "";
-  position: absolute;
-  right: -42px;
-  top: 50%;
-  width: 42px;
-  height: 1px;
-  background: rgba(147, 197, 253, .45);
-}
+  function bracketRoundStyle(roundIndex: number) {
+    const scale = Math.pow(2, roundIndex)
+    const unit = bracketCardHeight + bracketBaseGap
 
-.tvBracketPlayer {
-  background: #0f172a;
-  border-radius: 8px;
-  padding: 9px;
-  margin-top: 6px;
-  font-weight: 900;
-}
-
-.tvBracketPlayer.winner {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-  color: white;
-}
-
-.registerPage {
-  min-height: 100vh;
-  background: radial-gradient(circle at top, rgba(34,197,94,.18), transparent 35%), #020617;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-}
-
-.registerCard {
-  width: 100%;
-  max-width: 540px;
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 28px;
-  padding: 32px;
-  color: white;
-}
-
-.registerCard h1 {
-  font-size: 42px;
-  margin-bottom: 8px;
-}
-
-.registerCard label {
-  display: block;
-  margin-top: 14px;
-  margin-bottom: 6px;
-  color: #cbd5e1;
-  font-weight: 800;
-}
-
-.registerCard input {
-  width: 100%;
-  padding: 13px;
-  border-radius: 12px;
-  border: 1px solid #334155;
-  background: #020617;
-  color: white;
-}
-
-.registerCard a {
-  display: block;
-  margin-top: 18px;
-  color: #93c5fd;
-}
-
-.clientCard {
-  background: #020617;
-  border: 1px solid #334155;
-  border-radius: 18px;
-  padding: 18px;
-  margin-bottom: 14px;
-  display: grid;
-  grid-template-columns: 1.2fr 1fr auto;
-  gap: 18px;
-  align-items: center;
-}
-
-.clientCard strong {
-  display: block;
-  font-size: 20px;
-  color: white;
-}
-
-.clientCard span {
-  display: block;
-  color: #94a3b8;
-  margin-top: 4px;
-}
-
-.clientMetrics {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.clientMetrics span {
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  padding: 8px 10px;
-  border-radius: 999px;
-  font-weight: 800;
-}
-
-.clientActions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.clientActions button {
-  padding: 8px 10px;
-}
-
-@media (max-width: 900px) {
-  .clientCard {
-    grid-template-columns: 1fr;
+    return {
+      '--tv-round-offset': `${roundIndex === 0 ? 0 : ((scale - 1) * unit) / 2}px`,
+      '--tv-match-gap': `${bracketBaseGap + (scale - 1) * unit}px`,
+    } as any
   }
+
+  return (
+    <div className="tvMode">
+      <div className="tvHeader">
+        <div>
+          <span className="tvBadge">🎱 ProMaster Arena</span>
+
+          {tournament?.organization?.logoUrl && (
+            <img src={tournament.organization.logoUrl} className="tvLogo" />
+          )}
+
+          <h1>{tournament?.name || 'Torneio'}</h1>
+
+          <p className="tvMeta">
+            {tournament?.location && `📍 ${tournament.location}`}
+            {tournament?.eventDate &&
+              ` • 📅 ${new Date(tournament.eventDate).toLocaleDateString()}`}
+            {tournament?.eventTime && ` • ⏰ ${tournament.eventTime}`}
+          </p>
+        </div>
+
+        <div className="tvRight">
+          <div className="tvLive">
+            <span></span>
+            AO VIVO
+          </div>
+
+          {publicUrl && (
+            <div className="tvQr">
+              <QRCodeCanvas value={publicUrl} size={120} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {champion && (
+        <div className="tvChampion">
+          🏆 CAMPEÃO: {champion}
+        </div>
+      )}
+
+      {view === 0 && (
+        <>
+          <section className="tvFeatured">
+            {destaque ? (
+              <>
+                <h2>
+                  {destaque.status === 'playing'
+                    ? 'JOGO EM ANDAMENTO'
+                    : 'PRÓXIMO JOGO'}
+                </h2>
+
+                <div className="tvVersus">
+                  <strong>{destaque.playerA}</strong>
+                  <span>VS</span>
+                  <strong>{destaque.playerB}</strong>
+                </div>
+
+                <p>Mesa {destaque.table}</p>
+              </>
+            ) : (
+              <h2>Torneio finalizado</h2>
+            )}
+          </section>
+
+          <div className="tvGrid">
+            <div className="tvPanel">
+              <h3>Jogando agora</h3>
+              {playing.length === 0 && <p>Nenhum jogo em andamento</p>}
+              {playing.map(m => (
+                <div key={m.id} className="tvRow live">
+                  <span>{m.playerA} x {m.playerB}</span>
+                  <strong>Mesa {m.table}</strong>
+                </div>
+              ))}
+            </div>
+
+            <div className="tvPanel">
+              <h3>Próximos jogos</h3>
+              {pending.slice(0, 8).map(m => (
+                <div key={m.id} className="tvRow">
+                  <span>{m.playerA} x {m.playerB}</span>
+                  <strong>Mesa {m.table}</strong>
+                </div>
+              ))}
+            </div>
+
+            <div className="tvPanel">
+              <h3>Finalizados</h3>
+              {finished.slice(-8).reverse().map(m => (
+                <div key={m.id} className="tvRow">
+                  <span>
+                    {m.winner === m.playerA ? `🏆 ${m.playerA}` : m.playerA}
+                    {' x '}
+                    {m.winner === m.playerB ? `🏆 ${m.playerB}` : m.playerB}
+                  </span>
+                  <strong>Finalizado</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {view === 1 && (
+        <div className="tvBracketView">
+          <h2>Chave do Torneio</h2>
+
+          <div className="tvBracket">
+            {rounds.map((round, roundIndex) => (
+              <div
+                key={round.round}
+                className="tvBracketRound"
+                style={bracketRoundStyle(roundIndex)}
+              >
+                <h3>
+                  {roundIndex === rounds.length - 1
+                    ? 'Final'
+                    : roundIndex === rounds.length - 2
+                      ? 'Semifinal'
+                      : `Rodada ${round.round}`}
+                </h3>
+
+                <div className="tvBracketRoundMatches">
+                  {round.matches.map((match: any) => (
+                    <div key={match.id} className={`tvBracketMatch ${match.status}`}>
+                      <div className="matchMeta">
+                        <span>Jogo #{match.matchNumber || match.id}</span>
+                        <span>Mesa {match.table}</span>
+                      </div>
+
+                      <div className={match.winner === match.playerA ? 'tvBracketPlayer winner' : 'tvBracketPlayer'}>
+                        {match.playerA}
+                      </div>
+
+                      <div className={match.winner === match.playerB ? 'tvBracketPlayer winner' : 'tvBracketPlayer'}>
+                        {match.playerB}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {view === 2 && champion && (
+        <div className="tvCelebration">
+          <div className="confettiLayer">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <span key={i} style={{ '--i': i } as any}></span>
+            ))}
+          </div>
+
+          <div className="fireworksLayer">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div className="championTrophy">🏆</div>
+          <p>Campeão do torneio</p>
+          <h2>{champion}</h2>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AdminClientes() {
+  const navigate = useNavigate()
+  const [orgs, setOrgs] = useState<any[]>([])
+
+  function loadClientes() {
+    fetch(`${API}/admin/organizations`, {
+      headers: authHeaders(),
+    })
+      .then(res => res.json())
+      .then(data => setOrgs(Array.isArray(data) ? data : []))
+  }
+
+  function changePlan(id: number, plan: string) {
+    fetch(`${API}/admin/organization/${id}/plan`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ plan }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        loadClientes()
+      })
+  }
+
+ useEffect(() => {
+  if (!isLoggedIn()) {
+    goHome()
+    return
+  }
+
+  fetch(`${API}/me`, { headers: authHeaders() })
+    .then(res => res.json())
+    .then(data => {
+      if (data.user?.role !== 'superadmin') {
+        goHome()
+        return
+      }
+
+      loadClientes()
+    })
+}, [])
+
+  return (
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">👑 Admin Master</div>
+
+        <button onClick={() => navigate('/admin')}>Dashboard</button>
+        <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
+        <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
+        <button onClick={() => window.location.href = '/login'}>Sair</button>
+      </aside>
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">👑 Superadmin</div>
+          <h1>Clientes / Arenas</h1>
+          <p>Gerencie organizações, planos, usuários e torneios.</p>
+        </header>
+
+        <div className="panel">
+          <h2>Organizações cadastradas</h2>
+
+          {orgs.map(org => (
+            <div key={org.id} className="clientCard">
+              <div>
+                <strong>{org.name}</strong>
+                <span>{org.slug}</span>
+              </div>
+
+              <div className="clientMetrics">
+                <span>Plano: {org.plan}</span>
+                <span>Usuários: {org.users?.length || 0}</span>
+                <span>Torneios: {org.tournaments?.length || 0}</span>
+              </div>
+
+              <div className="clientActions">
+                <button onClick={() => changePlan(org.id, 'trial')}>Trial</button>
+                <button onClick={() => changePlan(org.id, 'free')}>Free</button>
+                <button onClick={() => changePlan(org.id, 'pro')}>Pro</button>
+                <button onClick={() => changePlan(org.id, 'master')}>Master</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+function Admin() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      goHome()
+      return
+    }
+
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        if (data.user?.role !== 'superadmin') {
+          goHome()
+        }
+      })
+  }, [])
+
+  return (
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">👑 Admin Master</div>
+        <button onClick={() => navigate('/admin')}>Dashboard</button>
+        <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
+        <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
+        <button onClick={() => {
+          localStorage.removeItem('token')
+          window.location.href = '/'
+        }}>
+          Sair
+        </button>
+      </aside>
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">👑 Superadmin</div>
+          <h1>Painel Master</h1>
+          <p>Gestão da plataforma ProMaster Arena</p>
+        </header>
+      </main>
+    </div>
+  )
 }
