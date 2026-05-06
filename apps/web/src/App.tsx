@@ -436,6 +436,7 @@ function Dashboard({ user }: any) {
 }
 
 function Upgrade() {
+  const navigate = useNavigate()
   const [pixData, setPixData] = useState<any>(null)
   const [pixLoading, setPixLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
@@ -488,14 +489,22 @@ function Upgrade() {
   }, [pixData?.paymentId])
 
   return (
-    <div className="app">
-      <header className="hero">
-        <div className="badge">💳 ProMaster Arena</div>
-        <h1>Planos e pagamentos</h1>
-        <p>Consulte seu plano, vencimento, alterações e histórico financeiro.</p>
-      </header>
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">🎱 ProMaster</div>
+        <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
+      </aside>
 
-      <div className="panel" style={{ maxWidth: 980, margin: '0 auto 24px' }}>
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">💳 ProMaster Arena</div>
+          <h1>Planos e pagamentos</h1>
+          <p>Consulte seu plano, vencimento, alterações e histórico financeiro.</p>
+        </header>
+
+      <div className="panel">
         <h2>Plano atual</h2>
 
         <div className="planSummary planSummaryWide">
@@ -587,7 +596,7 @@ function Upgrade() {
         </div>
       )}
 
-      <div className="panel" style={{ maxWidth: 980, margin: '30px auto' }}>
+      <div className="panel" style={{ marginTop: 30 }}>
         <h2>Histórico de pagamentos</h2>
 
         {payments.length === 0 && <p>Nenhum pagamento registrado.</p>}
@@ -605,6 +614,7 @@ function Upgrade() {
           </div>
         ))}
       </div>
+      </main>
     </div>
   )
 }
@@ -1087,6 +1097,7 @@ function TournamentBracket() {
         <div className="sidebarLogo">🎱 ProMaster</div>
         <button onClick={() => navigate('/app')}>Dashboard</button>
         <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate('/app')}>Voltar</button>
       </aside>
 
       <main className="saasMain">
