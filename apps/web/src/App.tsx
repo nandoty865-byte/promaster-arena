@@ -1029,6 +1029,7 @@ function PublicTournament() {
   const matches = (rounds || []).flatMap((round: any) =>
     (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
   )
+  const pending = matches.filter((match: any) => match.status === 'pending')
   const playing = matches.filter((match: any) => match.status === 'playing')
   const finished = matches.filter((match: any) => match.status === 'finished')
   const finalRound = rounds?.[rounds.length - 1]
@@ -1038,16 +1039,17 @@ function PublicTournament() {
   return (
     <div className="publicPage">
       <header className="publicHero">
-        <span>🎱 ProMaster Arena</span>
+        <span>AO VIVO • ProMaster Arena</span>
         <h1>{tournament.name}</h1>
 
         {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
       </header>
 
-      <main className="publicLayout">
-        <div className="publicLeftColumn">
-          <section className="publicCard">
-            <h2>Dados do torneio</h2>
+      <main>
+        <section className="publicShowcase">
+          <div className="publicCard publicInfoCard">
+            <span className="publicCardLabel">Torneio</span>
+            <h2>{tournament.name}</h2>
             <div className="publicInfoList">
               <div><span>Status</span><strong>{tournament.status}</strong></div>
               <div><span>Local</span><strong>{tournament.location || '-'}</strong></div>
@@ -1056,10 +1058,44 @@ function PublicTournament() {
               <div><span>Premiação</span><strong>{tournament.prize || '-'}</strong></div>
               <div><span>Regras</span><strong>{tournament.rules || '-'}</strong></div>
             </div>
-          </section>
+          </div>
 
-          <section className="publicCard">
-            <h2>Jogos em andamento</h2>
+          <div className="publicCard publicVideo">
+            <span className="publicCardLabel">Transmissão</span>
+            <h2>{embedUrl ? 'YouTube ao vivo' : 'Sem transmissão configurada'}</h2>
+            {embedUrl ? (
+              <iframe
+                src={embedUrl}
+                title="Transmissão ao vivo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <div className="publicVideoEmpty">
+                <strong>Resultados ao vivo</strong>
+                <span>Acompanhe os jogos nos cards abaixo.</span>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="publicMatchColumns">
+          <div className="publicCard publicMatchColumn next">
+            <span className="publicCardLabel">Agenda</span>
+            <h2>Próximos jogos</h2>
+            {pending.length === 0 && <p>Nenhum próximo jogo.</p>}
+            {pending.slice(0, 8).map((match: any) => (
+              <div key={match.id} className="publicMatchCard">
+                <strong>Jogo #{match.matchNumber || match.id}</strong>
+                <span>{match.playerA} x {match.playerB}</span>
+                <small>Mesa {match.table}</small>
+              </div>
+            ))}
+          </div>
+
+          <div className="publicCard publicMatchColumn live">
+            <span className="publicCardLabel">Agora</span>
+            <h2>Em andamento</h2>
             {playing.length === 0 && <p>Nenhum jogo em andamento.</p>}
             {playing.map((match: any) => (
               <div key={match.id} className="publicMatchCard live">
@@ -1068,25 +1104,13 @@ function PublicTournament() {
                 <small>Mesa {match.table}</small>
               </div>
             ))}
-          </section>
-        </div>
+          </div>
 
-        <aside className="publicRightColumn">
-          {embedUrl ? (
-            <section className="publicCard publicVideo">
-              <h2>Transmissão ao vivo</h2>
-              <iframe
-                src={embedUrl}
-                title="Transmissão ao vivo"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </section>
-          ) : (
-            <section className="publicCard">
-              <h2>Resultados</h2>
-              {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
-              {finished.slice(-10).reverse().map((match: any) => (
+          <div className="publicCard publicMatchColumn done">
+            <span className="publicCardLabel">Placar</span>
+            <h2>Finalizados</h2>
+            {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
+            {finished.slice(-8).reverse().map((match: any) => (
               <div key={match.id} className="publicMatchCard done">
                 <strong>Jogo #{match.matchNumber || match.id}</strong>
                 <span>
@@ -1096,24 +1120,9 @@ function PublicTournament() {
                 </span>
                 <small>Vencedor: {match.winner}</small>
               </div>
-              ))}
-            </section>
-          )}
-
-          {embedUrl && (
-            <section className="publicCard">
-              <h2>Resultados</h2>
-              {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
-              {finished.slice(-5).reverse().map((match: any) => (
-                <div key={match.id} className="publicMatchCard done">
-                  <strong>Jogo #{match.matchNumber || match.id}</strong>
-                  <span>{match.playerA} x {match.playerB}</span>
-                  <small>Vencedor: {match.winner}</small>
-                </div>
-              ))}
-            </section>
-          )}
-        </aside>
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   )
