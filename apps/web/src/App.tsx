@@ -1006,6 +1006,8 @@ function TournamentBracket() {
   const matches = rounds.flatMap(round =>
     (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
   )
+  const finalRound = rounds[rounds.length - 1]
+  const champion = finalRound?.matches?.[0]?.winner
   const pendingMatches = matches.filter((match: any) => match.status === 'pending')
   const playingMatches = matches.filter((match: any) => match.status === 'playing')
   const finishedMatches = matches.filter((match: any) => match.status === 'finished')
@@ -1084,8 +1086,8 @@ function TournamentBracket() {
         )}
 
         {match.winner && (
-          <div className="advanceLine">
-            {match.winner} avançou
+          <div className={match.winner === champion ? 'advanceLine championLine' : 'advanceLine'}>
+            {match.winner === champion ? `🏆 Campeão: ${match.winner}` : `${match.winner} avançou`}
           </div>
         )}
       </div>
@@ -1110,7 +1112,7 @@ function TournamentBracket() {
 
         {match.winner && (
           <div className={isFinalRound ? 'advanceLine championLine' : 'advanceLine'}>
-            {isFinalRound ? `🏆 ${match.winner} campeão` : `${match.winner} avançou`}
+            {isFinalRound ? `🏆 Campeão: ${match.winner}` : `${match.winner} avançou`}
           </div>
         )}
       </div>
@@ -1132,6 +1134,12 @@ function TournamentBracket() {
 
   <h1>Painel Torneio</h1>
   <p>Controle os jogos por status: aguardando, jogando e finalizados.</p>
+
+  {champion && (
+    <div className="championBanner">
+      🏆 Campeão: {champion}
+    </div>
+  )}
 
   <div className="tournamentTopActions">
     <button onClick={() => window.open(`/telao/${id}`, '_blank')}>
@@ -1342,8 +1350,12 @@ function TelaoTV() {
               <h3>Finalizados</h3>
               {finished.slice(-8).reverse().map(m => (
                 <div key={m.id} className="tvRow">
-                  <span>{m.playerA} x {m.playerB}</span>
-                  <strong>🏆 {m.winner}</strong>
+                  <span>
+                    {m.winner === m.playerA ? `🏆 ${m.playerA}` : m.playerA}
+                    {' x '}
+                    {m.winner === m.playerB ? `🏆 ${m.playerB}` : m.playerB}
+                  </span>
+                  <strong>Finalizado</strong>
                 </div>
               ))}
             </div>

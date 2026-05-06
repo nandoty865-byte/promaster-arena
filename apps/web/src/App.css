@@ -1587,6 +1587,18 @@ button:hover {
   background: rgba(250, 204, 21, .08);
 }
 
+.championBanner {
+  display: inline-flex;
+  align-items: center;
+  margin: 14px 0 4px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(250, 204, 21, .38);
+  background: rgba(250, 204, 21, .08);
+  color: #facc15;
+  font-weight: 900;
+}
+
 .proBracket {
   display: flex;
   align-items: stretch;
