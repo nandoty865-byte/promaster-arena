@@ -1085,6 +1085,46 @@ button:hover {
   align-items: flex-start;
 }
 
+.matchBoard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+
+.matchColumn {
+  min-height: 420px;
+  background: rgba(15, 23, 42, .7);
+  border: 1px solid #1e293b;
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.matchColumn h2 {
+  margin: 0 0 16px;
+  color: #bfdbfe;
+  text-transform: uppercase;
+  font-size: 15px;
+  letter-spacing: .04em;
+}
+
+.matchColumn.pending h2 {
+  color: #93c5fd;
+}
+
+.matchColumn.playing h2 {
+  color: #86efac;
+}
+
+.matchColumn.finished h2 {
+  color: #facc15;
+}
+
+.emptyColumn {
+  color: #64748b;
+  margin: 0;
+}
+
 .proRound {
   min-width: 300px;
   position: relative;
@@ -1098,7 +1138,7 @@ button:hover {
 
 .roundMatches {
   display: grid;
-  gap: 28px;
+  gap: 18px;
 }
 
 .proMatch {
@@ -1146,6 +1186,7 @@ button:hover {
 
 .proMatch.finished {
   opacity: .9;
+  border-color: rgba(250, 204, 21, .45);
 }
 
 .proPlayer {
@@ -1169,6 +1210,17 @@ button:hover {
 .proPlayer button {
   padding: 6px 9px;
   font-size: 12px;
+}
+
+.startButton {
+  width: 100%;
+  margin-top: 4px;
+}
+
+@media (max-width: 1180px) {
+  .matchBoard {
+    grid-template-columns: 1fr;
+  }
 }
 
 @keyframes fadeUp {

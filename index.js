@@ -315,7 +315,7 @@ app.get('/tournaments/:id/bracket', async (req, res) => {
 
   const matches = await prisma.match.findMany({
     where: { tournamentId },
-    orderBy: { round: 'asc' }
+    orderBy: [{ round: 'asc' }, { id: 'asc' }]
   })
 
   const players = await prisma.player.findMany({
@@ -329,13 +329,14 @@ app.get('/tournaments/:id/bracket', async (req, res) => {
 
   const rounds = {}
 
-  matches.forEach(m => {
+  matches.forEach((m, index) => {
     if (!rounds[m.round]) {
       rounds[m.round] = []
     }
 
     rounds[m.round].push({
   id: m.id,
+  matchNumber: index + 1,
   playerAId: m.playerAId,
   playerBId: m.playerBId,
   playerA: playerMap[m.playerAId],
@@ -517,6 +518,7 @@ app.get('/tournaments/:id/ranking', async (req, res) => {
     res.status(500).json({ error: 'Erro ao gerar ranking' })
   }
 })
+
 app.post('/organizations/:organizationId/tournaments/create',
   auth,
   requireRole('admin', 'operator'),
@@ -667,7 +669,7 @@ app.get('/public/:slug', async (req, res) => {
 
     const matches = await prisma.match.findMany({
       where: { tournamentId: tournament.id },
-      orderBy: [{ round: 'asc' }, { tableNumber: 'asc' }],
+      orderBy: [{ round: 'asc' }, { id: 'asc' }],
     })
 
     const playerMap = {}
@@ -677,11 +679,12 @@ app.get('/public/:slug', async (req, res) => {
 
     const rounds = {}
 
-    matches.forEach(m => {
+    matches.forEach((m, index) => {
       if (!rounds[m.round]) rounds[m.round] = []
 
       rounds[m.round].push({
         id: m.id,
+        matchNumber: index + 1,
         playerA: playerMap[m.playerAId],
         playerB: playerMap[m.playerBId],
         playerAId: m.playerAId,
@@ -774,7 +777,6 @@ app.post('/auth/register', async (req, res) => {
   }
 })
 
-     
 app.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body

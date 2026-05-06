@@ -530,7 +530,19 @@ function Upgrade() {
 function Financeiro() {
   const [finance, setFinance] = useState<any>(null)
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([])
-  
+
+  function loadFinance() {
+    fetch(`${API}/admin/finance/summary`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setFinance(data))
+  }
+
+  function loadMonthlyRevenue() {
+    fetch(`${API}/admin/finance/monthly`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setMonthlyRevenue(Array.isArray(data) ? data : []))
+  }
+
   useEffect(() => {
   if (!isLoggedIn()) {
     goHome()
@@ -550,19 +562,6 @@ function Financeiro() {
     })
 }, [])
 
-  function loadFinance() {
-    fetch(`${API}/admin/finance/summary`, { headers: authHeaders() })
-      .then(res => res.json())
-      .then(data => setFinance(data))
-  }
-
-  function loadMonthlyRevenue() {
-    fetch(`${API}/admin/finance/monthly`, { headers: authHeaders() })
-      .then(res => res.json())
-      .then(data => setMonthlyRevenue(Array.isArray(data) ? data : []))
-  }
-
- 
   return (
     <div className="app">
       <header className="hero">
@@ -885,7 +884,7 @@ function CreateTournament({ user }: any) {
             <p style={{ marginTop: 10, color: '#94a3b8' }}>
                Jogadores: {playersText.split('\n').filter(p => p.trim()).length}
           </p>
-          
+
            <div className="previewCard">
   <h3>Resumo</h3>
   <p><strong>{name}</strong></p>
@@ -910,6 +909,12 @@ function TournamentBracket() {
   const navigate = useNavigate()
 
   const [rounds, setRounds] = useState<any[]>([])
+  const matches = rounds.flatMap(round =>
+    (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
+  )
+  const pendingMatches = matches.filter((match: any) => match.status === 'pending')
+  const playingMatches = matches.filter((match: any) => match.status === 'playing')
+  const finishedMatches = matches.filter((match: any) => match.status === 'finished')
 
   function loadBracket() {
     fetch(`${API}/tournaments/${id}/bracket`, {
@@ -941,6 +946,58 @@ function TournamentBracket() {
     return () => clearInterval(interval)
   }, [id])
 
+  function renderMatchCard(match: any) {
+    return (
+      <div
+        key={match.id}
+        className={`proMatch ${match.status} ${match.winner ? 'hasWinner' : ''}`}
+      >
+        <div className="matchMeta">
+          <span>Jogo #{match.matchNumber || match.id}</span>
+          <span>Mesa {match.table}</span>
+        </div>
+
+        <div className="matchStatus">
+          {match.status === 'playing'
+            ? 'JOGANDO'
+            : match.status === 'finished'
+              ? 'FINALIZADO'
+              : 'AGUARDANDO'}
+        </div>
+
+        <div className={match.winner === match.playerA ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerA}</span>
+          {match.status !== 'finished' && (
+            <button onClick={() => finishMatch(match.id, match.playerAId)}>
+              Venceu
+            </button>
+          )}
+        </div>
+
+        <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerB}</span>
+          {match.status !== 'finished' && (
+            <button onClick={() => finishMatch(match.id, match.playerBId)}>
+              Venceu
+            </button>
+          )}
+        </div>
+
+        {match.status === 'pending' && (
+          <button className="startButton" onClick={() => startMatch(match.id)}>
+            Iniciar jogo
+          </button>
+        )}
+
+        {match.winner && (
+          <div className="advanceLine">
+            {match.winner} avançou
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="saasLayout">
       <aside className="sidebar">
@@ -951,10 +1008,10 @@ function TournamentBracket() {
 
       <main className="saasMain">
        <header className="hero">
-  <div className="badge">🏆 Chave do Torneio</div>
+  <div className="badge">🏆 Painel do Torneio</div>
 
-  <h1>Chave Visual</h1>
-  <p>Atualização automática em tempo real</p>
+  <h1>Painel Torneio</h1>
+  <p>Controle os jogos por status: aguardando, jogando e finalizados.</p>
 
   <div className="tournamentTopActions">
     <button onClick={() => navigate('/app')}>
@@ -967,69 +1024,30 @@ function TournamentBracket() {
   </div>
 </header>
 
-        <div className="proBracket">
-          {rounds.map((round, roundIndex) => (
-            <div key={round.round} className="proRound">
-             <h2>
-  {roundIndex === rounds.length - 1
-    ? 'Final'
-    : roundIndex === rounds.length - 2
-      ? 'Semifinal'
-      : `Rodada ${round.round}`}
-</h2>
-
-              <div className="roundMatches">
-                {round.matches.map((match: any) => (
-                 <div
-                   key={match.id}
-                   className={`proMatch ${match.status} ${match.winner ? 'hasWinner' : ''}`}
-                   >
-                    <div className="matchMeta">
-                      <span>Jogo #{match.id}</span>
-                      <span>Mesa {match.table}</span>
-                    </div>
-
-                    <div className="matchStatus">
-                    {match.winner && (
-              <div className="advanceLine">
-                    {match.winner} avançou para a próxima fase
-              </div>
-            )}
-                      {match.status === 'playing'
-                        ? 'AO VIVO'
-                        : match.status === 'finished'
-                          ? 'FINALIZADO'
-                          : 'AGUARDANDO'}
-                    </div>
-
-                    <div className={match.winner === match.playerA ? 'proPlayer winner' : 'proPlayer'}>
-                      <span>{match.playerA}</span>
-                      {match.status !== 'finished' && (
-                        <button onClick={() => finishMatch(match.id, match.playerAId)}>
-                          Venceu
-                        </button>
-                      )}
-                    </div>
-
-                    <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
-                      <span>{match.playerB}</span>
-                      {match.status !== 'finished' && (
-                        <button onClick={() => finishMatch(match.id, match.playerBId)}>
-                          Venceu
-                        </button>
-                      )}
-                    </div>
-
-                    {match.status === 'pending' && (
-                      <button className="startButton" onClick={() => startMatch(match.id)}>
-                        Iniciar jogo
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
+        <div className="matchBoard">
+          <section className="matchColumn pending">
+            <h2>Aguardando</h2>
+            {pendingMatches.length === 0 && <p className="emptyColumn">Nenhum jogo aguardando.</p>}
+            <div className="roundMatches">
+              {pendingMatches.map(renderMatchCard)}
             </div>
-          ))}
+          </section>
+
+          <section className="matchColumn playing">
+            <h2>Jogando</h2>
+            {playingMatches.length === 0 && <p className="emptyColumn">Nenhum jogo em andamento.</p>}
+            <div className="roundMatches">
+              {playingMatches.map(renderMatchCard)}
+            </div>
+          </section>
+
+          <section className="matchColumn finished">
+            <h2>Finalizados</h2>
+            {finishedMatches.length === 0 && <p className="emptyColumn">Nenhum jogo finalizado.</p>}
+            <div className="roundMatches">
+              {finishedMatches.map(renderMatchCard)}
+            </div>
+          </section>
         </div>
       </main>
     </div>
@@ -1199,7 +1217,7 @@ function TelaoTV() {
                 {round.matches.map((match: any) => (
                   <div key={match.id} className={`tvBracketMatch ${match.status}`}>
                     <div className="matchMeta">
-                      <span>Jogo #{match.id}</span>
+                      <span>Jogo #{match.matchNumber || match.id}</span>
                       <span>Mesa {match.table}</span>
                     </div>
 
