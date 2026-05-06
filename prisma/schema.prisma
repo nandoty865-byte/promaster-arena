@@ -33,6 +33,7 @@ eventDate    DateTime?
 eventTime    String?
 prize        String?
 rules        String?
+youtubeUrl   String?
   sport   Sport   @relation(fields: [sportId], references: [id])
   players Player[]
   matches Match[]

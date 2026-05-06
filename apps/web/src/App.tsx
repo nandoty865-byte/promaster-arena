@@ -33,6 +33,24 @@ function goHome() {
   window.location.href = '/'
 }
 
+function youtubeEmbedUrl(url?: string) {
+  if (!url) return ''
+
+  const patterns = [
+    /youtube\.com\/watch\?v=([^&]+)/,
+    /youtu\.be\/([^?]+)/,
+    /youtube\.com\/live\/([^?]+)/,
+    /youtube\.com\/embed\/([^?]+)/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match?.[1]) return `https://www.youtube.com/embed/${match[1]}`
+  }
+
+  return url
+}
+
 function isPublicPath(path: string) {
   return (
     path === '/' ||
@@ -93,6 +111,8 @@ export default function App() {
       <Route path="/app" element={<Dashboard user={user} />} />
       <Route path="/upgrade" element={<Upgrade />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
+      <Route path="/tournament/:id/settings" element={<TournamentSettings />} />
+      <Route path="/public/:slug" element={<PublicTournament />} />
       <Route path="/admin/financeiro" element={<Financeiro />} />
       <Route path="/admin/clientes" element={<AdminClientes />} />
       <Route path="/admin" element={<Admin />} />
@@ -399,6 +419,10 @@ function Dashboard({ user }: any) {
                     Telão
                   </button>
 
+                  <button onClick={() => navigate(`/tournament/${t.id}/settings`)}>
+                    Configurações
+                  </button>
+
                   {t.publicSlug && (
                     <>
                       <button onClick={() => navigator.clipboard.writeText(publicUrl)}>
@@ -619,6 +643,112 @@ function Upgrade() {
   )
 }
 
+function TournamentSettings() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [form, setForm] = useState<any>({
+    name: '',
+    location: '',
+    eventDate: '',
+    eventTime: '',
+    prize: '',
+    rules: '',
+    youtubeUrl: '',
+  })
+
+  useEffect(() => {
+    fetch(`${API}/tournaments/${id}`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        setForm({
+          name: data.name || '',
+          location: data.location || '',
+          eventDate: data.eventDate ? data.eventDate.slice(0, 10) : '',
+          eventTime: data.eventTime || '',
+          prize: data.prize || '',
+          rules: data.rules || '',
+          youtubeUrl: data.youtubeUrl || '',
+        })
+      })
+  }, [id])
+
+  function updateField(field: string, value: string) {
+    setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function saveSettings() {
+    fetch(`${API}/tournaments/${id}/settings`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(form),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        alert('Configurações salvas.')
+        navigate('/app')
+      })
+  }
+
+  return (
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">🎱 ProMaster</div>
+        <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
+      </aside>
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">⚙️ Configurações</div>
+          <h1>Configurações do torneio</h1>
+          <p>Atualize dados públicos, regras, premiação e transmissão ao vivo.</p>
+        </header>
+
+        <div className="panel settingsPanel">
+          <label>Nome do torneio</label>
+          <input value={form.name} onChange={e => updateField('name', e.target.value)} />
+
+          <label>Local</label>
+          <input value={form.location} onChange={e => updateField('location', e.target.value)} />
+
+          <div className="settingsGrid">
+            <div>
+              <label>Data</label>
+              <input type="date" value={form.eventDate} onChange={e => updateField('eventDate', e.target.value)} />
+            </div>
+
+            <div>
+              <label>Horário</label>
+              <input type="time" value={form.eventTime} onChange={e => updateField('eventTime', e.target.value)} />
+            </div>
+          </div>
+
+          <label>Premiação</label>
+          <input value={form.prize} onChange={e => updateField('prize', e.target.value)} />
+
+          <label>Link da transmissão YouTube</label>
+          <input
+            value={form.youtubeUrl}
+            onChange={e => updateField('youtubeUrl', e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=..."
+          />
+
+          <label>Regras</label>
+          <textarea value={form.rules} onChange={e => updateField('rules', e.target.value)} />
+
+          <button className="primaryButton" onClick={saveSettings}>Salvar configurações</button>
+        </div>
+      </main>
+    </div>
+  )
+}
+
 function Financeiro() {
   const [finance, setFinance] = useState<any>(null)
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([])
@@ -796,6 +926,124 @@ function Landing() {
             <h3>Master</h3>
             <strong>R$ 59,90/mês</strong>
             <p>Até 128 jogadores ou 32 times.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function PublicTournament() {
+  const { slug } = useParams()
+  const [data, setData] = useState<any>(null)
+
+  useEffect(() => {
+    fetch(`${API}/public/${slug}`)
+      .then(res => res.json())
+      .then(setData)
+  }, [slug])
+
+  if (!data?.tournament) {
+    return <div className="publicPage">Carregando torneio...</div>
+  }
+
+  const { tournament, rounds } = data
+  const matches = (rounds || []).flatMap((round: any) =>
+    (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
+  )
+  const playing = matches.filter((match: any) => match.status === 'playing')
+  const pending = matches.filter((match: any) => match.status === 'pending')
+  const finished = matches.filter((match: any) => match.status === 'finished')
+  const finalRound = rounds?.[rounds.length - 1]
+  const champion = finalRound?.matches?.[0]?.winner
+  const embedUrl = youtubeEmbedUrl(tournament.youtubeUrl)
+
+  return (
+    <div className="publicPage">
+      <header className="publicHero">
+        <span>🎱 ProMaster Arena</span>
+        <h1>{tournament.name}</h1>
+        <p>
+          {tournament.location && `Local: ${tournament.location}`}
+          {tournament.eventDate && ` • Data: ${new Date(tournament.eventDate).toLocaleDateString()}`}
+          {tournament.eventTime && ` • Horário: ${tournament.eventTime}`}
+        </p>
+
+        {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
+      </header>
+
+      <section className="publicInfoGrid">
+        <div>
+          <h2>Dados do torneio</h2>
+          <p>Status: {tournament.status}</p>
+          {tournament.prize && <p>Premiação: {tournament.prize}</p>}
+          {tournament.rules && <p>Regras: {tournament.rules}</p>}
+        </div>
+
+        <div>
+          <h2>Placar</h2>
+          {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
+          {finished.slice(-6).reverse().map((match: any) => (
+            <div key={match.id} className="publicScoreRow">
+              <span>
+                {match.winner === match.playerA ? `🏆 ${match.playerA}` : match.playerA}
+                {' x '}
+                {match.winner === match.playerB ? `🏆 ${match.playerB}` : match.playerB}
+              </span>
+              <strong>Jogo #{match.matchNumber || match.id}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {embedUrl && (
+        <section className="publicVideo">
+          <h2>Transmissão ao vivo</h2>
+          <iframe
+            src={embedUrl}
+            title="Transmissão ao vivo"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </section>
+      )}
+
+      <section className="publicMatches">
+        <h2>Andamento dos jogos</h2>
+
+        <div className="publicColumns">
+          <div>
+            <h3>Jogando</h3>
+            {playing.length === 0 && <p>Nenhum jogo em andamento.</p>}
+            {playing.map((match: any) => (
+              <div key={match.id} className="publicMatchCard live">
+                <strong>Jogo #{match.matchNumber || match.id}</strong>
+                <span>{match.playerA} x {match.playerB}</span>
+                <small>Mesa {match.table}</small>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <h3>Próximos</h3>
+            {pending.slice(0, 8).map((match: any) => (
+              <div key={match.id} className="publicMatchCard">
+                <strong>Jogo #{match.matchNumber || match.id}</strong>
+                <span>{match.playerA} x {match.playerB}</span>
+                <small>Mesa {match.table}</small>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <h3>Finalizados</h3>
+            {finished.slice(-8).reverse().map((match: any) => (
+              <div key={match.id} className="publicMatchCard done">
+                <strong>Jogo #{match.matchNumber || match.id}</strong>
+                <span>{match.playerA} x {match.playerB}</span>
+                <small>Vencedor: {match.winner}</small>
+              </div>
+            ))}
           </div>
         </div>
       </section>

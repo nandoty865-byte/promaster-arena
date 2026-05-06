@@ -147,6 +147,43 @@ app.get('/tournaments/:id', async (req, res) => {
   }
 })
 
+app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const id = Number(req.params.id)
+    const { name, location, eventDate, eventTime, prize, rules, youtubeUrl } = req.body
+
+    const tournament = await prisma.tournament.findUnique({
+      where: { id },
+    })
+
+    if (!tournament) {
+      return res.status(404).json({ error: 'Torneio não encontrado' })
+    }
+
+    if (tournament.organizationId !== req.user.organizationId) {
+      return res.status(403).json({ error: 'Acesso negado' })
+    }
+
+    const updated = await prisma.tournament.update({
+      where: { id },
+      data: {
+        name: name || tournament.name,
+        location: location || null,
+        eventDate: eventDate ? new Date(eventDate) : null,
+        eventTime: eventTime || null,
+        prize: prize || null,
+        rules: rules || null,
+        youtubeUrl: youtubeUrl || null,
+      },
+    })
+
+    res.json({ ok: true, tournament: updated })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao atualizar configurações do torneio' })
+  }
+})
+
     if (!tournament) {
       return res.status(404).json({ error: 'Torneio não encontrado' })
     }
@@ -705,6 +742,13 @@ app.get('/public/:slug', async (req, res) => {
         id: tournament.id,
         name: tournament.name,
         slug: tournament.publicSlug,
+        status: tournament.status,
+        location: tournament.location,
+        eventDate: tournament.eventDate,
+        eventTime: tournament.eventTime,
+        prize: tournament.prize,
+        rules: tournament.rules,
+        youtubeUrl: tournament.youtubeUrl,
       },
       rounds: formattedRounds,
     })
