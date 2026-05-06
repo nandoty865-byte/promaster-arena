@@ -798,6 +798,44 @@ button:hover {
   color: #94a3b8;
 }
 
+.planSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(130px, 1fr)) minmax(280px, 1.3fr);
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.planSummary > div {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.planSummary span {
+  display: block;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.planSummary strong {
+  color: white;
+}
+
+.planActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.planActions button {
+  width: auto;
+}
+
 .saasLayout {
   min-height: 100vh;
   display: grid;
@@ -813,6 +851,8 @@ button:hover {
   position: sticky;
   top: 0;
   height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebarLogo {
@@ -830,6 +870,10 @@ button:hover {
   background: #0f172a;
   color: white;
   text-align: left;
+}
+
+.sidebar button:last-child {
+  margin-top: auto;
 }
 
 .saasMain {

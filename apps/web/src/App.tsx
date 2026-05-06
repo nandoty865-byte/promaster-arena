@@ -275,6 +275,10 @@ function Dashboard({ user }: any) {
   const navigate = useNavigate()
   const [tournaments, setTournaments] = useState<any[]>([])
   const [qrUrl, setQrUrl] = useState<string | null>(null)
+  const plan = user?.organization?.plan || 'free'
+  const isMasterPlan = plan === 'master'
+  const trialEndsAt = user?.organization?.trialEndsAt
+  const planExpiresAt = user?.organization?.planExpiresAt
 
   function logout() {
     localStorage.removeItem('token')
@@ -308,8 +312,10 @@ function Dashboard({ user }: any) {
         <button onClick={() => navigate('/app')}>Dashboard</button>
         <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
         <button onClick={() => navigate('/upgrade')}>Planos</button>
+        {isMasterPlan && (
+          <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
+        )}
         <button onClick={logout}>Sair</button>
-        <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
       </aside>
 
       <main className="saasMain">
@@ -328,25 +334,38 @@ function Dashboard({ user }: any) {
           <h1>Painel da Arena</h1>
           <p>{user?.organization?.name}</p>
 
-          <p className="planBadge">
-            Plano atual: {user?.organization?.plan?.toUpperCase() || 'FREE'}
-          </p>
+          <div className="planSummary">
+            <div>
+              <span>Plano atual</span>
+              <strong>{plan.toUpperCase()}</strong>
+            </div>
 
-          {user?.organization?.planExpiresAt && (
-            <p>
-              Vence em: {new Date(user.organization.planExpiresAt).toLocaleDateString()}
-            </p>
-          )}
+            <div>
+              <span>Início</span>
+              <strong>{new Date(user?.organization?.createdAt).toLocaleDateString()}</strong>
+            </div>
+
+            <div>
+              <span>Vencimento</span>
+              <strong>
+                {planExpiresAt
+                  ? new Date(planExpiresAt).toLocaleDateString()
+                  : trialEndsAt
+                    ? new Date(trialEndsAt).toLocaleDateString()
+                    : 'Sem vencimento'}
+              </strong>
+            </div>
+
+            <div className="planActions">
+              <button onClick={() => navigate('/upgrade')}>Upgrade</button>
+              <button onClick={() => alert('Downgrade em implantação. Entre em contato com o suporte.')}>Downgrade</button>
+              <button onClick={() => alert('Cancelamento em implantação. Entre em contato com o suporte.')}>Cancelar</button>
+            </div>
+          </div>
 
           <button className="primaryButton" onClick={() => navigate('/criar-torneio')}>
             + Criar Torneio
           </button>
-
-          {user?.organization?.plan !== 'pro' && user?.organization?.plan !== 'master' && (
-            <button className="upgradeButton" onClick={() => navigate('/upgrade')}>
-              Fazer upgrade
-            </button>
-          )}
         </header>
 
         <div className="panel">
@@ -378,7 +397,7 @@ function Dashboard({ user }: any) {
 
                 <div className="tournamentActions">
                   <button onClick={() => navigate(`/tournament/${t.id}`)}>
-                    Ver chave
+                    Painel
                   </button>
 
                   <button onClick={() => window.open(`/telao/${t.id}`, '_blank')}>
