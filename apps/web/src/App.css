@@ -1040,6 +1040,14 @@ button:hover {
   align-items: stretch;
 }
 
+.publicTopGrid {
+  display: grid;
+  grid-template-columns: 1.25fr repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+  align-items: stretch;
+}
+
 .publicSideStack {
   display: grid;
   grid-template-rows: auto 1fr;
@@ -1079,6 +1087,28 @@ button:hover {
   font-size: clamp(28px, 3.2vw, 48px);
   line-height: 1;
   text-transform: uppercase;
+}
+
+.publicTopGrid .publicTitleCard h1 {
+  font-size: clamp(24px, 2.5vw, 38px);
+}
+
+.publicMiniInfoCard {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 150px;
+}
+
+.publicMiniInfoCard strong {
+  font-size: clamp(20px, 2vw, 30px);
+  line-height: 1.1;
+}
+
+.publicMiniInfoCard p {
+  margin: 0;
+  color: #c7d2fe;
+  line-height: 1.35;
 }
 
 .publicCard h2 {
@@ -1138,6 +1168,17 @@ button:hover {
 .publicVideoLarge iframe {
   flex: 1;
   min-height: 220px;
+  margin-top: 10px;
+}
+
+.publicVideoWide {
+  margin-bottom: 16px;
+}
+
+.publicVideoWide iframe {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  max-height: 360px;
   margin-top: 10px;
 }
 
@@ -1493,6 +1534,7 @@ button:hover {
   .billingPlansGrid,
   .settingsGrid,
   .publicShowcase,
+  .publicTopGrid,
   .publicBroadcastGrid,
   .publicNoVideoGrid,
   .publicMatchColumns {

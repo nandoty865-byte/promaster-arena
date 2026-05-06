@@ -1043,101 +1043,45 @@ function PublicTournament() {
       </header>
 
       <main>
-        {embedUrl ? (
-          <>
-            <section className="publicBroadcastGrid">
-              <div className="publicCard publicVideo publicVideoLarge">
-                <span className="publicCardLabel">Transmissão</span>
-                <iframe
-                  src={embedUrl}
-                  title="Transmissão ao vivo"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
+        <section className="publicTopGrid">
+          <div className="publicCard publicTitleCard">
+            <span className="publicCardLabel">Torneio</span>
+            <h1>{tournament.name}</h1>
+            {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
+          </div>
 
-              <aside className="publicSideStack">
-                <div className="publicCard publicTitleCard">
-                  <span className="publicCardLabel">Torneio</span>
-                  <h1>{tournament.name}</h1>
-                  {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
-                </div>
+          <div className="publicCard publicMiniInfoCard">
+            <span className="publicCardLabel">Local</span>
+            <strong>{tournament.status}</strong>
+            <p>{tournament.location || 'Local não informado'}</p>
+          </div>
 
-                <div className="publicCard publicInfoCard">
-                  <span className="publicCardLabel">Informações</span>
-                  <div className="publicInfoList">
-                    <div><span>Status</span><strong>{tournament.status}</strong></div>
-                    <div><span>Local</span><strong>{tournament.location || '-'}</strong></div>
-                    <div><span>Data</span><strong>{tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong></div>
-                    <div><span>Horário</span><strong>{tournament.eventTime || '-'}</strong></div>
-                    <div><span>Premiação</span><strong>{tournament.prize || '-'}</strong></div>
-                    <div><span>Regras</span><strong>{tournament.rules || '-'}</strong></div>
-                  </div>
-                </div>
-              </aside>
-            </section>
+          <div className="publicCard publicMiniInfoCard">
+            <span className="publicCardLabel">Data</span>
+            <strong>{tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong>
+            <p>{tournament.eventTime || 'Horário não informado'}</p>
+          </div>
 
-            <section className="publicMatchColumns">
-              <div className="publicCard publicMatchColumn next">
-                <span className="publicCardLabel">Agenda</span>
-                <h2>Próximos jogos</h2>
-                {pending.length === 0 && <p>Nenhum próximo jogo.</p>}
-                {pending.slice(0, 8).map((match: any) => (
-                  <div key={match.id} className="publicMatchCard">
-                    <strong>Jogo #{match.matchNumber || match.id}</strong>
-                    <span>{match.playerA} x {match.playerB}</span>
-                    <small>Mesa {match.table}</small>
-                  </div>
-                ))}
-              </div>
+          <div className="publicCard publicMiniInfoCard">
+            <span className="publicCardLabel">Premiação</span>
+            <strong>{tournament.prize || '-'}</strong>
+            <p>{tournament.rules || 'Regras não informadas'}</p>
+          </div>
+        </section>
 
-              <div className="publicCard publicMatchColumn live">
-                <span className="publicCardLabel">Agora</span>
-                <h2>Em andamento</h2>
-                {playing.length === 0 && <p>Nenhum jogo em andamento.</p>}
-                {playing.map((match: any) => (
-                  <div key={match.id} className="publicMatchCard live">
-                    <strong>Jogo #{match.matchNumber || match.id}</strong>
-                    <span>{match.playerA} x {match.playerB}</span>
-                    <small>Mesa {match.table}</small>
-                  </div>
-                ))}
-              </div>
+        {embedUrl && (
+          <section className="publicCard publicVideo publicVideoWide">
+            <span className="publicCardLabel">Transmissão YouTube</span>
+            <iframe
+              src={embedUrl}
+              title="Transmissão ao vivo"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </section>
+        )}
 
-              <div className="publicCard publicMatchColumn done">
-                <span className="publicCardLabel">Placar</span>
-                <h2>Resultados</h2>
-                {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
-                {finished.slice(-8).reverse().map((match: any) => (
-                  <div key={match.id} className="publicMatchCard done">
-                    <strong>Jogo #{match.matchNumber || match.id}</strong>
-                    <span>
-                      {match.winner === match.playerA ? `🏆 ${match.playerA}` : match.playerA}
-                      {' x '}
-                      {match.winner === match.playerB ? `🏆 ${match.playerB}` : match.playerB}
-                    </span>
-                    <small>Vencedor: {match.winner}</small>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </>
-        ) : (
-          <section className="publicNoVideoGrid">
-            <div className="publicCard publicInfoCard">
-              <span className="publicCardLabel">Torneio</span>
-              <h1>{tournament.name}</h1>
-              {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
-              <div className="publicInfoList">
-                <div><span>Status</span><strong>{tournament.status}</strong></div>
-                <div><span>Local</span><strong>{tournament.location || '-'}</strong></div>
-                <div><span>Data</span><strong>{tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong></div>
-                <div><span>Horário</span><strong>{tournament.eventTime || '-'}</strong></div>
-                <div><span>Premiação</span><strong>{tournament.prize || '-'}</strong></div>
-                <div><span>Regras</span><strong>{tournament.rules || '-'}</strong></div>
-              </div>
-            </div>
-
+        <section className="publicMatchColumns">
           <div className="publicCard publicMatchColumn next">
             <span className="publicCardLabel">Agenda</span>
             <h2>Próximos jogos</h2>
@@ -1180,8 +1124,7 @@ function PublicTournament() {
               </div>
             ))}
           </div>
-          </section>
-        )}
+        </section>
       </main>
     </div>
   )
