@@ -223,7 +223,8 @@ body {
 }
 
 .panel input,
-.panel select {
+.panel select,
+.panel textarea {
   width: 100%;
   margin-bottom: 12px;
   padding: 12px;
@@ -231,6 +232,25 @@ body {
   border: 1px solid #334155;
   background: #020617;
   color: white;
+}
+
+.panel textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.loginLinks {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.loginLinks a {
+  color: #93c5fd;
+  text-decoration: none;
+  font-weight: 800;
 }
 
 .primaryButton,
@@ -995,6 +1015,13 @@ button:hover {
   font-weight: 800;
 }
 
+.playersTextarea {
+  min-height: 320px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  line-height: 1.7;
+  white-space: pre;
+}
+
 .landingFeatures,
 .plansGrid {
   max-width: 1180px;
@@ -1085,14 +1112,7 @@ button:hover {
 }
 
 .proMatch::after {
-  content: "";
-  position: absolute;
-  right: -34px;
-  top: 50%;
-  width: 34px;
-  height: 2px;
-  background: #2563eb;
-  opacity: .7;
+  display: none;
 }
 
 .proRound:last-child .proMatch::after {
@@ -1895,11 +1915,22 @@ button:hover {
 }
 
 .tvBracketMatch {
+  position: relative;
   background: #020617;
   border: 1px solid #334155;
   border-radius: 14px;
   padding: 10px;
   margin-bottom: 16px;
+}
+
+.tvBracketRound:not(:last-child) .tvBracketMatch::after {
+  content: "";
+  position: absolute;
+  right: -34px;
+  top: 50%;
+  width: 34px;
+  height: 1px;
+  background: rgba(147, 197, 253, .45);
 }
 
 .tvBracketPlayer {

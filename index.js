@@ -746,9 +746,6 @@ app.post('/auth/register', async (req, res) => {
       }
     })
 
-    // 🔥 TOKEN DE VERIFICAÇÃO
-    const emailVerifyToken = crypto.randomUUID()
-
     // 🔹 senha
     const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -761,18 +758,14 @@ app.post('/auth/register', async (req, res) => {
         password: hashedPassword,
         role: 'admin',
         organizationId: organization.id,
-        emailVerified: false,
-        emailVerifyToken
+        emailVerified: true,
+        emailVerifyToken: null
       }
     })
 
-    // 🔥 retorno com link (temporário para teste)
-    const verifyUrl = `https://www.promasterarena.com.br/api/auth/verify-email/${emailVerifyToken}`
-
     res.json({
       ok: true,
-      message: 'Conta criada. Verifique seu e-mail.',
-      verifyUrl
+      message: 'Conta criada. Você já pode fazer login.'
     })
 
   } catch (error) {

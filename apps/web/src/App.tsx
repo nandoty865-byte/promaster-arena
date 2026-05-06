@@ -33,6 +33,17 @@ function goHome() {
   window.location.href = '/'
 }
 
+function isPublicPath(path: string) {
+  return (
+    path === '/' ||
+    path === '/login' ||
+    path === '/register' ||
+    path === '/forgot-password' ||
+    path.startsWith('/telao/') ||
+    path.startsWith('/public/')
+  )
+}
+
 export default function App() {
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
@@ -42,11 +53,11 @@ export default function App() {
     const path = window.location.pathname
 
     if (!token) {
-  setLoadingUser(false)
+      setLoadingUser(false)
 
-  if (path !== '/login') {
-    window.location.href = `/login?redirect=${encodeURIComponent(path)}`
-  }
+      if (!isPublicPath(path)) {
+        window.location.href = `/login?redirect=${encodeURIComponent(path)}`
+      }
 
   return
 }
@@ -70,13 +81,14 @@ export default function App() {
       .finally(() => setLoadingUser(false))
   }, [])
 
-  if (loadingUser && window.location.pathname !== '/login') {
+  if (loadingUser && !isPublicPath(window.location.pathname)) {
     return <div className="app">Carregando sistema...</div>
   }
 
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/" element={<Landing />} />
       <Route path="/app" element={<Dashboard user={user} />} />
       <Route path="/upgrade" element={<Upgrade />} />
@@ -135,7 +147,7 @@ function Register() {
           return
         }
 
-        alert('Cadastro criado! Verifique seu e-mail para ativar a conta.')
+        alert('Cadastro criado! Você já pode entrar com seu e-mail e senha.')
         window.location.href = '/login'
       })
       .finally(() => setLoading(false))
@@ -180,8 +192,8 @@ function Register() {
 }
 
 function Login() {
-  const [email, setEmail] = useState('cliente4@teste.com')
-  const [password, setPassword] = useState('123456')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   function login() {
     fetch(`${API}/auth/login`, {
@@ -197,9 +209,12 @@ function Login() {
   }
 
   localStorage.setItem('token', data.token)
+  const redirect = new URLSearchParams(window.location.search).get('redirect')
 
   if (data.user?.role === 'superadmin') {
     window.location.href = '/admin'
+  } else if (redirect && redirect !== '/login') {
+    window.location.href = redirect
   } else {
     window.location.href = '/app'
   }
@@ -221,6 +236,36 @@ function Login() {
         />
 
         <button className="primaryButton" onClick={login}>Entrar</button>
+        <div className="loginLinks">
+          <a href="/forgot-password">Esqueci minha senha</a>
+          <a href="/register">Criar nova conta</a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ForgotPassword() {
+  const [email, setEmail] = useState('')
+
+  return (
+    <div className="app">
+      <div className="panel" style={{ maxWidth: 420, margin: '80px auto' }}>
+        <h1>Recuperar senha</h1>
+        <p>Informe seu e-mail. A recuperação automática ainda está em implantação.</p>
+
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" />
+
+        <button
+          className="primaryButton"
+          onClick={() => alert('Recuperação de senha em implantação. Entre em contato com o suporte para redefinir o acesso.')}
+        >
+          Solicitar recuperação
+        </button>
+
+        <div className="loginLinks">
+          <a href="/login">Voltar ao login</a>
+        </div>
       </div>
     </div>
   )
@@ -280,7 +325,7 @@ function Dashboard({ user }: any) {
             <img src={user.organization.logoUrl} className="logo" />
           )}
 
-          <h1>Dashboard Cliente</h1>
+          <h1>Painel da Arena</h1>
           <p>{user?.organization?.name}</p>
 
           <p className="planBadge">
@@ -593,7 +638,7 @@ function Landing() {
 
         <div className="landingActions">
           <a href="/login">Entrar</a>
-          <a className="landingButton" href="/login">Começar grátis</a>
+          <a className="landingButton" href="/register">Começar grátis</a>
         </div>
       </header>
 
@@ -755,15 +800,14 @@ function CreateTournament({ user }: any) {
       <aside className="sidebar">
         <div className="sidebarLogo">🎱 ProMaster</div>
         <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/financeiro')}>Financeiro</button>
-        <button onClick={() => navigate('/upgrade')}>Planos</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
       </aside>
 
       <main className="saasMain">
         <header className="hero">
           <div className="badge">🏆 Novo Torneio</div>
           <h1>Criar Torneio</h1>
-          <p>Configure as informações do evento e cole a lista de jogadores.</p>
+          <p>Configure o evento e informe os participantes do torneio.</p>
         </header>
 
         <div className="createGrid">
@@ -828,13 +872,14 @@ function CreateTournament({ user }: any) {
           <div className="panel">
             <h2>Jogadores</h2>
 
-            <p>Cole 1 jogador por linha.</p>
+            <p>Digite ou cole um jogador por linha. A ordem será embaralhada ao gerar a chave.</p>
 
             <textarea
               className="playersTextarea"
               value={playersText}
               onChange={e => setPlayersText(e.target.value)}
-              placeholder={`João\nCarlos\nMarcos\nPedro`}
+              spellCheck={false}
+              placeholder={`João Silva\nCarlos "Cacá"\nMarcos de Santos\nPedro Bola 8`}
             />
 
             <p style={{ marginTop: 10, color: '#94a3b8' }}>
@@ -901,8 +946,7 @@ function TournamentBracket() {
       <aside className="sidebar">
         <div className="sidebarLogo">🎱 ProMaster</div>
         <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/financeiro')}>Financeiro</button>
-        <button onClick={() => navigate('/upgrade')}>Planos</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
       </aside>
 
       <main className="saasMain">
