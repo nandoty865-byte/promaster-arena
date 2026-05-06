@@ -866,6 +866,23 @@ button:hover {
   font-size: 13px;
 }
 
+.billingPlansGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.billingPlanCard {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.billingPlanCard button {
+  margin-top: auto;
+}
+
 .saasLayout {
   min-height: 100vh;
   display: grid;
@@ -1141,7 +1158,8 @@ button:hover {
 @media (max-width: 900px) {
   .landingHero,
   .landingFeatures,
-  .plansGrid {
+  .plansGrid,
+  .billingPlansGrid {
     grid-template-columns: 1fr;
   }
 

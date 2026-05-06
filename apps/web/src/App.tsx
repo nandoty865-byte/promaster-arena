@@ -537,8 +537,8 @@ function Upgrade() {
         </div>
       </div>
 
-      <div className="adminGrid">
-        <div className="panel">
+      <div className="billingPlansGrid">
+        <div className="panel billingPlanCard">
           <h2>PRO</h2>
           <p>R$ 29,90/mês</p>
           <p>Torneios ilimitados até 64 jogadores.</p>
@@ -547,7 +547,7 @@ function Upgrade() {
           </button>
         </div>
 
-        <div className="panel">
+        <div className="panel billingPlanCard">
           <h2>MASTER</h2>
           <p>R$ 59,90/mês</p>
           <p>Até 128 jogadores ou 32 times.</p>
@@ -556,7 +556,7 @@ function Upgrade() {
           </button>
         </div>
 
-        <div className="panel">
+        <div className="panel billingPlanCard">
           <h2>Avulso</h2>
           <p>R$ 9,90 por torneio</p>
           <p>Ideal para eventos únicos.</p>
@@ -1108,10 +1108,6 @@ function TournamentBracket() {
   <p>Controle os jogos por status: aguardando, jogando e finalizados.</p>
 
   <div className="tournamentTopActions">
-    <button onClick={() => navigate('/app')}>
-      Voltar ao Dashboard
-    </button>
-
     <button onClick={() => window.open(`/telao/${id}`, '_blank')}>
       Abrir Telão
     </button>
