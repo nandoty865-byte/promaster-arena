@@ -419,8 +419,8 @@ function Dashboard({ user }: any) {
                     Telão
                   </button>
 
-                  <button onClick={() => navigate(`/tournament/${t.id}/settings`)}>
-                    Configurações
+                    <button onClick={() => navigate(`/tournament/${t.id}/settings`)}>
+                      Editar
                   </button>
 
                   {t.publicSlug && (
@@ -646,6 +646,7 @@ function Upgrade() {
 function TournamentSettings() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [playersText, setPlayersText] = useState('')
   const [form, setForm] = useState<any>({
     name: '',
     location: '',
@@ -669,6 +670,9 @@ function TournamentSettings() {
           rules: data.rules || '',
           youtubeUrl: data.youtubeUrl || '',
         })
+        setPlayersText(Array.isArray(data.players)
+          ? data.players.map((player: any) => player.name).join('\n')
+          : '')
       })
   }, [id])
 
@@ -677,10 +681,15 @@ function TournamentSettings() {
   }
 
   function saveSettings() {
+    const players = playersText
+      .split('\n')
+      .map(player => player.trim())
+      .filter(Boolean)
+
     fetch(`${API}/tournaments/${id}/settings`, {
       method: 'PUT',
       headers: authHeaders(),
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, players }),
     })
       .then(res => res.json())
       .then(data => {
@@ -705,9 +714,9 @@ function TournamentSettings() {
 
       <main className="saasMain">
         <header className="hero">
-          <div className="badge">⚙️ Configurações</div>
-          <h1>Configurações do torneio</h1>
-          <p>Atualize dados públicos, regras, premiação e transmissão ao vivo.</p>
+          <div className="badge">✏️ Editar torneio</div>
+          <h1>Editar torneio</h1>
+          <p>Atualize dados públicos, jogadores, regras, premiação e transmissão ao vivo.</p>
         </header>
 
         <div className="panel settingsPanel">
@@ -742,7 +751,19 @@ function TournamentSettings() {
           <label>Regras</label>
           <textarea value={form.rules} onChange={e => updateField('rules', e.target.value)} />
 
-          <button className="primaryButton" onClick={saveSettings}>Salvar configurações</button>
+          <label>Jogadores</label>
+          <textarea
+            className="playersTextarea"
+            value={playersText}
+            onChange={e => setPlayersText(e.target.value)}
+            spellCheck={false}
+            placeholder="Um jogador por linha"
+          />
+          <p className="helperText">
+            Para manter a chave segura, edite os nomes mantendo a mesma quantidade de jogadores.
+          </p>
+
+          <button className="primaryButton" onClick={saveSettings}>Salvar edição</button>
         </div>
       </main>
     </div>
@@ -1054,6 +1075,8 @@ function CreateTournament({ user }: any) {
   const [eventTime, setEventTime] = useState('')
   const [prize, setPrize] = useState('')
   const [rules, setRules] = useState('')
+  const [hasYoutube, setHasYoutube] = useState(false)
+  const [youtubeUrl, setYoutubeUrl] = useState('')
   const [playersText, setPlayersText] = useState('')
 
   useEffect(() => {
@@ -1109,6 +1132,7 @@ function CreateTournament({ user }: any) {
       eventTime,
       prize,
       rules,
+      youtubeUrl: hasYoutube ? youtubeUrl : '',
       players,
     }),
   })
@@ -1197,6 +1221,26 @@ function CreateTournament({ user }: any) {
               onChange={e => setRules(e.target.value)}
               placeholder="Ex: Melhor de 3, atraso máximo 10 minutos..."
             />
+
+            <label className="checkboxLine">
+              <input
+                type="checkbox"
+                checked={hasYoutube}
+                onChange={e => setHasYoutube(e.target.checked)}
+              />
+              Transmissão YouTube
+            </label>
+
+            {hasYoutube && (
+              <>
+                <label>Link da transmissão</label>
+                <input
+                  value={youtubeUrl}
+                  onChange={e => setYoutubeUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+              </>
+            )}
           </div>
 
           <div className="panel">
@@ -1223,6 +1267,7 @@ function CreateTournament({ user }: any) {
   {location && <p>📍 {location}</p>}
   {eventDate && <p>📅 {eventDate}</p>}
   {eventTime && <p>⏰ {eventTime}</p>}
+  {hasYoutube && youtubeUrl && <p>Transmissão YouTube configurada</p>}
 </div>
 
             <button className="primaryButton" onClick={createTournament}>

@@ -239,6 +239,27 @@ body {
   resize: vertical;
 }
 
+.checkboxLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  color: #dbeafe;
+  font-weight: 800;
+}
+
+.panel .checkboxLine input {
+  width: auto;
+  margin: 0;
+}
+
+.helperText {
+  margin-top: -4px;
+  margin-bottom: 16px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
 .loginLinks {
   display: flex;
   justify-content: space-between;

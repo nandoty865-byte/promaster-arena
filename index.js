@@ -141,16 +141,30 @@ app.get('/tournaments/:id', async (req, res) => {
     const id = Number(req.params.id)
 
     const tournament = await prisma.tournament.findUnique({
-  where: { id },
-  include: {
-    organization: true
+      where: { id },
+      include: {
+        organization: true,
+        players: {
+          orderBy: { id: 'asc' }
+        }
+      }
+    })
+
+    if (!tournament) {
+      return res.status(404).json({ error: 'Torneio não encontrado' })
+    }
+
+    res.json(tournament)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Erro ao buscar torneio' })
   }
 })
 
 app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), async (req, res) => {
   try {
     const id = Number(req.params.id)
-    const { name, location, eventDate, eventTime, prize, rules, youtubeUrl } = req.body
+    const { name, location, eventDate, eventTime, prize, rules, youtubeUrl, players } = req.body
 
     const tournament = await prisma.tournament.findUnique({
       where: { id },
@@ -162,6 +176,27 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
 
     if (tournament.organizationId !== req.user.organizationId) {
       return res.status(403).json({ error: 'Acesso negado' })
+    }
+
+    if (Array.isArray(players)) {
+      const playerNames = players.map(player => String(player).trim()).filter(Boolean)
+      const existingPlayers = await prisma.player.findMany({
+        where: { tournamentId: id },
+        orderBy: { id: 'asc' },
+      })
+
+      if (playerNames.length !== existingPlayers.length) {
+        return res.status(400).json({
+          error: `Mantenha exatamente ${existingPlayers.length} jogadores neste torneio.`,
+        })
+      }
+
+      await Promise.all(existingPlayers.map((player, index) => (
+        prisma.player.update({
+          where: { id: player.id },
+          data: { name: playerNames[index] },
+        })
+      )))
     }
 
     const updated = await prisma.tournament.update({
@@ -181,17 +216,6 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Erro ao atualizar configurações do torneio' })
-  }
-})
-
-    if (!tournament) {
-      return res.status(404).json({ error: 'Torneio não encontrado' })
-    }
-
-    res.json(tournament)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Erro ao buscar torneio' })
   }
 })
 
@@ -562,7 +586,7 @@ app.post('/organizations/:organizationId/tournaments/create',
   async (req, res) => {
   try {
     const organizationId = Number(req.params.organizationId)
-    const { name, templateId, tableCount } = req.body
+    const { name, templateId, tableCount, location, eventDate, eventTime, prize, rules, youtubeUrl } = req.body
 
     const template = await prisma.tournamentTemplate.findUnique({
       where: { id: Number(templateId) },
@@ -629,6 +653,12 @@ if (template.playerCount > limits.maxPlayers) {
         status: 'draft',
         organizationId,
         publicSlug,
+        location: location || null,
+        eventDate: eventDate ? new Date(eventDate) : null,
+        eventTime: eventTime || null,
+        prize: prize || null,
+        rules: rules || null,
+        youtubeUrl: youtubeUrl || null,
       },
     })
 
