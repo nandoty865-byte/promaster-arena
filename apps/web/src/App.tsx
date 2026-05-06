@@ -33,6 +33,35 @@ function goHome() {
   window.location.href = '/'
 }
 
+function youtubeEmbedUrl(url?: string) {
+  if (!url) return ''
+
+  const patterns = [
+    /youtube\.com\/watch\?v=([^&]+)/,
+    /youtu\.be\/([^?]+)/,
+    /youtube\.com\/live\/([^?]+)/,
+    /youtube\.com\/embed\/([^?]+)/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match?.[1]) return `https://www.youtube.com/embed/${match[1]}`
+  }
+
+  return url
+}
+
+function isPublicPath(path: string) {
+  return (
+    path === '/' ||
+    path === '/login' ||
+    path === '/register' ||
+    path === '/forgot-password' ||
+    path.startsWith('/telao/') ||
+    path.startsWith('/public/')
+  )
+}
+
 export default function App() {
   const [user, setUser] = useState<any>(null)
   const [loadingUser, setLoadingUser] = useState(true)
@@ -42,11 +71,11 @@ export default function App() {
     const path = window.location.pathname
 
     if (!token) {
-  setLoadingUser(false)
+      setLoadingUser(false)
 
-  if (path !== '/login') {
-    window.location.href = `/login?redirect=${encodeURIComponent(path)}`
-  }
+      if (!isPublicPath(path)) {
+        window.location.href = `/login?redirect=${encodeURIComponent(path)}`
+      }
 
   return
 }
@@ -70,17 +99,20 @@ export default function App() {
       .finally(() => setLoadingUser(false))
   }, [])
 
-  if (loadingUser && window.location.pathname !== '/login') {
+  if (loadingUser && !isPublicPath(window.location.pathname)) {
     return <div className="app">Carregando sistema...</div>
   }
 
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/" element={<Landing />} />
       <Route path="/app" element={<Dashboard user={user} />} />
       <Route path="/upgrade" element={<Upgrade />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
+      <Route path="/tournament/:id/settings" element={<TournamentSettings />} />
+      <Route path="/public/:slug" element={<PublicTournament />} />
       <Route path="/admin/financeiro" element={<Financeiro />} />
       <Route path="/admin/clientes" element={<AdminClientes />} />
       <Route path="/admin" element={<Admin />} />
@@ -135,7 +167,7 @@ function Register() {
           return
         }
 
-        alert('Cadastro criado! Verifique seu e-mail para ativar a conta.')
+        alert('Cadastro criado! Você já pode entrar com seu e-mail e senha.')
         window.location.href = '/login'
       })
       .finally(() => setLoading(false))
@@ -180,8 +212,8 @@ function Register() {
 }
 
 function Login() {
-  const [email, setEmail] = useState('cliente4@teste.com')
-  const [password, setPassword] = useState('123456')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   function login() {
     fetch(`${API}/auth/login`, {
@@ -197,9 +229,12 @@ function Login() {
   }
 
   localStorage.setItem('token', data.token)
+  const redirect = new URLSearchParams(window.location.search).get('redirect')
 
   if (data.user?.role === 'superadmin') {
     window.location.href = '/admin'
+  } else if (redirect && redirect !== '/login') {
+    window.location.href = redirect
   } else {
     window.location.href = '/app'
   }
@@ -221,6 +256,36 @@ function Login() {
         />
 
         <button className="primaryButton" onClick={login}>Entrar</button>
+        <div className="loginLinks">
+          <a href="/forgot-password">Esqueci minha senha</a>
+          <a href="/register">Criar nova conta</a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ForgotPassword() {
+  const [email, setEmail] = useState('')
+
+  return (
+    <div className="app">
+      <div className="panel" style={{ maxWidth: 420, margin: '80px auto' }}>
+        <h1>Recuperar senha</h1>
+        <p>Informe seu e-mail. A recuperação automática ainda está em implantação.</p>
+
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" />
+
+        <button
+          className="primaryButton"
+          onClick={() => alert('Recuperação de senha em implantação. Entre em contato com o suporte para redefinir o acesso.')}
+        >
+          Solicitar recuperação
+        </button>
+
+        <div className="loginLinks">
+          <a href="/login">Voltar ao login</a>
+        </div>
       </div>
     </div>
   )
@@ -230,6 +295,11 @@ function Dashboard({ user }: any) {
   const navigate = useNavigate()
   const [tournaments, setTournaments] = useState<any[]>([])
   const [qrUrl, setQrUrl] = useState<string | null>(null)
+  const [detailsTournament, setDetailsTournament] = useState<any>(null)
+  const plan = user?.organization?.plan || 'free'
+  const isMasterPlan = plan === 'master'
+  const trialEndsAt = user?.organization?.trialEndsAt
+  const planExpiresAt = user?.organization?.planExpiresAt
 
   function logout() {
     localStorage.removeItem('token')
@@ -262,9 +332,11 @@ function Dashboard({ user }: any) {
 
         <button onClick={() => navigate('/app')}>Dashboard</button>
         <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
-        <button onClick={() => navigate('/upgrade')}>Planos</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        {isMasterPlan && (
+          <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
+        )}
         <button onClick={logout}>Sair</button>
-        <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
       </aside>
 
       <main className="saasMain">
@@ -280,28 +352,36 @@ function Dashboard({ user }: any) {
             <img src={user.organization.logoUrl} className="logo" />
           )}
 
-          <h1>Dashboard Cliente</h1>
+          <h1>Painel da Arena</h1>
           <p>{user?.organization?.name}</p>
 
-          <p className="planBadge">
-            Plano atual: {user?.organization?.plan?.toUpperCase() || 'FREE'}
-          </p>
+          <div className="planSummary">
+            <div>
+              <span>Plano atual</span>
+              <strong>{plan.toUpperCase()}</strong>
+            </div>
 
-          {user?.organization?.planExpiresAt && (
-            <p>
-              Vence em: {new Date(user.organization.planExpiresAt).toLocaleDateString()}
-            </p>
-          )}
+            <div>
+              <span>Início</span>
+              <strong>{new Date(user?.organization?.createdAt).toLocaleDateString()}</strong>
+            </div>
+
+            <div>
+              <span>Vencimento</span>
+              <strong>
+                {planExpiresAt
+                  ? new Date(planExpiresAt).toLocaleDateString()
+                  : trialEndsAt
+                    ? new Date(trialEndsAt).toLocaleDateString()
+                    : 'Sem vencimento'}
+              </strong>
+            </div>
+
+          </div>
 
           <button className="primaryButton" onClick={() => navigate('/criar-torneio')}>
             + Criar Torneio
           </button>
-
-          {user?.organization?.plan !== 'pro' && user?.organization?.plan !== 'master' && (
-            <button className="upgradeButton" onClick={() => navigate('/upgrade')}>
-              Fazer upgrade
-            </button>
-          )}
         </header>
 
         <div className="panel">
@@ -315,29 +395,28 @@ function Dashboard({ user }: any) {
             return (
               <div key={t.id} className="tournamentCard">
                 <div className="tournamentHeader">
-                  <strong>{t.name}</strong>
+                  <div className="tournamentTitleBlock">
+                    <strong>{t.name}</strong>
+                    <span>{t.location ? `📍 ${t.location}` : 'Local não informado'}</span>
+                  </div>
                   <span className={`statusBadge ${t.status}`}>{t.status}</span>
-                </div>
-
-                <p>{t.playerCount} jogadores</p>
-
-                <div className="eventInfo">
-                  {t.location && <span>📍 {t.location}</span>}
-                  {t.eventDate && (
-                    <span>📅 {new Date(t.eventDate).toLocaleDateString()}</span>
-                  )}
-                  {t.eventTime && <span>⏰ {t.eventTime}</span>}
-                  {t.prize && <span>🏆 Premiação: {t.prize}</span>}
-                  {t.rules && <span>📋 Regras: {t.rules}</span>}
                 </div>
 
                 <div className="tournamentActions">
                   <button onClick={() => navigate(`/tournament/${t.id}`)}>
-                    Ver chave
+                    Painel
+                  </button>
+
+                  <button onClick={() => setDetailsTournament(t)}>
+                    Detalhes
                   </button>
 
                   <button onClick={() => window.open(`/telao/${t.id}`, '_blank')}>
                     Telão
+                  </button>
+
+                    <button onClick={() => navigate(`/tournament/${t.id}/settings`)}>
+                      Editar
                   </button>
 
                   {t.publicSlug && (
@@ -371,14 +450,82 @@ function Dashboard({ user }: any) {
             </div>
           </div>
         )}
+
+        {detailsTournament && (
+          <div className="qrModal" onClick={() => setDetailsTournament(null)}>
+            <div className="detailsContent" onClick={e => e.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Detalhes do torneio</span>
+                  <h3>{detailsTournament.name}</h3>
+                </div>
+                <button onClick={() => setDetailsTournament(null)}>Fechar</button>
+              </div>
+
+              <div className="detailsList">
+                <div>
+                  <span>Status</span>
+                  <strong>{detailsTournament.status}</strong>
+                </div>
+                <div>
+                  <span>Jogadores</span>
+                  <strong>{detailsTournament.playerCount}</strong>
+                </div>
+                <div>
+                  <span>Data</span>
+                  <strong>{detailsTournament.eventDate ? new Date(detailsTournament.eventDate).toLocaleDateString() : '-'}</strong>
+                </div>
+                <div>
+                  <span>Horário</span>
+                  <strong>{detailsTournament.eventTime || '-'}</strong>
+                </div>
+                <div>
+                  <span>Premiação</span>
+                  <strong>{detailsTournament.prize || '-'}</strong>
+                </div>
+                <div>
+                  <span>Transmissão</span>
+                  <strong>{detailsTournament.youtubeUrl ? 'YouTube configurado' : 'Não configurada'}</strong>
+                </div>
+                {detailsTournament.youtubeUrl && (
+                  <div>
+                    <span>Link YouTube</span>
+                    <a href={detailsTournament.youtubeUrl} target="_blank" rel="noreferrer">
+                      Abrir transmissão
+                    </a>
+                  </div>
+                )}
+                {detailsTournament.publicSlug && (
+                  <div>
+                    <span>Página pública</span>
+                    <a href={`https://www.promasterarena.com.br/public/${detailsTournament.publicSlug}`} target="_blank" rel="noreferrer">
+                      Abrir página
+                    </a>
+                  </div>
+                )}
+                <div className="detailsRules">
+                  <span>Regras</span>
+                  <strong>{detailsTournament.rules || '-'}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
 }
 
 function Upgrade() {
+  const navigate = useNavigate()
   const [pixData, setPixData] = useState<any>(null)
   const [pixLoading, setPixLoading] = useState(false)
+  const [user, setUser] = useState<any>(null)
+  const [payments, setPayments] = useState<any[]>([])
+
+  const plan = user?.organization?.plan || 'free'
+  const trialEndsAt = user?.organization?.trialEndsAt
+  const planExpiresAt = user?.organization?.planExpiresAt
 
   function createPix(plan: string) {
     setPixLoading(true)
@@ -394,6 +541,16 @@ function Upgrade() {
   }
 
   useEffect(() => {
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setUser(data.user))
+
+    fetch(`${API}/me/payments`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setPayments(Array.isArray(data) ? data : []))
+  }, [])
+
+  useEffect(() => {
     if (!pixData?.paymentId) return
 
     const interval = setInterval(() => {
@@ -404,7 +561,7 @@ function Upgrade() {
         .then(data => {
           if (data.status === 'approved') {
             alert('Pagamento aprovado! Plano ativado.')
-            window.location.href = '/'
+            window.location.href = '/upgrade'
           }
         })
     }, 5000)
@@ -413,15 +570,56 @@ function Upgrade() {
   }, [pixData?.paymentId])
 
   return (
-    <div className="app">
-      <header className="hero">
-        <div className="badge">💳 ProMaster Arena</div>
-        <h1>Upgrade de Plano</h1>
-        <p>Escolha seu plano e pague via Pix</p>
-      </header>
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">🎱 ProMaster</div>
+        <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
+      </aside>
 
-      <div className="adminGrid">
-        <div className="panel">
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">💳 ProMaster Arena</div>
+          <h1>Planos e pagamentos</h1>
+          <p>Consulte seu plano, vencimento, alterações e histórico financeiro.</p>
+        </header>
+
+      <div className="panel">
+        <h2>Plano atual</h2>
+
+        <div className="planSummary planSummaryWide">
+          <div>
+            <span>Plano</span>
+            <strong>{plan.toUpperCase()}</strong>
+          </div>
+
+          <div>
+            <span>Início</span>
+            <strong>{user?.organization?.createdAt ? new Date(user.organization.createdAt).toLocaleDateString() : '-'}</strong>
+          </div>
+
+          <div>
+            <span>Vencimento</span>
+            <strong>
+              {planExpiresAt
+                ? new Date(planExpiresAt).toLocaleDateString()
+                : trialEndsAt
+                  ? new Date(trialEndsAt).toLocaleDateString()
+                  : 'Sem vencimento'}
+            </strong>
+          </div>
+
+          <div className="planActions">
+            <button onClick={() => window.scrollTo({ top: 420, behavior: 'smooth' })}>Upgrade</button>
+            <button onClick={() => alert('Downgrade em implantação. Entre em contato com o suporte.')}>Downgrade</button>
+            <button onClick={() => alert('Cancelamento em implantação. Entre em contato com o suporte.')}>Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="billingPlansGrid">
+        <div className="panel billingPlanCard">
           <h2>PRO</h2>
           <p>R$ 29,90/mês</p>
           <p>Torneios ilimitados até 64 jogadores.</p>
@@ -430,7 +628,7 @@ function Upgrade() {
           </button>
         </div>
 
-        <div className="panel">
+        <div className="panel billingPlanCard">
           <h2>MASTER</h2>
           <p>R$ 59,90/mês</p>
           <p>Até 128 jogadores ou 32 times.</p>
@@ -439,7 +637,7 @@ function Upgrade() {
           </button>
         </div>
 
-        <div className="panel">
+        <div className="panel billingPlanCard">
           <h2>Avulso</h2>
           <p>R$ 9,90 por torneio</p>
           <p>Ideal para eventos únicos.</p>
@@ -478,6 +676,153 @@ function Upgrade() {
           )}
         </div>
       )}
+
+      <div className="panel" style={{ marginTop: 30 }}>
+        <h2>Histórico de pagamentos</h2>
+
+        {payments.length === 0 && <p>Nenhum pagamento registrado.</p>}
+
+        {payments.map(payment => (
+          <div key={payment.id} className="paymentHistoryRow">
+            <div>
+              <strong>{payment.plan?.toUpperCase()}</strong>
+              <span>{new Date(payment.createdAt).toLocaleDateString()}</span>
+            </div>
+            <div>
+              <strong>R$ {Number(payment.amount).toFixed(2).replace('.', ',')}</strong>
+              <span>{payment.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      </main>
+    </div>
+  )
+}
+
+function TournamentSettings() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [playersText, setPlayersText] = useState('')
+  const [form, setForm] = useState<any>({
+    name: '',
+    location: '',
+    eventDate: '',
+    eventTime: '',
+    prize: '',
+    rules: '',
+    youtubeUrl: '',
+  })
+
+  useEffect(() => {
+    fetch(`${API}/tournaments/${id}`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        setForm({
+          name: data.name || '',
+          location: data.location || '',
+          eventDate: data.eventDate ? data.eventDate.slice(0, 10) : '',
+          eventTime: data.eventTime || '',
+          prize: data.prize || '',
+          rules: data.rules || '',
+          youtubeUrl: data.youtubeUrl || '',
+        })
+        setPlayersText(Array.isArray(data.players)
+          ? data.players.map((player: any) => player.name).join('\n')
+          : '')
+      })
+  }, [id])
+
+  function updateField(field: string, value: string) {
+    setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function saveSettings() {
+    const players = playersText
+      .split('\n')
+      .map(player => player.trim())
+      .filter(Boolean)
+
+    fetch(`${API}/tournaments/${id}/settings`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ ...form, players }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        alert('Configurações salvas.')
+        navigate('/app')
+      })
+  }
+
+  return (
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">🎱 ProMaster</div>
+        <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
+      </aside>
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">✏️ Editar torneio</div>
+          <h1>Editar torneio</h1>
+          <p>Atualize dados públicos, jogadores, regras, premiação e transmissão ao vivo.</p>
+        </header>
+
+        <div className="panel settingsPanel">
+          <label>Nome do torneio</label>
+          <input value={form.name} onChange={e => updateField('name', e.target.value)} />
+
+          <label>Local</label>
+          <input value={form.location} onChange={e => updateField('location', e.target.value)} />
+
+          <div className="settingsGrid">
+            <div>
+              <label>Data</label>
+              <input type="date" value={form.eventDate} onChange={e => updateField('eventDate', e.target.value)} />
+            </div>
+
+            <div>
+              <label>Horário</label>
+              <input type="time" value={form.eventTime} onChange={e => updateField('eventTime', e.target.value)} />
+            </div>
+          </div>
+
+          <label>Premiação</label>
+          <input value={form.prize} onChange={e => updateField('prize', e.target.value)} />
+
+          <label>Link da transmissão YouTube</label>
+          <input
+            value={form.youtubeUrl}
+            onChange={e => updateField('youtubeUrl', e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=..."
+          />
+
+          <label>Regras</label>
+          <textarea value={form.rules} onChange={e => updateField('rules', e.target.value)} />
+
+          <label>Jogadores</label>
+          <textarea
+            className="playersTextarea"
+            value={playersText}
+            onChange={e => setPlayersText(e.target.value)}
+            spellCheck={false}
+            placeholder="Um jogador por linha"
+          />
+          <p className="helperText">
+            Para manter a chave segura, edite os nomes mantendo a mesma quantidade de jogadores.
+          </p>
+
+          <button className="primaryButton" onClick={saveSettings}>Salvar edição</button>
+        </div>
+      </main>
     </div>
   )
 }
@@ -592,7 +937,7 @@ function Landing() {
 
         <div className="landingActions">
           <a href="/login">Entrar</a>
-          <a className="landingButton" href="/login">Começar grátis</a>
+          <a className="landingButton" href="/register">Começar grátis</a>
         </div>
       </header>
 
@@ -666,6 +1011,114 @@ function Landing() {
   )
 }
 
+function PublicTournament() {
+  const { slug } = useParams()
+  const [data, setData] = useState<any>(null)
+
+  useEffect(() => {
+    fetch(`${API}/public/${slug}`)
+      .then(res => res.json())
+      .then(setData)
+  }, [slug])
+
+  if (!data?.tournament) {
+    return <div className="publicPage">Carregando torneio...</div>
+  }
+
+  const { tournament, rounds } = data
+  const matches = (rounds || []).flatMap((round: any) =>
+    (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
+  )
+  const playing = matches.filter((match: any) => match.status === 'playing')
+  const finished = matches.filter((match: any) => match.status === 'finished')
+  const finalRound = rounds?.[rounds.length - 1]
+  const champion = finalRound?.matches?.[0]?.winner
+  const embedUrl = youtubeEmbedUrl(tournament.youtubeUrl)
+
+  return (
+    <div className="publicPage">
+      <header className="publicHero">
+        <span>🎱 ProMaster Arena</span>
+        <h1>{tournament.name}</h1>
+
+        {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
+      </header>
+
+      <main className="publicLayout">
+        <div className="publicLeftColumn">
+          <section className="publicCard">
+            <h2>Dados do torneio</h2>
+            <div className="publicInfoList">
+              <div><span>Status</span><strong>{tournament.status}</strong></div>
+              <div><span>Local</span><strong>{tournament.location || '-'}</strong></div>
+              <div><span>Data</span><strong>{tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong></div>
+              <div><span>Horário</span><strong>{tournament.eventTime || '-'}</strong></div>
+              <div><span>Premiação</span><strong>{tournament.prize || '-'}</strong></div>
+              <div><span>Regras</span><strong>{tournament.rules || '-'}</strong></div>
+            </div>
+          </section>
+
+          <section className="publicCard">
+            <h2>Jogos em andamento</h2>
+            {playing.length === 0 && <p>Nenhum jogo em andamento.</p>}
+            {playing.map((match: any) => (
+              <div key={match.id} className="publicMatchCard live">
+                <strong>Jogo #{match.matchNumber || match.id}</strong>
+                <span>{match.playerA} x {match.playerB}</span>
+                <small>Mesa {match.table}</small>
+              </div>
+            ))}
+          </section>
+        </div>
+
+        <aside className="publicRightColumn">
+          {embedUrl ? (
+            <section className="publicCard publicVideo">
+              <h2>Transmissão ao vivo</h2>
+              <iframe
+                src={embedUrl}
+                title="Transmissão ao vivo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </section>
+          ) : (
+            <section className="publicCard">
+              <h2>Resultados</h2>
+              {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
+              {finished.slice(-10).reverse().map((match: any) => (
+              <div key={match.id} className="publicMatchCard done">
+                <strong>Jogo #{match.matchNumber || match.id}</strong>
+                <span>
+                  {match.winner === match.playerA ? `🏆 ${match.playerA}` : match.playerA}
+                  {' x '}
+                  {match.winner === match.playerB ? `🏆 ${match.playerB}` : match.playerB}
+                </span>
+                <small>Vencedor: {match.winner}</small>
+              </div>
+              ))}
+            </section>
+          )}
+
+          {embedUrl && (
+            <section className="publicCard">
+              <h2>Resultados</h2>
+              {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
+              {finished.slice(-5).reverse().map((match: any) => (
+                <div key={match.id} className="publicMatchCard done">
+                  <strong>Jogo #{match.matchNumber || match.id}</strong>
+                  <span>{match.playerA} x {match.playerB}</span>
+                  <small>Vencedor: {match.winner}</small>
+                </div>
+              ))}
+            </section>
+          )}
+        </aside>
+      </main>
+    </div>
+  )
+}
+
 function CreateTournament({ user }: any) {
   const navigate = useNavigate()
 
@@ -679,6 +1132,8 @@ function CreateTournament({ user }: any) {
   const [eventTime, setEventTime] = useState('')
   const [prize, setPrize] = useState('')
   const [rules, setRules] = useState('')
+  const [hasYoutube, setHasYoutube] = useState(false)
+  const [youtubeUrl, setYoutubeUrl] = useState('')
   const [playersText, setPlayersText] = useState('')
 
   useEffect(() => {
@@ -734,6 +1189,7 @@ function CreateTournament({ user }: any) {
       eventTime,
       prize,
       rules,
+      youtubeUrl: hasYoutube ? youtubeUrl : '',
       players,
     }),
   })
@@ -754,15 +1210,15 @@ function CreateTournament({ user }: any) {
       <aside className="sidebar">
         <div className="sidebarLogo">🎱 ProMaster</div>
         <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/financeiro')}>Financeiro</button>
-        <button onClick={() => navigate('/upgrade')}>Planos</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
       </aside>
 
       <main className="saasMain">
         <header className="hero">
           <div className="badge">🏆 Novo Torneio</div>
           <h1>Criar Torneio</h1>
-          <p>Configure as informações do evento e cole a lista de jogadores.</p>
+          <p>Configure o evento e informe os participantes do torneio.</p>
         </header>
 
         <div className="createGrid">
@@ -822,18 +1278,39 @@ function CreateTournament({ user }: any) {
               onChange={e => setRules(e.target.value)}
               placeholder="Ex: Melhor de 3, atraso máximo 10 minutos..."
             />
+
+            <label className="checkboxLine">
+              <input
+                type="checkbox"
+                checked={hasYoutube}
+                onChange={e => setHasYoutube(e.target.checked)}
+              />
+              Transmissão YouTube
+            </label>
+
+            {hasYoutube && (
+              <>
+                <label>Link da transmissão</label>
+                <input
+                  value={youtubeUrl}
+                  onChange={e => setYoutubeUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+              </>
+            )}
           </div>
 
           <div className="panel">
             <h2>Jogadores</h2>
 
-            <p>Cole 1 jogador por linha.</p>
+            <p>Digite ou cole um jogador por linha. A ordem será embaralhada ao gerar a chave.</p>
 
             <textarea
               className="playersTextarea"
               value={playersText}
               onChange={e => setPlayersText(e.target.value)}
-              placeholder={`João\nCarlos\nMarcos\nPedro`}
+              spellCheck={false}
+              placeholder={`João Silva\nCarlos "Cacá"\nMarcos de Santos\nPedro Bola 8`}
             />
 
             <p style={{ marginTop: 10, color: '#94a3b8' }}>
@@ -847,6 +1324,7 @@ function CreateTournament({ user }: any) {
   {location && <p>📍 {location}</p>}
   {eventDate && <p>📅 {eventDate}</p>}
   {eventTime && <p>⏰ {eventTime}</p>}
+  {hasYoutube && youtubeUrl && <p>Transmissão YouTube configurada</p>}
 </div>
 
             <button className="primaryButton" onClick={createTournament}>
@@ -864,6 +1342,15 @@ function TournamentBracket() {
   const navigate = useNavigate()
 
   const [rounds, setRounds] = useState<any[]>([])
+  const [panelMode, setPanelMode] = useState<'board' | 'bracket'>('board')
+  const matches = rounds.flatMap(round =>
+    (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
+  )
+  const finalRound = rounds[rounds.length - 1]
+  const champion = finalRound?.matches?.[0]?.winner
+  const pendingMatches = matches.filter((match: any) => match.status === 'pending')
+  const playingMatches = matches.filter((match: any) => match.status === 'playing')
+  const finishedMatches = matches.filter((match: any) => match.status === 'finished')
 
   function loadBracket() {
     fetch(`${API}/tournaments/${id}/bracket`, {
@@ -895,97 +1382,161 @@ function TournamentBracket() {
     return () => clearInterval(interval)
   }, [id])
 
+  function renderMatchCard(match: any) {
+    return (
+      <div
+        key={match.id}
+        className={`proMatch ${match.status} ${match.winner ? 'hasWinner' : ''}`}
+      >
+        <div className="matchMeta">
+          <span>Jogo #{match.matchNumber || match.id}</span>
+          <span>Mesa {match.table}</span>
+        </div>
+
+        <div className="matchStatus">
+          {match.status === 'playing'
+            ? 'JOGANDO'
+            : match.status === 'finished'
+              ? 'FINALIZADO'
+              : 'AGUARDANDO'}
+        </div>
+
+        <div className={match.winner === match.playerA ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerA}</span>
+          {match.status !== 'finished' && (
+            <button onClick={() => finishMatch(match.id, match.playerAId)}>
+              Venceu
+            </button>
+          )}
+        </div>
+
+        <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerB}</span>
+          {match.status !== 'finished' && (
+            <button onClick={() => finishMatch(match.id, match.playerBId)}>
+              Venceu
+            </button>
+          )}
+        </div>
+
+        {match.status === 'pending' && (
+          <button className="startButton" onClick={() => startMatch(match.id)}>
+            Iniciar jogo
+          </button>
+        )}
+
+        {match.winner && (
+          <div className={match.winner === champion ? 'advanceLine championLine' : 'advanceLine'}>
+            {match.winner === champion ? `🏆 Campeão: ${match.winner}` : `${match.winner} avançou`}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  function renderBracketCard(match: any, isFinalRound = false) {
+    return (
+      <div key={match.id} className={`proMatch ${match.status} ${match.winner ? 'hasWinner' : ''}`}>
+        <div className="matchMeta">
+          <span>Jogo #{match.matchNumber || match.id}</span>
+          <span>Mesa {match.table}</span>
+        </div>
+
+        <div className={match.winner === match.playerA ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerA}</span>
+        </div>
+
+        <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
+          <span>{match.playerB}</span>
+        </div>
+
+        {match.winner && (
+          <div className={isFinalRound ? 'advanceLine championLine' : 'advanceLine'}>
+            {isFinalRound ? `🏆 Campeão: ${match.winner}` : `${match.winner} avançou`}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="saasLayout">
       <aside className="sidebar">
         <div className="sidebarLogo">🎱 ProMaster</div>
         <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/financeiro')}>Financeiro</button>
-        <button onClick={() => navigate('/upgrade')}>Planos</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate('/app')}>Voltar</button>
       </aside>
 
       <main className="saasMain">
        <header className="hero">
-  <div className="badge">🏆 Chave do Torneio</div>
+  <div className="badge">🏆 Painel do Torneio</div>
 
-  <h1>Chave Visual</h1>
-  <p>Atualização automática em tempo real</p>
+  <h1>Painel Torneio</h1>
+  <p>Controle os jogos por status: aguardando, jogando e finalizados.</p>
+
+  {champion && (
+    <div className="championBanner">
+      🏆 Campeão: {champion}
+    </div>
+  )}
 
   <div className="tournamentTopActions">
-    <button onClick={() => navigate('/app')}>
-      Voltar ao Dashboard
-    </button>
-
     <button onClick={() => window.open(`/telao/${id}`, '_blank')}>
       Abrir Telão
+    </button>
+
+    <button onClick={() => setPanelMode(panelMode === 'board' ? 'bracket' : 'board')}>
+      {panelMode === 'board' ? 'Chaveamento' : 'Painel'}
     </button>
   </div>
 </header>
 
-        <div className="proBracket">
-          {rounds.map((round, roundIndex) => (
-            <div key={round.round} className="proRound">
-             <h2>
-  {roundIndex === rounds.length - 1
-    ? 'Final'
-    : roundIndex === rounds.length - 2
-      ? 'Semifinal'
-      : `Rodada ${round.round}`}
-</h2>
-
-              <div className="roundMatches">
-                {round.matches.map((match: any) => (
-                 <div
-                   key={match.id}
-                   className={`proMatch ${match.status} ${match.winner ? 'hasWinner' : ''}`}
-                   >
-                    <div className="matchMeta">
-                      <span>Jogo #{match.id}</span>
-                      <span>Mesa {match.table}</span>
-                    </div>
-
-                    <div className="matchStatus">
-                    {match.winner && (
-              <div className="advanceLine">
-                    {match.winner} avançou para a próxima fase
-              </div>
-            )}
-                      {match.status === 'playing'
-                        ? 'AO VIVO'
-                        : match.status === 'finished'
-                          ? 'FINALIZADO'
-                          : 'AGUARDANDO'}
-                    </div>
-
-                    <div className={match.winner === match.playerA ? 'proPlayer winner' : 'proPlayer'}>
-                      <span>{match.playerA}</span>
-                      {match.status !== 'finished' && (
-                        <button onClick={() => finishMatch(match.id, match.playerAId)}>
-                          Venceu
-                        </button>
-                      )}
-                    </div>
-
-                    <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
-                      <span>{match.playerB}</span>
-                      {match.status !== 'finished' && (
-                        <button onClick={() => finishMatch(match.id, match.playerBId)}>
-                          Venceu
-                        </button>
-                      )}
-                    </div>
-
-                    {match.status === 'pending' && (
-                      <button className="startButton" onClick={() => startMatch(match.id)}>
-                        Iniciar jogo
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
+        {panelMode === 'board' ? (
+          <div className="matchBoard">
+          <section className="matchColumn pending">
+            <h2>Aguardando</h2>
+            {pendingMatches.length === 0 && <p className="emptyColumn">Nenhum jogo aguardando.</p>}
+            <div className="roundMatches">
+              {pendingMatches.map(renderMatchCard)}
             </div>
-          ))}
+          </section>
+
+          <section className="matchColumn playing">
+            <h2>Jogando</h2>
+            {playingMatches.length === 0 && <p className="emptyColumn">Nenhum jogo em andamento.</p>}
+            <div className="roundMatches">
+              {playingMatches.map(renderMatchCard)}
+            </div>
+          </section>
+
+          <section className="matchColumn finished">
+            <h2>Finalizados</h2>
+            {finishedMatches.length === 0 && <p className="emptyColumn">Nenhum jogo finalizado.</p>}
+            <div className="roundMatches">
+              {finishedMatches.map(renderMatchCard)}
+            </div>
+          </section>
         </div>
+        ) : (
+          <div className="proBracket">
+            {rounds.map((round, roundIndex) => (
+              <div key={round.round} className="proRound">
+                <h2>
+                  {roundIndex === rounds.length - 1
+                    ? 'Final'
+                    : roundIndex === rounds.length - 2
+                      ? 'Semifinal'
+                      : `Rodada ${round.round}`}
+                </h2>
+
+                <div className="roundMatches">
+                  {round.matches.map((match: any) => renderBracketCard(match, roundIndex === rounds.length - 1))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   )
@@ -1000,6 +1551,14 @@ function TelaoTV() {
   const publicUrl = tournament?.publicSlug
     ? `https://www.promasterarena.com.br/public/${tournament.publicSlug}`
     : null
+  const matches = rounds.flatMap(r => r.matches || [])
+  const playing = matches.filter(m => m.status === 'playing')
+  const pending = matches.filter(m => m.status === 'pending')
+  const finished = matches.filter(m => m.status === 'finished')
+  const destaque = playing[0] || pending[0]
+
+  const finalRound = rounds[rounds.length - 1]
+  const champion = finalRound?.matches?.[0]?.winner
 
   function loadBracket() {
     fetch(`${API}/tournaments/${id}/bracket`)
@@ -1019,23 +1578,27 @@ function TelaoTV() {
     const updateInterval = setInterval(loadBracket, 4000)
 
     const rotateInterval = setInterval(() => {
-      setView(v => (v + 1) % 2)
+      setView(v => (v + 1) % (champion ? 3 : 2))
     }, 15000)
 
     return () => {
       clearInterval(updateInterval)
       clearInterval(rotateInterval)
     }
-  }, [id])
+  }, [id, champion])
 
-  const matches = rounds.flatMap(r => r.matches || [])
-  const playing = matches.filter(m => m.status === 'playing')
-  const pending = matches.filter(m => m.status === 'pending')
-  const finished = matches.filter(m => m.status === 'finished')
-  const destaque = playing[0] || pending[0]
+  const bracketCardHeight = 132
+  const bracketBaseGap = 18
 
-  const finalRound = rounds[rounds.length - 1]
-  const champion = finalRound?.matches?.[0]?.winner
+  function bracketRoundStyle(roundIndex: number) {
+    const scale = Math.pow(2, roundIndex)
+    const unit = bracketCardHeight + bracketBaseGap
+
+    return {
+      '--tv-round-offset': `${roundIndex === 0 ? 0 : ((scale - 1) * unit) / 2}px`,
+      '--tv-match-gap': `${bracketBaseGap + (scale - 1) * unit}px`,
+    } as any
+  }
 
   return (
     <div className="tvMode">
@@ -1127,8 +1690,12 @@ function TelaoTV() {
               <h3>Finalizados</h3>
               {finished.slice(-8).reverse().map(m => (
                 <div key={m.id} className="tvRow">
-                  <span>{m.playerA} x {m.playerB}</span>
-                  <strong>🏆 {m.winner}</strong>
+                  <span>
+                    {m.winner === m.playerA ? `🏆 ${m.playerA}` : m.playerA}
+                    {' x '}
+                    {m.winner === m.playerB ? `🏆 ${m.playerB}` : m.playerB}
+                  </span>
+                  <strong>Finalizado</strong>
                 </div>
               ))}
             </div>
@@ -1142,7 +1709,11 @@ function TelaoTV() {
 
           <div className="tvBracket">
             {rounds.map((round, roundIndex) => (
-              <div key={round.round} className="tvBracketRound">
+              <div
+                key={round.round}
+                className="tvBracketRound"
+                style={bracketRoundStyle(roundIndex)}
+              >
                 <h3>
                   {roundIndex === rounds.length - 1
                     ? 'Final'
@@ -1151,25 +1722,47 @@ function TelaoTV() {
                       : `Rodada ${round.round}`}
                 </h3>
 
-                {round.matches.map((match: any) => (
-                  <div key={match.id} className={`tvBracketMatch ${match.status}`}>
-                    <div className="matchMeta">
-                      <span>Jogo #{match.id}</span>
-                      <span>Mesa {match.table}</span>
-                    </div>
+                <div className="tvBracketRoundMatches">
+                  {round.matches.map((match: any) => (
+                    <div key={match.id} className={`tvBracketMatch ${match.status}`}>
+                      <div className="matchMeta">
+                        <span>Jogo #{match.matchNumber || match.id}</span>
+                        <span>Mesa {match.table}</span>
+                      </div>
 
-                    <div className={match.winner === match.playerA ? 'tvBracketPlayer winner' : 'tvBracketPlayer'}>
-                      {match.playerA}
-                    </div>
+                      <div className={match.winner === match.playerA ? 'tvBracketPlayer winner' : 'tvBracketPlayer'}>
+                        {match.playerA}
+                      </div>
 
-                    <div className={match.winner === match.playerB ? 'tvBracketPlayer winner' : 'tvBracketPlayer'}>
-                      {match.playerB}
+                      <div className={match.winner === match.playerB ? 'tvBracketPlayer winner' : 'tvBracketPlayer'}>
+                        {match.playerB}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {view === 2 && champion && (
+        <div className="tvCelebration">
+          <div className="confettiLayer">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <span key={i} style={{ '--i': i } as any}></span>
+            ))}
+          </div>
+
+          <div className="fireworksLayer">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div className="championTrophy">🏆</div>
+          <p>Campeão do torneio</p>
+          <h2>{champion}</h2>
         </div>
       )}
     </div>
