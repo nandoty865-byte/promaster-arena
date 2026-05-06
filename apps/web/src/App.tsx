@@ -1035,6 +1035,12 @@ function PublicTournament() {
   const finalRound = rounds?.[rounds.length - 1]
   const champion = finalRound?.matches?.[0]?.winner
   const embedUrl = youtubeEmbedUrl(tournament.youtubeUrl)
+  const prizeLines = tournament.prize
+    ? String(tournament.prize).split(/\n|,/).map((line: string) => line.trim()).filter(Boolean)
+    : []
+  const ruleLines = tournament.rules
+    ? String(tournament.rules).split(/\n|,/).map((line: string) => line.trim()).filter(Boolean)
+    : []
 
   return (
     <div className="publicPage">
@@ -1062,12 +1068,28 @@ function PublicTournament() {
 
           <div className="publicCard publicMiniInfoCard">
             <span className="publicCardLabel">Premiação</span>
-            <strong>{tournament.prize || '-'}</strong>
+            {prizeLines.length > 0 ? (
+              <div className="publicTextLines">
+                {prizeLines.map((line: string, index: number) => (
+                  <p key={index}>{line}</p>
+                ))}
+              </div>
+            ) : (
+              <p>Premiação não informada</p>
+            )}
           </div>
 
           <div className="publicCard publicMiniInfoCard">
             <span className="publicCardLabel">Regras</span>
-            <p>{tournament.rules || 'Regras não informadas'}</p>
+            {ruleLines.length > 0 ? (
+              <div className="publicTextLines">
+                {ruleLines.map((line: string, index: number) => (
+                  <p key={index}>- {line.replace(/^-+/, '').trim()}</p>
+                ))}
+              </div>
+            ) : (
+              <p>Regras não informadas</p>
+            )}
           </div>
         </section>
 
