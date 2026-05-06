@@ -72,6 +72,71 @@ function getPlanLimits(plan) {
   return plans[plan] || plans.free
 }
 
+async function advanceFinishedRounds(tournamentId, startRound) {
+  let round = startRound
+
+  while (true) {
+    const roundMatches = await prisma.match.findMany({
+      where: { tournamentId, round },
+      orderBy: { id: 'asc' },
+    })
+
+    if (roundMatches.length === 0) return null
+    if (!roundMatches.every(match => match.status === 'finished')) return null
+
+    const winners = roundMatches.map(match => match.winnerId).filter(Boolean)
+
+    if (winners.length === 1) {
+      await prisma.tournament.update({
+        where: { id: tournamentId },
+        data: { status: 'finished' },
+      })
+
+      return winners[0]
+    }
+
+    const nextRound = round + 1
+    const existingNextRound = await prisma.match.findMany({
+      where: { tournamentId, round: nextRound },
+    })
+
+    if (existingNextRound.length > 0) {
+      round = nextRound
+      continue
+    }
+
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+    })
+
+    let table = 1
+
+    for (let i = 0; i < winners.length; i += 2) {
+      const playerAId = winners[i]
+      const playerBId = winners[i + 1] || null
+
+      await prisma.match.create({
+        data: {
+          tournamentId,
+          playerAId,
+          playerBId,
+          winnerId: playerBId ? null : playerAId,
+          loserId: null,
+          round: nextRound,
+          bracketType: 'knockout',
+          tableNumber: table,
+          status: playerBId ? 'pending' : 'finished',
+        },
+      })
+
+      table++
+      if (table > tournament.tableCount) table = 1
+    }
+
+    round = nextRound
+  }
+}
+
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) {
@@ -400,8 +465,8 @@ app.get('/tournaments/:id/bracket', async (req, res) => {
   matchNumber: index + 1,
   playerAId: m.playerAId,
   playerBId: m.playerBId,
-  playerA: playerMap[m.playerAId],
-  playerB: playerMap[m.playerBId],
+  playerA: playerMap[m.playerAId] || 'BYE',
+  playerB: playerMap[m.playerBId] || 'BYE',
   winner: playerMap[m.winnerId],
   table: m.tableNumber,
   status: m.status
@@ -447,66 +512,15 @@ app.post('/matches/:id/result', auth, requireRole('admin', 'operator'), async (r
       },
     })
 
-    const roundMatches = await prisma.match.findMany({
-      where: {
-        tournamentId: match.tournamentId,
-        round: match.round,
-      },
-      orderBy: { id: 'asc' },
-    })
+    const championId = await advanceFinishedRounds(match.tournamentId, match.round)
 
-    const allFinished = roundMatches.every(m => m.status === 'finished')
-
-    if (allFinished) {
-      const winners = roundMatches.map(m => m.winnerId).filter(Boolean)
-
-      if (winners.length === 1) {
-        await prisma.tournament.update({
-          where: { id: match.tournamentId },
-          data: { status: 'finished' },
-        })
-
-        return res.json({
-          ok: true,
-          message: 'Resultado salvo. Torneio finalizado.',
-          championId: winners[0],
-          match: updatedMatch,
-        })
-      }
-
-      const nextRound = match.round + 1
-
-      const existingNextRound = await prisma.match.findMany({
-        where: {
-          tournamentId: match.tournamentId,
-          round: nextRound,
-        },
+    if (championId) {
+      return res.json({
+        ok: true,
+        message: 'Resultado salvo. Torneio finalizado.',
+        championId,
+        match: updatedMatch,
       })
-
-      if (existingNextRound.length === 0) {
-        const tournament = await prisma.tournament.findUnique({
-          where: { id: match.tournamentId },
-        })
-
-        let table = 1
-
-        for (let i = 0; i < winners.length; i += 2) {
-          await prisma.match.create({
-            data: {
-              tournamentId: match.tournamentId,
-              playerAId: winners[i],
-              playerBId: winners[i + 1],
-              round: nextRound,
-              bracketType: 'knockout',
-              tableNumber: table,
-              status: 'pending',
-            },
-          })
-
-          table++
-          if (table > tournament.tableCount) table = 1
-        }
-      }
     }
 
     res.json({
@@ -663,15 +677,15 @@ if (template.playerCount > limits.maxPlayers) {
     })
 
     const players = []
+    const playerNames = Array.isArray(req.body.players)
+      ? req.body.players.map(player => String(player).trim()).filter(Boolean)
+      : []
 
-    const playerNames = Array.isArray(req.body.players) ? req.body.players : []
-
-for (let i = 1; i <= template.playerCount; i++) {
-  const customName = playerNames[i - 1]
+for (const playerName of playerNames.slice(0, template.playerCount)) {
 
   const player = await prisma.player.create({
     data: {
-      name: customName && customName.trim() ? customName.trim() : `Jogador ${i}`,
+      name: playerName,
       tournamentId: tournament.id,
     },
   })
@@ -681,19 +695,35 @@ for (let i = 1; i <= template.playerCount; i++) {
 
     players.sort(() => Math.random() - 0.5)
 
+    const playerIds = players.map(player => player.id)
+    const matchCount = Math.ceil(template.playerCount / 2)
+
     let table = 1
     const matches = []
 
-    for (let i = 0; i < players.length; i += 2) {
+    for (let i = 0; i < matchCount; i++) {
+      const playerAId = playerIds[i] || null
+      const playerBId = playerIds[i + matchCount] || null
+
+      if (!playerAId && !playerBId) continue
+
+      const byeWinnerId = playerAId && !playerBId
+        ? playerAId
+        : !playerAId && playerBId
+          ? playerBId
+          : null
+
       const match = await prisma.match.create({
         data: {
           tournamentId: tournament.id,
-          playerAId: players[i].id,
-          playerBId: players[i + 1].id,
+          playerAId,
+          playerBId,
+          winnerId: byeWinnerId,
+          loserId: null,
           round: 1,
           bracketType: template.eliminationType === 'double' ? 'winners' : 'knockout',
           tableNumber: table,
-          status: 'pending',
+          status: byeWinnerId ? 'finished' : 'pending',
         },
       })
 
@@ -702,6 +732,8 @@ for (let i = 1; i <= template.playerCount; i++) {
       table++
       if (table > Number(tableCount)) table = 1
     }
+
+    await advanceFinishedRounds(tournament.id, 1)
 
     res.json({
       ok: true,
@@ -752,8 +784,8 @@ app.get('/public/:slug', async (req, res) => {
       rounds[m.round].push({
         id: m.id,
         matchNumber: index + 1,
-        playerA: playerMap[m.playerAId],
-        playerB: playerMap[m.playerBId],
+        playerA: playerMap[m.playerAId] || 'BYE',
+        playerB: playerMap[m.playerBId] || 'BYE',
         playerAId: m.playerAId,
         playerBId: m.playerBId,
         winner: playerMap[m.winnerId],

@@ -662,7 +662,19 @@ body {
 .tournamentHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.tournamentTitleBlock {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+
+.tournamentTitleBlock span {
+  color: #bfdbfe;
+  font-size: 14px;
 }
 
 .statusBadge {
@@ -699,11 +711,6 @@ body {
   color: white;
   font-weight: 700;
   cursor: pointer;
-}
-
-.tournamentLocation {
-  margin: 12px 0 0;
-  color: #bfdbfe;
 }
 
 .qrModal {
@@ -1169,7 +1176,8 @@ button:hover {
 .saasMain .tournamentHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 .saasMain .tournamentActions {

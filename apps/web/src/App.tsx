@@ -395,13 +395,12 @@ function Dashboard({ user }: any) {
             return (
               <div key={t.id} className="tournamentCard">
                 <div className="tournamentHeader">
-                  <strong>{t.name}</strong>
+                  <div className="tournamentTitleBlock">
+                    <strong>{t.name}</strong>
+                    <span>{t.location ? `📍 ${t.location}` : 'Local não informado'}</span>
+                  </div>
                   <span className={`statusBadge ${t.status}`}>{t.status}</span>
                 </div>
-
-                <p className="tournamentLocation">
-                  {t.location ? `📍 ${t.location}` : 'Local não informado'}
-                </p>
 
                 <div className="tournamentActions">
                   <button onClick={() => navigate(`/tournament/${t.id}`)}>
