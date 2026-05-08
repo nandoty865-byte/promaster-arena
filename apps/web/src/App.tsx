@@ -442,10 +442,14 @@ function Dashboard({ user }: any) {
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [detailsTournament, setDetailsTournament] = useState<any>(null)
   const plan = user?.organization?.plan || 'trial'
-  const planLabel = plan === 'free' ? 'ACESSO GRATUITO' : plan.toUpperCase()
   const isMasterPlan = plan === 'master' || plan === 'free'
-  const trialEndsAt = user?.organization?.trialEndsAt
-  const planExpiresAt = user?.organization?.planExpiresAt
+  const finishedCount = tournaments.filter(t => t.status === 'finished').length
+  const canceledCount = tournaments.filter(t =>
+    ['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
+  ).length
+  const futureCount = tournaments.filter(t =>
+    t.status !== 'finished' && !['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
+  ).length
 
   function logout() {
     localStorage.removeItem('token')
@@ -477,6 +481,9 @@ function Dashboard({ user }: any) {
         <div className="sidebarLogo">🎱 ProMaster</div>
 
         <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => document.getElementById('meus-torneios')?.scrollIntoView({ behavior: 'smooth' })}>
+          Meus Torneios
+        </button>
         <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
         <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
         {isMasterPlan && (
@@ -500,37 +507,31 @@ function Dashboard({ user }: any) {
 
           <h1>Painel da Arena</h1>
           <p>{user?.organization?.name}</p>
-
-          <div className="planSummary">
-            <div>
-              <span>Plano atual</span>
-              <strong>{planLabel}</strong>
-            </div>
-
-            <div>
-              <span>Início</span>
-              <strong>{new Date(user?.organization?.createdAt).toLocaleDateString()}</strong>
-            </div>
-
-            <div>
-              <span>Vencimento</span>
-              <strong>
-                {planExpiresAt
-                  ? new Date(planExpiresAt).toLocaleDateString()
-                  : trialEndsAt
-                    ? new Date(trialEndsAt).toLocaleDateString()
-                    : 'Sem vencimento'}
-              </strong>
-            </div>
-
-          </div>
-
-          <button className="primaryButton" onClick={() => navigate('/criar-torneio')}>
-            + Criar Torneio
-          </button>
         </header>
 
-        <div className="panel">
+        <div className="dashboardStatsGrid">
+          <div className="dashboardStatCard">
+            <span>Finalizados</span>
+            <strong>{finishedCount}</strong>
+          </div>
+
+          <div className="dashboardStatCard">
+            <span>Futuros</span>
+            <strong>{futureCount}</strong>
+          </div>
+
+          <div className="dashboardStatCard">
+            <span>Cancelados</span>
+            <strong>{canceledCount}</strong>
+          </div>
+
+          <button className="dashboardCreateCard" onClick={() => navigate('/criar-torneio')}>
+            <span>+</span>
+            <strong>Criar Torneio</strong>
+          </button>
+        </div>
+
+        <div id="meus-torneios" className="panel">
           <h2>Meus Torneios</h2>
 
           {tournaments.length === 0 && <p>Nenhum torneio encontrado.</p>}
