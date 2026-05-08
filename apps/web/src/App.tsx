@@ -108,6 +108,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/" element={<Landing />} />
+      <Route path="/planos" element={<PlansComparison />} />
       <Route path="/app" element={<Dashboard user={user} />} />
       <Route path="/app/perfil" element={<ProfilePage />} />
       <Route path="/upgrade" element={<Upgrade />} />
@@ -1380,7 +1381,7 @@ function Landing() {
 
           <div className="landingCtas">
             <a className="landingButton" href="/register">Testar grátis por 7 dias</a>
-            <a className="landingSecondary" href="#planos">Ver planos</a>
+            <a className="landingSecondary" href="/planos">Ver planos</a>
           </div>
         </div>
 
@@ -1439,6 +1440,130 @@ function Landing() {
           </div>
         </div>
       </section>
+    </div>
+  )
+}
+
+function PlansComparison() {
+  const plans = [
+    {
+      name: 'Trial Free',
+      price: 'R$ 0',
+      detail: '7 dias ou 1 torneio',
+      description: 'Para testar a plataforma com acesso aos principais recursos.',
+      featured: false,
+      cta: 'Começar grátis',
+      href: '/register',
+      features: ['1 torneio', 'Até 16 jogadores', 'Chave e painel do torneio', 'Página pública', 'Login após expirar'],
+    },
+    {
+      name: 'Pro',
+      price: 'R$ 59,90',
+      detail: 'por mês',
+      description: 'Para arenas e organizadores com torneios recorrentes.',
+      featured: true,
+      cta: 'Escolher Pro',
+      href: '/register',
+      features: ['Torneios ilimitados', 'Até 64 jogadores', 'Telão e página pública', 'Ranking e histórico', 'Recursos principais'],
+    },
+    {
+      name: 'Master',
+      price: 'R$ 89,90',
+      detail: 'por mês',
+      description: 'Para operações maiores, equipe e torneios acima de 64 jogadores.',
+      featured: false,
+      cta: 'Escolher Master',
+      href: '/register',
+      features: ['Torneios acima de 64 jogadores', 'Usuários/equipe', 'Recursos avançados', 'Gestão ampliada', 'Acesso completo'],
+    },
+    {
+      name: 'Avulso',
+      price: 'R$ 21,90',
+      detail: 'por torneio',
+      description: 'Para quem precisa organizar apenas um evento pontual.',
+      featured: false,
+      cta: 'Comprar avulso',
+      href: '/register',
+      features: ['Crédito de 1 torneio', 'Ideal para evento único', 'Chave e painel do torneio', 'Página pública', 'Sem mensalidade'],
+    },
+  ]
+
+  const rows = [
+    ['Preço', 'Grátis', 'R$ 59,90/mês', 'R$ 89,90/mês', 'R$ 21,90/torneio'],
+    ['Torneios', '1 torneio', 'Ilimitados', 'Ilimitados', '1 crédito'],
+    ['Jogadores', 'Até 16', 'Até 64', 'Acima de 64', 'Até 64'],
+    ['Login após expirar', 'Sim', 'Sim', 'Sim', 'Sim'],
+    ['Criar novo torneio após expirar', 'Não', 'Sim', 'Sim', 'Com novo crédito'],
+    ['Usuários/equipe', 'Não', 'Não', 'Sim', 'Não'],
+    ['Melhor para', 'Teste inicial', 'Uso recorrente', 'Operação maior', 'Evento único'],
+  ]
+
+  return (
+    <div className="plansPage">
+      <header className="plansPageHeader">
+        <a href="/" className="landingLogo">🎱 ProMaster Arena</a>
+        <div className="landingActions">
+          <a href="/login">Entrar</a>
+          <a className="landingButton" href="/register">Começar grátis</a>
+        </div>
+      </header>
+
+      <main className="plansPageMain">
+        <section className="plansHero">
+          <span>Comparativo de planos</span>
+          <h1>Escolha o plano certo para sua arena</h1>
+          <p>Compare limites, valores e recursos antes de começar.</p>
+        </section>
+
+        <section className="plansCompareGrid">
+          {plans.map(plan => (
+            <article key={plan.name} className={plan.featured ? 'planCompareCard featured' : 'planCompareCard'}>
+              <div>
+                <h2>{plan.name}</h2>
+                <strong>{plan.price}</strong>
+                <span>{plan.detail}</span>
+                <p>{plan.description}</p>
+              </div>
+
+              <ul>
+                {plan.features.map(feature => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+
+              <a className={plan.featured ? 'landingButton' : 'landingSecondary'} href={plan.href}>
+                {plan.cta}
+              </a>
+            </article>
+          ))}
+        </section>
+
+        <section className="plansTablePanel">
+          <h2>Comparativo rápido</h2>
+          <div className="plansTableWrap">
+            <table className="plansTable">
+              <thead>
+                <tr>
+                  <th>Recurso</th>
+                  <th>Trial Free</th>
+                  <th>Pro</th>
+                  <th>Master</th>
+                  <th>Avulso</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(row => (
+                  <tr key={row[0]}>
+                    {row.map(cell => (
+                      <td key={cell}>{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
     </div>
   )
 }

@@ -1740,7 +1740,7 @@ button:hover {
   max-width: 1180px;
   margin: 70px auto 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 22px;
 }
 
@@ -1773,10 +1773,140 @@ button:hover {
   transform: scale(1.03);
 }
 
+.plansPage {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(34,197,94,.18), transparent 30%),
+    radial-gradient(circle at top right, rgba(96,165,250,.16), transparent 28%),
+    #020617;
+  color: white;
+  padding: 28px;
+}
+
+.plansPageHeader {
+  max-width: 1180px;
+  margin: 0 auto 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plansPageHeader .landingLogo {
+  text-decoration: none;
+}
+
+.plansPageMain {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.plansHero {
+  max-width: 760px;
+  margin-bottom: 34px;
+}
+
+.plansHero span {
+  color: #86efac;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.plansHero h1 {
+  font-size: clamp(40px, 6vw, 72px);
+  line-height: .95;
+  margin: 12px 0;
+}
+
+.plansHero p {
+  color: #c7d2fe;
+  font-size: 20px;
+}
+
+.plansCompareGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.planCompareCard {
+  min-height: 460px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 18px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.planCompareCard.featured {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px rgba(34,197,94,.35), 0 22px 70px rgba(34,197,94,.12);
+}
+
+.planCompareCard h2 {
+  margin: 0 0 14px;
+}
+
+.planCompareCard strong {
+  display: block;
+  color: #86efac;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.planCompareCard span,
+.planCompareCard p {
+  color: #cbd5e1;
+}
+
+.planCompareCard ul {
+  display: grid;
+  gap: 10px;
+  padding-left: 18px;
+  margin: 22px 0;
+}
+
+.planCompareCard a {
+  margin-top: auto;
+  text-align: center;
+}
+
+.plansTablePanel {
+  margin: 34px 0 70px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 18px;
+  padding: 22px;
+}
+
+.plansTableWrap {
+  overflow-x: auto;
+}
+
+.plansTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 820px;
+}
+
+.plansTable th,
+.plansTable td {
+  padding: 14px;
+  border-bottom: 1px solid #1e293b;
+  text-align: left;
+}
+
+.plansTable th {
+  color: #93c5fd;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
 @media (max-width: 900px) {
   .landingHero,
   .landingFeatures,
   .plansGrid,
+  .plansCompareGrid,
   .billingPlansGrid,
   .planSummaryWide,
   .cancelReasons,
@@ -1814,6 +1944,12 @@ button:hover {
   .landingHeader {
     flex-direction: column;
     gap: 18px;
+  }
+
+  .plansPageHeader {
+    flex-direction: column;
+    gap: 18px;
+    align-items: flex-start;
   }
 }
 
