@@ -830,6 +830,7 @@ function TournamentSettings() {
 }
 
 function Financeiro() {
+  const navigate = useNavigate()
   const [finance, setFinance] = useState<any>(null)
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([])
 
@@ -865,68 +866,83 @@ function Financeiro() {
 }, [])
 
   return (
-    <div className="app">
-      <header className="hero">
-        <div className="badge">💰 ProMaster Arena</div>
-        <h1>Painel Financeiro</h1>
-        <p>Resumo de cobranças Pix e faturamento</p>
-      </header>
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">👑 Admin Master</div>
+        <button onClick={() => navigate('/admin')}>Dashboard</button>
+        <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
+        <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
+        <button onClick={() => {
+          localStorage.removeItem('token')
+          window.location.href = '/'
+        }}>
+          Sair
+        </button>
+      </aside>
 
-      <div className="financeGrid">
-        <div className="financeCard">
-          <span>Faturamento aprovado</span>
-          <strong>R$ {(finance?.totalRevenue || 0).toFixed(2)}</strong>
-        </div>
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">💰 ProMaster Arena</div>
+          <h1>Painel Financeiro</h1>
+          <p>Resumo de cobranças Pix e faturamento</p>
+        </header>
 
-        <div className="financeCard">
-          <span>Pendente</span>
-          <strong>R$ {(finance?.pendingRevenue || 0).toFixed(2)}</strong>
-        </div>
-
-        <div className="financeCard">
-          <span>Pagamentos aprovados</span>
-          <strong>{finance?.approvedCount || 0}</strong>
-        </div>
-
-        <div className="financeCard">
-          <span>Pagamentos pendentes</span>
-          <strong>{finance?.pendingCount || 0}</strong>
-        </div>
-      </div>
-
-      <div className="panel">
-        <h2>Faturamento mensal</h2>
-
-        <div style={{ width: '100%', height: 320 }}>
-          <ResponsiveContainer>
-            <LineChart data={monthlyRevenue}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="total" strokeWidth={3} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="panel">
-        <h2>Histórico de pagamentos</h2>
-
-        {(finance?.payments || []).map((p: any) => (
-          <div key={p.id} className="paymentRow">
-            <div>
-              <strong>{p.plan?.toUpperCase()}</strong>
-              <span>MP: {p.mercadoPagoId || '-'}</span>
-            </div>
-
-            <div>
-              <strong>R$ {Number(p.amount).toFixed(2)}</strong>
-              <span className={`statusBadge ${p.status}`}>{p.status}</span>
-            </div>
+        <div className="financeGrid">
+          <div className="financeCard">
+            <span>Faturamento aprovado</span>
+            <strong>R$ {(finance?.totalRevenue || 0).toFixed(2)}</strong>
           </div>
-        ))}
-      </div>
+
+          <div className="financeCard">
+            <span>Pendente</span>
+            <strong>R$ {(finance?.pendingRevenue || 0).toFixed(2)}</strong>
+          </div>
+
+          <div className="financeCard">
+            <span>Pagamentos aprovados</span>
+            <strong>{finance?.approvedCount || 0}</strong>
+          </div>
+
+          <div className="financeCard">
+            <span>Pagamentos pendentes</span>
+            <strong>{finance?.pendingCount || 0}</strong>
+          </div>
+        </div>
+
+        <div className="panel">
+          <h2>Faturamento mensal</h2>
+
+          <div style={{ width: '100%', height: 320 }}>
+            <ResponsiveContainer>
+              <LineChart data={monthlyRevenue}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="total" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="panel">
+          <h2>Histórico de pagamentos</h2>
+
+          {(finance?.payments || []).map((p: any) => (
+            <div key={p.id} className="paymentRow">
+              <div>
+                <strong>{p.plan?.toUpperCase()}</strong>
+                <span>MP: {p.mercadoPagoId || '-'}</span>
+              </div>
+
+              <div>
+                <strong>R$ {Number(p.amount).toFixed(2)}</strong>
+                <span className={`statusBadge ${p.status}`}>{p.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   )
 }
@@ -1897,6 +1913,11 @@ function AdminClientes() {
 
 function Admin() {
   const navigate = useNavigate()
+  const [orgs, setOrgs] = useState<any[]>([])
+  const totalClientes = orgs.length
+  const freeClientes = orgs.filter(org => org.plan === 'free').length
+  const masterClientes = orgs.filter(org => org.plan === 'master').length
+  const proClientes = orgs.filter(org => org.plan === 'pro').length
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -1909,7 +1930,12 @@ function Admin() {
       .then(data => {
         if (data.user?.role !== 'superadmin') {
           goHome()
+          return
         }
+
+        fetch(`${API}/admin/organizations`, { headers: authHeaders() })
+          .then(res => res.json())
+          .then(data => setOrgs(Array.isArray(data) ? data : []))
       })
   }, [])
 
@@ -1934,6 +1960,36 @@ function Admin() {
           <h1>Painel Master</h1>
           <p>Gestão da plataforma ProMaster Arena</p>
         </header>
+
+        <div className="financeGrid adminStatsGrid">
+          <div className="financeCard">
+            <span>Clientes</span>
+            <strong>{totalClientes}</strong>
+          </div>
+
+          <div className="financeCard">
+            <span>Acesso gratuito</span>
+            <strong>{freeClientes}</strong>
+          </div>
+
+          <div className="financeCard">
+            <span>Master</span>
+            <strong>{masterClientes}</strong>
+          </div>
+
+          <div className="financeCard">
+            <span>Pro</span>
+            <strong>{proClientes}</strong>
+          </div>
+        </div>
+
+        <div className="panel adminQuickPanel">
+          <h2>Ações rápidas</h2>
+          <div className="tournamentActions">
+            <button onClick={() => navigate('/admin/clientes')}>Gerenciar clientes</button>
+            <button onClick={() => navigate('/admin/financeiro')}>Ver financeiro</button>
+          </div>
+        </div>
       </main>
     </div>
   )
