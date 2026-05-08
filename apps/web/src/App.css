@@ -1448,6 +1448,13 @@ button:hover {
   background: #0f172a;
   color: white;
   text-align: left;
+  transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+
+.sidebar button:hover {
+  background: #60a5fa;
+  color: #020617;
+  transform: translateX(2px);
 }
 
 .sidebar button:last-child {

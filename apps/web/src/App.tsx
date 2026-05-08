@@ -292,8 +292,44 @@ function ForgotPassword() {
   )
 }
 
-function ProfilePage() {
+function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: boolean, onLogout?: () => void }) {
   const navigate = useNavigate()
+
+  function goToTournaments() {
+    if (window.location.pathname === '/app') {
+      document.getElementById('meus-torneios')?.scrollIntoView({ behavior: 'smooth' })
+      return
+    }
+
+    navigate('/app')
+  }
+
+  function logout() {
+    if (onLogout) {
+      onLogout()
+      return
+    }
+
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebarLogo">🎱 ProMaster</div>
+      <button onClick={() => navigate('/app')}>Dashboard</button>
+      <button onClick={goToTournaments}>Meus Torneios</button>
+      <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
+      <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+      {isMasterPlan && (
+        <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
+      )}
+      <button className="sidebarFooterButton" onClick={logout}>Sair</button>
+    </aside>
+  )
+}
+
+function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [form, setForm] = useState<any>({
     name: '',
@@ -376,13 +412,7 @@ function ProfilePage() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
-      </aside>
+      <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
 
       <main className="saasMain">
         <header className="hero">
@@ -477,20 +507,7 @@ function Dashboard({ user }: any) {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => document.getElementById('meus-torneios')?.scrollIntoView({ behavior: 'smooth' })}>
-          Meus Torneios
-        </button>
-        <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        {isMasterPlan && (
-          <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
-        )}
-        <button onClick={logout}>Sair</button>
-      </aside>
+      <ClientSidebar isMasterPlan={isMasterPlan} onLogout={logout} />
 
       <main className="saasMain">
         <header className="hero">
@@ -664,7 +681,6 @@ function Dashboard({ user }: any) {
 }
 
 function Upgrade() {
-  const navigate = useNavigate()
   const [pixData, setPixData] = useState<any>(null)
   const [pixLoading, setPixLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
@@ -761,12 +777,7 @@ function Upgrade() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
-      </aside>
+      <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
 
       <main className="saasMain">
         <header className="hero">
@@ -1018,12 +1029,7 @@ function TournamentSettings() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
-      </aside>
+      <ClientSidebar />
 
       <main className="saasMain">
         <header className="hero">
@@ -1508,12 +1514,7 @@ function CreateTournament({ user }: any) {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
-      </aside>
+      <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
 
       <main className="saasMain">
         <header className="hero">
@@ -1640,7 +1641,6 @@ function CreateTournament({ user }: any) {
 
 function TournamentBracket() {
   const { id } = useParams()
-  const navigate = useNavigate()
 
   const [rounds, setRounds] = useState<any[]>([])
   const [panelMode, setPanelMode] = useState<'board' | 'bracket'>('board')
@@ -1762,12 +1762,7 @@ function TournamentBracket() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        <button className="sidebarFooterButton" onClick={() => navigate('/app')}>Voltar</button>
-      </aside>
+      <ClientSidebar />
 
       <main className="saasMain">
        <header className="hero">
