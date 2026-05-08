@@ -817,6 +817,71 @@ body {
   font-size: 28px;
 }
 
+.detailsHeader p {
+  margin: 8px 0 0;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.modalCloseButton {
+  width: auto;
+  background: #0f172a;
+  border: 1px solid #334155;
+}
+
+.adminEditModal {
+  width: min(900px, calc(100vw - 32px));
+  padding: 0;
+  border-color: rgba(96, 165, 250, .45);
+  background: linear-gradient(180deg, #0f172a 0%, #020617 46%);
+}
+
+.adminEditModal .detailsHeader {
+  padding: 24px 24px 18px;
+  margin-bottom: 0;
+  border-bottom: 1px solid #1e293b;
+}
+
+.adminEditSection {
+  padding: 20px 24px 0;
+}
+
+.adminEditSection h4 {
+  margin: 0 0 14px;
+  color: #93c5fd;
+  font-size: 16px;
+  text-transform: uppercase;
+}
+
+.adminEditGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.adminEditGrid label {
+  margin-top: 0;
+  color: #cbd5e1;
+}
+
+.adminEditGrid input {
+  background: #020617;
+  border: 1px solid #334155;
+}
+
+.adminEditWide {
+  grid-column: span 2;
+}
+
+.adminModalActions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 12px;
+  padding: 22px 24px 24px;
+  border-top: 1px solid #1e293b;
+  margin-top: 22px;
+}
+
 .detailsList {
   display: grid;
   gap: 10px;
@@ -1731,6 +1796,15 @@ button:hover {
 
   .profileAddressGrid {
     grid-template-columns: 1fr;
+  }
+
+  .adminEditGrid,
+  .adminModalActions {
+    grid-template-columns: 1fr;
+  }
+
+  .adminEditWide {
+    grid-column: auto;
   }
 
   .landingHero h1 {
@@ -2907,6 +2981,11 @@ button:hover {
 
 .clientActions button {
   padding: 8px 10px;
+}
+
+.clientActions .clientEditButton {
+  background: #60a5fa;
+  color: #020617;
 }
 
 .clientFilters {

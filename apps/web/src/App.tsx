@@ -2358,7 +2358,9 @@ function AdminClientes() {
                 <button onClick={() => changePlan(org.id, 'trial')}>Trial</button>
                 <button onClick={() => changePlan(org.id, 'pro')}>Pro</button>
                 <button onClick={() => changePlan(org.id, 'master')}>Master</button>
-                <button onClick={() => openEditClient(org)}>Editar</button>
+                <button className="clientEditButton" onClick={() => openEditClient(org)}>
+                  Editar cliente/arena
+                </button>
                 <button onClick={() => setSelectedOrg(org)}>Torneios</button>
                 <button onClick={() => changePlan(org.id, 'free')}>Acesso gratuito</button>
               </div>
@@ -2368,70 +2370,82 @@ function AdminClientes() {
 
         {editingOrg && (
           <div className="qrModal" onClick={() => setEditingOrg(null)}>
-            <div className="detailsContent" onClick={e => e.stopPropagation()}>
+            <div className="detailsContent adminEditModal" onClick={e => e.stopPropagation()}>
               <div className="detailsHeader">
                 <div>
-                  <span>Editar cliente</span>
+                  <span>Editar cliente/arena</span>
                   <h3>{editingOrg.name}</h3>
+                  <p>Atualize os dados principais do cliente, contato e endereço da arena.</p>
                 </div>
-                <button onClick={() => setEditingOrg(null)}>Fechar</button>
+                <button className="modalCloseButton" onClick={() => setEditingOrg(null)}>Fechar</button>
               </div>
 
-              <div className="profileAddressGrid">
-                <div>
-                  <label>Nome do responsável</label>
-                  <input value={editForm.name} onChange={e => updateEditField('name', e.target.value)} />
-                </div>
+              <div className="adminEditSection">
+                <h4>Dados do cliente</h4>
+                <div className="adminEditGrid">
+                  <div>
+                    <label>Nome do responsável</label>
+                    <input value={editForm.name} onChange={e => updateEditField('name', e.target.value)} />
+                  </div>
 
-                <div>
-                  <label>E-mail</label>
-                  <input type="email" value={editForm.email} onChange={e => updateEditField('email', e.target.value)} />
-                </div>
+                  <div>
+                    <label>E-mail</label>
+                    <input type="email" value={editForm.email} onChange={e => updateEditField('email', e.target.value)} />
+                  </div>
 
-                <div>
-                  <label>Telefone / WhatsApp</label>
-                  <input value={editForm.phone} onChange={e => updateEditField('phone', e.target.value)} />
-                </div>
+                  <div>
+                    <label>Telefone / WhatsApp</label>
+                    <input value={editForm.phone} onChange={e => updateEditField('phone', e.target.value)} />
+                  </div>
 
-                <div>
-                  <label>Nome da arena / organização</label>
-                  <input value={editForm.organizationName} onChange={e => updateEditField('organizationName', e.target.value)} />
-                </div>
-
-                <div>
-                  <label>Rua</label>
-                  <input value={editForm.street} onChange={e => updateEditField('street', e.target.value)} />
-                </div>
-
-                <div>
-                  <label>Número</label>
-                  <input value={editForm.number} onChange={e => updateEditField('number', e.target.value)} />
-                </div>
-
-                <div>
-                  <label>Complemento</label>
-                  <input value={editForm.complement} onChange={e => updateEditField('complement', e.target.value)} />
-                </div>
-
-                <div>
-                  <label>País</label>
-                  <input value={editForm.country} onChange={e => updateEditField('country', e.target.value)} />
-                </div>
-
-                <div>
-                  <label>Estado</label>
-                  <input value={editForm.state} onChange={e => updateEditField('state', e.target.value)} />
-                </div>
-
-                <div>
-                  <label>Cidade</label>
-                  <input value={editForm.city} onChange={e => updateEditField('city', e.target.value)} />
+                  <div>
+                    <label>Nome da arena / organização</label>
+                    <input value={editForm.organizationName} onChange={e => updateEditField('organizationName', e.target.value)} />
+                  </div>
                 </div>
               </div>
 
-              <button className="primaryButton" onClick={saveClientEdit}>
-                Salvar cliente
-              </button>
+              <div className="adminEditSection">
+                <h4>Endereço da arena</h4>
+                <div className="adminEditGrid">
+                  <div className="adminEditWide">
+                    <label>Rua</label>
+                    <input value={editForm.street} onChange={e => updateEditField('street', e.target.value)} />
+                  </div>
+
+                  <div>
+                    <label>Número</label>
+                    <input value={editForm.number} onChange={e => updateEditField('number', e.target.value)} />
+                  </div>
+
+                  <div>
+                    <label>Complemento</label>
+                    <input value={editForm.complement} onChange={e => updateEditField('complement', e.target.value)} />
+                  </div>
+
+                  <div>
+                    <label>País</label>
+                    <input value={editForm.country} onChange={e => updateEditField('country', e.target.value)} />
+                  </div>
+
+                  <div>
+                    <label>Estado</label>
+                    <input value={editForm.state} onChange={e => updateEditField('state', e.target.value)} />
+                  </div>
+
+                  <div>
+                    <label>Cidade</label>
+                    <input value={editForm.city} onChange={e => updateEditField('city', e.target.value)} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="adminModalActions">
+                <button onClick={() => setEditingOrg(null)}>Cancelar</button>
+                <button className="primaryButton" onClick={saveClientEdit}>
+                  Salvar cliente/arena
+                </button>
+              </div>
             </div>
           </div>
         )}
