@@ -352,9 +352,15 @@ function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [form, setForm] = useState<any>({
     name: '',
+    email: '',
     phone: '',
     organizationName: '',
-    address: '',
+    street: '',
+    number: '',
+    complement: '',
+    country: '',
+    state: '',
+    city: '',
   })
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -370,9 +376,15 @@ function ProfilePage() {
         setUser(data.user)
         setForm({
           name: data.user?.name || '',
+          email: data.user?.email || '',
           phone: data.user?.phone || '',
           organizationName: data.user?.organization?.name || '',
-          address: data.user?.organization?.address || '',
+          street: data.user?.organization?.street || data.user?.organization?.address || '',
+          number: data.user?.organization?.number || '',
+          complement: data.user?.organization?.complement || '',
+          country: data.user?.organization?.country || '',
+          state: data.user?.organization?.state || '',
+          city: data.user?.organization?.city || '',
         })
       })
   }
@@ -515,14 +527,46 @@ function ProfilePage() {
             <label>Nome do responsável</label>
             <input value={form.name} onChange={e => updateField('name', e.target.value)} />
 
+            <label>E-mail</label>
+            <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+
             <label>Telefone / WhatsApp</label>
             <input value={form.phone} onChange={e => updateField('phone', e.target.value)} />
 
             <label>Nome da arena / organização</label>
             <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
 
-            <label>Endereço</label>
-            <input value={form.address} onChange={e => updateField('address', e.target.value)} />
+            <div className="profileAddressGrid">
+              <div>
+                <label>Rua</label>
+                <input value={form.street} onChange={e => updateField('street', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Número</label>
+                <input value={form.number} onChange={e => updateField('number', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Complemento</label>
+                <input value={form.complement} onChange={e => updateField('complement', e.target.value)} />
+              </div>
+
+              <div>
+                <label>País</label>
+                <input value={form.country} onChange={e => updateField('country', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Estado</label>
+                <input value={form.state} onChange={e => updateField('state', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Cidade</label>
+                <input value={form.city} onChange={e => updateField('city', e.target.value)} />
+              </div>
+            </div>
 
             <button className="primaryButton" onClick={saveProfile}>
               Salvar perfil
@@ -2156,6 +2200,19 @@ function AdminClientes() {
   const [search, setSearch] = useState('')
   const [planFilter, setPlanFilter] = useState('todos')
   const [selectedOrg, setSelectedOrg] = useState<any>(null)
+  const [editingOrg, setEditingOrg] = useState<any>(null)
+  const [editForm, setEditForm] = useState<any>({
+    name: '',
+    email: '',
+    phone: '',
+    organizationName: '',
+    street: '',
+    number: '',
+    complement: '',
+    country: '',
+    state: '',
+    city: '',
+  })
   const filteredOrgs = orgs
     .filter(org => org.name?.toLowerCase().includes(search.toLowerCase()))
     .filter(org => planFilter === 'todos' ? true : org.plan === planFilter)
@@ -2188,6 +2245,49 @@ function AdminClientes() {
         }
 
         loadClientes()
+      })
+  }
+
+  function openEditClient(org: any) {
+    const adminUser = org.users?.find((user: any) => user.role === 'admin') || org.users?.[0]
+
+    setEditingOrg(org)
+    setEditForm({
+      name: adminUser?.name || '',
+      email: adminUser?.email || '',
+      phone: adminUser?.phone || '',
+      organizationName: org.name || '',
+      street: org.street || org.address || '',
+      number: org.number || '',
+      complement: org.complement || '',
+      country: org.country || '',
+      state: org.state || '',
+      city: org.city || '',
+    })
+  }
+
+  function updateEditField(field: string, value: string) {
+    setEditForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function saveClientEdit() {
+    if (!editingOrg) return
+
+    fetch(`${API}/admin/organization/${editingOrg.id}/profile`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(editForm),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setEditingOrg(null)
+        loadClientes()
+        alert('Cliente atualizado.')
       })
   }
 
@@ -2258,12 +2358,83 @@ function AdminClientes() {
                 <button onClick={() => changePlan(org.id, 'trial')}>Trial</button>
                 <button onClick={() => changePlan(org.id, 'pro')}>Pro</button>
                 <button onClick={() => changePlan(org.id, 'master')}>Master</button>
+                <button onClick={() => openEditClient(org)}>Editar</button>
                 <button onClick={() => setSelectedOrg(org)}>Torneios</button>
                 <button onClick={() => changePlan(org.id, 'free')}>Acesso gratuito</button>
               </div>
             </div>
           ))}
         </div>
+
+        {editingOrg && (
+          <div className="qrModal" onClick={() => setEditingOrg(null)}>
+            <div className="detailsContent" onClick={e => e.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Editar cliente</span>
+                  <h3>{editingOrg.name}</h3>
+                </div>
+                <button onClick={() => setEditingOrg(null)}>Fechar</button>
+              </div>
+
+              <div className="profileAddressGrid">
+                <div>
+                  <label>Nome do responsável</label>
+                  <input value={editForm.name} onChange={e => updateEditField('name', e.target.value)} />
+                </div>
+
+                <div>
+                  <label>E-mail</label>
+                  <input type="email" value={editForm.email} onChange={e => updateEditField('email', e.target.value)} />
+                </div>
+
+                <div>
+                  <label>Telefone / WhatsApp</label>
+                  <input value={editForm.phone} onChange={e => updateEditField('phone', e.target.value)} />
+                </div>
+
+                <div>
+                  <label>Nome da arena / organização</label>
+                  <input value={editForm.organizationName} onChange={e => updateEditField('organizationName', e.target.value)} />
+                </div>
+
+                <div>
+                  <label>Rua</label>
+                  <input value={editForm.street} onChange={e => updateEditField('street', e.target.value)} />
+                </div>
+
+                <div>
+                  <label>Número</label>
+                  <input value={editForm.number} onChange={e => updateEditField('number', e.target.value)} />
+                </div>
+
+                <div>
+                  <label>Complemento</label>
+                  <input value={editForm.complement} onChange={e => updateEditField('complement', e.target.value)} />
+                </div>
+
+                <div>
+                  <label>País</label>
+                  <input value={editForm.country} onChange={e => updateEditField('country', e.target.value)} />
+                </div>
+
+                <div>
+                  <label>Estado</label>
+                  <input value={editForm.state} onChange={e => updateEditField('state', e.target.value)} />
+                </div>
+
+                <div>
+                  <label>Cidade</label>
+                  <input value={editForm.city} onChange={e => updateEditField('city', e.target.value)} />
+                </div>
+              </div>
+
+              <button className="primaryButton" onClick={saveClientEdit}>
+                Salvar cliente
+              </button>
+            </div>
+          </div>
+        )}
 
         {selectedOrg && (
           <div className="qrModal" onClick={() => setSelectedOrg(null)}>
