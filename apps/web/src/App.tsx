@@ -833,10 +833,15 @@ function Upgrade() {
   const plan = user?.organization?.plan || 'trial'
   const planLabel = plan === 'free' ? 'ACESSO GRATUITO' : plan.toUpperCase()
   const selectedPlanLabel = selectedPlan
-    ? selectedPlan === 'free' ? 'ACESSO GRATUITO' : selectedPlan.toUpperCase()
+    ? selectedPlan === 'free'
+      ? 'ACESSO GRATUITO'
+      : selectedPlan === 'avulso'
+        ? 'AVULSO'
+        : selectedPlan.toUpperCase()
     : planLabel
   const trialEndsAt = user?.organization?.trialEndsAt
   const planExpiresAt = user?.organization?.planExpiresAt
+  const tournamentCredits = user?.organization?.tournamentCredits || 0
 
   function createPix(plan: string) {
     setSelectedPlan(plan)
@@ -907,7 +912,7 @@ function Upgrade() {
         .then(res => res.json())
         .then(data => {
           if (data.status === 'approved') {
-            alert('Pagamento aprovado! Plano ativado.')
+            alert('Pagamento aprovado! Plano ou crédito atualizado.')
             window.location.href = '/upgrade'
           }
         })
@@ -955,6 +960,11 @@ function Upgrade() {
                   ? new Date(trialEndsAt).toLocaleDateString()
                   : 'Sem vencimento'}
             </strong>
+          </div>
+
+          <div>
+            <span>Créditos avulsos</span>
+            <strong>{tournamentCredits}</strong>
           </div>
 
           <div className="planActions">
@@ -1027,10 +1037,19 @@ function Upgrade() {
       )}
 
       <div className="billingPlansGrid">
+        <div className={selectedPlan === 'trial' ? 'panel billingPlanCard selectedPlanCard' : 'panel billingPlanCard'}>
+          <h2>TRIAL FREE</h2>
+          <p>7 dias grátis ou 1 torneio</p>
+          <p>Acesso aos principais recursos. Após expirar, mantém login e edição dos torneios existentes, mas bloqueia novos torneios.</p>
+          <button onClick={() => setSelectedPlan('trial')}>
+            Plano atual inicial
+          </button>
+        </div>
+
         <div className={selectedPlan === 'pro' ? 'panel billingPlanCard selectedPlanCard' : 'panel billingPlanCard'}>
           <h2>PRO</h2>
-          <p>R$ 29,90/mês</p>
-          <p>Torneios ilimitados até 64 jogadores.</p>
+          <p>R$ 59,90/mês</p>
+          <p>Mesmas funções principais, com torneios ilimitados até 64 jogadores.</p>
           <button className="primaryButton" onClick={() => createPix('pro')}>
             Gerar Pix PRO
           </button>
@@ -1038,7 +1057,7 @@ function Upgrade() {
 
         <div className={selectedPlan === 'master' ? 'panel billingPlanCard selectedPlanCard' : 'panel billingPlanCard'}>
           <h2>MASTER</h2>
-          <p>R$ 59,90/mês</p>
+          <p>R$ 89,90/mês</p>
           <p>Torneios acima de 64 jogadores, usuários/equipe e recursos avançados.</p>
           <button className="upgradeButton" onClick={() => createPix('master')}>
             Gerar Pix MASTER
@@ -1047,8 +1066,8 @@ function Upgrade() {
 
         <div className={selectedPlan === 'avulso' ? 'panel billingPlanCard selectedPlanCard' : 'panel billingPlanCard'}>
           <h2>Avulso</h2>
-          <p>R$ 9,90 por torneio</p>
-          <p>Ideal para eventos únicos.</p>
+          <p>R$ 21,90 por torneio</p>
+          <p>Crédito para criar 1 torneio, ideal para eventos únicos.</p>
           <button onClick={() => createPix('avulso')}>
             Gerar Pix Avulso
           </button>
@@ -1396,21 +1415,27 @@ function Landing() {
 
         <div className="plansGrid">
           <div className="planCard">
-            <h3>Trial</h3>
-            <strong>7 dias grátis</strong>
-            <p>1 torneio até 16 jogadores com acesso aos recursos principais.</p>
+            <h3>Trial Free</h3>
+            <strong>7 dias ou 1 torneio</strong>
+            <p>Acesso aos principais recursos. Depois expira para novos torneios, mas mantém login e edição.</p>
           </div>
 
           <div className="planCard featured">
             <h3>Pro</h3>
-            <strong>R$ 29,90/mês</strong>
-            <p>Torneios ilimitados até 64 jogadores.</p>
+            <strong>R$ 59,90/mês</strong>
+            <p>Mesmas funções principais, com torneios ilimitados até 64 jogadores.</p>
           </div>
 
           <div className="planCard">
             <h3>Master</h3>
-            <strong>R$ 59,90/mês</strong>
+            <strong>R$ 89,90/mês</strong>
             <p>Torneios acima de 64 jogadores, usuários/equipe e recursos avançados.</p>
+          </div>
+
+          <div className="planCard">
+            <h3>Avulso</h3>
+            <strong>R$ 21,90</strong>
+            <p>Crédito para criar 1 torneio, ideal para eventos únicos.</p>
           </div>
         </div>
       </section>

@@ -107,6 +107,7 @@ plan        String    @default("trial")
 trialEndsAt DateTime?
 planExpiresAt DateTime?
 maxUsers Int @default(1)
+tournamentCredits Int @default(0)
   users       User[]
   tournaments Tournament[]
 }

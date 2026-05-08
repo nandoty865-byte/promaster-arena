@@ -66,6 +66,11 @@ function getPlanLimits(plan) {
       maxTournaments: Infinity,
       maxPlayers: 128,
       maxTeams: 32
+    },
+    avulso: {
+      maxTournaments: 1,
+      maxPlayers: 64,
+      maxTeams: 16
     }
   }
 
@@ -173,14 +178,23 @@ app.post('/billing/webhook', async (req, res) => {
         const orgId = payment.metadata.organizationId
         const plan = payment.metadata.plan
 
-       await prisma.organization.update({
-  where: { id: orgId },
-  data: {
-    plan,
-    trialEndsAt: null,
-    planExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  }
-})
+        if (plan === 'avulso') {
+          await prisma.organization.update({
+            where: { id: orgId },
+            data: {
+              tournamentCredits: { increment: 1 },
+            },
+          })
+        } else {
+          await prisma.organization.update({
+            where: { id: orgId },
+            data: {
+              plan,
+              trialEndsAt: null,
+              planExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            },
+          })
+        }
 
         console.log(`Plano atualizado para ${plan} (org ${orgId})`)
       }
@@ -708,8 +722,11 @@ if (!org) {
 }
 
 const currentPlan = org.plan
+const limits = getPlanLimits(currentPlan)
+const trialExpired = org.plan === 'trial' && org.trialEndsAt && org.trialEndsAt < new Date()
+const hasTournamentCredit = (org.tournamentCredits || 0) > 0
 
-if (org.plan === 'trial' && org.trialEndsAt && org.trialEndsAt < new Date()) {
+if (trialExpired && !hasTournamentCredit) {
   return res.status(403).json({
     error: 'Seu período trial terminou. Você pode visualizar e editar torneios existentes, mas precisa fazer upgrade para criar novos torneios.'
   })
@@ -719,17 +736,20 @@ const tournamentsCount = await prisma.tournament.count({
   where: { organizationId }
 })
 
-const limits = getPlanLimits(currentPlan)
+const useTournamentCredit = hasTournamentCredit && (
+  trialExpired || tournamentsCount >= limits.maxTournaments
+)
+const effectiveLimits = useTournamentCredit ? getPlanLimits('avulso') : limits
 
-if (tournamentsCount >= limits.maxTournaments) {
+if (tournamentsCount >= limits.maxTournaments && !useTournamentCredit) {
   return res.status(403).json({
     error: `Seu plano ${currentPlan} permite apenas ${limits.maxTournaments} torneio(s).`
   })
 }
 
-if (template.playerCount > limits.maxPlayers) {
+if (template.playerCount > effectiveLimits.maxPlayers) {
   return res.status(403).json({
-    error: `Seu plano ${currentPlan} permite torneios até ${limits.maxPlayers} jogadores.`
+    error: `Seu plano ${useTournamentCredit ? 'avulso' : currentPlan} permite torneios até ${effectiveLimits.maxPlayers} jogadores.`
   })
 }
 
@@ -816,6 +836,15 @@ for (const playerName of playerNames.slice(0, template.playerCount)) {
     }
 
     await advanceFinishedRounds(tournament.id, 1)
+
+    if (useTournamentCredit) {
+      await prisma.organization.update({
+        where: { id: organizationId },
+        data: {
+          tournamentCredits: { decrement: 1 },
+        },
+      })
+    }
 
     res.json({
       ok: true,
@@ -1177,15 +1206,15 @@ app.post('/billing/create-pix', auth, requireRole('admin'), async (req, res) => 
     const plans = {
       pro: {
         title: 'Plano PRO - ProMaster Arena',
-        price: 29.90
+        price: 59.90
       },
       master: {
         title: 'Plano MASTER - ProMaster Arena',
-        price: 59.90
+        price: 89.90
       },
       avulso: {
         title: 'Torneio Avulso - ProMaster Arena',
-        price: 9.90
+        price: 21.90
       }
     }
 
@@ -1264,14 +1293,23 @@ app.get('/billing/payment/:id/status', auth, requireRole('admin', 'operator'), a
       const plan = payment.metadata.plan
 
       if (orgId && plan) {
-       await prisma.organization.update({
-  where: { id: orgId },
-  data: {
-    plan,
-    trialEndsAt: null,
-    planExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  }
-})
+        if (plan === 'avulso') {
+          await prisma.organization.update({
+            where: { id: orgId },
+            data: {
+              tournamentCredits: { increment: 1 },
+            },
+          })
+        } else {
+          await prisma.organization.update({
+            where: { id: orgId },
+            data: {
+              plan,
+              trialEndsAt: null,
+              planExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            },
+          })
+        }
       }
     }
 
