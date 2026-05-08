@@ -1819,13 +1819,25 @@ function TelaoTV() {
 function AdminClientes() {
   const navigate = useNavigate()
   const [orgs, setOrgs] = useState<any[]>([])
+  const [search, setSearch] = useState('')
+  const [planFilter, setPlanFilter] = useState('todos')
+  const [selectedOrg, setSelectedOrg] = useState<any>(null)
+  const filteredOrgs = orgs
+    .filter(org => org.name?.toLowerCase().includes(search.toLowerCase()))
+    .filter(org => planFilter === 'todos' ? true : org.plan === planFilter)
+    .sort((a, b) => Number(a.id) - Number(b.id))
 
   function loadClientes() {
     fetch(`${API}/admin/organizations`, {
       headers: authHeaders(),
     })
       .then(res => res.json())
-      .then(data => setOrgs(Array.isArray(data) ? data : []))
+      .then(data => {
+        const sorted = Array.isArray(data)
+          ? [...data].sort((a, b) => Number(a.id) - Number(b.id))
+          : []
+        setOrgs(sorted)
+      })
   }
 
   function changePlan(id: number, plan: string) {
@@ -1884,11 +1896,29 @@ function AdminClientes() {
         <div className="panel">
           <h2>Organizações cadastradas</h2>
 
-          {orgs.map(org => (
+          <div className="clientFilters">
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Pesquisar por nome"
+            />
+
+            <select value={planFilter} onChange={e => setPlanFilter(e.target.value)}>
+              <option value="todos">Todos os planos</option>
+              <option value="trial">Trial</option>
+              <option value="free">Acesso gratuito</option>
+              <option value="pro">Pro</option>
+              <option value="master">Master</option>
+            </select>
+          </div>
+
+          {filteredOrgs.length === 0 && <p>Nenhum cliente encontrado.</p>}
+
+          {filteredOrgs.map(org => (
             <div key={org.id} className="clientCard">
               <div>
                 <strong>{org.name}</strong>
-                <span>{org.slug}</span>
+                <span>Cadastro: {org.createdAt ? new Date(org.createdAt).toLocaleDateString() : '-'}</span>
               </div>
 
               <div className="clientMetrics">
@@ -1902,10 +1932,41 @@ function AdminClientes() {
                 <button onClick={() => changePlan(org.id, 'free')}>Acesso gratuito</button>
                 <button onClick={() => changePlan(org.id, 'pro')}>Pro</button>
                 <button onClick={() => changePlan(org.id, 'master')}>Master</button>
+                <button onClick={() => setSelectedOrg(org)}>Torneios</button>
               </div>
             </div>
           ))}
         </div>
+
+        {selectedOrg && (
+          <div className="qrModal" onClick={() => setSelectedOrg(null)}>
+            <div className="detailsContent" onClick={e => e.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Torneios do cliente</span>
+                  <h3>{selectedOrg.name}</h3>
+                </div>
+                <button onClick={() => setSelectedOrg(null)}>Fechar</button>
+              </div>
+
+              {(selectedOrg.tournaments || []).length === 0 && <p>Nenhum torneio encontrado.</p>}
+
+              <div className="clientTournamentList">
+                {(selectedOrg.tournaments || []).map((tournament: any) => (
+                  <div key={tournament.id} className="clientTournamentRow">
+                    <div>
+                      <strong>{tournament.name}</strong>
+                      <span>{tournament.status} • {tournament.playerCount} jogadores</span>
+                    </div>
+                    <button onClick={() => navigate(`/tournament/${tournament.id}`)}>
+                      Abrir
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
