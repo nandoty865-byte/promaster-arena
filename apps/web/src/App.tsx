@@ -109,6 +109,7 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/" element={<Landing />} />
       <Route path="/app" element={<Dashboard user={user} />} />
+      <Route path="/app/perfil" element={<ProfilePage />} />
       <Route path="/upgrade" element={<Upgrade />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
       <Route path="/tournament/:id/settings" element={<TournamentSettings />} />
@@ -291,15 +292,291 @@ function ForgotPassword() {
   )
 }
 
+function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: boolean, onLogout?: () => void }) {
+  const navigate = useNavigate()
+
+  function goToTournaments() {
+    if (window.location.pathname === '/app') {
+      document.getElementById('meus-torneios')?.scrollIntoView({ behavior: 'smooth' })
+      return
+    }
+
+    navigate('/app')
+  }
+
+  function logout() {
+    if (onLogout) {
+      onLogout()
+      return
+    }
+
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebarLogo">🎱 ProMaster</div>
+      <button onClick={() => navigate('/app')}>Dashboard</button>
+      <button onClick={goToTournaments}>Meus Torneios</button>
+      <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
+      <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+      {isMasterPlan && (
+        <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
+      )}
+      <button className="sidebarFooterButton" onClick={logout}>Sair</button>
+    </aside>
+  )
+}
+
+function AdminSidebar() {
+  const navigate = useNavigate()
+
+  function logout() {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebarLogo">👑 Admin Master</div>
+      <button onClick={() => navigate('/admin')}>Dashboard</button>
+      <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
+      <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
+      <button className="sidebarFooterButton" onClick={logout}>Sair</button>
+    </aside>
+  )
+}
+
+function ProfilePage() {
+  const [user, setUser] = useState<any>(null)
+  const [form, setForm] = useState<any>({
+    name: '',
+    phone: '',
+    organizationName: '',
+    address: '',
+  })
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [logoUploading, setLogoUploading] = useState(false)
+
+  function loadProfile() {
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        setUser(data.user)
+        setForm({
+          name: data.user?.name || '',
+          phone: data.user?.phone || '',
+          organizationName: data.user?.organization?.name || '',
+          address: data.user?.organization?.address || '',
+        })
+      })
+  }
+
+  function updateField(field: string, value: string) {
+    setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function updatePasswordField(field: string, value: string) {
+    setPasswordForm(current => ({ ...current, [field]: value }))
+  }
+
+  function saveProfile() {
+    fetch(`${API}/me/profile`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(form),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setUser(data.user)
+        alert('Perfil atualizado.')
+      })
+  }
+
+  function changePassword() {
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      alert('Preencha todos os campos de senha.')
+      return
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      alert('A nova senha precisa ter pelo menos 6 caracteres.')
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('A confirmação da senha não confere.')
+      return
+    }
+
+    fetch(`${API}/me/password`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        })
+        alert('Senha alterada com sucesso.')
+      })
+  }
+
+  function uploadLogo(file?: File) {
+    if (!file) return
+
+    const data = new FormData()
+    data.append('logo', file)
+    setLogoUploading(true)
+
+    fetch(`${API}/me/logo`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: data,
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        loadProfile()
+      })
+      .finally(() => setLogoUploading(false))
+  }
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      goHome()
+      return
+    }
+
+    loadProfile()
+  }, [])
+
+  return (
+    <div className="saasLayout">
+      <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">👤 Perfil do cliente</div>
+          <h1>Perfil da Arena</h1>
+          <p>Atualize os dados do cliente, contato e logo exibida no sistema.</p>
+        </header>
+
+        <div className="profileGrid">
+          <div className="panel profileLogoPanel">
+            <h2>Logo / Foto</h2>
+            {user?.organization?.logoUrl ? (
+              <img src={user.organization.logoUrl} className="profileLogoPreview" />
+            ) : (
+              <div className="profileLogoEmpty">Sem logo</div>
+            )}
+
+            <label className="fileButton">
+              {logoUploading ? 'Enviando...' : 'Enviar logo'}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => uploadLogo(e.target.files?.[0])}
+                disabled={logoUploading}
+              />
+            </label>
+          </div>
+
+          <div className="panel settingsPanel">
+            <h2>Dados do cliente</h2>
+
+            <label>Nome do responsável</label>
+            <input value={form.name} onChange={e => updateField('name', e.target.value)} />
+
+            <label>Telefone / WhatsApp</label>
+            <input value={form.phone} onChange={e => updateField('phone', e.target.value)} />
+
+            <label>Nome da arena / organização</label>
+            <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
+
+            <label>Endereço</label>
+            <input value={form.address} onChange={e => updateField('address', e.target.value)} />
+
+            <button className="primaryButton" onClick={saveProfile}>
+              Salvar perfil
+            </button>
+          </div>
+
+          <div className="panel settingsPanel profilePasswordPanel">
+            <h2>Alterar senha</h2>
+
+            <label>Senha atual</label>
+            <input
+              type="password"
+              value={passwordForm.currentPassword}
+              onChange={e => updatePasswordField('currentPassword', e.target.value)}
+            />
+
+            <label>Nova senha</label>
+            <input
+              type="password"
+              value={passwordForm.newPassword}
+              onChange={e => updatePasswordField('newPassword', e.target.value)}
+            />
+
+            <label>Confirmar nova senha</label>
+            <input
+              type="password"
+              value={passwordForm.confirmPassword}
+              onChange={e => updatePasswordField('confirmPassword', e.target.value)}
+            />
+
+            <button className="primaryButton" onClick={changePassword}>
+              Alterar senha
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
 function Dashboard({ user }: any) {
   const navigate = useNavigate()
   const [tournaments, setTournaments] = useState<any[]>([])
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [detailsTournament, setDetailsTournament] = useState<any>(null)
-  const plan = user?.organization?.plan || 'free'
-  const isMasterPlan = plan === 'master'
-  const trialEndsAt = user?.organization?.trialEndsAt
-  const planExpiresAt = user?.organization?.planExpiresAt
+  const plan = user?.organization?.plan || 'trial'
+  const isMasterPlan = plan === 'master' || plan === 'free'
+  const finishedCount = tournaments.filter(t => t.status === 'finished').length
+  const canceledCount = tournaments.filter(t =>
+    ['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
+  ).length
+  const futureCount = tournaments.filter(t =>
+    t.status !== 'finished' && !['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
+  ).length
 
   function logout() {
     localStorage.removeItem('token')
@@ -327,17 +604,7 @@ function Dashboard({ user }: any) {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        {isMasterPlan && (
-          <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
-        )}
-        <button onClick={logout}>Sair</button>
-      </aside>
+      <ClientSidebar isMasterPlan={isMasterPlan} onLogout={logout} />
 
       <main className="saasMain">
         <header className="hero">
@@ -354,37 +621,31 @@ function Dashboard({ user }: any) {
 
           <h1>Painel da Arena</h1>
           <p>{user?.organization?.name}</p>
-
-          <div className="planSummary">
-            <div>
-              <span>Plano atual</span>
-              <strong>{plan.toUpperCase()}</strong>
-            </div>
-
-            <div>
-              <span>Início</span>
-              <strong>{new Date(user?.organization?.createdAt).toLocaleDateString()}</strong>
-            </div>
-
-            <div>
-              <span>Vencimento</span>
-              <strong>
-                {planExpiresAt
-                  ? new Date(planExpiresAt).toLocaleDateString()
-                  : trialEndsAt
-                    ? new Date(trialEndsAt).toLocaleDateString()
-                    : 'Sem vencimento'}
-              </strong>
-            </div>
-
-          </div>
-
-          <button className="primaryButton" onClick={() => navigate('/criar-torneio')}>
-            + Criar Torneio
-          </button>
         </header>
 
-        <div className="panel">
+        <div className="dashboardStatsGrid">
+          <div className="dashboardStatCard">
+            <span>Finalizados</span>
+            <strong>{finishedCount}</strong>
+          </div>
+
+          <div className="dashboardStatCard">
+            <span>Futuros</span>
+            <strong>{futureCount}</strong>
+          </div>
+
+          <div className="dashboardStatCard">
+            <span>Cancelados</span>
+            <strong>{canceledCount}</strong>
+          </div>
+
+          <button className="dashboardCreateCard" onClick={() => navigate('/criar-torneio')}>
+            <span>+</span>
+            <strong>Criar Torneio</strong>
+          </button>
+        </div>
+
+        <div id="meus-torneios" className="panel">
           <h2>Meus Torneios</h2>
 
           {tournaments.length === 0 && <p>Nenhum torneio encontrado.</p>}
@@ -517,17 +778,25 @@ function Dashboard({ user }: any) {
 }
 
 function Upgrade() {
-  const navigate = useNavigate()
   const [pixData, setPixData] = useState<any>(null)
   const [pixLoading, setPixLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [payments, setPayments] = useState<any[]>([])
+  const [selectedPlan, setSelectedPlan] = useState('')
+  const [showCancel, setShowCancel] = useState(false)
+  const [cancelReasons, setCancelReasons] = useState<string[]>([])
 
-  const plan = user?.organization?.plan || 'free'
+  const plan = user?.organization?.plan || 'trial'
+  const planLabel = plan === 'free' ? 'ACESSO GRATUITO' : plan.toUpperCase()
+  const selectedPlanLabel = selectedPlan
+    ? selectedPlan === 'free' ? 'ACESSO GRATUITO' : selectedPlan.toUpperCase()
+    : planLabel
   const trialEndsAt = user?.organization?.trialEndsAt
   const planExpiresAt = user?.organization?.planExpiresAt
 
   function createPix(plan: string) {
+    setSelectedPlan(plan)
+    setShowCancel(false)
     setPixLoading(true)
 
     fetch(`${API}/billing/create-pix`, {
@@ -540,14 +809,48 @@ function Upgrade() {
       .finally(() => setPixLoading(false))
   }
 
-  useEffect(() => {
+  function toggleCancelReason(reason: string) {
+    setCancelReasons(current =>
+      current.includes(reason)
+        ? current.filter(item => item !== reason)
+        : [...current, reason]
+    )
+  }
+
+  function refreshAccount() {
     fetch(`${API}/me`, { headers: authHeaders() })
       .then(res => res.json())
-      .then(data => setUser(data.user))
+      .then(data => {
+        if (!data.user) return
+
+        setUser(data.user)
+        setSelectedPlan(data.user.organization?.plan || 'trial')
+      })
+  }
+
+  useEffect(() => {
+    refreshAccount()
 
     fetch(`${API}/me/payments`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => setPayments(Array.isArray(data) ? data : []))
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(refreshAccount, 15000)
+    const onFocus = () => refreshAccount()
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshAccount()
+    }
+
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [])
 
   useEffect(() => {
@@ -571,12 +874,7 @@ function Upgrade() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
-      </aside>
+      <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
 
       <main className="saasMain">
         <header className="hero">
@@ -591,7 +889,12 @@ function Upgrade() {
         <div className="planSummary planSummaryWide">
           <div>
             <span>Plano</span>
-            <strong>{plan.toUpperCase()}</strong>
+            <strong>{planLabel}</strong>
+          </div>
+
+          <div>
+            <span>Plano selecionado</span>
+            <strong>{selectedPlanLabel}</strong>
           </div>
 
           <div>
@@ -612,14 +915,75 @@ function Upgrade() {
 
           <div className="planActions">
             <button onClick={() => window.scrollTo({ top: 420, behavior: 'smooth' })}>Upgrade</button>
-            <button onClick={() => alert('Downgrade em implantação. Entre em contato com o suporte.')}>Downgrade</button>
-            <button onClick={() => alert('Cancelamento em implantação. Entre em contato com o suporte.')}>Cancelar</button>
+            <button onClick={() => {
+              setSelectedPlan('pro')
+              setShowCancel(false)
+              window.scrollTo({ top: 420, behavior: 'smooth' })
+            }}>
+              Downgrade
+            </button>
+            <button onClick={() => {
+              setSelectedPlan('cancelamento')
+              setShowCancel(true)
+            }}>
+              Cancelar
+            </button>
           </div>
         </div>
       </div>
 
+      {showCancel && (
+        <div className="panel cancelPanel">
+          <h2>Confirmar cancelamento</h2>
+          <p>Antes de cancelar, selecione o motivo principal. Isso ajuda a melhorar o ProMaster Arena.</p>
+
+          <div className="cancelReasons">
+            {[
+              'Valor acima do esperado',
+              'Usei apenas para um evento',
+              'Faltou alguma funcionalidade',
+              'Achei difícil de usar',
+              'Vou migrar para outra solução',
+            ].map(reason => (
+              <label key={reason}>
+                <input
+                  type="checkbox"
+                  checked={cancelReasons.includes(reason)}
+                  onChange={() => toggleCancelReason(reason)}
+                />
+                {reason}
+              </label>
+            ))}
+          </div>
+
+          <div className="cancelActions">
+            <button onClick={() => {
+              setShowCancel(false)
+              setSelectedPlan(plan)
+              setCancelReasons([])
+            }}>
+              Manter plano
+            </button>
+            <button
+              className="dangerButton"
+              onClick={() => {
+                if (cancelReasons.length === 0) {
+                  alert('Selecione pelo menos um motivo para continuar.')
+                  return
+                }
+
+                alert('Solicitação de cancelamento registrada. O suporte finalizará o processo.')
+                setShowCancel(false)
+              }}
+            >
+              Confirmar cancelamento
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="billingPlansGrid">
-        <div className="panel billingPlanCard">
+        <div className={selectedPlan === 'pro' ? 'panel billingPlanCard selectedPlanCard' : 'panel billingPlanCard'}>
           <h2>PRO</h2>
           <p>R$ 29,90/mês</p>
           <p>Torneios ilimitados até 64 jogadores.</p>
@@ -628,16 +992,16 @@ function Upgrade() {
           </button>
         </div>
 
-        <div className="panel billingPlanCard">
+        <div className={selectedPlan === 'master' ? 'panel billingPlanCard selectedPlanCard' : 'panel billingPlanCard'}>
           <h2>MASTER</h2>
           <p>R$ 59,90/mês</p>
-          <p>Até 128 jogadores ou 32 times.</p>
+          <p>Torneios acima de 64 jogadores, usuários/equipe e recursos avançados.</p>
           <button className="upgradeButton" onClick={() => createPix('master')}>
             Gerar Pix MASTER
           </button>
         </div>
 
-        <div className="panel billingPlanCard">
+        <div className={selectedPlan === 'avulso' ? 'panel billingPlanCard selectedPlanCard' : 'panel billingPlanCard'}>
           <h2>Avulso</h2>
           <p>R$ 9,90 por torneio</p>
           <p>Ideal para eventos únicos.</p>
@@ -762,12 +1126,7 @@ function TournamentSettings() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
-      </aside>
+      <ClientSidebar />
 
       <main className="saasMain">
         <header className="hero">
@@ -863,68 +1222,72 @@ function Financeiro() {
 }, [])
 
   return (
-    <div className="app">
-      <header className="hero">
-        <div className="badge">💰 ProMaster Arena</div>
-        <h1>Painel Financeiro</h1>
-        <p>Resumo de cobranças Pix e faturamento</p>
-      </header>
+    <div className="saasLayout">
+      <AdminSidebar />
 
-      <div className="financeGrid">
-        <div className="financeCard">
-          <span>Faturamento aprovado</span>
-          <strong>R$ {(finance?.totalRevenue || 0).toFixed(2)}</strong>
-        </div>
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">💰 ProMaster Arena</div>
+          <h1>Painel Financeiro</h1>
+          <p>Resumo de cobranças Pix e faturamento</p>
+        </header>
 
-        <div className="financeCard">
-          <span>Pendente</span>
-          <strong>R$ {(finance?.pendingRevenue || 0).toFixed(2)}</strong>
-        </div>
-
-        <div className="financeCard">
-          <span>Pagamentos aprovados</span>
-          <strong>{finance?.approvedCount || 0}</strong>
-        </div>
-
-        <div className="financeCard">
-          <span>Pagamentos pendentes</span>
-          <strong>{finance?.pendingCount || 0}</strong>
-        </div>
-      </div>
-
-      <div className="panel">
-        <h2>Faturamento mensal</h2>
-
-        <div style={{ width: '100%', height: 320 }}>
-          <ResponsiveContainer>
-            <LineChart data={monthlyRevenue}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="total" strokeWidth={3} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="panel">
-        <h2>Histórico de pagamentos</h2>
-
-        {(finance?.payments || []).map((p: any) => (
-          <div key={p.id} className="paymentRow">
-            <div>
-              <strong>{p.plan?.toUpperCase()}</strong>
-              <span>MP: {p.mercadoPagoId || '-'}</span>
-            </div>
-
-            <div>
-              <strong>R$ {Number(p.amount).toFixed(2)}</strong>
-              <span className={`statusBadge ${p.status}`}>{p.status}</span>
-            </div>
+        <div className="financeGrid">
+          <div className="financeCard">
+            <span>Faturamento aprovado</span>
+            <strong>R$ {(finance?.totalRevenue || 0).toFixed(2)}</strong>
           </div>
-        ))}
-      </div>
+
+          <div className="financeCard">
+            <span>Pendente</span>
+            <strong>R$ {(finance?.pendingRevenue || 0).toFixed(2)}</strong>
+          </div>
+
+          <div className="financeCard">
+            <span>Pagamentos aprovados</span>
+            <strong>{finance?.approvedCount || 0}</strong>
+          </div>
+
+          <div className="financeCard">
+            <span>Pagamentos pendentes</span>
+            <strong>{finance?.pendingCount || 0}</strong>
+          </div>
+        </div>
+
+        <div className="panel">
+          <h2>Faturamento mensal</h2>
+
+          <div style={{ width: '100%', height: 320 }}>
+            <ResponsiveContainer>
+              <LineChart data={monthlyRevenue}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="total" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="panel">
+          <h2>Histórico de pagamentos</h2>
+
+          {(finance?.payments || []).map((p: any) => (
+            <div key={p.id} className="paymentRow">
+              <div>
+                <strong>{p.plan?.toUpperCase()}</strong>
+                <span>MP: {p.mercadoPagoId || '-'}</span>
+              </div>
+
+              <div>
+                <strong>R$ {Number(p.amount).toFixed(2)}</strong>
+                <span className={`statusBadge ${p.status}`}>{p.status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   )
 }
@@ -989,9 +1352,9 @@ function Landing() {
 
         <div className="plansGrid">
           <div className="planCard">
-            <h3>Free</h3>
+            <h3>Trial</h3>
             <strong>7 dias grátis</strong>
-            <p>1 torneio até 16 jogadores.</p>
+            <p>1 torneio até 16 jogadores com acesso aos recursos principais.</p>
           </div>
 
           <div className="planCard featured">
@@ -1003,7 +1366,7 @@ function Landing() {
           <div className="planCard">
             <h3>Master</h3>
             <strong>R$ 59,90/mês</strong>
-            <p>Até 128 jogadores ou 32 times.</p>
+            <p>Torneios acima de 64 jogadores, usuários/equipe e recursos avançados.</p>
           </div>
         </div>
       </section>
@@ -1035,49 +1398,75 @@ function PublicTournament() {
   const finalRound = rounds?.[rounds.length - 1]
   const champion = finalRound?.matches?.[0]?.winner
   const embedUrl = youtubeEmbedUrl(tournament.youtubeUrl)
+  const prizeLines = tournament.prize
+    ? String(tournament.prize).split(/\n|,/).map((line: string) => line.trim()).filter(Boolean)
+    : []
+  const ruleLines = tournament.rules
+    ? String(tournament.rules).split(/\n|,/).map((line: string) => line.trim()).filter(Boolean)
+    : []
 
   return (
     <div className="publicPage">
       <header className="publicHero">
         <span>AO VIVO • ProMaster Arena</span>
-        <h1>{tournament.name}</h1>
-
-        {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
       </header>
 
       <main>
-        <section className="publicShowcase">
-          <div className="publicCard publicInfoCard">
+        <section className="publicTopGrid">
+          <div className="publicCard publicTitleCard">
             <span className="publicCardLabel">Torneio</span>
-            <h2>{tournament.name}</h2>
-            <div className="publicInfoList">
-              <div><span>Status</span><strong>{tournament.status}</strong></div>
-              <div><span>Local</span><strong>{tournament.location || '-'}</strong></div>
-              <div><span>Data</span><strong>{tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong></div>
-              <div><span>Horário</span><strong>{tournament.eventTime || '-'}</strong></div>
-              <div><span>Premiação</span><strong>{tournament.prize || '-'}</strong></div>
-              <div><span>Regras</span><strong>{tournament.rules || '-'}</strong></div>
-            </div>
+            <h1>{tournament.name}</h1>
+            {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
           </div>
 
-          <div className="publicCard publicVideo">
-            <span className="publicCardLabel">Transmissão</span>
-            <h2>{embedUrl ? 'YouTube ao vivo' : 'Sem transmissão configurada'}</h2>
-            {embedUrl ? (
-              <iframe
-                src={embedUrl}
-                title="Transmissão ao vivo"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <div className="publicVideoEmpty">
-                <strong>Resultados ao vivo</strong>
-                <span>Acompanhe os jogos nos cards abaixo.</span>
+          <div className="publicCard publicMiniInfoCard">
+            <span className="publicCardLabel">Status</span>
+            <strong>{tournament.status}</strong>
+            <p>{tournament.location || 'Local não informado'}</p>
+            <p>
+              {tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : 'Data não informada'}
+              {tournament.eventTime ? ` • ${tournament.eventTime}` : ''}
+            </p>
+          </div>
+
+          <div className="publicCard publicMiniInfoCard">
+            <span className="publicCardLabel">Premiação</span>
+            {prizeLines.length > 0 ? (
+              <div className="publicTextLines">
+                {prizeLines.map((line: string, index: number) => (
+                  <p key={index}>{line}</p>
+                ))}
               </div>
+            ) : (
+              <p>Premiação não informada</p>
+            )}
+          </div>
+
+          <div className="publicCard publicMiniInfoCard">
+            <span className="publicCardLabel">Regras</span>
+            {ruleLines.length > 0 ? (
+              <div className="publicTextLines">
+                {ruleLines.map((line: string, index: number) => (
+                  <p key={index}>- {line.replace(/^-+/, '').trim()}</p>
+                ))}
+              </div>
+            ) : (
+              <p>Regras não informadas</p>
             )}
           </div>
         </section>
+
+        {embedUrl && (
+          <section className="publicCard publicVideo publicVideoWide">
+            <span className="publicCardLabel">Transmissão YouTube</span>
+            <iframe
+              src={embedUrl}
+              title="Transmissão ao vivo"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </section>
+        )}
 
         <section className="publicMatchColumns">
           <div className="publicCard publicMatchColumn next">
@@ -1108,9 +1497,9 @@ function PublicTournament() {
 
           <div className="publicCard publicMatchColumn done">
             <span className="publicCardLabel">Placar</span>
-            <h2>Finalizados</h2>
+            <h2>Resultados</h2>
             {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
-            {finished.slice(-8).reverse().map((match: any) => (
+            {finished.slice(-5).reverse().map((match: any) => (
               <div key={match.id} className="publicMatchCard done">
                 <strong>Jogo #{match.matchNumber || match.id}</strong>
                 <span>
@@ -1153,12 +1542,6 @@ function CreateTournament({ user }: any) {
 
   function createTournament() {
   const organizationId = user?.organizationId
-
-  if (user?.organization?.plan === 'free') {
-  alert('Seu plano permite apenas 1 torneio. Faça upgrade.')
-  navigate('/upgrade')
-  return
-}
 
   if (!organizationId) {
     alert('Usuário sem organização')
@@ -1216,12 +1599,7 @@ function CreateTournament({ user }: any) {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
-      </aside>
+      <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
 
       <main className="saasMain">
         <header className="hero">
@@ -1348,7 +1726,6 @@ function CreateTournament({ user }: any) {
 
 function TournamentBracket() {
   const { id } = useParams()
-  const navigate = useNavigate()
 
   const [rounds, setRounds] = useState<any[]>([])
   const [panelMode, setPanelMode] = useState<'board' | 'bracket'>('board')
@@ -1470,12 +1847,7 @@ function TournamentBracket() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">🎱 ProMaster</div>
-        <button onClick={() => navigate('/app')}>Dashboard</button>
-        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-        <button className="sidebarFooterButton" onClick={() => navigate('/app')}>Voltar</button>
-      </aside>
+      <ClientSidebar />
 
       <main className="saasMain">
        <header className="hero">
@@ -1781,13 +2153,25 @@ function TelaoTV() {
 function AdminClientes() {
   const navigate = useNavigate()
   const [orgs, setOrgs] = useState<any[]>([])
+  const [search, setSearch] = useState('')
+  const [planFilter, setPlanFilter] = useState('todos')
+  const [selectedOrg, setSelectedOrg] = useState<any>(null)
+  const filteredOrgs = orgs
+    .filter(org => org.name?.toLowerCase().includes(search.toLowerCase()))
+    .filter(org => planFilter === 'todos' ? true : org.plan === planFilter)
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
 
   function loadClientes() {
     fetch(`${API}/admin/organizations`, {
       headers: authHeaders(),
     })
       .then(res => res.json())
-      .then(data => setOrgs(Array.isArray(data) ? data : []))
+      .then(data => {
+        const sorted = Array.isArray(data)
+          ? [...data].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+          : []
+        setOrgs(sorted)
+      })
   }
 
   function changePlan(id: number, plan: string) {
@@ -1827,14 +2211,7 @@ function AdminClientes() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">👑 Admin Master</div>
-
-        <button onClick={() => navigate('/admin')}>Dashboard</button>
-        <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
-        <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
-        <button onClick={() => window.location.href = '/login'}>Sair</button>
-      </aside>
+      <AdminSidebar />
 
       <main className="saasMain">
         <header className="hero">
@@ -1846,28 +2223,77 @@ function AdminClientes() {
         <div className="panel">
           <h2>Organizações cadastradas</h2>
 
-          {orgs.map(org => (
+          <div className="clientFilters">
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Pesquisar por nome"
+            />
+
+            <select value={planFilter} onChange={e => setPlanFilter(e.target.value)}>
+              <option value="todos">Todos os planos</option>
+              <option value="trial">Trial</option>
+              <option value="free">Acesso gratuito</option>
+              <option value="pro">Pro</option>
+              <option value="master">Master</option>
+            </select>
+          </div>
+
+          {filteredOrgs.length === 0 && <p>Nenhum cliente encontrado.</p>}
+
+          {filteredOrgs.map(org => (
             <div key={org.id} className="clientCard">
               <div>
                 <strong>{org.name}</strong>
-                <span>{org.slug}</span>
+                <span>Cadastro: {org.createdAt ? new Date(org.createdAt).toLocaleDateString() : '-'}</span>
               </div>
 
               <div className="clientMetrics">
-                <span>Plano: {org.plan}</span>
+                <span>Plano: {org.plan === 'free' ? 'acesso gratuito' : org.plan}</span>
                 <span>Usuários: {org.users?.length || 0}</span>
                 <span>Torneios: {org.tournaments?.length || 0}</span>
               </div>
 
               <div className="clientActions">
                 <button onClick={() => changePlan(org.id, 'trial')}>Trial</button>
-                <button onClick={() => changePlan(org.id, 'free')}>Free</button>
                 <button onClick={() => changePlan(org.id, 'pro')}>Pro</button>
                 <button onClick={() => changePlan(org.id, 'master')}>Master</button>
+                <button onClick={() => setSelectedOrg(org)}>Torneios</button>
+                <button onClick={() => changePlan(org.id, 'free')}>Acesso gratuito</button>
               </div>
             </div>
           ))}
         </div>
+
+        {selectedOrg && (
+          <div className="qrModal" onClick={() => setSelectedOrg(null)}>
+            <div className="detailsContent" onClick={e => e.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Torneios do cliente</span>
+                  <h3>{selectedOrg.name}</h3>
+                </div>
+                <button onClick={() => setSelectedOrg(null)}>Fechar</button>
+              </div>
+
+              {(selectedOrg.tournaments || []).length === 0 && <p>Nenhum torneio encontrado.</p>}
+
+              <div className="clientTournamentList">
+                {(selectedOrg.tournaments || []).map((tournament: any) => (
+                  <div key={tournament.id} className="clientTournamentRow">
+                    <div>
+                      <strong>{tournament.name}</strong>
+                      <span>{tournament.status} • {tournament.playerCount} jogadores</span>
+                    </div>
+                    <button onClick={() => navigate(`/tournament/${tournament.id}`)}>
+                      Abrir
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
@@ -1875,6 +2301,11 @@ function AdminClientes() {
 
 function Admin() {
   const navigate = useNavigate()
+  const [orgs, setOrgs] = useState<any[]>([])
+  const totalClientes = orgs.length
+  const freeClientes = orgs.filter(org => org.plan === 'free').length
+  const masterClientes = orgs.filter(org => org.plan === 'master').length
+  const proClientes = orgs.filter(org => org.plan === 'pro').length
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -1887,24 +2318,18 @@ function Admin() {
       .then(data => {
         if (data.user?.role !== 'superadmin') {
           goHome()
+          return
         }
+
+        fetch(`${API}/admin/organizations`, { headers: authHeaders() })
+          .then(res => res.json())
+          .then(data => setOrgs(Array.isArray(data) ? data : []))
       })
   }, [])
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">👑 Admin Master</div>
-        <button onClick={() => navigate('/admin')}>Dashboard</button>
-        <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
-        <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
-        <button onClick={() => {
-          localStorage.removeItem('token')
-          window.location.href = '/'
-        }}>
-          Sair
-        </button>
-      </aside>
+      <AdminSidebar />
 
       <main className="saasMain">
         <header className="hero">
@@ -1912,6 +2337,36 @@ function Admin() {
           <h1>Painel Master</h1>
           <p>Gestão da plataforma ProMaster Arena</p>
         </header>
+
+        <div className="financeGrid adminStatsGrid">
+          <div className="financeCard">
+            <span>Clientes</span>
+            <strong>{totalClientes}</strong>
+          </div>
+
+          <div className="financeCard">
+            <span>Acesso gratuito</span>
+            <strong>{freeClientes}</strong>
+          </div>
+
+          <div className="financeCard">
+            <span>Master</span>
+            <strong>{masterClientes}</strong>
+          </div>
+
+          <div className="financeCard">
+            <span>Pro</span>
+            <strong>{proClientes}</strong>
+          </div>
+        </div>
+
+        <div className="panel adminQuickPanel">
+          <h2>Ações rápidas</h2>
+          <div className="tournamentActions">
+            <button onClick={() => navigate('/admin/clientes')}>Gerenciar clientes</button>
+            <button onClick={() => navigate('/admin/financeiro')}>Ver financeiro</button>
+          </div>
+        </div>
       </main>
     </div>
   )
