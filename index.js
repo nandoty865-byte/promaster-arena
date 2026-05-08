@@ -325,6 +325,85 @@ app.post('/admin/organization/:id/plan', auth, requireRole('superadmin'), async 
   res.json({ ok: true, org })
 })
 
+app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), async (req, res) => {
+  try {
+    const organizationId = Number(req.params.id)
+    const {
+      name,
+      email,
+      phone,
+      organizationName,
+      street,
+      number,
+      complement,
+      country,
+      state,
+      city,
+    } = req.body
+
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      include: { users: true },
+    })
+
+    if (!organization) {
+      return res.status(404).json({ error: 'Cliente não encontrado' })
+    }
+
+    const adminUser = organization.users.find(user => user.role === 'admin') || organization.users[0]
+
+    if (adminUser && email && email !== adminUser.email) {
+      const emailOwner = await prisma.user.findUnique({ where: { email } })
+
+      if (emailOwner && emailOwner.id !== adminUser.id) {
+        return res.status(400).json({ error: 'Este e-mail já está em uso' })
+      }
+    }
+
+    if (adminUser) {
+      await prisma.user.update({
+        where: { id: adminUser.id },
+        data: {
+          name: name || adminUser.name,
+          email: email || adminUser.email,
+          phone: phone || null,
+        },
+      })
+    }
+
+    const address = [street, number, complement, city, state, country]
+      .filter(Boolean)
+      .join(', ')
+
+    await prisma.organization.update({
+      where: { id: organizationId },
+      data: {
+        name: organizationName || organization.name,
+        address: address || null,
+        street: street || null,
+        number: number || null,
+        complement: complement || null,
+        country: country || null,
+        state: state || null,
+        city: city || null,
+      },
+    })
+
+    const updatedOrganization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      include: {
+        users: true,
+        tournaments: true,
+      },
+    })
+
+    res.json({ ok: true, organization: updatedOrganization })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao atualizar cliente' })
+  }
+})
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 const logoStorage = multer.diskStorage({
@@ -951,23 +1030,53 @@ app.get('/me', auth, async (req, res) => {
 
 app.put('/me/profile', auth, requireRole('admin', 'operator'), async (req, res) => {
   try {
-    const { name, phone, organizationName, address } = req.body
+    const {
+      name,
+      email,
+      phone,
+      organizationName,
+      street,
+      number,
+      complement,
+      country,
+      state,
+      city,
+    } = req.body
+
+    if (email && email !== req.user.email) {
+      const emailOwner = await prisma.user.findUnique({ where: { email } })
+
+      if (emailOwner && emailOwner.id !== req.user.id) {
+        return res.status(400).json({ error: 'Este e-mail já está em uso' })
+      }
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
       data: {
         name: name || null,
+        email: email || req.user.email,
         phone: phone || null,
       },
       include: { organization: true },
     })
 
     if (req.user.organizationId) {
+      const address = [street, number, complement, city, state, country]
+        .filter(Boolean)
+        .join(', ')
+
       await prisma.organization.update({
         where: { id: req.user.organizationId },
         data: {
           name: organizationName || updatedUser.organization?.name,
           address: address || null,
+          street: street || null,
+          number: number || null,
+          complement: complement || null,
+          country: country || null,
+          state: state || null,
+          city: city || null,
         },
       })
     }

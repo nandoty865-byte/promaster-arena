@@ -276,6 +276,16 @@ body {
   grid-column: 2;
 }
 
+.profileAddressGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profileAddressGrid label {
+  margin-top: 0;
+}
+
 .profileLogoPreview,
 .profileLogoEmpty {
   width: 180px;
@@ -1717,6 +1727,10 @@ button:hover {
 
   .profilePasswordPanel {
     grid-column: auto;
+  }
+
+  .profileAddressGrid {
+    grid-template-columns: 1fr;
   }
 
   .landingHero h1 {

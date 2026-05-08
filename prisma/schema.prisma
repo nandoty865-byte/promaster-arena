@@ -96,6 +96,12 @@ model Organization {
   slug      String   @unique
   createdAt DateTime @default(now())
 address String?
+street String?
+number String?
+complement String?
+country String?
+state String?
+city String?
 logoUrl String?
 plan        String    @default("trial")
 trialEndsAt DateTime?
