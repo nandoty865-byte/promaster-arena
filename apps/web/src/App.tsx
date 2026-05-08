@@ -523,13 +523,21 @@ function Upgrade() {
   const [pixLoading, setPixLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [payments, setPayments] = useState<any[]>([])
+  const [selectedPlan, setSelectedPlan] = useState('')
+  const [showCancel, setShowCancel] = useState(false)
+  const [cancelReasons, setCancelReasons] = useState<string[]>([])
 
   const plan = user?.organization?.plan || 'trial'
   const planLabel = plan === 'free' ? 'ACESSO GRATUITO' : plan.toUpperCase()
+  const selectedPlanLabel = selectedPlan
+    ? selectedPlan === 'free' ? 'ACESSO GRATUITO' : selectedPlan.toUpperCase()
+    : planLabel
   const trialEndsAt = user?.organization?.trialEndsAt
   const planExpiresAt = user?.organization?.planExpiresAt
 
   function createPix(plan: string) {
+    setSelectedPlan(plan)
+    setShowCancel(false)
     setPixLoading(true)
 
     fetch(`${API}/billing/create-pix`, {
@@ -542,10 +550,21 @@ function Upgrade() {
       .finally(() => setPixLoading(false))
   }
 
+  function toggleCancelReason(reason: string) {
+    setCancelReasons(current =>
+      current.includes(reason)
+        ? current.filter(item => item !== reason)
+        : [...current, reason]
+    )
+  }
+
   useEffect(() => {
     fetch(`${API}/me`, { headers: authHeaders() })
       .then(res => res.json())
-      .then(data => setUser(data.user))
+      .then(data => {
+        setUser(data.user)
+        setSelectedPlan(data.user?.organization?.plan || 'trial')
+      })
 
     fetch(`${API}/me/payments`, { headers: authHeaders() })
       .then(res => res.json())
@@ -597,6 +616,11 @@ function Upgrade() {
           </div>
 
           <div>
+            <span>Plano selecionado</span>
+            <strong>{selectedPlanLabel}</strong>
+          </div>
+
+          <div>
             <span>Início</span>
             <strong>{user?.organization?.createdAt ? new Date(user.organization.createdAt).toLocaleDateString() : '-'}</strong>
           </div>
@@ -614,14 +638,75 @@ function Upgrade() {
 
           <div className="planActions">
             <button onClick={() => window.scrollTo({ top: 420, behavior: 'smooth' })}>Upgrade</button>
-            <button onClick={() => alert('Downgrade em implantação. Entre em contato com o suporte.')}>Downgrade</button>
-            <button onClick={() => alert('Cancelamento em implantação. Entre em contato com o suporte.')}>Cancelar</button>
+            <button onClick={() => {
+              setSelectedPlan('pro')
+              setShowCancel(false)
+              window.scrollTo({ top: 420, behavior: 'smooth' })
+            }}>
+              Downgrade
+            </button>
+            <button onClick={() => {
+              setSelectedPlan('cancelamento')
+              setShowCancel(true)
+            }}>
+              Cancelar
+            </button>
           </div>
         </div>
       </div>
 
+      {showCancel && (
+        <div className="panel cancelPanel">
+          <h2>Confirmar cancelamento</h2>
+          <p>Antes de cancelar, selecione o motivo principal. Isso ajuda a melhorar o ProMaster Arena.</p>
+
+          <div className="cancelReasons">
+            {[
+              'Valor acima do esperado',
+              'Usei apenas para um evento',
+              'Faltou alguma funcionalidade',
+              'Achei difícil de usar',
+              'Vou migrar para outra solução',
+            ].map(reason => (
+              <label key={reason}>
+                <input
+                  type="checkbox"
+                  checked={cancelReasons.includes(reason)}
+                  onChange={() => toggleCancelReason(reason)}
+                />
+                {reason}
+              </label>
+            ))}
+          </div>
+
+          <div className="cancelActions">
+            <button onClick={() => {
+              setShowCancel(false)
+              setSelectedPlan(plan)
+              setCancelReasons([])
+            }}>
+              Manter plano
+            </button>
+            <button
+              className="dangerButton"
+              onClick={() => {
+                if (cancelReasons.length === 0) {
+                  alert('Selecione pelo menos um motivo para continuar.')
+                  return
+                }
+
+                alert('Solicitação de cancelamento registrada. O suporte finalizará o processo.')
+                setShowCancel(false)
+              }}
+            >
+              Confirmar cancelamento
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="billingPlansGrid">
-        <div className="panel billingPlanCard">
+        <div className={selectedPlan === 'pro' ? 'panel billingPlanCard selectedPlanCard' : 'panel billingPlanCard'}>
           <h2>PRO</h2>
           <p>R$ 29,90/mês</p>
           <p>Torneios ilimitados até 64 jogadores.</p>
@@ -630,7 +715,7 @@ function Upgrade() {
           </button>
         </div>
 
-        <div className="panel billingPlanCard">
+        <div className={selectedPlan === 'master' ? 'panel billingPlanCard selectedPlanCard' : 'panel billingPlanCard'}>
           <h2>MASTER</h2>
           <p>R$ 59,90/mês</p>
           <p>Torneios acima de 64 jogadores, usuários/equipe e recursos avançados.</p>
@@ -639,7 +724,7 @@ function Upgrade() {
           </button>
         </div>
 
-        <div className="panel billingPlanCard">
+        <div className={selectedPlan === 'avulso' ? 'panel billingPlanCard selectedPlanCard' : 'panel billingPlanCard'}>
           <h2>Avulso</h2>
           <p>R$ 9,90 por torneio</p>
           <p>Ideal para eventos únicos.</p>
