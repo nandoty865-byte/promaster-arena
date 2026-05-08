@@ -1111,6 +1111,20 @@ button:hover {
   line-height: 1.35;
 }
 
+.publicTextLines {
+  display: grid;
+  gap: 7px;
+}
+
+.publicTextLines p {
+  margin: 0;
+  color: #c7d2fe;
+  font-size: clamp(16px, 1.35vw, 20px);
+  line-height: 1.25;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .publicCard h2 {
   margin: 8px 0 18px;
   text-transform: uppercase;
