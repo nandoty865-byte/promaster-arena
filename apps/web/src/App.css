@@ -260,6 +260,49 @@ body {
   font-size: 14px;
 }
 
+.profileGrid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.profileLogoPanel {
+  display: grid;
+  gap: 16px;
+}
+
+.profileLogoPreview,
+.profileLogoEmpty {
+  width: 180px;
+  height: 180px;
+  border-radius: 18px;
+  border: 1px solid #334155;
+  background: #020617;
+  object-fit: contain;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  font-weight: 900;
+}
+
+.fileButton {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: #2563eb;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.fileButton input {
+  display: none;
+}
+
 .loginLinks {
   display: flex;
   justify-content: space-between;
@@ -1592,6 +1635,7 @@ button:hover {
   .planSummaryWide,
   .cancelReasons,
   .settingsGrid,
+  .profileGrid,
   .publicShowcase,
   .publicTopGrid,
   .publicBroadcastGrid,

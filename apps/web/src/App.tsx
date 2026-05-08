@@ -109,6 +109,7 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/" element={<Landing />} />
       <Route path="/app" element={<Dashboard user={user} />} />
+      <Route path="/app/perfil" element={<ProfilePage />} />
       <Route path="/upgrade" element={<Upgrade />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
       <Route path="/tournament/:id/settings" element={<TournamentSettings />} />
@@ -287,6 +288,150 @@ function ForgotPassword() {
           <a href="/login">Voltar ao login</a>
         </div>
       </div>
+    </div>
+  )
+}
+
+function ProfilePage() {
+  const navigate = useNavigate()
+  const [user, setUser] = useState<any>(null)
+  const [form, setForm] = useState<any>({
+    name: '',
+    phone: '',
+    organizationName: '',
+    address: '',
+  })
+  const [logoUploading, setLogoUploading] = useState(false)
+
+  function loadProfile() {
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        setUser(data.user)
+        setForm({
+          name: data.user?.name || '',
+          phone: data.user?.phone || '',
+          organizationName: data.user?.organization?.name || '',
+          address: data.user?.organization?.address || '',
+        })
+      })
+  }
+
+  function updateField(field: string, value: string) {
+    setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function saveProfile() {
+    fetch(`${API}/me/profile`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(form),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setUser(data.user)
+        alert('Perfil atualizado.')
+      })
+  }
+
+  function uploadLogo(file?: File) {
+    if (!file) return
+
+    const data = new FormData()
+    data.append('logo', file)
+    setLogoUploading(true)
+
+    fetch(`${API}/me/logo`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: data,
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        loadProfile()
+      })
+      .finally(() => setLogoUploading(false))
+  }
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      goHome()
+      return
+    }
+
+    loadProfile()
+  }, [])
+
+  return (
+    <div className="saasLayout">
+      <aside className="sidebar">
+        <div className="sidebarLogo">🎱 ProMaster</div>
+        <button onClick={() => navigate('/app')}>Dashboard</button>
+        <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
+        <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+        <button className="sidebarFooterButton" onClick={() => navigate(-1)}>Voltar</button>
+      </aside>
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">👤 Perfil do cliente</div>
+          <h1>Perfil da Arena</h1>
+          <p>Atualize os dados do cliente, contato e logo exibida no sistema.</p>
+        </header>
+
+        <div className="profileGrid">
+          <div className="panel profileLogoPanel">
+            <h2>Logo / Foto</h2>
+            {user?.organization?.logoUrl ? (
+              <img src={user.organization.logoUrl} className="profileLogoPreview" />
+            ) : (
+              <div className="profileLogoEmpty">Sem logo</div>
+            )}
+
+            <label className="fileButton">
+              {logoUploading ? 'Enviando...' : 'Enviar logo'}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => uploadLogo(e.target.files?.[0])}
+                disabled={logoUploading}
+              />
+            </label>
+          </div>
+
+          <div className="panel settingsPanel">
+            <h2>Dados do cliente</h2>
+
+            <label>Nome do responsável</label>
+            <input value={form.name} onChange={e => updateField('name', e.target.value)} />
+
+            <label>Telefone / WhatsApp</label>
+            <input value={form.phone} onChange={e => updateField('phone', e.target.value)} />
+
+            <label>Nome da arena / organização</label>
+            <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
+
+            <label>Endereço</label>
+            <input value={form.address} onChange={e => updateField('address', e.target.value)} />
+
+            <button className="primaryButton" onClick={saveProfile}>
+              Salvar perfil
+            </button>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }

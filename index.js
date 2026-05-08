@@ -949,6 +949,43 @@ app.get('/me', auth, async (req, res) => {
   res.json({ user: safeUser })
 })
 
+app.put('/me/profile', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const { name, phone, organizationName, address } = req.body
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        name: name || null,
+        phone: phone || null,
+      },
+      include: { organization: true },
+    })
+
+    if (req.user.organizationId) {
+      await prisma.organization.update({
+        where: { id: req.user.organizationId },
+        data: {
+          name: organizationName || updatedUser.organization?.name,
+          address: address || null,
+        },
+      })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { organization: true },
+    })
+
+    const { password, ...safeUser } = user
+
+    res.json({ ok: true, user: safeUser })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao atualizar perfil' })
+  }
+})
+
 app.get('/me/tournaments', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
   const tournaments = await prisma.tournament.findMany({
     where: {
