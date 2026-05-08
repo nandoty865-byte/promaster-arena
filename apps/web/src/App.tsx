@@ -296,8 +296,9 @@ function Dashboard({ user }: any) {
   const [tournaments, setTournaments] = useState<any[]>([])
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [detailsTournament, setDetailsTournament] = useState<any>(null)
-  const plan = user?.organization?.plan || 'free'
-  const isMasterPlan = plan === 'master'
+  const plan = user?.organization?.plan || 'trial'
+  const planLabel = plan === 'free' ? 'ACESSO GRATUITO' : plan.toUpperCase()
+  const isMasterPlan = plan === 'master' || plan === 'free'
   const trialEndsAt = user?.organization?.trialEndsAt
   const planExpiresAt = user?.organization?.planExpiresAt
 
@@ -358,7 +359,7 @@ function Dashboard({ user }: any) {
           <div className="planSummary">
             <div>
               <span>Plano atual</span>
-              <strong>{plan.toUpperCase()}</strong>
+              <strong>{planLabel}</strong>
             </div>
 
             <div>
@@ -523,7 +524,8 @@ function Upgrade() {
   const [user, setUser] = useState<any>(null)
   const [payments, setPayments] = useState<any[]>([])
 
-  const plan = user?.organization?.plan || 'free'
+  const plan = user?.organization?.plan || 'trial'
+  const planLabel = plan === 'free' ? 'ACESSO GRATUITO' : plan.toUpperCase()
   const trialEndsAt = user?.organization?.trialEndsAt
   const planExpiresAt = user?.organization?.planExpiresAt
 
@@ -591,7 +593,7 @@ function Upgrade() {
         <div className="planSummary planSummaryWide">
           <div>
             <span>Plano</span>
-            <strong>{plan.toUpperCase()}</strong>
+            <strong>{planLabel}</strong>
           </div>
 
           <div>
@@ -631,7 +633,7 @@ function Upgrade() {
         <div className="panel billingPlanCard">
           <h2>MASTER</h2>
           <p>R$ 59,90/mês</p>
-          <p>Até 128 jogadores ou 32 times.</p>
+          <p>Torneios acima de 64 jogadores, usuários/equipe e recursos avançados.</p>
           <button className="upgradeButton" onClick={() => createPix('master')}>
             Gerar Pix MASTER
           </button>
@@ -989,9 +991,9 @@ function Landing() {
 
         <div className="plansGrid">
           <div className="planCard">
-            <h3>Free</h3>
+            <h3>Trial</h3>
             <strong>7 dias grátis</strong>
-            <p>1 torneio até 16 jogadores.</p>
+            <p>1 torneio até 16 jogadores com acesso aos recursos principais.</p>
           </div>
 
           <div className="planCard featured">
@@ -1003,7 +1005,7 @@ function Landing() {
           <div className="planCard">
             <h3>Master</h3>
             <strong>R$ 59,90/mês</strong>
-            <p>Até 128 jogadores ou 32 times.</p>
+            <p>Torneios acima de 64 jogadores, usuários/equipe e recursos avançados.</p>
           </div>
         </div>
       </section>
@@ -1179,12 +1181,6 @@ function CreateTournament({ user }: any) {
 
   function createTournament() {
   const organizationId = user?.organizationId
-
-  if (user?.organization?.plan === 'free') {
-  alert('Seu plano permite apenas 1 torneio. Faça upgrade.')
-  navigate('/upgrade')
-  return
-}
 
   if (!organizationId) {
     alert('Usuário sem organização')
@@ -1880,14 +1876,14 @@ function AdminClientes() {
               </div>
 
               <div className="clientMetrics">
-                <span>Plano: {org.plan}</span>
+                <span>Plano: {org.plan === 'free' ? 'acesso gratuito' : org.plan}</span>
                 <span>Usuários: {org.users?.length || 0}</span>
                 <span>Torneios: {org.tournaments?.length || 0}</span>
               </div>
 
               <div className="clientActions">
                 <button onClick={() => changePlan(org.id, 'trial')}>Trial</button>
-                <button onClick={() => changePlan(org.id, 'free')}>Free</button>
+                <button onClick={() => changePlan(org.id, 'free')}>Acesso gratuito</button>
                 <button onClick={() => changePlan(org.id, 'pro')}>Pro</button>
                 <button onClick={() => changePlan(org.id, 'master')}>Master</button>
               </div>

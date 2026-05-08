@@ -53,9 +53,9 @@ function getPlanLimits(plan) {
       maxTeams: 0
     },
     free: {
-      maxTournaments: 1,
-      maxPlayers: 16,
-      maxTeams: 0
+      maxTournaments: Infinity,
+      maxPlayers: 128,
+      maxTeams: 32
     },
     pro: {
       maxTournaments: Infinity,
@@ -69,7 +69,7 @@ function getPlanLimits(plan) {
     }
   }
 
-  return plans[plan] || plans.free
+  return plans[plan] || plans.trial
 }
 
 async function advanceFinishedRounds(tournamentId, startRound) {
@@ -301,6 +301,12 @@ app.get('/admin/organizations',
 
 app.post('/admin/organization/:id/plan', auth, requireRole('superadmin'), async (req, res) => {
   const { plan } = req.body
+
+  const allowedPlans = ['trial', 'free', 'pro', 'master']
+
+  if (!allowedPlans.includes(plan)) {
+    return res.status(400).json({ error: 'Plano inválido' })
+  }
 
   const org = await prisma.organization.update({
     where: { id: Number(req.params.id) },
@@ -622,15 +628,12 @@ if (!org) {
   return res.status(404).json({ error: 'Organização não encontrada' })
 }
 
-let currentPlan = org.plan
+const currentPlan = org.plan
 
 if (org.plan === 'trial' && org.trialEndsAt && org.trialEndsAt < new Date()) {
-  const updatedOrg = await prisma.organization.update({
-    where: { id: organizationId },
-    data: { plan: 'free' }
+  return res.status(403).json({
+    error: 'Seu período trial terminou. Você pode visualizar e editar torneios existentes, mas precisa fazer upgrade para criar novos torneios.'
   })
-
-  currentPlan = updatedOrg.plan
 }
 
 const tournamentsCount = await prisma.tournament.count({
@@ -981,36 +984,6 @@ app.post('/me/logo', auth, requireRole('admin'), uploadLogo.single('logo'), asyn
   }
 })
 
-app.post('/admin/organization/:id/plan', auth, requireRole('superadmin'), async (req, res) => {
-  try {
-    const { plan } = req.body
-
-    const allowedPlans = ['trial', 'free', 'pro', 'master']
-
-    if (!allowedPlans.includes(plan)) {
-      return res.status(400).json({ error: 'Plano inválido' })
-    }
-
-    const organization = await prisma.organization.update({
-      where: { id: Number(req.params.id) },
-      data: {
-        plan,
-        trialEndsAt: plan === 'trial'
-          ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-          : null
-      }
-    })
-
-    res.json({
-      ok: true,
-      organization
-    })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Erro ao alterar plano' })
-  }
-})
-
 app.post('/billing/create-pix', auth, requireRole('admin'), async (req, res) => {
   try {
     const { plan } = req.body
@@ -1227,7 +1200,7 @@ app.post('/me/users/create', auth, requireRole('admin'), async (req, res) => {
       return res.status(404).json({ error: 'Organização não encontrada' })
     }
 
-    const allowedUsers = org.plan === 'master' ? 4 : 1
+    const allowedUsers = org.plan === 'master' || org.plan === 'free' ? 4 : 1
 
     if (org.users.length >= allowedUsers) {
       return res.status(403).json({
