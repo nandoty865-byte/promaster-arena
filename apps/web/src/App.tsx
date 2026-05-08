@@ -1825,7 +1825,7 @@ function AdminClientes() {
   const filteredOrgs = orgs
     .filter(org => org.name?.toLowerCase().includes(search.toLowerCase()))
     .filter(org => planFilter === 'todos' ? true : org.plan === planFilter)
-    .sort((a, b) => Number(a.id) - Number(b.id))
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
 
   function loadClientes() {
     fetch(`${API}/admin/organizations`, {
@@ -1834,7 +1834,7 @@ function AdminClientes() {
       .then(res => res.json())
       .then(data => {
         const sorted = Array.isArray(data)
-          ? [...data].sort((a, b) => Number(a.id) - Number(b.id))
+          ? [...data].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
           : []
         setOrgs(sorted)
       })
@@ -1929,10 +1929,10 @@ function AdminClientes() {
 
               <div className="clientActions">
                 <button onClick={() => changePlan(org.id, 'trial')}>Trial</button>
-                <button onClick={() => changePlan(org.id, 'free')}>Acesso gratuito</button>
                 <button onClick={() => changePlan(org.id, 'pro')}>Pro</button>
                 <button onClick={() => changePlan(org.id, 'master')}>Master</button>
                 <button onClick={() => setSelectedOrg(org)}>Torneios</button>
+                <button onClick={() => changePlan(org.id, 'free')}>Acesso gratuito</button>
               </div>
             </div>
           ))}
