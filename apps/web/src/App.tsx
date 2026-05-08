@@ -356,6 +356,11 @@ function ProfilePage() {
     organizationName: '',
     address: '',
   })
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
   const [logoUploading, setLogoUploading] = useState(false)
 
   function loadProfile() {
@@ -376,6 +381,10 @@ function ProfilePage() {
     setForm((current: any) => ({ ...current, [field]: value }))
   }
 
+  function updatePasswordField(field: string, value: string) {
+    setPasswordForm(current => ({ ...current, [field]: value }))
+  }
+
   function saveProfile() {
     fetch(`${API}/me/profile`, {
       method: 'PUT',
@@ -391,6 +400,46 @@ function ProfilePage() {
 
         setUser(data.user)
         alert('Perfil atualizado.')
+      })
+  }
+
+  function changePassword() {
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      alert('Preencha todos os campos de senha.')
+      return
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      alert('A nova senha precisa ter pelo menos 6 caracteres.')
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('A confirmação da senha não confere.')
+      return
+    }
+
+    fetch(`${API}/me/password`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        })
+        alert('Senha alterada com sucesso.')
       })
   }
 
@@ -477,6 +526,35 @@ function ProfilePage() {
 
             <button className="primaryButton" onClick={saveProfile}>
               Salvar perfil
+            </button>
+          </div>
+
+          <div className="panel settingsPanel profilePasswordPanel">
+            <h2>Alterar senha</h2>
+
+            <label>Senha atual</label>
+            <input
+              type="password"
+              value={passwordForm.currentPassword}
+              onChange={e => updatePasswordField('currentPassword', e.target.value)}
+            />
+
+            <label>Nova senha</label>
+            <input
+              type="password"
+              value={passwordForm.newPassword}
+              onChange={e => updatePasswordField('newPassword', e.target.value)}
+            />
+
+            <label>Confirmar nova senha</label>
+            <input
+              type="password"
+              value={passwordForm.confirmPassword}
+              onChange={e => updatePasswordField('confirmPassword', e.target.value)}
+            />
+
+            <button className="primaryButton" onClick={changePassword}>
+              Alterar senha
             </button>
           </div>
         </div>

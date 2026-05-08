@@ -986,6 +986,46 @@ app.put('/me/profile', auth, requireRole('admin', 'operator'), async (req, res) 
   }
 })
 
+app.put('/me/password', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Informe a senha atual e a nova senha' })
+    }
+
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ error: 'A nova senha precisa ter pelo menos 6 caracteres' })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+    })
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    const validPassword = await bcrypt.compare(currentPassword, user.password)
+
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Senha atual inválida' })
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { password: hashedPassword },
+    })
+
+    res.json({ ok: true })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao alterar senha' })
+  }
+})
+
 app.get('/me/tournaments', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
   const tournaments = await prisma.tournament.findMany({
     where: {
