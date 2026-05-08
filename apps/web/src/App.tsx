@@ -558,17 +558,40 @@ function Upgrade() {
     )
   }
 
-  useEffect(() => {
+  function refreshAccount() {
     fetch(`${API}/me`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => {
+        if (!data.user) return
+
         setUser(data.user)
-        setSelectedPlan(data.user?.organization?.plan || 'trial')
+        setSelectedPlan(data.user.organization?.plan || 'trial')
       })
+  }
+
+  useEffect(() => {
+    refreshAccount()
 
     fetch(`${API}/me/payments`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => setPayments(Array.isArray(data) ? data : []))
+  }, [])
+
+  useEffect(() => {
+    const interval = setInterval(refreshAccount, 15000)
+    const onFocus = () => refreshAccount()
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshAccount()
+    }
+
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [])
 
   useEffect(() => {
