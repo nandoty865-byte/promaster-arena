@@ -329,6 +329,25 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
   )
 }
 
+function AdminSidebar() {
+  const navigate = useNavigate()
+
+  function logout() {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebarLogo">👑 Admin Master</div>
+      <button onClick={() => navigate('/admin')}>Dashboard</button>
+      <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
+      <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
+      <button className="sidebarFooterButton" onClick={logout}>Sair</button>
+    </aside>
+  )
+}
+
 function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [form, setForm] = useState<any>({
@@ -1090,7 +1109,6 @@ function TournamentSettings() {
 }
 
 function Financeiro() {
-  const navigate = useNavigate()
   const [finance, setFinance] = useState<any>(null)
   const [monthlyRevenue, setMonthlyRevenue] = useState<any[]>([])
 
@@ -1127,18 +1145,7 @@ function Financeiro() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">👑 Admin Master</div>
-        <button onClick={() => navigate('/admin')}>Dashboard</button>
-        <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
-        <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
-        <button onClick={() => {
-          localStorage.removeItem('token')
-          window.location.href = '/'
-        }}>
-          Sair
-        </button>
-      </aside>
+      <AdminSidebar />
 
       <main className="saasMain">
         <header className="hero">
@@ -2126,14 +2133,7 @@ function AdminClientes() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">👑 Admin Master</div>
-
-        <button onClick={() => navigate('/admin')}>Dashboard</button>
-        <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
-        <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
-        <button onClick={() => window.location.href = '/login'}>Sair</button>
-      </aside>
+      <AdminSidebar />
 
       <main className="saasMain">
         <header className="hero">
@@ -2251,18 +2251,7 @@ function Admin() {
 
   return (
     <div className="saasLayout">
-      <aside className="sidebar">
-        <div className="sidebarLogo">👑 Admin Master</div>
-        <button onClick={() => navigate('/admin')}>Dashboard</button>
-        <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
-        <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
-        <button onClick={() => {
-          localStorage.removeItem('token')
-          window.location.href = '/'
-        }}>
-          Sair
-        </button>
-      </aside>
+      <AdminSidebar />
 
       <main className="saasMain">
         <header className="hero">
