@@ -296,6 +296,17 @@ function ForgotPassword() {
 
 function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: boolean, onLogout?: () => void }) {
   const navigate = useNavigate()
+  const [currentPlan, setCurrentPlan] = useState('')
+  const showMasterLinks = isMasterPlan || currentPlan === 'master' || currentPlan === 'free'
+
+  useEffect(() => {
+    if (!isLoggedIn()) return
+
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setCurrentPlan(data.user?.organization?.plan || ''))
+      .catch(() => setCurrentPlan(''))
+  }, [isMasterPlan])
 
   function goToTournaments() {
     if (window.location.pathname === '/app') {
@@ -323,7 +334,7 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
       <button onClick={goToTournaments}>Meus Torneios</button>
       <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
       <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
-      {isMasterPlan && (
+      {showMasterLinks && (
         <>
           <button onClick={() => navigate('/campeonatos')}>Campeonatos</button>
           <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
