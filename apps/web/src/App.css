@@ -3163,10 +3163,152 @@ button:hover {
   margin-top: 4px;
 }
 
+.seasonLayout {
+  display: grid;
+  grid-template-columns: minmax(360px, .95fr) minmax(320px, .65fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.seasonFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.seasonFormGrid label {
+  margin-top: 0;
+}
+
+.seasonList {
+  display: grid;
+  gap: 10px;
+}
+
+.seasonItem {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  gap: 5px;
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.seasonItem.active,
+.seasonItem:hover {
+  border-color: #60a5fa;
+  background: #0f172a;
+}
+
+.seasonItem span,
+.seasonItem small {
+  color: #94a3b8;
+}
+
+.seasonDetailsPanel {
+  margin-top: 24px;
+}
+
+.seasonDetailsHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.seasonChampion {
+  background: linear-gradient(135deg, rgba(34,197,94,.2), rgba(37,99,235,.18));
+  border: 1px solid rgba(34,197,94,.4);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.seasonChampion span {
+  display: block;
+  color: #86efac;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.seasonChampion strong {
+  display: block;
+  font-size: 28px;
+  margin-top: 6px;
+}
+
+.seasonInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0 24px;
+}
+
+.seasonInfoGrid div {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.seasonInfoGrid span {
+  display: block;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.seasonTournamentList {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.seasonRankingTable {
+  display: grid;
+  gap: 8px;
+}
+
+.seasonRankingHead,
+.seasonRankingRow {
+  display: grid;
+  grid-template-columns: 50px 1fr repeat(4, 90px);
+  gap: 10px;
+  align-items: center;
+}
+
+.seasonRankingHead {
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.seasonRankingRow {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px;
+}
+
 @media (max-width: 900px) {
   .clientCard,
   .clientFilters,
-  .clientTournamentRow {
+  .clientTournamentRow,
+  .seasonLayout,
+  .seasonFormGrid,
+  .seasonInfoGrid,
+  .seasonRankingHead,
+  .seasonRankingRow {
     grid-template-columns: 1fr;
+  }
+
+  .seasonDetailsHeader {
+    flex-direction: column;
   }
 }

@@ -27,6 +27,8 @@ model Tournament {
   createdAt   DateTime @default(now())
 organizationId Int?
 organization   Organization? @relation(fields: [organizationId], references: [id])
+seasonId       Int?
+season         Season? @relation(fields: [seasonId], references: [id])
 publicSlug     String? @unique
 location     String?
 eventDate    DateTime?
@@ -37,6 +39,26 @@ youtubeUrl   String?
   sport   Sport   @relation(fields: [sportId], references: [id])
   players Player[]
   matches Match[]
+}
+
+model Season {
+  id                  Int      @id @default(autoincrement())
+  organizationId      Int
+  name                String
+  tournamentCount     Int
+  playerCount         Int
+  startDate           DateTime?
+  endDate             DateTime?
+  locations           String?
+  rules               String?
+  prize               String?
+  status              String   @default("draft")
+  championName        String?
+  championPoints      Int?
+  createdAt           DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  tournaments  Tournament[]
 }
 
 model Player {
@@ -110,6 +132,7 @@ maxUsers Int @default(1)
 tournamentCredits Int @default(0)
   users       User[]
   tournaments Tournament[]
+  seasons     Season[]
 }
 
 model Payment {

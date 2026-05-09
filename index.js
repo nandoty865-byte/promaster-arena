@@ -693,13 +693,229 @@ app.get('/tournaments/:id/ranking', async (req, res) => {
   }
 })
 
+async function buildSeasonRanking(seasonId, organizationId) {
+  const tournaments = await prisma.tournament.findMany({
+    where: {
+      seasonId,
+      organizationId,
+    },
+    include: {
+      players: true,
+      matches: {
+        where: { status: 'finished' },
+      },
+    },
+    orderBy: { eventDate: 'asc' },
+  })
+
+  const rankingMap = new Map()
+
+  function playerKey(name) {
+    return String(name || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+  }
+
+  for (const tournament of tournaments) {
+    const playerMap = {}
+
+    tournament.players.forEach(player => {
+      playerMap[player.id] = player
+
+      const key = playerKey(player.name)
+      if (!key) return
+
+      if (!rankingMap.has(key)) {
+        rankingMap.set(key, {
+          name: player.name,
+          tournaments: new Set(),
+          wins: 0,
+          losses: 0,
+          played: 0,
+          points: 0,
+        })
+      }
+
+      rankingMap.get(key).tournaments.add(tournament.id)
+    })
+
+    tournament.matches.forEach(match => {
+      const winner = playerMap[match.winnerId]
+      const loser = playerMap[match.loserId]
+
+      if (winner) {
+        const key = playerKey(winner.name)
+        const item = rankingMap.get(key)
+        item.wins += 1
+        item.played += 1
+        item.points += 3
+      }
+
+      if (loser) {
+        const key = playerKey(loser.name)
+        const item = rankingMap.get(key)
+        item.losses += 1
+        item.played += 1
+      }
+    })
+  }
+
+  const ranking = Array.from(rankingMap.values())
+    .map(item => ({
+      ...item,
+      tournaments: item.tournaments.size,
+      winRate: item.played > 0 ? Math.round((item.wins / item.played) * 100) : 0,
+    }))
+    .sort((a, b) =>
+      b.points - a.points ||
+      b.wins - a.wins ||
+      b.winRate - a.winRate ||
+      a.name.localeCompare(b.name)
+    )
+
+  return {
+    tournaments,
+    ranking,
+    champion: ranking[0] || null,
+  }
+}
+
+app.get('/seasons', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
+  try {
+    const seasons = await prisma.season.findMany({
+      where: { organizationId: req.user.organizationId },
+      include: {
+        tournaments: {
+          orderBy: { eventDate: 'asc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    res.json(seasons)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar campeonatos' })
+  }
+})
+
+app.post('/seasons', auth, requireRole('admin'), async (req, res) => {
+  try {
+    const org = await prisma.organization.findUnique({
+      where: { id: req.user.organizationId },
+    })
+
+    if (!org) {
+      return res.status(404).json({ error: 'Organização não encontrada' })
+    }
+
+    if (org.plan !== 'master' && org.plan !== 'free') {
+      return res.status(403).json({ error: 'Modo campeonato disponível apenas no plano Master' })
+    }
+
+    const { name, tournamentCount, playerCount, startDate, endDate, locations, rules, prize } = req.body
+
+    if (!name || !tournamentCount || !playerCount) {
+      return res.status(400).json({ error: 'Informe nome, número de torneios e número de jogadores' })
+    }
+
+    const season = await prisma.season.create({
+      data: {
+        organizationId: req.user.organizationId,
+        name,
+        tournamentCount: Number(tournamentCount),
+        playerCount: Number(playerCount),
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+        locations: locations || null,
+        rules: rules || null,
+        prize: prize || null,
+        status: 'draft',
+      },
+    })
+
+    res.json({ ok: true, season })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao criar campeonato' })
+  }
+})
+
+app.get('/seasons/:id', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
+  try {
+    const seasonId = Number(req.params.id)
+    const season = await prisma.season.findFirst({
+      where: {
+        id: seasonId,
+        organizationId: req.user.organizationId,
+      },
+    })
+
+    if (!season) {
+      return res.status(404).json({ error: 'Campeonato não encontrado' })
+    }
+
+    const data = await buildSeasonRanking(seasonId, req.user.organizationId)
+
+    res.json({
+      season,
+      tournaments: data.tournaments,
+      ranking: data.ranking,
+      champion: season.championName
+        ? { name: season.championName, points: season.championPoints }
+        : data.champion,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar campeonato' })
+  }
+})
+
+app.post('/seasons/:id/finish', auth, requireRole('admin'), async (req, res) => {
+  try {
+    const seasonId = Number(req.params.id)
+    const season = await prisma.season.findFirst({
+      where: {
+        id: seasonId,
+        organizationId: req.user.organizationId,
+      },
+    })
+
+    if (!season) {
+      return res.status(404).json({ error: 'Campeonato não encontrado' })
+    }
+
+    const data = await buildSeasonRanking(seasonId, req.user.organizationId)
+
+    if (!data.champion) {
+      return res.status(400).json({ error: 'Ainda não há ranking suficiente para declarar campeão' })
+    }
+
+    const updated = await prisma.season.update({
+      where: { id: seasonId },
+      data: {
+        status: 'finished',
+        championName: data.champion.name,
+        championPoints: data.champion.points,
+      },
+    })
+
+    res.json({ ok: true, season: updated, champion: data.champion })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao finalizar campeonato' })
+  }
+})
+
 app.post('/organizations/:organizationId/tournaments/create',
   auth,
   requireRole('admin', 'operator'),
   async (req, res) => {
   try {
     const organizationId = Number(req.params.organizationId)
-    const { name, templateId, tableCount, location, eventDate, eventTime, prize, rules, youtubeUrl } = req.body
+    const { name, templateId, tableCount, location, eventDate, eventTime, prize, rules, youtubeUrl, seasonId } = req.body
 
     const template = await prisma.tournamentTemplate.findUnique({
       where: { id: Number(templateId) },
@@ -753,6 +969,37 @@ if (template.playerCount > effectiveLimits.maxPlayers) {
   })
 }
 
+let season = null
+
+if (seasonId) {
+  season = await prisma.season.findFirst({
+    where: {
+      id: Number(seasonId),
+      organizationId,
+    },
+  })
+
+  if (!season) {
+    return res.status(404).json({ error: 'Campeonato não encontrado' })
+  }
+
+  if (org.plan !== 'master' && org.plan !== 'free') {
+    return res.status(403).json({ error: 'Modo campeonato disponível apenas no plano Master' })
+  }
+
+  const seasonTournamentsCount = await prisma.tournament.count({
+    where: { seasonId: season.id },
+  })
+
+  if (seasonTournamentsCount >= season.tournamentCount) {
+    return res.status(403).json({ error: 'Este campeonato já atingiu o número configurado de torneios' })
+  }
+
+  if (template.playerCount > season.playerCount) {
+    return res.status(403).json({ error: `A temporada foi configurada para até ${season.playerCount} jogadores.` })
+  }
+}
+
     const publicSlug = `${name.toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -768,6 +1015,7 @@ if (template.playerCount > effectiveLimits.maxPlayers) {
         tableCount: Number(tableCount),
         status: 'draft',
         organizationId,
+        seasonId: season ? season.id : null,
         publicSlug,
         location: location || null,
         eventDate: eventDate ? new Date(eventDate) : null,
@@ -1168,6 +1416,9 @@ app.get('/me/tournaments', auth, requireRole('admin', 'operator', 'viewer'), asy
   const tournaments = await prisma.tournament.findMany({
     where: {
       organizationId: req.user.organizationId
+    },
+    include: {
+      season: true,
     },
     orderBy: { id: 'desc' }
   })

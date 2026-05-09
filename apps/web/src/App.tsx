@@ -112,6 +112,7 @@ export default function App() {
       <Route path="/app" element={<Dashboard user={user} />} />
       <Route path="/app/perfil" element={<ProfilePage />} />
       <Route path="/upgrade" element={<Upgrade />} />
+      <Route path="/campeonatos" element={<SeasonsPage user={user} />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
       <Route path="/tournament/:id/settings" element={<TournamentSettings />} />
       <Route path="/public/:slug" element={<PublicTournament />} />
@@ -323,7 +324,10 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
       <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
       <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
       {isMasterPlan && (
-        <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
+        <>
+          <button onClick={() => navigate('/campeonatos')}>Campeonatos</button>
+          <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
+        </>
       )}
       <button className="sidebarFooterButton" onClick={logout}>Sair</button>
     </aside>
@@ -1711,12 +1715,267 @@ function PublicTournament() {
   )
 }
 
+function SeasonsPage({ user }: any) {
+  const navigate = useNavigate()
+  const isMasterPlan = user?.organization?.plan === 'master' || user?.organization?.plan === 'free'
+  const [seasons, setSeasons] = useState<any[]>([])
+  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null)
+  const [seasonDetails, setSeasonDetails] = useState<any>(null)
+  const [form, setForm] = useState<any>({
+    name: 'Campeonato da Temporada',
+    tournamentCount: 4,
+    playerCount: 32,
+    startDate: '',
+    endDate: '',
+    locations: '',
+    rules: '',
+    prize: '',
+  })
+
+  function updateSeasonField(field: string, value: string | number) {
+    setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function loadSeasons() {
+    fetch(`${API}/seasons`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : []
+        setSeasons(list)
+
+        if (!selectedSeasonId && list[0]) {
+          setSelectedSeasonId(list[0].id)
+        }
+      })
+  }
+
+  function loadSeasonDetails(id: number) {
+    fetch(`${API}/seasons/${id}`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setSeasonDetails(data.error ? null : data))
+  }
+
+  function createSeason() {
+    if (!isMasterPlan) {
+      alert('Modo campeonato disponível apenas no plano Master.')
+      return
+    }
+
+    fetch(`${API}/seasons`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(form),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setSelectedSeasonId(data.season.id)
+        loadSeasons()
+      })
+  }
+
+  function finishSeason() {
+    if (!selectedSeasonId) return
+
+    fetch(`${API}/seasons/${selectedSeasonId}/finish`, {
+      method: 'POST',
+      headers: authHeaders(),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        alert(`Campeão da temporada: ${data.champion.name}`)
+        loadSeasonDetails(selectedSeasonId)
+        loadSeasons()
+      })
+  }
+
+  useEffect(() => {
+    loadSeasons()
+  }, [])
+
+  useEffect(() => {
+    if (selectedSeasonId) {
+      loadSeasonDetails(selectedSeasonId)
+    }
+  }, [selectedSeasonId])
+
+  return (
+    <div className="saasLayout">
+      <ClientSidebar isMasterPlan={isMasterPlan} />
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">🏁 Modo Campeonato</div>
+          <h1>Campeonatos</h1>
+          <p>Configure temporadas com vários torneios e ranking por vitórias e derrotas.</p>
+        </header>
+
+        {!isMasterPlan && (
+          <div className="panel cancelPanel">
+            <h2>Recurso Master</h2>
+            <p>O modo campeonato está disponível para o plano Master.</p>
+            <button onClick={() => navigate('/upgrade')}>Ver planos</button>
+          </div>
+        )}
+
+        <div className="seasonLayout">
+          <section className="panel">
+            <h2>Novo campeonato</h2>
+
+            <label>Nome da temporada</label>
+            <input value={form.name} onChange={e => updateSeasonField('name', e.target.value)} />
+
+            <div className="seasonFormGrid">
+              <div>
+                <label>Nº de torneios</label>
+                <input type="number" value={form.tournamentCount} onChange={e => updateSeasonField('tournamentCount', Number(e.target.value))} />
+              </div>
+
+              <div>
+                <label>Jogadores na temporada</label>
+                <input type="number" value={form.playerCount} onChange={e => updateSeasonField('playerCount', Number(e.target.value))} />
+              </div>
+
+              <div>
+                <label>Início</label>
+                <input type="date" value={form.startDate} onChange={e => updateSeasonField('startDate', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Final</label>
+                <input type="date" value={form.endDate} onChange={e => updateSeasonField('endDate', e.target.value)} />
+              </div>
+            </div>
+
+            <label>Locais</label>
+            <textarea value={form.locations} onChange={e => updateSeasonField('locations', e.target.value)} placeholder="Um local por linha ou lista de sedes" />
+
+            <label>Regras da temporada</label>
+            <textarea value={form.rules} onChange={e => updateSeasonField('rules', e.target.value)} placeholder="Critérios, desempate, presença, pontuação..." />
+
+            <label>Premiação</label>
+            <textarea value={form.prize} onChange={e => updateSeasonField('prize', e.target.value)} placeholder="Premiação final da temporada" />
+
+            <button className="primaryButton" onClick={createSeason}>
+              Criar campeonato
+            </button>
+          </section>
+
+          <section className="panel">
+            <h2>Temporadas</h2>
+
+            {seasons.length === 0 && <p>Nenhum campeonato criado.</p>}
+
+            <div className="seasonList">
+              {seasons.map(season => (
+                <button
+                  key={season.id}
+                  className={selectedSeasonId === season.id ? 'seasonItem active' : 'seasonItem'}
+                  onClick={() => setSelectedSeasonId(season.id)}
+                >
+                  <strong>{season.name}</strong>
+                  <span>{season.tournaments?.length || 0}/{season.tournamentCount} torneios</span>
+                  {season.championName && <small>Campeão: {season.championName}</small>}
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {seasonDetails && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <h2>{seasonDetails.season.name}</h2>
+                <p>
+                  {seasonDetails.season.tournamentCount} torneios • {seasonDetails.season.playerCount} jogadores • status {seasonDetails.season.status}
+                </p>
+              </div>
+
+              <div className="tournamentActions">
+                <button onClick={() => navigate(`/criar-torneio?seasonId=${seasonDetails.season.id}`)}>
+                  Criar torneio da temporada
+                </button>
+                <button className="primaryButton" onClick={finishSeason}>
+                  Declarar campeão
+                </button>
+              </div>
+            </div>
+
+            {seasonDetails.champion && (
+              <div className="seasonChampion">
+                <span>Campeão parcial/final</span>
+                <strong>🏆 {seasonDetails.champion.name}</strong>
+                <p>{seasonDetails.champion.points} pontos</p>
+              </div>
+            )}
+
+            <div className="seasonInfoGrid">
+              <div><span>Datas</span><strong>{seasonDetails.season.startDate ? new Date(seasonDetails.season.startDate).toLocaleDateString() : '-'} até {seasonDetails.season.endDate ? new Date(seasonDetails.season.endDate).toLocaleDateString() : '-'}</strong></div>
+              <div><span>Locais</span><strong>{seasonDetails.season.locations || '-'}</strong></div>
+              <div><span>Regras</span><strong>{seasonDetails.season.rules || '-'}</strong></div>
+              <div><span>Premiação</span><strong>{seasonDetails.season.prize || '-'}</strong></div>
+            </div>
+
+            <h3>Torneios da temporada</h3>
+            <div className="seasonTournamentList">
+              {seasonDetails.tournaments.length === 0 && <p>Nenhum torneio vinculado ainda.</p>}
+              {seasonDetails.tournaments.map((tournament: any) => (
+                <div key={tournament.id} className="clientTournamentRow">
+                  <div>
+                    <strong>{tournament.name}</strong>
+                    <span>{tournament.status} • {tournament.playerCount} jogadores</span>
+                  </div>
+                  <button onClick={() => navigate(`/tournament/${tournament.id}`)}>Painel</button>
+                </div>
+              ))}
+            </div>
+
+            <h3>Ranking da temporada</h3>
+            <div className="seasonRankingTable">
+              <div className="seasonRankingHead">
+                <span>#</span>
+                <span>Jogador</span>
+                <span>Pontos</span>
+                <span>V</span>
+                <span>D</span>
+                <span>Aprov.</span>
+              </div>
+              {seasonDetails.ranking.map((item: any, index: number) => (
+                <div key={item.name} className="seasonRankingRow">
+                  <span>{index + 1}</span>
+                  <strong>{item.name}</strong>
+                  <span>{item.points}</span>
+                  <span>{item.wins}</span>
+                  <span>{item.losses}</span>
+                  <span>{item.winRate}%</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </main>
+    </div>
+  )
+}
+
 function CreateTournament({ user }: any) {
   const navigate = useNavigate()
 
   const [templates, setTemplates] = useState<any[]>([])
+  const [seasons, setSeasons] = useState<any[]>([])
   const [name, setName] = useState('Novo Torneio')
   const [templateId, setTemplateId] = useState(1)
+  const [seasonId, setSeasonId] = useState('')
   const [tableCount, setTableCount] = useState(4)
 
   const [location, setLocation] = useState('')
@@ -1732,6 +1991,21 @@ function CreateTournament({ user }: any) {
     fetch(`${API}/templates`)
       .then(res => res.json())
       .then(data => setTemplates(Array.isArray(data) ? data : []))
+
+    if (user?.organization?.plan === 'master' || user?.organization?.plan === 'free') {
+      fetch(`${API}/seasons`, { headers: authHeaders() })
+        .then(res => res.json())
+        .then(data => {
+          const list = Array.isArray(data) ? data : []
+          const querySeasonId = new URLSearchParams(window.location.search).get('seasonId')
+
+          setSeasons(list)
+
+          if (querySeasonId && list.some((season: any) => String(season.id) === querySeasonId)) {
+            setSeasonId(querySeasonId)
+          }
+        })
+    }
   }, [])
 
   function createTournament() {
@@ -1776,6 +2050,7 @@ function CreateTournament({ user }: any) {
       prize,
       rules,
       youtubeUrl: hasYoutube ? youtubeUrl : '',
+      seasonId: seasonId || null,
       players,
     }),
   })
@@ -1817,6 +2092,20 @@ function CreateTournament({ user }: any) {
                 </option>
               ))}
             </select>
+
+            {seasons.length > 0 && (
+              <>
+                <label>Campeonato / temporada</label>
+                <select value={seasonId} onChange={e => setSeasonId(e.target.value)}>
+                  <option value="">Torneio avulso fora de campeonato</option>
+                  {seasons.map(season => (
+                    <option key={season.id} value={season.id}>
+                      {season.name}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
 
             <label>Número de mesas</label>
             <input
@@ -1906,6 +2195,7 @@ function CreateTournament({ user }: any) {
   {eventDate && <p>📅 {eventDate}</p>}
   {eventTime && <p>⏰ {eventTime}</p>}
   {hasYoutube && youtubeUrl && <p>Transmissão YouTube configurada</p>}
+  {seasonId && <p>Vinculado ao campeonato</p>}
 </div>
 
             <button className="primaryButton" onClick={createTournament}>
