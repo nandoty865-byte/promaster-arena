@@ -554,7 +554,7 @@ function ProfilePage() {
 
             <div className="profileAddressGrid">
               <div>
-                <label>Rua</label>
+                <label>Logradouro</label>
                 <input value={form.street} onChange={e => updateField('street', e.target.value)} />
               </div>
 
@@ -2860,7 +2860,7 @@ function AdminClientes() {
                 <h4>Endereço da arena</h4>
                 <div className="adminEditGrid">
                   <div className="adminEditWide">
-                    <label>Rua</label>
+                    <label>Logradouro</label>
                     <input value={editForm.street} onChange={e => updateEditField('street', e.target.value)} />
                   </div>
 

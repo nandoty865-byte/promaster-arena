@@ -9,6 +9,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const multer = require('multer')
 const path = require('path')
+const fs = require('fs')
 const axios = require('axios')
 const { randomUUID } = require('crypto')
 const crypto = require('crypto')
@@ -418,19 +419,36 @@ app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), asyn
   }
 })
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
+const uploadsDir = path.join(__dirname, 'uploads')
+const logosDir = path.join(uploadsDir, 'logos')
+
+fs.mkdirSync(logosDir, { recursive: true })
+
+app.use('/uploads', express.static(uploadsDir))
 
 const logoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/logos')
+    cb(null, logosDir)
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname)
+    const ext = path.extname(file.originalname).toLowerCase()
     cb(null, `logo-${Date.now()}${ext}`)
   }
 })
 
-const uploadLogo = multer({ storage: logoStorage })
+const uploadLogo = multer({
+  storage: logoStorage,
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Arquivo inválido. Envie uma imagem.'))
+    }
+
+    cb(null, true)
+  },
+  limits: {
+    fileSize: 3 * 1024 * 1024,
+  },
+})
 
 app.get('/', (req, res) => {
   res.send('ProMaster Arena API online 🚀')
@@ -1432,7 +1450,7 @@ app.post('/me/logo', auth, requireRole('admin'), uploadLogo.single('logo'), asyn
       return res.status(400).json({ error: 'Arquivo não enviado' })
     }
 
-    const logoUrl = `/uploads/logos/${req.file.filename}`
+    const logoUrl = `/api/uploads/logos/${req.file.filename}`
 
     const organization = await prisma.organization.update({
       where: { id: req.user.organizationId },
