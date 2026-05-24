@@ -27,25 +27,79 @@ model Tournament {
   createdAt   DateTime @default(now())
 organizationId Int?
 organization   Organization? @relation(fields: [organizationId], references: [id])
+seasonId       Int?
+season         Season? @relation(fields: [seasonId], references: [id])
 publicSlug     String? @unique
 location     String?
+venueAddress String?
 eventDate    DateTime?
 eventTime    String?
 prize        String?
 rules        String?
+broadcastType String @default("none")
+youtubeUrl   String?
+obsStreamUrl String?
+registrationOpen Boolean @default(true)
+registrationFee Float?
+paymentCollectionMode String @default("manual")
+paymentLink String?
+liveStarted Boolean @default(false)
+matchQuantity Int?
+matchQuantityMode String @default("all")
+scheduleMode String @default("single_day")
+phaseSchedule String?
+phaseMatchRules String?
   sport   Sport   @relation(fields: [sportId], references: [id])
   players Player[]
   matches Match[]
+  registrations TournamentRegistration[]
+}
+
+model Season {
+  id                  Int      @id @default(autoincrement())
+  organizationId      Int
+  name                String
+  tournamentCount     Int
+  playerCount         Int
+  startDate           DateTime?
+  endDate             DateTime?
+  locations           String?
+  rules               String?
+  prize               String?
+  status              String   @default("draft")
+  championName        String?
+  championPoints      Int?
+  createdAt           DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  tournaments  Tournament[]
 }
 
 model Player {
   id           Int      @id @default(autoincrement())
   name         String
   nickname     String?
+  email        String?
+  phone        String?
   tournamentId Int?
   createdAt    DateTime @default(now())
 
   tournament Tournament? @relation(fields: [tournamentId], references: [id])
+}
+
+model PlayerAccount {
+  id              Int      @id @default(autoincrement())
+  name            String
+  nickname        String?
+  email           String   @unique
+  phone           String?
+  rg              String?
+  city            String?
+  state           String?
+  country         String?
+  favoriteSports  String?
+  termsAcceptedAt DateTime?
+  createdAt       DateTime @default(now())
 }
 
 model Match {
@@ -59,9 +113,45 @@ model Match {
   round        Int
   bracketType  String
   status       String   @default("pending")
+  scoreA       Int      @default(0)
+  scoreB       Int      @default(0)
+  resultType   String?
+  calledAt     DateTime?
+  startedAt    DateTime?
+  callCount    Int      @default(0)
   createdAt    DateTime @default(now())
 
   tournament Tournament @relation(fields: [tournamentId], references: [id])
+}
+
+model TournamentRegistration {
+  id           Int      @id @default(autoincrement())
+  tournamentId Int
+  name         String
+  rg           String
+  email        String
+  phone        String
+  status       String   @default("confirmed")
+  paymentStatus String  @default("pending")
+  paymentMethod String?
+  automaticPayment Boolean @default(false)
+  mercadoPagoId String?
+  paymentTicketUrl String?
+  paymentQrCode String?
+  paymentQrCodeBase64 String?
+  representsOrganization Boolean @default(false)
+  representedOrganizationName String?
+  representedOrganizationType String?
+  representedOrganizationDocument String?
+  checkedIn    Boolean  @default(false)
+  confirmationToken String? @unique
+  confirmedAt   DateTime?
+  sortOrder     Int?
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+
+  @@unique([tournamentId, email])
 }
 
 model TournamentTemplate {
@@ -85,6 +175,8 @@ model User {
   phone String?
 emailVerified Boolean @default(false)
 emailVerifyToken String?
+passwordResetToken String?
+passwordResetExpiresAt DateTime?
 organizationId Int?
 organization   Organization? @relation(fields: [organizationId], references: [id])
 }
@@ -95,13 +187,28 @@ model Organization {
   slug      String   @unique
   createdAt DateTime @default(now())
 address String?
+street String?
+number String?
+complement String?
+country String?
+state String?
+city String?
 logoUrl String?
+documentType String?
+documentNumber String?
+kycStatus String @default("pending")
+kycDocumentUrl String?
+termsAcceptedAt DateTime?
+paymentCollectionMode String @default("manual")
+supportedSports String?
 plan        String    @default("trial")
 trialEndsAt DateTime?
 planExpiresAt DateTime?
 maxUsers Int @default(1)
+tournamentCredits Int @default(0)
   users       User[]
   tournaments Tournament[]
+  seasons     Season[]
 }
 
 model Payment {
