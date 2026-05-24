@@ -1171,6 +1171,51 @@ body {
   font-size: 26px;
 }
 
+.overviewRankingCard {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  background: #020617;
+}
+
+.overviewRankingCard h3 {
+  margin: 0 0 4px;
+}
+
+.overviewRankingCard p {
+  margin: 0;
+  color: #94a3b8;
+}
+
+.overviewRankingList {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.overviewRankingRow {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  background: #0f172a;
+}
+
+.overviewRankingRow span {
+  color: #bfdbfe;
+  font-weight: 900;
+}
+
+.overviewRankingRow em {
+  color: #86efac;
+  font-style: normal;
+  font-weight: 900;
+}
+
 .publicPanel {
   display: grid;
   gap: 14px;
@@ -1645,6 +1690,10 @@ body {
   .sectionHeaderActions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .overviewRankingRow {
+    grid-template-columns: 1fr;
   }
 
   .registrationsFilters {
@@ -3182,10 +3231,33 @@ button:hover {
 
 .landingHeader {
   max-width: 1180px;
-  margin: 0 auto 70px;
+  margin: 0 auto 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.landingNotice {
+  max-width: 1180px;
+  margin: 0 auto 46px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid rgba(250, 204, 21, .42);
+  border-radius: 14px;
+  background: rgba(250, 204, 21, .1);
+  color: #fef3c7;
+}
+
+.landingNotice strong {
+  color: #fde68a;
+  white-space: nowrap;
+}
+
+.landingNotice span {
+  color: #e2e8f0;
+  line-height: 1.4;
 }
 
 .landingLogo {
@@ -3561,6 +3633,12 @@ button:hover {
   .landingHeader {
     flex-direction: column;
     gap: 18px;
+  }
+
+  .landingNotice {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 34px;
   }
 
   .plansPageHeader {
@@ -3977,7 +4055,7 @@ button:hover {
 .tvGrid {
   margin-top: 32px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
 }
 
@@ -4010,6 +4088,10 @@ button:hover {
 .tvRow.live {
   border-color: #22c55e;
   box-shadow: 0 0 24px rgba(34,197,94,.18);
+}
+
+.tvRow.ranking strong {
+  color: #86efac;
 }
 
 @media (max-width: 1000px) {

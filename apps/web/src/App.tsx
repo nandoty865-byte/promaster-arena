@@ -1667,6 +1667,7 @@ function TournamentOverview() {
   const navigate = useNavigate()
   const [tournament, setTournament] = useState<any>(null)
   const [rounds, setRounds] = useState<any[]>([])
+  const [ranking, setRanking] = useState<any[]>([])
   const initialPanel = new URLSearchParams(window.location.search).get('painel') || 'overview'
   const [panel, setPanel] = useState(initialPanel)
   const [selectedRegistrationIds, setSelectedRegistrationIds] = useState<number[]>([])
@@ -1736,6 +1737,10 @@ function TournamentOverview() {
     fetch(`${API}/tournaments/${id}/bracket`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => setRounds(Array.isArray(data.rounds) ? data.rounds : []))
+
+    fetch(`${API}/tournaments/${id}/ranking`, { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => setRanking(Array.isArray(data) ? data : []))
   }
 
   useEffect(() => {
@@ -2341,6 +2346,27 @@ function TournamentOverview() {
           <div><span>Em andamento</span><strong>{playingMatches.length}</strong></div>
           <div><span>Finalizados</span><strong>{finishedMatches.length}</strong></div>
           <div><span>Data</span><strong>{tournament?.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong></div>
+        </div>
+
+        <div className="overviewRankingCard">
+          <div>
+            <h3>Ranking do torneio</h3>
+            <p>Acompanhamento por vitórias, derrotas e aproveitamento.</p>
+          </div>
+
+          <div className="overviewRankingList">
+            {ranking.slice(0, 5).map((item: any, index: number) => (
+              <div key={item.playerId || item.name} className="overviewRankingRow">
+                <strong>{index + 1}. {item.name}</strong>
+                <span>{item.wins}V / {item.losses}D</span>
+                <em>{item.winRate}%</em>
+              </div>
+            ))}
+
+            {ranking.length === 0 && (
+              <p className="helperText">O ranking aparece assim que houver jogadores e resultados.</p>
+            )}
+          </div>
         </div>
       </section>
     )
@@ -2967,6 +2993,11 @@ function TournamentSettings() {
               </option>
             ))}
           </select>
+          {form.format === 'round_robin' && (
+            <p className="helperText">
+              Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou campeonatos com várias etapas/dias e ranking acumulado, use o plano Master.
+            </p>
+          )}
           <p className="helperText">Quantidade e modelo só podem ser alterados antes de gerar a chave.</p>
 
           <label>Número de mesas</label>
@@ -3332,6 +3363,11 @@ function Landing() {
           <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
         </div>
       </header>
+
+      <div className="landingNotice">
+        <strong>Aviso provisório</strong>
+        <span>Esta página está em modo teste. Alguns recursos e informações podem ser ajustados durante a validação da plataforma.</span>
+      </div>
 
       <section className="landingHero">
         <div>
@@ -4287,6 +4323,11 @@ function CreateTournament({ user }: any) {
                 </option>
               ))}
             </select>
+            {tournamentFormat === 'round_robin' && (
+              <p className="helperText">
+                Todos contra todos: plano Pro permite até 64 jogadores. Plano Master permite torneios acima de 64 e também campeonatos em várias etapas/dias com ranking acumulado.
+              </p>
+            )}
 
             {seasons.length > 0 && (
               <>
@@ -5291,6 +5332,7 @@ function TelaoTV() {
   const { id } = useParams()
   const [rounds, setRounds] = useState<any[]>([])
   const [tournament, setTournament] = useState<any>(null)
+  const [ranking, setRanking] = useState<any[]>([])
   const [view, setView] = useState(0)
 
   const publicUrl = tournament?.publicSlug
@@ -5309,6 +5351,10 @@ function TelaoTV() {
     fetch(`${API}/tournaments/${id}/bracket`)
       .then(res => res.json())
       .then(data => setRounds(data.rounds || []))
+
+    fetch(`${API}/tournaments/${id}/ranking`)
+      .then(res => res.json())
+      .then(data => setRanking(Array.isArray(data) ? data : []))
   }
 
   useEffect(() => {
@@ -5443,6 +5489,17 @@ function TelaoTV() {
                   <strong>Finalizado</strong>
                 </div>
               ))}
+            </div>
+
+            <div className="tvPanel tvRankingPanel">
+              <h3>Ranking</h3>
+              {ranking.slice(0, 8).map((item: any, index: number) => (
+                <div key={item.playerId || item.name} className="tvRow ranking">
+                  <span>{index + 1}. {item.name}</span>
+                  <strong>{item.wins}V / {item.losses}D</strong>
+                </div>
+              ))}
+              {ranking.length === 0 && <p>Ranking aguardando resultados</p>}
             </div>
           </div>
         </>

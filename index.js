@@ -1037,6 +1037,12 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
           error: `Seu plano ${organization?.plan || 'trial'} permite torneios até ${limits.maxPlayers} jogadores.`
         })
       }
+
+      if (nextFormat === 'round_robin' && organization?.plan === 'pro' && nextPlayerCount > 64) {
+        return res.status(403).json({
+          error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou campeonato em etapas, use o plano Master.'
+        })
+      }
     }
 
     if (Array.isArray(players)) {
@@ -2228,6 +2234,12 @@ if (tournamentsCount >= limits.maxTournaments && !useTournamentCredit) {
 if (requestedPlayerCount > effectiveLimits.maxPlayers) {
   return res.status(403).json({
     error: `Seu plano ${useTournamentCredit ? 'avulso' : currentPlan} permite torneios até ${effectiveLimits.maxPlayers} jogadores.`
+  })
+}
+
+if (requestedFormat === 'round_robin' && currentPlan === 'pro' && requestedPlayerCount > 64) {
+  return res.status(403).json({
+    error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou campeonato em etapas, use o plano Master.'
   })
 }
 
