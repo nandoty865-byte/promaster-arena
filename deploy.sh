@@ -5,6 +5,8 @@ APP_DIR="/opt/promaster-arena"
 WEB_DIR="$APP_DIR/apps/web"
 PUBLIC_DIR="/var/www/promaster"
 BRANCH="main"
+API_HEALTH_URL="http://localhost:3000/"
+API_HEALTH_ATTEMPTS=20
 
 cd "$APP_DIR"
 
@@ -42,6 +44,20 @@ pm2 restart promaster-api --update-env
 nginx -t
 systemctl reload nginx
 
-curl -fsS http://localhost:3000/ > /dev/null
+echo "Aguardando API responder..."
+for attempt in $(seq 1 "$API_HEALTH_ATTEMPTS"); do
+  if curl -fsS "$API_HEALTH_URL" > /dev/null; then
+    echo "API online."
+    break
+  fi
+
+  if [ "$attempt" -eq "$API_HEALTH_ATTEMPTS" ]; then
+    echo "Deploy falhou: API nao respondeu em $API_HEALTH_ATTEMPTS segundos."
+    pm2 status promaster-api || true
+    exit 1
+  fi
+
+  sleep 1
+done
 
 echo "Deploy ProMaster Arena concluido a partir do branch main."
