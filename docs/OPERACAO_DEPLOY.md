@@ -10,6 +10,7 @@ Regras:
 - A VPS nao deve ser editada diretamente em operacao normal.
 - Deploy oficial sempre parte do `main`.
 - Alteracao feita direto na VPS e considerada emergencia e precisa ser salva em branch proprio antes de continuar.
+- Homologacao usa branch e deploy separados. Veja `docs/HOMOLOGACAO.md`.
 
 ## Deploy normal
 

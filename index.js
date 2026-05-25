@@ -1762,6 +1762,8 @@ app.get('/auth/verify-email/:token', async (req, res) => {
   }
 })
 
-app.listen(3000, () => {
-  console.log('ProMaster Arena API rodando na porta 3000 🚀')
+const PORT = Number(process.env.PORT || 3000)
+
+app.listen(PORT, () => {
+  console.log(`ProMaster Arena API rodando na porta ${PORT} 🚀`)
 })
