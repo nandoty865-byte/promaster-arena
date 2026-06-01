@@ -2098,13 +2098,21 @@ function CreateTournament({ user }: any) {
   const [bingoMaxNumber, setBingoMaxNumber] = useState(75)
   const [bingoCardPrice, setBingoCardPrice] = useState('')
   const [bingoCardsPerParticipant, setBingoCardsPerParticipant] = useState(1)
-  const sports = Array.from(
+  const templateSports = Array.from(
     new Map(
       templates
         .filter(template => template.sport)
         .map(template => [template.sport.slug, template.sport])
     ).values()
   )
+  const sports = [
+    { slug: 'sinuca', name: 'Sinuca' },
+    { slug: 'bingo', name: 'Bingo' },
+    ...templateSports.filter((sport: any) => !['sinuca', 'bingo'].includes(sport.slug)),
+  ].map(baseSport => {
+    const templateSport = templateSports.find((sport: any) => sport.slug === baseSport.slug)
+    return templateSport || baseSport
+  })
   const filteredTemplates = templates.filter(template => (
     template.sport?.slug ? template.sport.slug === sportSlug : true
   ))
@@ -2235,7 +2243,7 @@ function CreateTournament({ user }: any) {
           </header>
 
           <div className="sportChoiceGrid">
-            {sports.length === 0 && (
+            {templates.length === 0 && (
               <div className="panel">
                 <h2>Carregando modalidades</h2>
                 <p>Aguarde enquanto buscamos os modelos disponíveis.</p>
@@ -2244,12 +2252,14 @@ function CreateTournament({ user }: any) {
 
             {sports.map((sport: any) => {
               const isSportBingo = sport.slug === 'bingo'
+              const hasTemplate = templates.some(template => template.sport?.slug === sport.slug)
 
               return (
                 <button
                   key={sport.slug}
                   className="sportChoiceCard"
                   onClick={() => chooseSport(sport.slug)}
+                  disabled={!hasTemplate}
                   type="button"
                 >
                   <span>{isSportBingo ? 'Bingo' : sport.name}</span>

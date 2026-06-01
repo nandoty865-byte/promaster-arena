@@ -1782,6 +1782,17 @@ button:hover {
   transform: translateY(-2px);
 }
 
+.sportChoiceCard:disabled {
+  cursor: wait;
+  opacity: .58;
+  transform: none;
+}
+
+.sportChoiceCard:disabled:hover {
+  border-color: #334155;
+  background: #0f172a;
+}
+
 .sportChoiceCard span {
   width: fit-content;
   padding: 7px 12px;
