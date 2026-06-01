@@ -4261,10 +4261,13 @@ function SeasonsPage({ user }: any) {
 function CreateTournament({ user }: any) {
   const navigate = useNavigate()
 
+  const [templates, setTemplates] = useState<any[]>([])
   const [seasons, setSeasons] = useState<any[]>([])
   const [name, setName] = useState('Novo Torneio')
   const [playerCount, setPlayerCount] = useState(16)
   const [tournamentFormat, setTournamentFormat] = useState('knockout')
+  const [templateId, setTemplateId] = useState(1)
+  const [sportSlug, setSportSlug] = useState('sinuca')
   const [seasonId, setSeasonId] = useState('')
   const [tableCount, setTableCount] = useState(4)
 
@@ -4294,7 +4297,18 @@ function CreateTournament({ user }: any) {
   const [bingoMaxNumber, setBingoMaxNumber] = useState(75)
   const [bingoCardPrice, setBingoCardPrice] = useState('')
   const [bingoCardsPerParticipant, setBingoCardsPerParticipant] = useState(1)
-  const isBingo = tournamentFormat === 'bingo'
+  const sports = Array.from(
+    new Map(
+      templates
+        .filter(template => template.sport)
+        .map(template => [template.sport.slug, template.sport])
+    ).values()
+  )
+  const filteredTemplates = templates.filter(template => (
+    template.sport?.slug ? template.sport.slug === sportSlug : true
+  ))
+  const selectedTemplate = templates.find(template => Number(template.id) === Number(templateId))
+  const isBingo = tournamentFormat === 'bingo' || selectedTemplate?.format === 'bingo' || selectedTemplate?.sport?.slug === 'bingo'
 
   function updatePhaseRule(phase: number, field: string, value: string) {
     setPhaseRules(current => {
@@ -4341,6 +4355,25 @@ function CreateTournament({ user }: any) {
   }
 
   useEffect(() => {
+    fetch(`${API}/templates`)
+      .then(res => res.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : []
+        const defaultSport = list.some((template: any) => template.sport?.slug === 'sinuca')
+          ? 'sinuca'
+          : list[0]?.sport?.slug || ''
+        const defaultTemplate = list.find((template: any) => template.sport?.slug === defaultSport) || list[0]
+
+        setTemplates(list)
+        setSportSlug(defaultSport)
+
+        if (defaultTemplate) {
+          setTemplateId(defaultTemplate.id)
+          setTournamentFormat(defaultTemplate.format || (defaultTemplate.sport?.slug === 'bingo' ? 'bingo' : 'knockout'))
+          if (defaultTemplate.playerCount) setPlayerCount(Number(defaultTemplate.playerCount))
+        }
+      })
+
     if (user?.organization?.plan === 'master' || user?.organization?.plan === 'free') {
       fetch(`${API}/seasons`, { headers: authHeaders() })
         .then(res => res.json())
@@ -4381,10 +4414,11 @@ function CreateTournament({ user }: any) {
   fetch(`${API}/organizations/${organizationId}/tournaments/create`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({
-      name,
-      playerCount,
-      format: tournamentFormat,
+      body: JSON.stringify({
+        name,
+        templateId,
+        playerCount,
+        format: tournamentFormat,
       tableCount,
       location,
       venueAddress,
@@ -4443,22 +4477,70 @@ function CreateTournament({ user }: any) {
             <label>Nome do torneio</label>
             <input value={name} onChange={e => setName(e.target.value)} />
 
-            <label>Quantidade de inscritos</label>
-            <input
-              type="number"
-              min="2"
-              value={playerCount}
-              onChange={e => setPlayerCount(Math.max(2, Number(e.target.value) || 2))}
-            />
-
-            <label>Modelo do torneio</label>
-            <select value={tournamentFormat} onChange={e => setTournamentFormat(e.target.value)}>
-              {TOURNAMENT_FORMAT_OPTIONS.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+            <label>Esporte / modalidade</label>
+            <select
+              value={sportSlug}
+              onChange={e => {
+                const nextSport = e.target.value
+                const nextTemplate = templates.find(template => template.sport?.slug === nextSport)
+                setSportSlug(nextSport)
+                if (nextTemplate) {
+                  setTemplateId(nextTemplate.id)
+                  setTournamentFormat(nextTemplate.format || (nextSport === 'bingo' ? 'bingo' : 'knockout'))
+                  if (nextTemplate.playerCount) setPlayerCount(Number(nextTemplate.playerCount))
+                } else {
+                  setTournamentFormat(nextSport === 'bingo' ? 'bingo' : 'knockout')
+                }
+              }}
+            >
+              {sports.map((sport: any) => (
+                <option key={sport.slug} value={sport.slug}>
+                  {sport.name}
                 </option>
               ))}
             </select>
+
+            <label>Modelo</label>
+            <select
+              value={templateId}
+              onChange={e => {
+                const nextTemplateId = Number(e.target.value)
+                const nextTemplate = templates.find(template => Number(template.id) === nextTemplateId)
+                setTemplateId(nextTemplateId)
+                if (nextTemplate) {
+                  setSportSlug(nextTemplate.sport?.slug || sportSlug)
+                  setTournamentFormat(nextTemplate.format || (nextTemplate.sport?.slug === 'bingo' ? 'bingo' : 'knockout'))
+                  if (nextTemplate.playerCount) setPlayerCount(Number(nextTemplate.playerCount))
+                }
+              }}
+            >
+              {filteredTemplates.map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+
+            {!isBingo && (
+              <>
+                <label>Quantidade de inscritos</label>
+                <input
+                  type="number"
+                  min="2"
+                  value={playerCount}
+                  onChange={e => setPlayerCount(Math.max(2, Number(e.target.value) || 2))}
+                />
+
+                <label>Formato do torneio</label>
+                <select value={tournamentFormat} onChange={e => setTournamentFormat(e.target.value)}>
+                  {TOURNAMENT_FORMAT_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
             {tournamentFormat === 'round_robin' && (
               <p className="helperText">
                 Todos contra todos: plano Pro permite até 64 jogadores. Plano Master permite torneios acima de 64 e também campeonatos em várias etapas/dias com ranking acumulado.
