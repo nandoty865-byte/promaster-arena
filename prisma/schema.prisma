@@ -36,9 +36,20 @@ eventTime    String?
 prize        String?
 rules        String?
 youtubeUrl   String?
+bingoMode    String?
+bingoDrawMode String?
+bingoCardMode String?
+bingoMaxNumber Int @default(75)
+bingoCardPrice Float?
+bingoCardsPerParticipant Int @default(1)
+bingoDrawnNumbers String?
+bingoWinners String?
   sport   Sport   @relation(fields: [sportId], references: [id])
   players Player[]
   matches Match[]
+  bingoCards BingoCard[]
+  bingoDraws BingoDraw[]
+  bingoWinnerRecords BingoWinner[]
 }
 
 model Season {
@@ -69,6 +80,7 @@ model Player {
   createdAt    DateTime @default(now())
 
   tournament Tournament? @relation(fields: [tournamentId], references: [id])
+  bingoCards BingoCard[]
 }
 
 model Match {
@@ -96,6 +108,47 @@ model TournamentTemplate {
   eliminationType String
 
   sport Sport @relation(fields: [sportId], references: [id])
+}
+
+model BingoCard {
+  id           Int      @id @default(autoincrement())
+  tournamentId Int
+  playerId     Int?
+  buyerName    String?
+  buyerEmail   String?
+  buyerWhatsapp String?
+  numbers      String
+  status       String   @default("pending")
+  source       String   @default("online")
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+  player     Player?    @relation(fields: [playerId], references: [id])
+  winners    BingoWinner[]
+}
+
+model BingoDraw {
+  id           Int      @id @default(autoincrement())
+  tournamentId Int
+  roundName    String?
+  number       Int
+  source       String   @default("virtual")
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+}
+
+model BingoWinner {
+  id           Int      @id @default(autoincrement())
+  tournamentId Int
+  cardId       Int?
+  roundName    String?
+  winnerName   String
+  prize        String?
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+  card       BingoCard? @relation(fields: [cardId], references: [id])
 }
 
 model User {
