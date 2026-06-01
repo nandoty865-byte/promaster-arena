@@ -4268,6 +4268,7 @@ function CreateTournament({ user }: any) {
   const [tournamentFormat, setTournamentFormat] = useState('knockout')
   const [templateId, setTemplateId] = useState(1)
   const [sportSlug, setSportSlug] = useState('sinuca')
+  const [sportSelectionDone, setSportSelectionDone] = useState(false)
   const [seasonId, setSeasonId] = useState('')
   const [tableCount, setTableCount] = useState(4)
 
@@ -4309,6 +4310,7 @@ function CreateTournament({ user }: any) {
   ))
   const selectedTemplate = templates.find(template => Number(template.id) === Number(templateId))
   const isBingo = tournamentFormat === 'bingo' || selectedTemplate?.format === 'bingo' || selectedTemplate?.sport?.slug === 'bingo'
+  const selectedSport = sports.find((sport: any) => sport.slug === sportSlug)
 
   function updatePhaseRule(phase: number, field: string, value: string) {
     setPhaseRules(current => {
@@ -4390,6 +4392,22 @@ function CreateTournament({ user }: any) {
     }
   }, [])
 
+  function chooseSport(nextSport: string) {
+    const nextTemplate = templates.find(template => template.sport?.slug === nextSport)
+
+    setSportSlug(nextSport)
+
+    if (nextTemplate) {
+      setTemplateId(nextTemplate.id)
+      setTournamentFormat(nextTemplate.format || (nextSport === 'bingo' ? 'bingo' : 'knockout'))
+      if (nextTemplate.playerCount) setPlayerCount(Number(nextTemplate.playerCount))
+    } else {
+      setTournamentFormat(nextSport === 'bingo' ? 'bingo' : 'knockout')
+    }
+
+    setSportSelectionDone(true)
+  }
+
   function createTournament() {
   const organizationId = user?.organizationId
 
@@ -4459,6 +4477,52 @@ function CreateTournament({ user }: any) {
     })
 }
 
+  if (!sportSelectionDone) {
+    return (
+      <div className="saasLayout">
+        <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+
+        <main className="saasMain">
+          <header className="hero">
+            <div className="badge">🏆 Novo Torneio</div>
+            <h1>Escolha a modalidade</h1>
+            <p>Primeiro selecione o esporte ou formato do evento. Depois abrimos os campos certos para configurar o torneio.</p>
+          </header>
+
+          <div className="sportChoiceGrid">
+            {sports.length === 0 && (
+              <div className="panel">
+                <h2>Carregando modalidades</h2>
+                <p>Aguarde enquanto buscamos os modelos disponíveis.</p>
+              </div>
+            )}
+
+            {sports.map((sport: any) => {
+              const isSportBingo = sport.slug === 'bingo'
+
+              return (
+                <button
+                  key={sport.slug}
+                  className="sportChoiceCard"
+                  onClick={() => chooseSport(sport.slug)}
+                  type="button"
+                >
+                  <span>{isSportBingo ? 'Bingo' : sport.name}</span>
+                  <strong>{sport.name}</strong>
+                  <p>
+                    {isSportBingo
+                      ? 'Cartelas, sorteio físico ou virtual, telão de números e ganhadores.'
+                      : 'Chaveamento, partidas, mesas, ranking e controle do torneio.'}
+                  </p>
+                </button>
+              )
+            })}
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="saasLayout">
       <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
@@ -4478,27 +4542,15 @@ function CreateTournament({ user }: any) {
             <input value={name} onChange={e => setName(e.target.value)} />
 
             <label>Esporte / modalidade</label>
-            <select
-              value={sportSlug}
-              onChange={e => {
-                const nextSport = e.target.value
-                const nextTemplate = templates.find(template => template.sport?.slug === nextSport)
-                setSportSlug(nextSport)
-                if (nextTemplate) {
-                  setTemplateId(nextTemplate.id)
-                  setTournamentFormat(nextTemplate.format || (nextSport === 'bingo' ? 'bingo' : 'knockout'))
-                  if (nextTemplate.playerCount) setPlayerCount(Number(nextTemplate.playerCount))
-                } else {
-                  setTournamentFormat(nextSport === 'bingo' ? 'bingo' : 'knockout')
-                }
-              }}
-            >
-              {sports.map((sport: any) => (
-                <option key={sport.slug} value={sport.slug}>
-                  {sport.name}
-                </option>
-              ))}
-            </select>
+            <div className="selectedSportBox">
+              <div>
+                <strong>{selectedSport?.name || 'Modalidade selecionada'}</strong>
+                <span>{isBingo ? 'Evento de bingo' : 'Torneio esportivo'}</span>
+              </div>
+              <button type="button" onClick={() => setSportSelectionDone(false)}>
+                Trocar modalidade
+              </button>
+            </div>
 
             <label>Modelo</label>
             <select
