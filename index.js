@@ -1427,8 +1427,75 @@ app.get('/', (req, res) => {
   res.send('ProMaster Arena API online 🚀')
 })
 
+async function ensureTemplate(sportId, template) {
+  const existing = await prisma.tournamentTemplate.findFirst({
+    where: {
+      sportId,
+      name: template.name,
+      playerCount: template.playerCount,
+      format: template.format,
+      eliminationType: template.eliminationType,
+    },
+  })
+
+  if (existing) return existing
+
+  return prisma.tournamentTemplate.create({
+    data: {
+      sportId,
+      ...template,
+    },
+  })
+}
+
+async function ensureDefaultTemplates() {
+  const sinuca = await prisma.sport.upsert({
+    where: { slug: 'sinuca' },
+    update: { name: 'Sinuca' },
+    create: { name: 'Sinuca', slug: 'sinuca' },
+  })
+
+  const bingo = await prisma.sport.upsert({
+    where: { slug: 'bingo' },
+    update: { name: 'Bingo' },
+    create: { name: 'Bingo', slug: 'bingo' },
+  })
+
+  for (const players of [16, 32, 64, 128]) {
+    await ensureTemplate(sinuca.id, {
+      name: `Sinuca ${players} jogadores — Mata-mata`,
+      playerCount: players,
+      format: 'knockout',
+      eliminationType: 'single',
+    })
+
+    await ensureTemplate(sinuca.id, {
+      name: `Sinuca ${players} jogadores — Dupla eliminação`,
+      playerCount: players,
+      format: 'double',
+      eliminationType: 'double',
+    })
+  }
+
+  await ensureTemplate(sinuca.id, {
+    name: 'Sinuca — Modo livre',
+    playerCount: 0,
+    format: 'custom',
+    eliminationType: 'custom',
+  })
+
+  await ensureTemplate(bingo.id, {
+    name: 'Bingo — Evento livre',
+    playerCount: 0,
+    format: 'bingo',
+    eliminationType: 'bingo',
+  })
+}
+
 // listar templates
 app.get('/templates', async (req, res) => {
+  await ensureDefaultTemplates()
+
   const templates = await prisma.tournamentTemplate.findMany({
     include: { sport: true },
     orderBy: { id: 'asc' },
