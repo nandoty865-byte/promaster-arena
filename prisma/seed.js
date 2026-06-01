@@ -66,6 +66,25 @@ async function main() {
     }
   })
 
+  const bingo = await prisma.sport.upsert({
+    where: { slug: 'bingo' },
+    update: {},
+    create: {
+      name: 'Bingo',
+      slug: 'bingo'
+    }
+  })
+
+  await prisma.tournamentTemplate.create({
+    data: {
+      sportId: bingo.id,
+      name: 'Bingo — Evento livre',
+      playerCount: 0,
+      format: 'bingo',
+      eliminationType: 'bingo'
+    }
+  })
+
   console.log('✔ Templates criados com sucesso')
   console.log('Seed finalizado 🚀')
 }
