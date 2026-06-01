@@ -333,6 +333,10 @@ function getPlanLimits(plan) {
 function normalizeTournamentFormat(format) {
   const value = String(format || '').toLowerCase()
 
+  if (value === 'bingo') {
+    return 'bingo'
+  }
+
   if (['double_elimination', 'double', 'dupla', 'dupla_eliminatoria', 'dupla eliminatória'].includes(value)) {
     return 'double_elimination'
   }
@@ -377,6 +381,57 @@ function balancedByeIndexes(matchCount, byeCount) {
 
 function tableForIndex(index, tableCount) {
   return (index % Math.max(1, Number(tableCount) || 1)) + 1
+}
+
+const BINGO_MODES = ['virtual', 'physical', 'mixed']
+const BINGO_DRAW_MODES = ['virtual', 'physical']
+const BINGO_CARD_MODES = ['virtual', 'physical', 'mixed']
+
+function normalizeBingoConfig(body = {}) {
+  return {
+    bingoMode: BINGO_MODES.includes(body.bingoMode) ? body.bingoMode : 'physical',
+    bingoDrawMode: BINGO_DRAW_MODES.includes(body.bingoDrawMode) ? body.bingoDrawMode : 'physical',
+    bingoCardMode: BINGO_CARD_MODES.includes(body.bingoCardMode) ? body.bingoCardMode : 'physical',
+    bingoMaxNumber: Math.min(Math.max(Number(body.bingoMaxNumber || 75), 30), 99),
+    bingoCardPrice: body.bingoCardPrice === '' || body.bingoCardPrice == null
+      ? null
+      : Number(body.bingoCardPrice),
+    bingoCardsPerParticipant: Math.min(Math.max(Number(body.bingoCardsPerParticipant || 1), 1), 20),
+  }
+}
+
+function generateBingoCardNumbers(maxNumber = 75) {
+  const size = Math.min(24, maxNumber)
+  const pool = Array.from({ length: maxNumber }, (_, index) => index + 1)
+  const numbers = []
+
+  while (numbers.length < size && pool.length > 0) {
+    const index = Math.floor(Math.random() * pool.length)
+    numbers.push(pool.splice(index, 1)[0])
+  }
+
+  return numbers.sort((a, b) => a - b)
+}
+
+async function requireOwnedTournament(tournamentId, organizationId) {
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+    include: { sport: true },
+  })
+
+  if (!tournament) {
+    const error = new Error('Torneio não encontrado')
+    error.status = 404
+    throw error
+  }
+
+  if (tournament.organizationId !== organizationId) {
+    const error = new Error('Acesso negado')
+    error.status = 403
+    throw error
+  }
+
+  return tournament
 }
 
 async function advanceFinishedRounds(tournamentId, startRound) {
@@ -932,6 +987,7 @@ app.get('/tournaments/:id', async (req, res) => {
     const tournament = await prisma.tournament.findUnique({
       where: { id },
       include: {
+        sport: true,
         organization: true,
         players: {
           orderBy: { id: 'asc' }
@@ -982,6 +1038,12 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
       phaseSchedule,
       phaseMatchRules,
       players,
+      bingoMode,
+      bingoDrawMode,
+      bingoCardMode,
+      bingoMaxNumber,
+      bingoCardPrice,
+      bingoCardsPerParticipant,
     } = req.body
 
     const tournament = await prisma.tournament.findUnique({
@@ -1127,6 +1189,17 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
       ? (obsStreamUrl !== undefined ? obsStreamUrl || null : tournament.obsStreamUrl)
       : null
 
+    const bingoData = tournament.format === 'bingo'
+      ? normalizeBingoConfig({
+          bingoMode,
+          bingoDrawMode,
+          bingoCardMode,
+          bingoMaxNumber,
+          bingoCardPrice,
+          bingoCardsPerParticipant,
+        })
+      : {}
+
     const updated = await prisma.tournament.update({
       where: { id },
       data: {
@@ -1156,6 +1229,7 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
         scheduleMode: scheduleMode || 'single_day',
         phaseSchedule: phaseSchedule || null,
         phaseMatchRules: phaseMatchRules || null,
+        ...bingoData,
       },
     })
 
@@ -1356,6 +1430,7 @@ app.get('/', (req, res) => {
 // listar templates
 app.get('/templates', async (req, res) => {
   const templates = await prisma.tournamentTemplate.findMany({
+    include: { sport: true },
     orderBy: { id: 'asc' },
   })
 
@@ -1872,6 +1947,188 @@ app.post('/matches/:id/start', auth, requireRole('admin', 'operator'), async (re
   }
 })
 
+app.get('/tournaments/:id/bingo', async (req, res) => {
+  try {
+    const tournamentId = Number(req.params.id)
+
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      include: { sport: true },
+    })
+
+    if (!tournament) {
+      return res.status(404).json({ error: 'Evento não encontrado' })
+    }
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    const [cards, draws, winners] = await Promise.all([
+      prisma.bingoCard.findMany({
+        where: { tournamentId },
+        orderBy: { id: 'asc' },
+      }),
+      prisma.bingoDraw.findMany({
+        where: { tournamentId },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.bingoWinner.findMany({
+        where: { tournamentId },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ])
+
+    res.json({
+      tournament,
+      cards,
+      draws,
+      drawnNumbers: draws.map(draw => draw.number),
+      winners,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar Bingo' })
+  }
+})
+
+app.post('/tournaments/:id/bingo/draw', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const tournamentId = Number(req.params.id)
+    const tournament = await requireOwnedTournament(tournamentId, req.user.organizationId)
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    const maxNumber = tournament.bingoMaxNumber || 75
+    const source = req.body.source === 'physical' ? 'physical' : 'virtual'
+    const existingDraws = await prisma.bingoDraw.findMany({ where: { tournamentId } })
+    const drawnSet = new Set(existingDraws.map(draw => draw.number))
+
+    let number = req.body.number ? Number(req.body.number) : null
+
+    if (number) {
+      if (number < 1 || number > maxNumber) {
+        return res.status(400).json({ error: `Número deve estar entre 1 e ${maxNumber}` })
+      }
+
+      if (drawnSet.has(number)) {
+        return res.status(400).json({ error: 'Número já sorteado' })
+      }
+    } else {
+      const availableNumbers = Array.from({ length: maxNumber }, (_, index) => index + 1)
+        .filter(item => !drawnSet.has(item))
+
+      if (availableNumbers.length === 0) {
+        return res.status(400).json({ error: 'Todos os números já foram sorteados' })
+      }
+
+      number = availableNumbers[Math.floor(Math.random() * availableNumbers.length)]
+    }
+
+    const draw = await prisma.bingoDraw.create({
+      data: {
+        tournamentId,
+        number,
+        source,
+        roundName: req.body.roundName || 'Rodada principal',
+      },
+    })
+
+    res.json({ ok: true, draw })
+  } catch (error) {
+    console.error(error)
+    res.status(error.status || 500).json({ error: error.message || 'Erro ao sortear número' })
+  }
+})
+
+app.post('/tournaments/:id/bingo/winners', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const tournamentId = Number(req.params.id)
+    const tournament = await requireOwnedTournament(tournamentId, req.user.organizationId)
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    const winnerName = String(req.body.winnerName || '').trim()
+
+    if (!winnerName) {
+      return res.status(400).json({ error: 'Informe o nome do ganhador' })
+    }
+
+    const winner = await prisma.bingoWinner.create({
+      data: {
+        tournamentId,
+        cardId: req.body.cardId ? Number(req.body.cardId) : null,
+        roundName: req.body.roundName || 'Rodada principal',
+        winnerName,
+        prize: req.body.prize || null,
+      },
+    })
+
+    res.json({ ok: true, winner })
+  } catch (error) {
+    console.error(error)
+    res.status(error.status || 500).json({ error: error.message || 'Erro ao registrar ganhador' })
+  }
+})
+
+app.post('/public/:slug/bingo/cards', async (req, res) => {
+  try {
+    const { slug } = req.params
+    const tournament = await prisma.tournament.findUnique({
+      where: { publicSlug: slug },
+      include: { sport: true },
+    })
+
+    if (!tournament) {
+      return res.status(404).json({ error: 'Evento não encontrado' })
+    }
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    if (!['virtual', 'mixed'].includes(tournament.bingoCardMode || 'physical')) {
+      return res.status(400).json({ error: 'Este Bingo não aceita cartelas online' })
+    }
+
+    const buyerName = String(req.body.name || '').trim()
+    const quantity = Math.min(Math.max(Number(req.body.quantity || 1), 1), 10)
+
+    if (!buyerName) {
+      return res.status(400).json({ error: 'Informe o nome do participante' })
+    }
+
+    const cards = []
+
+    for (let i = 0; i < quantity; i++) {
+      cards.push(await prisma.bingoCard.create({
+        data: {
+          tournamentId: tournament.id,
+          buyerName,
+          buyerEmail: req.body.email || null,
+          buyerWhatsapp: req.body.whatsapp || null,
+          numbers: JSON.stringify(generateBingoCardNumbers(tournament.bingoMaxNumber || 75)),
+          status: 'pending',
+          source: 'online',
+        },
+      }))
+    }
+
+    res.json({
+      ok: true,
+      message: 'Cartela reservada. A confirmação do pagamento será vinculada na próxima etapa.',
+      cards,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao reservar cartela' })
+  }
+})
+
 
 
 app.get('/tournaments/:id/ranking', async (req, res) => {
@@ -2159,6 +2416,12 @@ app.post('/organizations/:organizationId/tournaments/create',
       scheduleMode,
       phaseSchedule,
       phaseMatchRules,
+      bingoMode,
+      bingoDrawMode,
+      bingoCardMode,
+      bingoMaxNumber,
+      bingoCardPrice,
+      bingoCardsPerParticipant,
     } = req.body
 
     if (req.user.organizationId !== organizationId) {
@@ -2170,6 +2433,7 @@ app.post('/organizations/:organizationId/tournaments/create',
     if (templateId) {
       template = await prisma.tournamentTemplate.findUnique({
         where: { id: Number(templateId) },
+        include: { sport: true },
       })
 
       if (!template) {
@@ -2196,6 +2460,11 @@ app.post('/organizations/:organizationId/tournaments/create',
 
     const requestedPlayerCount = Math.max(2, Number(playerCount || template?.playerCount || 16))
     const requestedFormat = normalizeTournamentFormat(format || template?.format || 'knockout')
+
+    if (requestedFormat === 'bingo') {
+      const bingoSport = await prisma.sport.findUnique({ where: { slug: 'bingo' } })
+      if (bingoSport) sportId = bingoSport.id
+    }
 
 const org = await prisma.organization.findUnique({
   where: { id: organizationId }
@@ -2242,6 +2511,18 @@ if (requestedFormat === 'round_robin' && currentPlan === 'pro' && requestedPlaye
     error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou campeonato em etapas, use o plano Master.'
   })
 }
+
+const isBingo = requestedFormat === 'bingo' || template?.format === 'bingo' || template?.sport?.slug === 'bingo'
+const bingoData = isBingo
+  ? normalizeBingoConfig({
+      bingoMode,
+      bingoDrawMode,
+      bingoCardMode,
+      bingoMaxNumber,
+      bingoCardPrice,
+      bingoCardsPerParticipant,
+    })
+  : {}
 
 let season = null
 
@@ -2316,6 +2597,7 @@ if (seasonId) {
         scheduleMode: scheduleMode || 'single_day',
         phaseSchedule: phaseSchedule || null,
         phaseMatchRules: phaseMatchRules || null,
+        ...bingoData,
       },
     })
 
@@ -2338,6 +2620,9 @@ for (const playerData of parsedPlayers.slice(0, requestedPlayerCount)) {
   players.push(player)
 }
 
+    if (isBingo) {
+      players.length = 0
+    }
     if (useTournamentCredit) {
       await prisma.organization.update({
         where: { id: organizationId },
@@ -2374,7 +2659,7 @@ app.get('/public/:slug', async (req, res) => {
 
     const tournament = await prisma.tournament.findUnique({
       where: { publicSlug: slug },
-      include: { organization: true },
+      include: { organization: true, sport: true },
     })
 
     if (!tournament) {
@@ -2397,6 +2682,21 @@ app.get('/public/:slug', async (req, res) => {
       },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     })
+
+    const [bingoCards, bingoDraws, bingoWinners] = await Promise.all([
+      prisma.bingoCard.findMany({
+        where: { tournamentId: tournament.id },
+        orderBy: { id: 'asc' },
+      }),
+      prisma.bingoDraw.findMany({
+        where: { tournamentId: tournament.id },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.bingoWinner.findMany({
+        where: { tournamentId: tournament.id },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ])
 
     const playerMap = {}
     players.forEach(p => {
@@ -2452,6 +2752,14 @@ app.get('/public/:slug', async (req, res) => {
         scheduleMode: tournament.scheduleMode,
         phaseSchedule: tournament.phaseSchedule,
         phaseMatchRules: tournament.phaseMatchRules,
+        format: tournament.format,
+        sport: tournament.sport,
+        bingoMode: tournament.bingoMode,
+        bingoDrawMode: tournament.bingoDrawMode,
+        bingoCardMode: tournament.bingoCardMode,
+        bingoMaxNumber: tournament.bingoMaxNumber,
+        bingoCardPrice: tournament.bingoCardPrice,
+        bingoCardsPerParticipant: tournament.bingoCardsPerParticipant,
       },
       registrations: registrations.map(registration => ({
         id: registration.id,
@@ -2465,6 +2773,12 @@ app.get('/public/:slug', async (req, res) => {
         createdAt: registration.createdAt,
       })),
       rounds: formattedRounds,
+      bingo: {
+        cards: bingoCards,
+        draws: bingoDraws,
+        drawnNumbers: bingoDraws.map(draw => draw.number),
+        winners: bingoWinners,
+      },
     })
   } catch (error) {
     console.error(error)
