@@ -2079,6 +2079,7 @@ function CreateTournament({ user }: any) {
   const [seasons, setSeasons] = useState<any[]>([])
   const [name, setName] = useState('Novo Torneio')
   const [templateId, setTemplateId] = useState(1)
+  const [sportSlug, setSportSlug] = useState('sinuca')
   const [seasonId, setSeasonId] = useState('')
   const [tableCount, setTableCount] = useState(4)
 
@@ -2096,13 +2097,36 @@ function CreateTournament({ user }: any) {
   const [bingoMaxNumber, setBingoMaxNumber] = useState(75)
   const [bingoCardPrice, setBingoCardPrice] = useState('')
   const [bingoCardsPerParticipant, setBingoCardsPerParticipant] = useState(1)
+  const sports = Array.from(
+    new Map(
+      templates
+        .filter(template => template.sport)
+        .map(template => [template.sport.slug, template.sport])
+    ).values()
+  )
+  const filteredTemplates = templates.filter(template => (
+    template.sport?.slug ? template.sport.slug === sportSlug : true
+  ))
   const selectedTemplate = templates.find(template => Number(template.id) === Number(templateId))
   const isBingo = selectedTemplate?.format === 'bingo' || selectedTemplate?.sport?.slug === 'bingo'
 
   useEffect(() => {
     fetch(`${API}/templates`)
       .then(res => res.json())
-      .then(data => setTemplates(Array.isArray(data) ? data : []))
+      .then(data => {
+        const list = Array.isArray(data) ? data : []
+        const defaultSport = list.some((template: any) => template.sport?.slug === 'sinuca')
+          ? 'sinuca'
+          : list[0]?.sport?.slug || ''
+        const defaultTemplate = list.find((template: any) => template.sport?.slug === defaultSport) || list[0]
+
+        setTemplates(list)
+        setSportSlug(defaultSport)
+
+        if (defaultTemplate) {
+          setTemplateId(defaultTemplate.id)
+        }
+      })
 
     if (user?.organization?.plan === 'master' || user?.organization?.plan === 'free') {
       fetch(`${API}/seasons`, { headers: authHeaders() })
@@ -2202,9 +2226,26 @@ function CreateTournament({ user }: any) {
             <label>Nome do torneio</label>
             <input value={name} onChange={e => setName(e.target.value)} />
 
+            <label>Esporte / modalidade</label>
+            <select
+              value={sportSlug}
+              onChange={e => {
+                const nextSport = e.target.value
+                const nextTemplate = templates.find(template => template.sport?.slug === nextSport)
+                setSportSlug(nextSport)
+                if (nextTemplate) setTemplateId(nextTemplate.id)
+              }}
+            >
+              {sports.map((sport: any) => (
+                <option key={sport.slug} value={sport.slug}>
+                  {sport.name}
+                </option>
+              ))}
+            </select>
+
             <label>Modelo</label>
             <select value={templateId} onChange={e => setTemplateId(Number(e.target.value))}>
-              {templates.map(t => (
+              {filteredTemplates.map(t => (
                 <option key={t.id} value={t.id}>
                   {t.name}
                 </option>
