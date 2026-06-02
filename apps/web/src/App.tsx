@@ -4568,25 +4568,43 @@ function CreateTournament({ user }: any) {
             </div>
 
             <label>Modelo</label>
-            <select
-              value={templateId}
-              onChange={e => {
-                const nextTemplateId = Number(e.target.value)
-                const nextTemplate = templates.find(template => Number(template.id) === nextTemplateId)
-                setTemplateId(nextTemplateId)
-                if (nextTemplate) {
-                  setSportSlug(nextTemplate.sport?.slug || sportSlug)
-                  setTournamentFormat(nextTemplate.format || (nextTemplate.sport?.slug === 'bingo' ? 'bingo' : 'knockout'))
-                  if (nextTemplate.playerCount) setPlayerCount(Number(nextTemplate.playerCount))
-                }
-              }}
-            >
-              {filteredTemplates.map(t => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
+            {isBingo ? (
+              <>
+                <select
+                  value={bingoMaxNumber}
+                  onChange={e => setBingoMaxNumber(Number(e.target.value))}
+                >
+                  <option value={75}>Bingo 75 bolas — cartela 5 x 5 com coringa no centro</option>
+                  <option value={90}>Bingo 90 bolas — cartela tradicional 3 linhas x 5 colunas</option>
+                </select>
+
+                <div className="bingoFormatHint">
+                  {bingoMaxNumber === 75
+                    ? '75 bolas: cartela 5 x 5 com letras BINGO e número grátis no centro.'
+                    : '90 bolas: cartela tradicional com 3 linhas e 5 números por linha.'}
+                </div>
+              </>
+            ) : (
+              <select
+                value={templateId}
+                onChange={e => {
+                  const nextTemplateId = Number(e.target.value)
+                  const nextTemplate = templates.find(template => Number(template.id) === nextTemplateId)
+                  setTemplateId(nextTemplateId)
+                  if (nextTemplate) {
+                    setSportSlug(nextTemplate.sport?.slug || sportSlug)
+                    setTournamentFormat(nextTemplate.format || (nextTemplate.sport?.slug === 'bingo' ? 'bingo' : 'knockout'))
+                    if (nextTemplate.playerCount) setPlayerCount(Number(nextTemplate.playerCount))
+                  }
+                }}
+              >
+                {filteredTemplates.map(t => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            )}
 
             {!isBingo && (
               <>
@@ -4664,21 +4682,6 @@ function CreateTournament({ user }: any) {
                     : bingoCardMode === 'mixed'
                       ? 'Cartela física e virtual'
                       : 'Cartela física'}
-                </div>
-
-                <label>Quantidade de bolas</label>
-                <select
-                  value={bingoMaxNumber}
-                  onChange={e => setBingoMaxNumber(Number(e.target.value))}
-                >
-                  <option value={75}>75 bolas — cartela 5 x 5 com coringa no centro</option>
-                  <option value={90}>90 bolas — cartela tradicional 3 linhas x 5 colunas</option>
-                </select>
-
-                <div className="bingoFormatHint">
-                  {bingoMaxNumber === 75
-                    ? '75 bolas: cartela 5 x 5 com letras BINGO e número grátis no centro.'
-                    : '90 bolas: cartela tradicional com 3 linhas e 5 números por linha.'}
                 </div>
 
                 <label>Valor da cartela online</label>
