@@ -1493,6 +1493,26 @@ button:hover {
   color: #94a3b8;
 }
 
+.publicBingoForm {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.publicBingoForm input {
+  width: 100%;
+  border: 1px solid rgba(56, 189, 248, .45);
+  border-radius: 10px;
+  background: rgba(2, 6, 23, .72);
+  color: white;
+  padding: 11px 12px;
+}
+
+.publicBingoForm button {
+  width: 100%;
+  padding: 12px;
+}
+
 .saasLayout {
   min-height: 100vh;
   display: grid;
@@ -1733,6 +1753,211 @@ button:hover {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   line-height: 1.7;
   white-space: pre;
+}
+
+.sportChoiceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.sportChoiceCard {
+  min-height: 210px;
+  padding: 24px;
+  border-radius: 18px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: white;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+}
+
+.sportChoiceCard:hover {
+  border-color: #60a5fa;
+  background: #172033;
+  transform: translateY(-2px);
+}
+
+.sportChoiceCard:disabled {
+  cursor: wait;
+  opacity: .58;
+  transform: none;
+}
+
+.sportChoiceCard:disabled:hover {
+  border-color: #334155;
+  background: #0f172a;
+}
+
+.sportChoiceCard span {
+  width: fit-content;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .18);
+  border: 1px solid rgba(96, 165, 250, .35);
+  color: #bfdbfe;
+  font-weight: 900;
+}
+
+.sportChoiceCard strong {
+  font-size: 30px;
+  line-height: 1.05;
+}
+
+.sportChoiceCard p {
+  color: #cbd5e1;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.selectedSportBox {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid #334155;
+  background: #020617;
+}
+
+.selectedSportBox div {
+  display: grid;
+  gap: 4px;
+}
+
+.selectedSportBox strong {
+  font-size: 18px;
+}
+
+.selectedSportBox span {
+  color: #94a3b8;
+  font-weight: 800;
+}
+
+.selectedSportBox button {
+  width: auto;
+  white-space: nowrap;
+}
+
+.bingoConfigBox {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid rgba(34, 197, 94, .35);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, .7);
+}
+
+.bingoConfigBox h3 {
+  margin-bottom: 6px;
+}
+
+.bingoConfigBox p {
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.readonlyField,
+.bingoFormatHint {
+  background: #020617;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  color: #cbd5e1;
+  padding: 12px;
+  font-weight: 800;
+}
+
+.bingoFormatHint {
+  color: #93c5fd;
+  margin-top: 8px;
+}
+
+.bingoControlGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr .8fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.bingoControlPanel {
+  min-height: 260px;
+}
+
+.bingoCurrentNumber {
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  margin: 16px 0;
+  border-radius: 18px;
+  background: radial-gradient(circle at top, rgba(37, 99, 235, .3), rgba(15, 23, 42, .95));
+  border: 1px solid rgba(96, 165, 250, .45);
+}
+
+.bingoCurrentNumber span {
+  color: #93c5fd;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bingoCurrentNumber strong {
+  font-size: 76px;
+  line-height: 1;
+}
+
+.bingoActionRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.bingoActionRow input {
+  min-width: 0;
+}
+
+.bingoNumbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bingoNumbers span {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #2563eb;
+  color: white;
+  font-weight: 900;
+}
+
+.bingoWinnerRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #020617;
+  border: 1px solid #1e293b;
+  margin-top: 10px;
+}
+
+.bingoWinnerRow span,
+.bingoStats span {
+  color: #94a3b8;
+}
+
+.bingoStats strong {
+  display: block;
+  font-size: 52px;
+  color: #86efac;
+  line-height: 1;
+  margin-bottom: 8px;
 }
 
 .landingFeatures,
@@ -2094,7 +2319,12 @@ button:hover {
 }
 
 @media (max-width: 1180px) {
-  .matchBoard {
+  .matchBoard,
+  .bingoControlGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .bingoActionRow {
     grid-template-columns: 1fr;
   }
 }
@@ -2386,8 +2616,50 @@ button:hover {
   box-shadow: 0 0 24px rgba(34,197,94,.18);
 }
 
+.bingoTv {
+  margin-top: 32px;
+}
+
+.bingoTvFeatured {
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: radial-gradient(circle at center, rgba(37, 99, 235, .32), rgba(15, 23, 42, .88));
+  border: 1px solid rgba(96, 165, 250, .45);
+  border-radius: 34px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.35);
+}
+
+.bingoTvFeatured span {
+  color: #93c5fd;
+  font-size: 28px;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.bingoTvFeatured strong {
+  display: block;
+  font-size: clamp(100px, 18vw, 220px);
+  line-height: .85;
+}
+
+.bingoTvFeatured p {
+  color: #cbd5e1;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.bingoTvGrid {
+  margin-top: 26px;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr .8fr;
+  gap: 24px;
+}
+
 @media (max-width: 1000px) {
-  .tvGrid {
+  .tvGrid,
+  .bingoTvGrid {
     grid-template-columns: 1fr;
   }
 

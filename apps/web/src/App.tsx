@@ -51,6 +51,11 @@ function youtubeEmbedUrl(url?: string) {
   return url
 }
 
+function publicTournamentUrl(slug?: string) {
+  if (!slug) return ''
+  return `${window.location.origin}/public/${slug}`
+}
+
 function isPublicPath(path: string) {
   return (
     path === '/' ||
@@ -711,7 +716,7 @@ function Dashboard({ user }: any) {
           {tournaments.length === 0 && <p>Nenhum torneio encontrado.</p>}
 
           {tournaments.map(t => {
-            const publicUrl = `https://www.promasterarena.com.br/public/${t.publicSlug}`
+            const publicUrl = publicTournamentUrl(t.publicSlug)
 
             return (
               <div key={t.id} className="tournamentCard">
@@ -819,7 +824,7 @@ function Dashboard({ user }: any) {
                 {detailsTournament.publicSlug && (
                   <div>
                     <span>Página pública</span>
-                    <a href={`https://www.promasterarena.com.br/public/${detailsTournament.publicSlug}`} target="_blank" rel="noreferrer">
+                    <a href={publicTournamentUrl(detailsTournament.publicSlug)} target="_blank" rel="noreferrer">
                       Abrir página
                     </a>
                   </div>
@@ -1586,18 +1591,51 @@ function PlansComparison() {
 function PublicTournament() {
   const { slug } = useParams()
   const [data, setData] = useState<any>(null)
+  const [error, setError] = useState('')
+  const [bingoBuyer, setBingoBuyer] = useState({ name: '', email: '', whatsapp: '', quantity: 1 })
+  const [bingoMessage, setBingoMessage] = useState('')
 
   useEffect(() => {
+    setError('')
+    setData(null)
     fetch(`${API}/public/${slug}`)
-      .then(res => res.json())
+      .then(async res => {
+        const result = await res.json().catch(() => null)
+        if (!res.ok) {
+          throw new Error(result?.error || 'Erro ao carregar pagina publica')
+        }
+        return result
+      })
       .then(setData)
+      .catch(err => setError(err.message || 'Erro ao carregar pagina publica'))
   }, [slug])
+
+  if (error) {
+    return (
+      <div className="publicPage">
+        <main>
+          <section className="publicCard publicErrorCard">
+            <span className="publicCardLabel">Pagina publica</span>
+            <h1>Nao foi possivel carregar este torneio</h1>
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()}>Tentar novamente</button>
+          </section>
+        </main>
+      </div>
+    )
+  }
 
   if (!data?.tournament) {
     return <div className="publicPage">Carregando torneio...</div>
   }
 
-  const { tournament, rounds } = data
+  const { tournament, rounds, bingo } = data
+  const isBingo = tournament.format === 'bingo' || tournament.sport?.slug === 'bingo'
+  const bingoNumbers = bingo?.drawnNumbers || []
+  const bingoWinners = bingo?.winners || []
+  const bingoCards = bingo?.cards || []
+  const canBuyBingoCards = isBingo && ['virtual', 'mixed'].includes(tournament.bingoCardMode || 'physical')
+  const bingoCardLimit = Math.max(Number(tournament.bingoCardsPerParticipant || 1), 1)
   const matches = (rounds || []).flatMap((round: any) =>
     (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
   )
@@ -1613,6 +1651,25 @@ function PublicTournament() {
   const ruleLines = tournament.rules
     ? String(tournament.rules).split(/\n|,/).map((line: string) => line.trim()).filter(Boolean)
     : []
+
+  function reserveBingoCard() {
+    setBingoMessage('')
+    fetch(`${API}/public/${slug}/bingo/cards`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bingoBuyer),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          setBingoMessage(result.error)
+          return
+        }
+
+        setBingoMessage('Cartela reservada. Aguarde a confirmação do pagamento pelo organizador.')
+        setBingoBuyer(current => ({ ...current, name: '', email: '', whatsapp: '' }))
+      })
+  }
 
   return (
     <div className="publicPage">
@@ -1677,6 +1734,76 @@ function PublicTournament() {
           </section>
         )}
 
+        {isBingo && (
+          <section className="publicMatchColumns">
+            <div className="publicCard publicMatchColumn live">
+              <span className="publicCardLabel">Bingo</span>
+              <h2>Números sorteados</h2>
+              <div className="bingoNumbers">
+                {bingoNumbers.length === 0 && <p>Nenhum número sorteado.</p>}
+                {bingoNumbers.map((number: number) => (
+                  <span key={number}>{number}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="publicCard publicMatchColumn done">
+              <span className="publicCardLabel">Rodadas</span>
+              <h2>Ganhadores</h2>
+              {bingoWinners.length === 0 && <p>Nenhum ganhador registrado.</p>}
+              {bingoWinners.map((winner: any) => (
+                <div key={winner.id} className="publicMatchCard done">
+                  <strong>{winner.winnerName}</strong>
+                  <span>{winner.prize || winner.roundName || 'Rodada'}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="publicCard publicMatchColumn next">
+              <span className="publicCardLabel">Cartelas</span>
+              <h2>{bingoCards.length} registradas</h2>
+              <p>
+                {canBuyBingoCards
+                  ? 'Participação online habilitada.'
+                  : 'Venda de cartelas online não habilitada.'}
+              </p>
+              {canBuyBingoCards && (
+                <div className="publicBingoForm">
+                  <input
+                    value={bingoBuyer.name}
+                    onChange={e => setBingoBuyer(current => ({ ...current, name: e.target.value }))}
+                    placeholder="Nome"
+                  />
+                  <input
+                    value={bingoBuyer.email}
+                    onChange={e => setBingoBuyer(current => ({ ...current, email: e.target.value }))}
+                    placeholder="E-mail"
+                  />
+                  <input
+                    value={bingoBuyer.whatsapp}
+                    onChange={e => setBingoBuyer(current => ({ ...current, whatsapp: e.target.value }))}
+                    placeholder="WhatsApp"
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    max={bingoCardLimit}
+                    value={bingoBuyer.quantity}
+                    onChange={e => {
+                      const quantity = Math.min(Math.max(Number(e.target.value || 1), 1), bingoCardLimit)
+                      setBingoBuyer(current => ({ ...current, quantity }))
+                    }}
+                  />
+                  <p>Limite: {bingoCardLimit} cartela(s) por participante.</p>
+                  <button onClick={reserveBingoCard}>Reservar cartela</button>
+                  {bingoMessage && <p>{bingoMessage}</p>}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {!isBingo && (
         <section className="publicMatchColumns">
           <div className="publicCard publicMatchColumn next">
             <span className="publicCardLabel">Agenda</span>
@@ -1721,6 +1848,7 @@ function PublicTournament() {
             ))}
           </div>
         </section>
+        )}
       </main>
     </div>
   )
@@ -1986,6 +2114,8 @@ function CreateTournament({ user }: any) {
   const [seasons, setSeasons] = useState<any[]>([])
   const [name, setName] = useState('Novo Torneio')
   const [templateId, setTemplateId] = useState(1)
+  const [sportSlug, setSportSlug] = useState('sinuca')
+  const [sportSelectionDone, setSportSelectionDone] = useState(false)
   const [seasonId, setSeasonId] = useState('')
   const [tableCount, setTableCount] = useState(4)
 
@@ -1997,11 +2127,51 @@ function CreateTournament({ user }: any) {
   const [hasYoutube, setHasYoutube] = useState(false)
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [playersText, setPlayersText] = useState('')
+  const [bingoMode, setBingoMode] = useState('physical')
+  const [bingoDrawMode, setBingoDrawMode] = useState('physical')
+  const [bingoCardMode, setBingoCardMode] = useState('physical')
+  const [bingoMaxNumber, setBingoMaxNumber] = useState(75)
+  const [bingoCardPrice, setBingoCardPrice] = useState('')
+  const [bingoCardsPerParticipant, setBingoCardsPerParticipant] = useState(1)
+  const templateSports = Array.from(
+    new Map(
+      templates
+        .filter(template => template.sport)
+        .map(template => [template.sport.slug, template.sport])
+    ).values()
+  )
+  const sports = [
+    { slug: 'sinuca', name: 'Sinuca' },
+    { slug: 'bingo', name: 'Bingo' },
+    ...templateSports.filter((sport: any) => !['sinuca', 'bingo'].includes(sport.slug)),
+  ].map(baseSport => {
+    const templateSport = templateSports.find((sport: any) => sport.slug === baseSport.slug)
+    return templateSport || baseSport
+  })
+  const filteredTemplates = templates.filter(template => (
+    template.sport?.slug ? template.sport.slug === sportSlug : true
+  ))
+  const selectedTemplate = templates.find(template => Number(template.id) === Number(templateId))
+  const isBingo = selectedTemplate?.format === 'bingo' || selectedTemplate?.sport?.slug === 'bingo'
+  const selectedSport = sports.find((sport: any) => sport.slug === sportSlug)
 
   useEffect(() => {
     fetch(`${API}/templates`)
       .then(res => res.json())
-      .then(data => setTemplates(Array.isArray(data) ? data : []))
+      .then(data => {
+        const list = Array.isArray(data) ? data : []
+        const defaultSport = list.some((template: any) => template.sport?.slug === 'sinuca')
+          ? 'sinuca'
+          : list[0]?.sport?.slug || ''
+        const defaultTemplate = list.find((template: any) => template.sport?.slug === defaultSport) || list[0]
+
+        setTemplates(list)
+        setSportSlug(defaultSport)
+
+        if (defaultTemplate) {
+          setTemplateId(defaultTemplate.id)
+        }
+      })
 
     if (user?.organization?.plan === 'master' || user?.organization?.plan === 'free') {
       fetch(`${API}/seasons`, { headers: authHeaders() })
@@ -2019,6 +2189,18 @@ function CreateTournament({ user }: any) {
     }
   }, [])
 
+  function chooseSport(nextSport: string) {
+    const nextTemplate = templates.find(template => template.sport?.slug === nextSport)
+
+    setSportSlug(nextSport)
+
+    if (nextTemplate) {
+      setTemplateId(nextTemplate.id)
+    }
+
+    setSportSelectionDone(true)
+  }
+
   function createTournament() {
   const organizationId = user?.organizationId
 
@@ -2032,7 +2214,7 @@ function CreateTournament({ user }: any) {
     return
   }
 
-  if (!playersText.trim()) {
+  if (!isBingo && !playersText.trim()) {
     alert('Adicione jogadores')
     return
   }
@@ -2042,7 +2224,7 @@ function CreateTournament({ user }: any) {
     .map(p => p.trim())
     .filter(Boolean)
 
-  if (players.length < 2) {
+  if (!isBingo && players.length < 2) {
     alert('Mínimo 2 jogadores')
     return
   }
@@ -2054,7 +2236,7 @@ function CreateTournament({ user }: any) {
     body: JSON.stringify({
       name,
       templateId,
-      tableCount,
+      tableCount: isBingo ? 1 : tableCount,
       location,
       eventDate,
       eventTime,
@@ -2062,6 +2244,12 @@ function CreateTournament({ user }: any) {
       rules,
       youtubeUrl: hasYoutube ? youtubeUrl : '',
       seasonId: seasonId || null,
+      bingoMode,
+      bingoDrawMode,
+      bingoCardMode,
+      bingoMaxNumber,
+      bingoCardPrice,
+      bingoCardsPerParticipant,
       players,
     }),
   })
@@ -2076,6 +2264,54 @@ function CreateTournament({ user }: any) {
       navigate(`/tournament/${data.tournament.id}`)
     })
 }
+
+  if (!sportSelectionDone) {
+    return (
+      <div className="saasLayout">
+        <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+
+        <main className="saasMain">
+          <header className="hero">
+            <div className="badge">🏆 Novo Torneio</div>
+            <h1>Escolha a modalidade</h1>
+            <p>Primeiro selecione o esporte ou formato do evento. Depois abrimos os campos certos para configurar o torneio.</p>
+          </header>
+
+          <div className="sportChoiceGrid">
+            {templates.length === 0 && (
+              <div className="panel">
+                <h2>Carregando modalidades</h2>
+                <p>Aguarde enquanto buscamos os modelos disponíveis.</p>
+              </div>
+            )}
+
+            {sports.map((sport: any) => {
+              const isSportBingo = sport.slug === 'bingo'
+              const hasTemplate = templates.some(template => template.sport?.slug === sport.slug)
+
+              return (
+                <button
+                  key={sport.slug}
+                  className="sportChoiceCard"
+                  onClick={() => chooseSport(sport.slug)}
+                  disabled={!hasTemplate}
+                  type="button"
+                >
+                  <span>{isSportBingo ? 'Bingo' : sport.name}</span>
+                  <strong>{sport.name}</strong>
+                  <p>
+                    {isSportBingo
+                      ? 'Cartelas, sorteio físico ou virtual, telão de números e ganhadores.'
+                      : 'Chaveamento, partidas, mesas, ranking e controle do torneio.'}
+                  </p>
+                </button>
+              )
+            })}
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="saasLayout">
@@ -2095,14 +2331,113 @@ function CreateTournament({ user }: any) {
             <label>Nome do torneio</label>
             <input value={name} onChange={e => setName(e.target.value)} />
 
+            <label>Esporte / modalidade</label>
+            <div className="selectedSportBox">
+              <div>
+                <strong>{selectedSport?.name || 'Modalidade selecionada'}</strong>
+                <span>{isBingo ? 'Evento de bingo' : 'Torneio esportivo'}</span>
+              </div>
+              <button type="button" onClick={() => setSportSelectionDone(false)}>
+                Trocar modalidade
+              </button>
+            </div>
+
             <label>Modelo</label>
-            <select value={templateId} onChange={e => setTemplateId(Number(e.target.value))}>
-              {templates.map(t => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
+            {isBingo ? (
+              <>
+                <select
+                  value={bingoMaxNumber}
+                  onChange={e => setBingoMaxNumber(Number(e.target.value))}
+                >
+                  <option value={75}>Bingo 75 bolas — cartela 5 x 5 com coringa no centro</option>
+                  <option value={90}>Bingo 90 bolas — cartela tradicional 3 linhas x 5 colunas</option>
+                </select>
+
+                <div className="bingoFormatHint">
+                  {bingoMaxNumber === 75
+                    ? '75 bolas: cartela 5 x 5 com letras BINGO e número grátis no centro.'
+                    : '90 bolas: cartela tradicional com 3 linhas e 5 números por linha.'}
+                </div>
+              </>
+            ) : (
+              <select value={templateId} onChange={e => setTemplateId(Number(e.target.value))}>
+                {filteredTemplates.map(t => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {isBingo && (
+              <div className="bingoConfigBox">
+                <h3>Bingo</h3>
+                <p>Configure se o evento será presencial, virtual ou misto.</p>
+
+                <label>Formato do Bingo</label>
+                <select
+                  value={bingoMode}
+                  onChange={e => {
+                    const nextMode = e.target.value
+                    setBingoMode(nextMode)
+
+                    if (nextMode === 'physical') {
+                      setBingoCardMode('physical')
+                      setBingoDrawMode('physical')
+                    } else if (nextMode === 'virtual') {
+                      setBingoCardMode('virtual')
+                      setBingoDrawMode('virtual')
+                    } else if (nextMode === 'mixed') {
+                      setBingoCardMode('mixed')
+                      setBingoDrawMode('virtual')
+                    }
+                  }}
+                >
+                  <option value="physical">Presencial com estrutura física</option>
+                  <option value="virtual">Totalmente virtual</option>
+                  <option value="mixed">Misto</option>
+                </select>
+
+                <label>Sorteio dos números</label>
+                {bingoMode === 'mixed' ? (
+                  <select value={bingoDrawMode} onChange={e => setBingoDrawMode(e.target.value)}>
+                    <option value="virtual">Virtual pela plataforma</option>
+                    <option value="physical">Físico pelas bolinhas</option>
+                  </select>
+                ) : (
+                  <div className="readonlyField">
+                    {bingoDrawMode === 'virtual'
+                      ? 'Virtual pela plataforma'
+                      : 'Físico pelas bolinhas'}
+                  </div>
+                )}
+
+                <label>Cartelas</label>
+                <div className="readonlyField">
+                  {bingoCardMode === 'virtual'
+                    ? 'Cartela virtual'
+                    : bingoCardMode === 'mixed'
+                      ? 'Cartela física e virtual'
+                      : 'Cartela física'}
+                </div>
+
+                <label>Valor da cartela online</label>
+                <input
+                  value={bingoCardPrice}
+                  onChange={e => setBingoCardPrice(e.target.value)}
+                  placeholder="Ex: 10,00"
+                />
+
+                <label>Limite de cartelas online por participante</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={bingoCardsPerParticipant}
+                  onChange={e => setBingoCardsPerParticipant(Number(e.target.value))}
+                />
+              </div>
+            )}
 
             {seasons.length > 0 && (
               <>
@@ -2118,12 +2453,16 @@ function CreateTournament({ user }: any) {
               </>
             )}
 
-            <label>Número de mesas</label>
-            <input
-              type="number"
-              value={tableCount}
-              onChange={e => setTableCount(Number(e.target.value))}
-            />
+            {!isBingo && (
+              <>
+                <label>Número de mesas</label>
+                <input
+                  type="number"
+                  value={tableCount}
+                  onChange={e => setTableCount(Number(e.target.value))}
+                />
+              </>
+            )}
 
             <label>Local</label>
             <input
@@ -2181,6 +2520,7 @@ function CreateTournament({ user }: any) {
             )}
           </div>
 
+          {!isBingo && (
           <div className="panel">
             <h2>Jogadores</h2>
 
@@ -2213,6 +2553,30 @@ function CreateTournament({ user }: any) {
               Criar torneio e gerar chave
             </button>
           </div>
+          )}
+
+          {isBingo && (
+            <div className="panel">
+              <h2>Resumo do Bingo</h2>
+              <div className="previewCard">
+                <h3>{name}</h3>
+                {location && <p>Local: {location}</p>}
+                {eventDate && <p>Data: {eventDate}</p>}
+                {eventTime && <p>Horário: {eventTime}</p>}
+                <p>Formato: {bingoMode === 'virtual' ? 'Totalmente virtual' : bingoMode === 'mixed' ? 'Misto' : 'Presencial'}</p>
+                <p>Sorteio: {bingoDrawMode === 'virtual' ? 'Virtual pela plataforma' : 'Físico pelas bolinhas'}</p>
+                <p>Cartelas: {bingoCardMode === 'virtual' ? 'Virtuais' : bingoCardMode === 'mixed' ? 'Físicas e virtuais' : 'Físicas'}</p>
+                <p>Bolas: 1 a {bingoMaxNumber}</p>
+                <p>{bingoMaxNumber === 75 ? 'Cartela 5 x 5 com coringa central' : 'Cartela 90 bolas com 3 linhas e 5 números por linha'}</p>
+                <p>Limite online: {bingoCardsPerParticipant} cartela(s) por participante</p>
+                {bingoCardPrice && <p>Cartela online: R$ {bingoCardPrice}</p>}
+              </div>
+
+              <button className="primaryButton" onClick={createTournament}>
+                Criar Bingo
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </div>
@@ -2223,6 +2587,11 @@ function TournamentBracket() {
   const { id } = useParams()
 
   const [rounds, setRounds] = useState<any[]>([])
+  const [tournament, setTournament] = useState<any>(null)
+  const [bingoState, setBingoState] = useState<any>(null)
+  const [physicalNumber, setPhysicalNumber] = useState('')
+  const [winnerName, setWinnerName] = useState('')
+  const [winnerPrize, setWinnerPrize] = useState('')
   const [panelMode, setPanelMode] = useState<'board' | 'bracket'>('board')
   const matches = rounds.flatMap(round =>
     (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
@@ -2232,6 +2601,11 @@ function TournamentBracket() {
   const pendingMatches = matches.filter((match: any) => match.status === 'pending')
   const playingMatches = matches.filter((match: any) => match.status === 'playing')
   const finishedMatches = matches.filter((match: any) => match.status === 'finished')
+  const isBingo = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo'
+  const bingoNumbers = bingoState?.drawnNumbers || []
+  const latestBingoNumber = bingoNumbers[bingoNumbers.length - 1]
+  const bingoWinners = bingoState?.winners || []
+  const bingoCards = bingoState?.cards || []
 
   function loadBracket() {
     fetch(`${API}/tournaments/${id}/bracket`, {
@@ -2239,6 +2613,24 @@ function TournamentBracket() {
     })
       .then(res => res.json())
       .then(data => setRounds(data.rounds || []))
+  }
+
+  function loadTournament() {
+    fetch(`${API}/tournaments/${id}`, {
+      headers: authHeaders(),
+    })
+      .then(res => res.json())
+      .then(data => setTournament(data))
+  }
+
+  function loadBingo() {
+    fetch(`${API}/tournaments/${id}/bingo`, {
+      headers: authHeaders(),
+    })
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (data) setBingoState(data)
+      })
   }
 
   function startMatch(matchId: number) {
@@ -2256,10 +2648,66 @@ function TournamentBracket() {
     }).then(loadBracket)
   }
 
+  function drawVirtualNumber() {
+    fetch(`${API}/tournaments/${id}/bingo/draw`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ source: 'virtual' }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+        loadBingo()
+      })
+  }
+
+  function registerPhysicalNumber() {
+    fetch(`${API}/tournaments/${id}/bingo/draw`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ source: 'physical', number: Number(physicalNumber) }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+        setPhysicalNumber('')
+        loadBingo()
+      })
+  }
+
+  function registerBingoWinner() {
+    fetch(`${API}/tournaments/${id}/bingo/winners`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ winnerName, prize: winnerPrize }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+        setWinnerName('')
+        setWinnerPrize('')
+        loadBingo()
+      })
+  }
+
   useEffect(() => {
     loadBracket()
+    loadTournament()
+    loadBingo()
 
-    const interval = setInterval(loadBracket, 5000)
+    const interval = setInterval(() => {
+      loadBracket()
+      loadBingo()
+    }, 5000)
     return () => clearInterval(interval)
   }, [id])
 
@@ -2348,8 +2796,12 @@ function TournamentBracket() {
        <header className="hero">
   <div className="badge">🏆 Painel do Torneio</div>
 
-  <h1>Painel Torneio</h1>
-  <p>Controle os jogos por status: aguardando, jogando e finalizados.</p>
+  <h1>{isBingo ? 'Painel Bingo' : 'Painel Torneio'}</h1>
+  <p>
+    {isBingo
+      ? 'Controle números sorteados, cartelas e ganhadores das rodadas.'
+      : 'Controle os jogos por status: aguardando, jogando e finalizados.'}
+  </p>
 
   {champion && (
     <div className="championBanner">
@@ -2362,13 +2814,84 @@ function TournamentBracket() {
       Abrir Telão
     </button>
 
-    <button onClick={() => setPanelMode(panelMode === 'board' ? 'bracket' : 'board')}>
-      {panelMode === 'board' ? 'Chaveamento' : 'Painel'}
-    </button>
+    {!isBingo && (
+      <button onClick={() => setPanelMode(panelMode === 'board' ? 'bracket' : 'board')}>
+        {panelMode === 'board' ? 'Chaveamento' : 'Painel'}
+      </button>
+    )}
   </div>
 </header>
 
-        {panelMode === 'board' ? (
+        {isBingo && (
+          <div className="bingoControlGrid">
+            <section className="panel bingoControlPanel">
+              <h2>Controle do Bingo</h2>
+              <div className="bingoCurrentNumber">
+                <span>Último número</span>
+                <strong>{latestBingoNumber || '--'}</strong>
+              </div>
+
+              <div className="bingoActionRow">
+                <button onClick={drawVirtualNumber}>Sortear virtual</button>
+                <input
+                  value={physicalNumber}
+                  onChange={e => setPhysicalNumber(e.target.value)}
+                  placeholder="Número físico"
+                />
+                <button onClick={registerPhysicalNumber}>Registrar bolinha</button>
+              </div>
+
+              <div className="bingoNumbers">
+                {bingoNumbers.length === 0 && <p>Nenhum número sorteado.</p>}
+                {bingoNumbers.map((number: number) => (
+                  <span key={number}>{number}</span>
+                ))}
+              </div>
+            </section>
+
+            <section className="panel bingoControlPanel">
+              <h2>Ganhadores</h2>
+              <div className="bingoActionRow">
+                <input
+                  value={winnerName}
+                  onChange={e => setWinnerName(e.target.value)}
+                  placeholder="Nome do ganhador"
+                />
+                <input
+                  value={winnerPrize}
+                  onChange={e => setWinnerPrize(e.target.value)}
+                  placeholder="Rodada/prêmio"
+                />
+                <button onClick={registerBingoWinner}>Registrar ganhador</button>
+              </div>
+
+              {bingoWinners.length === 0 && <p>Nenhum ganhador registrado.</p>}
+              {bingoWinners.map((winner: any) => (
+                <div key={winner.id} className="bingoWinnerRow">
+                  <strong>{winner.winnerName}</strong>
+                  <span>{winner.prize || winner.roundName || 'Rodada'}</span>
+                </div>
+              ))}
+            </section>
+
+            <section className="panel bingoControlPanel">
+              <h2>Cartelas</h2>
+              <div className="bingoStats">
+                <strong>{bingoCards.length}</strong>
+                <span>cartelas registradas</span>
+              </div>
+              <p>
+                {tournament?.bingoCardMode === 'virtual'
+                  ? 'Cartelas online habilitadas.'
+                  : tournament?.bingoCardMode === 'mixed'
+                    ? 'Cartelas físicas e online.'
+                    : 'Cartelas físicas.'}
+              </p>
+            </section>
+          </div>
+        )}
+
+        {!isBingo && panelMode === 'board' ? (
           <div className="matchBoard">
           <section className="matchColumn pending">
             <h2>Aguardando</h2>
@@ -2394,7 +2917,7 @@ function TournamentBracket() {
             </div>
           </section>
         </div>
-        ) : (
+        ) : !isBingo ? (
           <div className="proBracket">
             {rounds.map((round, roundIndex) => (
               <div key={round.round} className="proRound">
@@ -2412,7 +2935,7 @@ function TournamentBracket() {
               </div>
             ))}
           </div>
-        )}
+        ) : null}
       </main>
     </div>
   )
@@ -2422,16 +2945,22 @@ function TelaoTV() {
   const { id } = useParams()
   const [rounds, setRounds] = useState<any[]>([])
   const [tournament, setTournament] = useState<any>(null)
+  const [bingoState, setBingoState] = useState<any>(null)
   const [view, setView] = useState(0)
 
   const publicUrl = tournament?.publicSlug
-    ? `https://www.promasterarena.com.br/public/${tournament.publicSlug}`
+    ? publicTournamentUrl(tournament.publicSlug)
     : null
   const matches = rounds.flatMap(r => r.matches || [])
   const playing = matches.filter(m => m.status === 'playing')
   const pending = matches.filter(m => m.status === 'pending')
   const finished = matches.filter(m => m.status === 'finished')
   const destaque = playing[0] || pending[0]
+  const isBingo = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo'
+  const drawnNumbers = bingoState?.drawnNumbers || []
+  const latestBingoNumber = drawnNumbers[drawnNumbers.length - 1]
+  const bingoWinners = bingoState?.winners || []
+  const bingoCards = bingoState?.cards || []
 
   const finalRound = rounds[rounds.length - 1]
   const champion = finalRound?.matches?.[0]?.winner
@@ -2442,16 +2971,32 @@ function TelaoTV() {
       .then(data => setRounds(data.rounds || []))
   }
 
+  function loadBingo() {
+    fetch(`${API}/tournaments/${id}/bingo`)
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (data) setBingoState(data)
+      })
+  }
+
   useEffect(() => {
     loadBracket()
 
     fetch(`${API}/tournaments/${id}`)
       .then(res => res.json())
-      .then(data => setTournament(data))
+      .then(data => {
+        setTournament(data)
+        if (data?.format === 'bingo' || data?.sport?.slug === 'bingo') {
+          loadBingo()
+        }
+      })
 
     document.documentElement.requestFullscreen?.().catch(() => {})
 
-    const updateInterval = setInterval(loadBracket, 4000)
+    const updateInterval = setInterval(() => {
+      loadBracket()
+      loadBingo()
+    }, 4000)
 
     const rotateInterval = setInterval(() => {
       setView(v => (v + 1) % (champion ? 3 : 2))
@@ -2516,7 +3061,59 @@ function TelaoTV() {
         </div>
       )}
 
-      {view === 0 && (
+      {isBingo && (
+        <div className="bingoTv">
+          <section className="bingoTvFeatured">
+            <span>Número sorteado</span>
+            <strong>{latestBingoNumber || '--'}</strong>
+            <p>
+              {tournament?.bingoDrawMode === 'virtual'
+                ? 'Sorteio virtual pela plataforma'
+                : 'Sorteio físico pelas bolinhas'}
+            </p>
+          </section>
+
+          <div className="bingoTvGrid">
+            <div className="tvPanel">
+              <h3>Números sorteados</h3>
+              <div className="bingoNumbers">
+                {drawnNumbers.length === 0 && <p>Nenhum número sorteado</p>}
+                {drawnNumbers.map((number: number) => (
+                  <span key={number}>{number}</span>
+                ))}
+              </div>
+            </div>
+
+            <div className="tvPanel">
+              <h3>Ganhadores das rodadas</h3>
+              {bingoWinners.length === 0 && <p>Nenhum ganhador registrado</p>}
+              {bingoWinners.slice(0, 8).map((winner: any) => (
+                <div key={winner.id} className="tvRow live">
+                  <span>{winner.winnerName}</span>
+                  <strong>{winner.roundName || 'Rodada'}</strong>
+                </div>
+              ))}
+            </div>
+
+            <div className="tvPanel">
+              <h3>Cartelas</h3>
+              <div className="bingoStats">
+                <strong>{bingoCards.length}</strong>
+                <span>cartelas registradas</span>
+              </div>
+              <p>
+                {tournament?.bingoCardMode === 'virtual'
+                  ? 'Participação online habilitada'
+                  : tournament?.bingoCardMode === 'mixed'
+                    ? 'Cartelas físicas e virtuais'
+                    : 'Cartelas físicas'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isBingo && view === 0 && (
         <>
           <section className="tvFeatured">
             {destaque ? (
@@ -2579,7 +3176,7 @@ function TelaoTV() {
         </>
       )}
 
-      {view === 1 && (
+      {!isBingo && view === 1 && (
         <div className="tvBracketView">
           <h2>Chave do Torneio</h2>
 
@@ -2622,7 +3219,7 @@ function TelaoTV() {
         </div>
       )}
 
-      {view === 2 && champion && (
+      {!isBingo && view === 2 && champion && (
         <div className="tvCelebration">
           <div className="confettiLayer">
             {Array.from({ length: 24 }).map((_, i) => (

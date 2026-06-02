@@ -78,6 +78,110 @@ function getPlanLimits(plan) {
   return plans[plan] || plans.trial
 }
 
+const BINGO_MODES = ['virtual', 'physical', 'mixed']
+const BINGO_DRAW_MODES = ['virtual', 'physical']
+const BINGO_CARD_MODES = ['virtual', 'physical', 'mixed']
+
+function normalizeBingoConfig(body = {}) {
+  const bingoMode = BINGO_MODES.includes(body.bingoMode) ? body.bingoMode : 'physical'
+  const requestedDrawMode = BINGO_DRAW_MODES.includes(body.bingoDrawMode) ? body.bingoDrawMode : 'virtual'
+  const bingoMaxNumber = Number(body.bingoMaxNumber) === 90 ? 90 : 75
+  const bingoCardMode = bingoMode === 'virtual'
+    ? 'virtual'
+    : bingoMode === 'mixed'
+      ? 'mixed'
+      : 'physical'
+  const bingoDrawMode = bingoMode === 'mixed'
+    ? requestedDrawMode
+    : bingoMode === 'virtual'
+      ? 'virtual'
+      : 'physical'
+
+  return {
+    bingoMode,
+    bingoDrawMode,
+    bingoCardMode,
+    bingoMaxNumber,
+    bingoCardPrice: body.bingoCardPrice === '' || body.bingoCardPrice == null
+      ? null
+      : Number(body.bingoCardPrice),
+    bingoCardsPerParticipant: Math.min(Math.max(Number(body.bingoCardsPerParticipant || 1), 1), 20),
+  }
+}
+
+function generateBingoCardNumbers(maxNumber = 75) {
+  const normalizedMax = Number(maxNumber) === 90 ? 90 : 75
+
+  if (normalizedMax === 90) {
+    const pool = Array.from({ length: 90 }, (_, index) => index + 1)
+    const rows = Array.from({ length: 3 }, () => {
+      const row = []
+
+      while (row.length < 5 && pool.length > 0) {
+        const index = Math.floor(Math.random() * pool.length)
+        row.push(pool.splice(index, 1)[0])
+      }
+
+      return row.sort((a, b) => a - b)
+    })
+
+    return {
+      type: '90-ball',
+      layout: '3x5',
+      rows,
+    }
+  }
+
+  const columns = [
+    { letter: 'B', from: 1, to: 15 },
+    { letter: 'I', from: 16, to: 30 },
+    { letter: 'N', from: 31, to: 45 },
+    { letter: 'G', from: 46, to: 60 },
+    { letter: 'O', from: 61, to: 75 },
+  ]
+
+  const cardColumns = columns.map(column => {
+    const pool = Array.from({ length: column.to - column.from + 1 }, (_, index) => column.from + index)
+    const values = []
+
+    while (values.length < 5) {
+      const index = Math.floor(Math.random() * pool.length)
+      values.push(pool.splice(index, 1)[0])
+    }
+
+    return { letter: column.letter, values: values.sort((a, b) => a - b) }
+  })
+
+  cardColumns[2].values[2] = 'FREE'
+
+  return {
+    type: '75-ball',
+    layout: '5x5',
+    columns: cardColumns,
+  }
+}
+
+async function requireOwnedTournament(tournamentId, organizationId) {
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+    include: { sport: true },
+  })
+
+  if (!tournament) {
+    const error = new Error('Torneio não encontrado')
+    error.status = 404
+    throw error
+  }
+
+  if (tournament.organizationId !== organizationId) {
+    const error = new Error('Acesso negado')
+    error.status = 403
+    throw error
+  }
+
+  return tournament
+}
+
 async function advanceFinishedRounds(tournamentId, startRound) {
   let round = startRound
 
@@ -223,6 +327,7 @@ app.get('/tournaments/:id', async (req, res) => {
     const tournament = await prisma.tournament.findUnique({
       where: { id },
       include: {
+        sport: true,
         organization: true,
         players: {
           orderBy: { id: 'asc' }
@@ -244,7 +349,22 @@ app.get('/tournaments/:id', async (req, res) => {
 app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), async (req, res) => {
   try {
     const id = Number(req.params.id)
-    const { name, location, eventDate, eventTime, prize, rules, youtubeUrl, players } = req.body
+    const {
+      name,
+      location,
+      eventDate,
+      eventTime,
+      prize,
+      rules,
+      youtubeUrl,
+      players,
+      bingoMode,
+      bingoDrawMode,
+      bingoCardMode,
+      bingoMaxNumber,
+      bingoCardPrice,
+      bingoCardsPerParticipant,
+    } = req.body
 
     const tournament = await prisma.tournament.findUnique({
       where: { id },
@@ -279,6 +399,17 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
       )))
     }
 
+    const bingoData = tournament.format === 'bingo'
+      ? normalizeBingoConfig({
+          bingoMode,
+          bingoDrawMode,
+          bingoCardMode,
+          bingoMaxNumber,
+          bingoCardPrice,
+          bingoCardsPerParticipant,
+        })
+      : {}
+
     const updated = await prisma.tournament.update({
       where: { id },
       data: {
@@ -289,6 +420,7 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
         prize: prize || null,
         rules: rules || null,
         youtubeUrl: youtubeUrl || null,
+        ...bingoData,
       },
     })
 
@@ -454,9 +586,77 @@ app.get('/', (req, res) => {
   res.send('ProMaster Arena API online 🚀')
 })
 
+async function ensureTemplate(sportId, template) {
+  const existing = await prisma.tournamentTemplate.findFirst({
+    where: {
+      sportId,
+      name: template.name,
+      playerCount: template.playerCount,
+      format: template.format,
+      eliminationType: template.eliminationType,
+    },
+  })
+
+  if (existing) return existing
+
+  return prisma.tournamentTemplate.create({
+    data: {
+      sportId,
+      ...template,
+    },
+  })
+}
+
+async function ensureDefaultTemplates() {
+  const sinuca = await prisma.sport.upsert({
+    where: { slug: 'sinuca' },
+    update: { name: 'Sinuca' },
+    create: { name: 'Sinuca', slug: 'sinuca' },
+  })
+
+  const bingo = await prisma.sport.upsert({
+    where: { slug: 'bingo' },
+    update: { name: 'Bingo' },
+    create: { name: 'Bingo', slug: 'bingo' },
+  })
+
+  for (const players of [16, 32, 64, 128]) {
+    await ensureTemplate(sinuca.id, {
+      name: `Sinuca ${players} jogadores — Mata-mata`,
+      playerCount: players,
+      format: 'knockout',
+      eliminationType: 'single',
+    })
+
+    await ensureTemplate(sinuca.id, {
+      name: `Sinuca ${players} jogadores — Dupla eliminação`,
+      playerCount: players,
+      format: 'double',
+      eliminationType: 'double',
+    })
+  }
+
+  await ensureTemplate(sinuca.id, {
+    name: 'Sinuca — Modo livre',
+    playerCount: 0,
+    format: 'custom',
+    eliminationType: 'custom',
+  })
+
+  await ensureTemplate(bingo.id, {
+    name: 'Bingo — Evento livre',
+    playerCount: 0,
+    format: 'bingo',
+    eliminationType: 'bingo',
+  })
+}
+
 // listar templates
 app.get('/templates', async (req, res) => {
+  await ensureDefaultTemplates()
+
   const templates = await prisma.tournamentTemplate.findMany({
+    include: { sport: true },
     orderBy: { id: 'asc' },
   })
 
@@ -668,6 +868,218 @@ app.post('/matches/:id/start', auth, requireRole('admin', 'operator'), async (re
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Erro ao iniciar jogo' })
+  }
+})
+
+app.get('/tournaments/:id/bingo', async (req, res) => {
+  try {
+    const tournamentId = Number(req.params.id)
+
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      include: { sport: true },
+    })
+
+    if (!tournament) {
+      return res.status(404).json({ error: 'Evento não encontrado' })
+    }
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    const [cards, draws, winners] = await Promise.all([
+      prisma.bingoCard.findMany({
+        where: { tournamentId },
+        orderBy: { id: 'asc' },
+      }),
+      prisma.bingoDraw.findMany({
+        where: { tournamentId },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.bingoWinner.findMany({
+        where: { tournamentId },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ])
+
+    res.json({
+      tournament,
+      cards,
+      draws,
+      drawnNumbers: draws.map(draw => draw.number),
+      winners,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar Bingo' })
+  }
+})
+
+app.post('/tournaments/:id/bingo/draw', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const tournamentId = Number(req.params.id)
+    const tournament = await requireOwnedTournament(tournamentId, req.user.organizationId)
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    const maxNumber = tournament.bingoMaxNumber || 75
+    const source = tournament.bingoDrawMode === 'physical' && req.body.source === 'physical'
+      ? 'physical'
+      : 'virtual'
+    const existingDraws = await prisma.bingoDraw.findMany({ where: { tournamentId } })
+    const drawnSet = new Set(existingDraws.map(draw => draw.number))
+
+    let number = req.body.number ? Number(req.body.number) : null
+
+    if (number) {
+      if (number < 1 || number > maxNumber) {
+        return res.status(400).json({ error: `Número deve estar entre 1 e ${maxNumber}` })
+      }
+
+      if (drawnSet.has(number)) {
+        return res.status(400).json({ error: 'Número já sorteado' })
+      }
+    } else {
+      const availableNumbers = Array.from({ length: maxNumber }, (_, index) => index + 1)
+        .filter(item => !drawnSet.has(item))
+
+      if (availableNumbers.length === 0) {
+        return res.status(400).json({ error: 'Todos os números já foram sorteados' })
+      }
+
+      number = availableNumbers[Math.floor(Math.random() * availableNumbers.length)]
+    }
+
+    const draw = await prisma.bingoDraw.create({
+      data: {
+        tournamentId,
+        number,
+        source,
+        roundName: req.body.roundName || 'Rodada principal',
+      },
+    })
+
+    res.json({ ok: true, draw })
+  } catch (error) {
+    console.error(error)
+    res.status(error.status || 500).json({ error: error.message || 'Erro ao sortear número' })
+  }
+})
+
+app.post('/tournaments/:id/bingo/winners', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const tournamentId = Number(req.params.id)
+    const tournament = await requireOwnedTournament(tournamentId, req.user.organizationId)
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    const winnerName = String(req.body.winnerName || '').trim()
+
+    if (!winnerName) {
+      return res.status(400).json({ error: 'Informe o nome do ganhador' })
+    }
+
+    const winner = await prisma.bingoWinner.create({
+      data: {
+        tournamentId,
+        cardId: req.body.cardId ? Number(req.body.cardId) : null,
+        roundName: req.body.roundName || 'Rodada principal',
+        winnerName,
+        prize: req.body.prize || null,
+      },
+    })
+
+    res.json({ ok: true, winner })
+  } catch (error) {
+    console.error(error)
+    res.status(error.status || 500).json({ error: error.message || 'Erro ao registrar ganhador' })
+  }
+})
+
+app.post('/public/:slug/bingo/cards', async (req, res) => {
+  try {
+    const { slug } = req.params
+    const tournament = await prisma.tournament.findUnique({
+      where: { publicSlug: slug },
+      include: { sport: true },
+    })
+
+    if (!tournament) {
+      return res.status(404).json({ error: 'Evento não encontrado' })
+    }
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    if (!['virtual', 'mixed'].includes(tournament.bingoCardMode || 'physical')) {
+      return res.status(400).json({ error: 'Este Bingo não aceita cartelas online' })
+    }
+
+    const buyerName = String(req.body.name || '').trim()
+    const buyerEmail = String(req.body.email || '').trim() || null
+    const buyerWhatsapp = String(req.body.whatsapp || '').replace(/\D/g, '') || null
+    const limitPerParticipant = Math.max(Number(tournament.bingoCardsPerParticipant || 1), 1)
+    const requestedQuantity = Math.max(Number(req.body.quantity || 1), 1)
+
+    if (!buyerName) {
+      return res.status(400).json({ error: 'Informe o nome do participante' })
+    }
+
+    if (requestedQuantity > limitPerParticipant) {
+      return res.status(400).json({
+        error: `Este Bingo permite no máximo ${limitPerParticipant} cartela(s) por participante.`,
+      })
+    }
+
+    const participantFilters = []
+
+    if (buyerEmail) participantFilters.push({ buyerEmail })
+    if (buyerWhatsapp) participantFilters.push({ buyerWhatsapp })
+    if (participantFilters.length === 0) participantFilters.push({ buyerName })
+
+    const existingCards = await prisma.bingoCard.count({
+      where: {
+        tournamentId: tournament.id,
+        OR: participantFilters,
+      },
+    })
+
+    if (existingCards + requestedQuantity > limitPerParticipant) {
+      return res.status(400).json({
+        error: `Este participante já atingiu o limite de ${limitPerParticipant} cartela(s).`,
+      })
+    }
+
+    const cards = []
+
+    for (let i = 0; i < requestedQuantity; i++) {
+      cards.push(await prisma.bingoCard.create({
+        data: {
+          tournamentId: tournament.id,
+          buyerName,
+          buyerEmail,
+          buyerWhatsapp,
+          numbers: JSON.stringify(generateBingoCardNumbers(tournament.bingoMaxNumber || 75)),
+          status: 'pending',
+          source: 'online',
+        },
+      }))
+    }
+
+    res.json({
+      ok: true,
+      message: 'Cartela reservada. A confirmação do pagamento será vinculada na próxima etapa.',
+      cards,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao reservar cartela' })
   }
 })
 
@@ -933,10 +1345,28 @@ app.post('/organizations/:organizationId/tournaments/create',
   async (req, res) => {
   try {
     const organizationId = Number(req.params.organizationId)
-    const { name, templateId, tableCount, location, eventDate, eventTime, prize, rules, youtubeUrl, seasonId } = req.body
+    const {
+      name,
+      templateId,
+      tableCount,
+      location,
+      eventDate,
+      eventTime,
+      prize,
+      rules,
+      youtubeUrl,
+      seasonId,
+      bingoMode,
+      bingoDrawMode,
+      bingoCardMode,
+      bingoMaxNumber,
+      bingoCardPrice,
+      bingoCardsPerParticipant,
+    } = req.body
 
     const template = await prisma.tournamentTemplate.findUnique({
       where: { id: Number(templateId) },
+      include: { sport: true },
     })
 
     if (req.user.organizationId !== organizationId) {
@@ -986,6 +1416,18 @@ if (template.playerCount > effectiveLimits.maxPlayers) {
     error: `Seu plano ${useTournamentCredit ? 'avulso' : currentPlan} permite torneios até ${effectiveLimits.maxPlayers} jogadores.`
   })
 }
+
+const isBingo = template.format === 'bingo' || template.sport?.slug === 'bingo'
+const bingoData = isBingo
+  ? normalizeBingoConfig({
+      bingoMode,
+      bingoDrawMode,
+      bingoCardMode,
+      bingoMaxNumber,
+      bingoCardPrice,
+      bingoCardsPerParticipant,
+    })
+  : {}
 
 let season = null
 
@@ -1041,6 +1483,7 @@ if (seasonId) {
         prize: prize || null,
         rules: rules || null,
         youtubeUrl: youtubeUrl || null,
+        ...bingoData,
       },
     })
 
@@ -1060,6 +1503,18 @@ for (const playerName of playerNames.slice(0, template.playerCount)) {
 
   players.push(player)
 }
+
+    if (isBingo) {
+      return res.json({
+        ok: true,
+        tournament,
+        publicUrl: `https://www.promasterarena.com.br/telao/${tournament.id}`,
+        publicSlug,
+        playersCreated: 0,
+        matchesCreated: 0,
+        matches: [],
+      })
+    }
 
     players.sort(() => Math.random() - 0.5)
 
@@ -1133,11 +1588,14 @@ app.get('/public/:slug', async (req, res) => {
 
     const tournament = await prisma.tournament.findUnique({
       where: { publicSlug: slug },
+      include: { sport: true },
     })
 
     if (!tournament) {
       return res.status(404).json({ error: 'Torneio não encontrado' })
     }
+
+    const isBingo = tournament.format === 'bingo' || tournament.sport?.slug === 'bingo'
 
     const players = await prisma.player.findMany({
       where: { tournamentId: tournament.id },
@@ -1147,6 +1605,23 @@ app.get('/public/:slug', async (req, res) => {
       where: { tournamentId: tournament.id },
       orderBy: [{ round: 'asc' }, { id: 'asc' }],
     })
+
+    const [bingoCards, bingoDraws, bingoWinners] = isBingo
+      ? await Promise.all([
+          prisma.bingoCard.findMany({
+            where: { tournamentId: tournament.id },
+            orderBy: { id: 'asc' },
+          }),
+          prisma.bingoDraw.findMany({
+            where: { tournamentId: tournament.id },
+            orderBy: { createdAt: 'asc' },
+          }),
+          prisma.bingoWinner.findMany({
+            where: { tournamentId: tournament.id },
+            orderBy: { createdAt: 'desc' },
+          }),
+        ])
+      : [[], [], []]
 
     const playerMap = {}
     players.forEach(p => {
@@ -1188,8 +1663,22 @@ app.get('/public/:slug', async (req, res) => {
         prize: tournament.prize,
         rules: tournament.rules,
         youtubeUrl: tournament.youtubeUrl,
+        format: tournament.format,
+        sport: tournament.sport,
+        bingoMode: tournament.bingoMode,
+        bingoDrawMode: tournament.bingoDrawMode,
+        bingoCardMode: tournament.bingoCardMode,
+        bingoMaxNumber: tournament.bingoMaxNumber,
+        bingoCardPrice: tournament.bingoCardPrice,
+        bingoCardsPerParticipant: tournament.bingoCardsPerParticipant,
       },
       rounds: formattedRounds,
+      bingo: {
+        cards: bingoCards,
+        draws: bingoDraws,
+        drawnNumbers: bingoDraws.map(draw => draw.number),
+        winners: bingoWinners,
+      },
     })
   } catch (error) {
     console.error(error)
