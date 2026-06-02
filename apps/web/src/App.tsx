@@ -3650,6 +3650,7 @@ function PublicTournament() {
   const bingoWinners = bingo?.winners || []
   const bingoCards = bingo?.cards || []
   const canBuyBingoCards = isBingo && ['virtual', 'mixed'].includes(tournament.bingoCardMode || 'physical')
+  const bingoCardLimit = Math.max(Number(tournament.bingoCardsPerParticipant || 1), 1)
   const finalRound = rounds?.[rounds.length - 1]
   const champion = finalRound?.matches?.[0]?.winner
   const prizeLines = tournament.prize
@@ -3861,10 +3862,14 @@ function PublicTournament() {
                   <input
                     type="number"
                     min={1}
-                    max={10}
+                    max={bingoCardLimit}
                     value={bingoBuyer.quantity}
-                    onChange={e => setBingoBuyer(current => ({ ...current, quantity: Number(e.target.value) }))}
+                    onChange={e => {
+                      const quantity = Math.min(Math.max(Number(e.target.value || 1), 1), bingoCardLimit)
+                      setBingoBuyer(current => ({ ...current, quantity }))
+                    }}
                   />
+                  <p>Limite: {bingoCardLimit} cartela(s) por participante.</p>
                   <button onClick={reserveBingoCard}>Reservar cartela</button>
                   {bingoMessage && <p>{bingoMessage}</p>}
                 </div>
@@ -4440,12 +4445,12 @@ function CreateTournament({ user }: any) {
   fetch(`${API}/organizations/${organizationId}/tournaments/create`, {
     method: 'POST',
     headers: authHeaders(),
-      body: JSON.stringify({
-        name,
-        templateId,
-        playerCount,
-        format: tournamentFormat,
-      tableCount,
+    body: JSON.stringify({
+      name,
+      templateId,
+      playerCount,
+      format: tournamentFormat,
+      tableCount: isBingo ? 1 : tableCount,
       location,
       venueAddress,
       eventDate,
@@ -4615,33 +4620,66 @@ function CreateTournament({ user }: any) {
                 <p>Configure se o evento será presencial, virtual ou misto.</p>
 
                 <label>Formato do Bingo</label>
-                <select value={bingoMode} onChange={e => setBingoMode(e.target.value)}>
+                <select
+                  value={bingoMode}
+                  onChange={e => {
+                    const nextMode = e.target.value
+                    setBingoMode(nextMode)
+
+                    if (nextMode === 'physical') {
+                      setBingoCardMode('physical')
+                      setBingoDrawMode('physical')
+                    } else if (nextMode === 'virtual') {
+                      setBingoCardMode('virtual')
+                      setBingoDrawMode('virtual')
+                    } else if (nextMode === 'mixed') {
+                      setBingoCardMode('mixed')
+                      setBingoDrawMode('virtual')
+                    }
+                  }}
+                >
                   <option value="physical">Presencial com estrutura física</option>
                   <option value="virtual">Totalmente virtual</option>
                   <option value="mixed">Misto</option>
                 </select>
 
                 <label>Sorteio dos números</label>
-                <select value={bingoDrawMode} onChange={e => setBingoDrawMode(e.target.value)}>
-                  <option value="physical">Físico pelas bolinhas</option>
-                  <option value="virtual">Virtual pela plataforma</option>
-                </select>
+                {bingoMode === 'mixed' ? (
+                  <select value={bingoDrawMode} onChange={e => setBingoDrawMode(e.target.value)}>
+                    <option value="virtual">Virtual pela plataforma</option>
+                    <option value="physical">Físico pelas bolinhas</option>
+                  </select>
+                ) : (
+                  <div className="readonlyField">
+                    {bingoDrawMode === 'virtual'
+                      ? 'Virtual pela plataforma'
+                      : 'Físico pelas bolinhas'}
+                  </div>
+                )}
 
                 <label>Cartelas</label>
-                <select value={bingoCardMode} onChange={e => setBingoCardMode(e.target.value)}>
-                  <option value="physical">Cartela física</option>
-                  <option value="virtual">Cartela virtual</option>
-                  <option value="mixed">Cartela física e virtual</option>
-                </select>
+                <div className="readonlyField">
+                  {bingoCardMode === 'virtual'
+                    ? 'Cartela virtual'
+                    : bingoCardMode === 'mixed'
+                      ? 'Cartela física e virtual'
+                      : 'Cartela física'}
+                </div>
 
-                <label>Quantidade de números</label>
-                <input
-                  type="number"
-                  min={30}
-                  max={99}
+                <label>Quantidade de bolas</label>
+                <select
                   value={bingoMaxNumber}
                   onChange={e => setBingoMaxNumber(Number(e.target.value))}
-                />
+                >
+                  <option value={75}>75 bolas — cartela 5 x 5 com coringa no centro</option>
+                  <option value={90}>90 bolas — cartela tradicional 3 linhas x 5 colunas</option>
+                </select>
+
+                <div className="bingoFormatHint">
+                  {bingoMaxNumber === 75
+                    ? '75 bolas: cartela 5 x 5 com letras BINGO e número grátis no centro.'
+                    : '90 bolas: cartela tradicional com 3 linhas e 5 números por linha.'}
+                </div>
 
                 <label>Valor da cartela online</label>
                 <input
@@ -4650,7 +4688,7 @@ function CreateTournament({ user }: any) {
                   placeholder="Ex: 10,00"
                 />
 
-                <label>Cartelas por participante</label>
+                <label>Limite de cartelas online por participante</label>
                 <input
                   type="number"
                   min={1}
@@ -4675,12 +4713,16 @@ function CreateTournament({ user }: any) {
               </>
             )}
 
-            <label>Número de mesas</label>
-            <input
-              type="number"
-              value={tableCount}
-              onChange={e => setTableCount(Number(e.target.value))}
-            />
+            {!isBingo && (
+              <>
+                <label>Número de mesas</label>
+                <input
+                  type="number"
+                  value={tableCount}
+                  onChange={e => setTableCount(Number(e.target.value))}
+                />
+              </>
+            )}
 
             <label>Local</label>
             <input
@@ -4926,7 +4968,9 @@ function CreateTournament({ user }: any) {
                 <p>Formato: {bingoMode === 'virtual' ? 'Totalmente virtual' : bingoMode === 'mixed' ? 'Misto' : 'Presencial'}</p>
                 <p>Sorteio: {bingoDrawMode === 'virtual' ? 'Virtual pela plataforma' : 'Físico pelas bolinhas'}</p>
                 <p>Cartelas: {bingoCardMode === 'virtual' ? 'Virtuais' : bingoCardMode === 'mixed' ? 'Físicas e virtuais' : 'Físicas'}</p>
-                <p>Números: 1 a {bingoMaxNumber}</p>
+                <p>Bolas: 1 a {bingoMaxNumber}</p>
+                <p>{bingoMaxNumber === 75 ? 'Cartela 5 x 5 com coringa central' : 'Cartela 90 bolas com 3 linhas e 5 números por linha'}</p>
+                <p>Limite online: {bingoCardsPerParticipant} cartela(s) por participante</p>
                 {bingoCardPrice && <p>Cartela online: R$ {bingoCardPrice}</p>}
               </div>
 

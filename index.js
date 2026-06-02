@@ -388,11 +388,25 @@ const BINGO_DRAW_MODES = ['virtual', 'physical']
 const BINGO_CARD_MODES = ['virtual', 'physical', 'mixed']
 
 function normalizeBingoConfig(body = {}) {
+  const bingoMode = BINGO_MODES.includes(body.bingoMode) ? body.bingoMode : 'physical'
+  const requestedDrawMode = BINGO_DRAW_MODES.includes(body.bingoDrawMode) ? body.bingoDrawMode : 'virtual'
+  const bingoMaxNumber = Number(body.bingoMaxNumber) === 90 ? 90 : 75
+  const bingoCardMode = bingoMode === 'virtual'
+    ? 'virtual'
+    : bingoMode === 'mixed'
+      ? 'mixed'
+      : 'physical'
+  const bingoDrawMode = bingoMode === 'mixed'
+    ? requestedDrawMode
+    : bingoMode === 'virtual'
+      ? 'virtual'
+      : 'physical'
+
   return {
-    bingoMode: BINGO_MODES.includes(body.bingoMode) ? body.bingoMode : 'physical',
-    bingoDrawMode: BINGO_DRAW_MODES.includes(body.bingoDrawMode) ? body.bingoDrawMode : 'physical',
-    bingoCardMode: BINGO_CARD_MODES.includes(body.bingoCardMode) ? body.bingoCardMode : 'physical',
-    bingoMaxNumber: Math.min(Math.max(Number(body.bingoMaxNumber || 75), 30), 99),
+    bingoMode,
+    bingoDrawMode,
+    bingoCardMode,
+    bingoMaxNumber,
     bingoCardPrice: body.bingoCardPrice === '' || body.bingoCardPrice == null
       ? null
       : Number(body.bingoCardPrice),
@@ -401,16 +415,55 @@ function normalizeBingoConfig(body = {}) {
 }
 
 function generateBingoCardNumbers(maxNumber = 75) {
-  const size = Math.min(24, maxNumber)
-  const pool = Array.from({ length: maxNumber }, (_, index) => index + 1)
-  const numbers = []
+  const normalizedMax = Number(maxNumber) === 90 ? 90 : 75
 
-  while (numbers.length < size && pool.length > 0) {
-    const index = Math.floor(Math.random() * pool.length)
-    numbers.push(pool.splice(index, 1)[0])
+  if (normalizedMax === 90) {
+    const pool = Array.from({ length: 90 }, (_, index) => index + 1)
+    const rows = Array.from({ length: 3 }, () => {
+      const row = []
+
+      while (row.length < 5 && pool.length > 0) {
+        const index = Math.floor(Math.random() * pool.length)
+        row.push(pool.splice(index, 1)[0])
+      }
+
+      return row.sort((a, b) => a - b)
+    })
+
+    return {
+      type: '90-ball',
+      layout: '3x5',
+      rows,
+    }
   }
 
-  return numbers.sort((a, b) => a - b)
+  const columns = [
+    { letter: 'B', from: 1, to: 15 },
+    { letter: 'I', from: 16, to: 30 },
+    { letter: 'N', from: 31, to: 45 },
+    { letter: 'G', from: 46, to: 60 },
+    { letter: 'O', from: 61, to: 75 },
+  ]
+
+  const cardColumns = columns.map(column => {
+    const pool = Array.from({ length: column.to - column.from + 1 }, (_, index) => column.from + index)
+    const values = []
+
+    while (values.length < 5) {
+      const index = Math.floor(Math.random() * pool.length)
+      values.push(pool.splice(index, 1)[0])
+    }
+
+    return { letter: column.letter, values: values.sort((a, b) => a - b) }
+  })
+
+  cardColumns[2].values[2] = 'FREE'
+
+  return {
+    type: '75-ball',
+    layout: '5x5',
+    columns: cardColumns,
+  }
 }
 
 async function requireOwnedTournament(tournamentId, organizationId) {
@@ -2069,7 +2122,9 @@ app.post('/tournaments/:id/bingo/draw', auth, requireRole('admin', 'operator'), 
     }
 
     const maxNumber = tournament.bingoMaxNumber || 75
-    const source = req.body.source === 'physical' ? 'physical' : 'virtual'
+    const source = tournament.bingoDrawMode === 'physical' && req.body.source === 'physical'
+      ? 'physical'
+      : 'virtual'
     const existingDraws = await prisma.bingoDraw.findMany({ where: { tournamentId } })
     const drawnSet = new Set(existingDraws.map(draw => draw.number))
 
@@ -2163,21 +2218,49 @@ app.post('/public/:slug/bingo/cards', async (req, res) => {
     }
 
     const buyerName = String(req.body.name || '').trim()
-    const quantity = Math.min(Math.max(Number(req.body.quantity || 1), 1), 10)
+    const buyerEmail = String(req.body.email || '').trim() || null
+    const buyerWhatsapp = String(req.body.whatsapp || '').replace(/\D/g, '') || null
+    const limitPerParticipant = Math.max(Number(tournament.bingoCardsPerParticipant || 1), 1)
+    const requestedQuantity = Math.max(Number(req.body.quantity || 1), 1)
 
     if (!buyerName) {
       return res.status(400).json({ error: 'Informe o nome do participante' })
     }
 
+    if (requestedQuantity > limitPerParticipant) {
+      return res.status(400).json({
+        error: `Este Bingo permite no máximo ${limitPerParticipant} cartela(s) por participante.`,
+      })
+    }
+
+    const participantFilters = []
+
+    if (buyerEmail) participantFilters.push({ buyerEmail })
+    if (buyerWhatsapp) participantFilters.push({ buyerWhatsapp })
+    if (participantFilters.length === 0) participantFilters.push({ buyerName })
+
+    const existingCards = await prisma.bingoCard.count({
+      where: {
+        tournamentId: tournament.id,
+        OR: participantFilters,
+      },
+    })
+
+    if (existingCards + requestedQuantity > limitPerParticipant) {
+      return res.status(400).json({
+        error: `Este participante já atingiu o limite de ${limitPerParticipant} cartela(s).`,
+      })
+    }
+
     const cards = []
 
-    for (let i = 0; i < quantity; i++) {
+    for (let i = 0; i < requestedQuantity; i++) {
       cards.push(await prisma.bingoCard.create({
         data: {
           tournamentId: tournament.id,
           buyerName,
-          buyerEmail: req.body.email || null,
-          buyerWhatsapp: req.body.whatsapp || null,
+          buyerEmail,
+          buyerWhatsapp,
           numbers: JSON.stringify(generateBingoCardNumbers(tournament.bingoMaxNumber || 75)),
           status: 'pending',
           source: 'online',

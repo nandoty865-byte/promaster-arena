@@ -3495,6 +3495,21 @@ button:hover {
   margin-bottom: 12px;
 }
 
+.readonlyField,
+.bingoFormatHint {
+  background: #020617;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  color: #cbd5e1;
+  padding: 12px;
+  font-weight: 800;
+}
+
+.bingoFormatHint {
+  color: #93c5fd;
+  margin-top: 8px;
+}
+
 .bingoControlGrid {
   display: grid;
   grid-template-columns: 1.2fr 1fr .8fr;
