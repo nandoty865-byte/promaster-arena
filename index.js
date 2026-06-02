@@ -2816,6 +2816,8 @@ app.get('/public/:slug', async (req, res) => {
       return res.status(404).json({ error: 'Torneio não encontrado' })
     }
 
+    const isBingo = tournament.format === 'bingo' || tournament.sport?.slug === 'bingo'
+
     const players = await prisma.player.findMany({
       where: { tournamentId: tournament.id },
     })
@@ -2833,20 +2835,22 @@ app.get('/public/:slug', async (req, res) => {
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     })
 
-    const [bingoCards, bingoDraws, bingoWinners] = await Promise.all([
-      prisma.bingoCard.findMany({
-        where: { tournamentId: tournament.id },
-        orderBy: { id: 'asc' },
-      }),
-      prisma.bingoDraw.findMany({
-        where: { tournamentId: tournament.id },
-        orderBy: { createdAt: 'asc' },
-      }),
-      prisma.bingoWinner.findMany({
-        where: { tournamentId: tournament.id },
-        orderBy: { createdAt: 'desc' },
-      }),
-    ])
+    const [bingoCards, bingoDraws, bingoWinners] = isBingo
+      ? await Promise.all([
+          prisma.bingoCard.findMany({
+            where: { tournamentId: tournament.id },
+            orderBy: { id: 'asc' },
+          }),
+          prisma.bingoDraw.findMany({
+            where: { tournamentId: tournament.id },
+            orderBy: { createdAt: 'asc' },
+          }),
+          prisma.bingoWinner.findMany({
+            where: { tournamentId: tournament.id },
+            orderBy: { createdAt: 'desc' },
+          }),
+        ])
+      : [[], [], []]
 
     const playerMap = {}
     players.forEach(p => {

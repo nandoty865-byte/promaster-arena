@@ -3595,6 +3595,7 @@ function PlansComparison() {
 function PublicTournament() {
   const { slug } = useParams()
   const [data, setData] = useState<any>(null)
+  const [error, setError] = useState('')
   const [registrationForm, setRegistrationForm] = useState<any>({
     name: '',
     rg: '',
@@ -3612,11 +3613,23 @@ function PublicTournament() {
 
   function loadPublicTournament() {
     fetch(`${API}/public/${slug}`, { cache: 'no-store' })
-      .then(res => res.json())
-      .then(setData)
+      .then(async res => {
+        const result = await res.json().catch(() => null)
+        if (!res.ok) {
+          throw new Error(result?.error || 'Erro ao carregar pagina publica')
+        }
+        return result
+      })
+      .then(result => {
+        setError('')
+        setData(result)
+      })
+      .catch(err => setError(err.message || 'Erro ao carregar pagina publica'))
   }
 
   useEffect(() => {
+    setError('')
+    setData(null)
     loadPublicTournament()
     const interval = setInterval(loadPublicTournament, 15000)
     return () => clearInterval(interval)
@@ -3638,6 +3651,21 @@ function PublicTournament() {
 
     return () => clearInterval(interval)
   }, [registrationPayment?.registrationId, registrationPayment?.paymentId])
+
+  if (error) {
+    return (
+      <div className="publicPage">
+        <main>
+          <section className="publicCard publicErrorCard">
+            <span className="publicCardLabel">Pagina publica</span>
+            <h1>Nao foi possivel carregar este torneio</h1>
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()}>Tentar novamente</button>
+          </section>
+        </main>
+      </div>
+    )
+  }
 
   if (!data?.tournament) {
     return <div className="publicPage">Carregando torneio...</div>
