@@ -51,6 +51,11 @@ function youtubeEmbedUrl(url?: string) {
   return url
 }
 
+function publicTournamentUrl(slug?: string) {
+  if (!slug) return ''
+  return `${window.location.origin}/public/${slug}`
+}
+
 function isPublicPath(path: string) {
   return (
     path === '/' ||
@@ -711,7 +716,7 @@ function Dashboard({ user }: any) {
           {tournaments.length === 0 && <p>Nenhum torneio encontrado.</p>}
 
           {tournaments.map(t => {
-            const publicUrl = `https://www.promasterarena.com.br/public/${t.publicSlug}`
+            const publicUrl = publicTournamentUrl(t.publicSlug)
 
             return (
               <div key={t.id} className="tournamentCard">
@@ -819,7 +824,7 @@ function Dashboard({ user }: any) {
                 {detailsTournament.publicSlug && (
                   <div>
                     <span>Página pública</span>
-                    <a href={`https://www.promasterarena.com.br/public/${detailsTournament.publicSlug}`} target="_blank" rel="noreferrer">
+                    <a href={publicTournamentUrl(detailsTournament.publicSlug)} target="_blank" rel="noreferrer">
                       Abrir página
                     </a>
                   </div>
@@ -2944,7 +2949,7 @@ function TelaoTV() {
   const [view, setView] = useState(0)
 
   const publicUrl = tournament?.publicSlug
-    ? `https://www.promasterarena.com.br/public/${tournament.publicSlug}`
+    ? publicTournamentUrl(tournament.publicSlug)
     : null
   const matches = rounds.flatMap(r => r.matches || [])
   const playing = matches.filter(m => m.status === 'playing')
