@@ -1586,14 +1586,39 @@ function PlansComparison() {
 function PublicTournament() {
   const { slug } = useParams()
   const [data, setData] = useState<any>(null)
+  const [error, setError] = useState('')
   const [bingoBuyer, setBingoBuyer] = useState({ name: '', email: '', whatsapp: '', quantity: 1 })
   const [bingoMessage, setBingoMessage] = useState('')
 
   useEffect(() => {
+    setError('')
+    setData(null)
     fetch(`${API}/public/${slug}`)
-      .then(res => res.json())
+      .then(async res => {
+        const result = await res.json().catch(() => null)
+        if (!res.ok) {
+          throw new Error(result?.error || 'Erro ao carregar pagina publica')
+        }
+        return result
+      })
       .then(setData)
+      .catch(err => setError(err.message || 'Erro ao carregar pagina publica'))
   }, [slug])
+
+  if (error) {
+    return (
+      <div className="publicPage">
+        <main>
+          <section className="publicCard publicErrorCard">
+            <span className="publicCardLabel">Pagina publica</span>
+            <h1>Nao foi possivel carregar este torneio</h1>
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()}>Tentar novamente</button>
+          </section>
+        </main>
+      </div>
+    )
+  }
 
   if (!data?.tournament) {
     return <div className="publicPage">Carregando torneio...</div>
