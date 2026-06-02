@@ -58,6 +58,11 @@ function goHome() {
   window.location.href = '/'
 }
 
+function publicTournamentUrl(slug?: string) {
+  if (!slug) return ''
+  return `${window.location.origin}/public/${slug}`
+}
+
 function isPublicPath(path: string) {
   return (
     path === '/' ||
@@ -1567,21 +1572,38 @@ function Dashboard({ user }: any) {
                     <th>Local</th>
                     <th>Data</th>
                     <th>Status</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tournaments.map(t => (
-                    <tr key={t.id}>
-                      <td>
-                        <button className="tableLinkButton" onClick={() => navigate(`/tournament/${t.id}/painel`)}>
-                          {t.name}
-                        </button>
-                      </td>
-                      <td>{t.location || 'Local não informado'}</td>
-                      <td>{t.eventDate ? new Date(t.eventDate).toLocaleDateString() : '-'}</td>
-                      <td><span className={`statusBadge ${t.status}`}>{t.status}</span></td>
-                    </tr>
-                  ))}
+                  {tournaments.map(t => {
+                    const publicUrl = publicTournamentUrl(t.publicSlug)
+
+                    return (
+                      <tr key={t.id}>
+                        <td>
+                          <button className="tableLinkButton" onClick={() => navigate(`/tournament/${t.id}/painel`)}>
+                            {t.name}
+                          </button>
+                        </td>
+                        <td>{t.location || 'Local não informado'}</td>
+                        <td>{t.eventDate ? new Date(t.eventDate).toLocaleDateString() : '-'}</td>
+                        <td><span className={`statusBadge ${t.status}`}>{t.status}</span></td>
+                        <td>
+                          <div className="tableActions">
+                            <button onClick={() => setDetailsTournament(t)}>Detalhes</button>
+                            {t.publicSlug && (
+                              <>
+                                <button onClick={() => navigator.clipboard.writeText(publicUrl)}>Copiar link</button>
+                                <button onClick={() => window.open(publicUrl, '_blank')}>Público</button>
+                                <button onClick={() => setQrUrl(publicUrl)}>QR Code</button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -1662,7 +1684,7 @@ function Dashboard({ user }: any) {
                 {detailsTournament.publicSlug && (
                   <div>
                     <span>Página pública</span>
-                    <a href={`https://www.promasterarena.com.br/public/${detailsTournament.publicSlug}`} target="_blank" rel="noreferrer">
+                    <a href={publicTournamentUrl(detailsTournament.publicSlug)} target="_blank" rel="noreferrer">
                       Abrir página
                     </a>
                   </div>
@@ -1719,7 +1741,7 @@ function TournamentOverview() {
   const tournamentTableCount = Math.max(1, Number(tournament?.tableCount || 1))
   const tournamentTables = Array.from({ length: tournamentTableCount }, (_, index) => index + 1)
   const publicUrl = tournament?.publicSlug
-    ? `https://www.promasterarena.com.br/public/${tournament.publicSlug}`
+    ? publicTournamentUrl(tournament.publicSlug)
     : ''
   const expectedRevenue = Number(tournament?.registrationFee || 0) * confirmed.length
   const statusPriority: Record<string, number> = { confirmed: 1, pending: 2, waiting: 3, removed: 4 }
@@ -5910,7 +5932,7 @@ function TelaoTV() {
   const [view, setView] = useState(0)
 
   const publicUrl = tournament?.publicSlug
-    ? `https://www.promasterarena.com.br/public/${tournament.publicSlug}`
+    ? publicTournamentUrl(tournament.publicSlug)
     : null
   const matches = rounds.flatMap(r => r.matches || [])
   const playing = matches.filter(m => m.status === 'playing')
