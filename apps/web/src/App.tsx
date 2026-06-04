@@ -232,16 +232,21 @@ export default function App() {
       <Route path="/campeonatos" element={<SeasonsPage user={user} />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
       <Route path="/tournament/:id/painel" element={<TournamentOverview />} />
+      <Route path="/tournament/:id" element={<TournamentOverview />} />
+      <Route path="/tournament/:id/inscritos" element={<TournamentOverview defaultPanel="inscritos" />} />
+      <Route path="/tournament/:id/financeiro" element={<TournamentOverview defaultPanel="financeiro" />} />
+      <Route path="/tournament/:id/patrocinadores" element={<TournamentOverview defaultPanel="patrocinadores" />} />
+      <Route path="/tournament/:id/publico" element={<TournamentOverview defaultPanel="publico" />} />
+      <Route path="/tournament/:id/chaveamento" element={<TournamentBracket />} />
       <Route path="/tournament/:id/settings" element={<TournamentSettings />} />
       <Route path="/public/:slug" element={<PublicTournament />} />
+      <Route path="/arbitro/:id" element={<RefereeMode />} />
+      <Route path="/telao/:id" element={<TelaoTV />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/admin/financeiro" element={<Financeiro />} />
       <Route path="/admin/clientes" element={<AdminClientes />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="*" element={<Navigate to="/" />} />
-<Route path="/tournament/:id" element={<TournamentBracket />} />
-<Route path="/arbitro/:id" element={<RefereeMode />} />
-<Route path="/telao/:id" element={<TelaoTV />} />
-<Route path="/register" element={<Register />} />
 
     </Routes>
   )
@@ -1582,7 +1587,7 @@ function Dashboard({ user }: any) {
                     return (
                       <tr key={t.id}>
                         <td>
-                          <button className="tableLinkButton" onClick={() => navigate(`/tournament/${t.id}/painel`)}>
+                          <button className="tableLinkButton" onClick={() => navigate(`/tournament/${t.id}`)}>
                             {t.name}
                           </button>
                         </td>
@@ -1702,13 +1707,13 @@ function Dashboard({ user }: any) {
   )
 }
 
-function TournamentOverview() {
+function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: string } = {}) {
   const { id } = useParams()
   const navigate = useNavigate()
   const [tournament, setTournament] = useState<any>(null)
   const [rounds, setRounds] = useState<any[]>([])
   const [ranking, setRanking] = useState<any[]>([])
-  const initialPanel = new URLSearchParams(window.location.search).get('painel') || 'overview'
+  const initialPanel = new URLSearchParams(window.location.search).get('painel') || defaultPanel
   const [panel, setPanel] = useState(initialPanel)
   const [selectedRegistrationIds, setSelectedRegistrationIds] = useState<number[]>([])
   const [registrationSearch, setRegistrationSearch] = useState('')
@@ -1786,6 +1791,11 @@ function TournamentOverview() {
   useEffect(() => {
     loadTournamentOverview()
   }, [id])
+
+  useEffect(() => {
+    const queryPanel = new URLSearchParams(window.location.search).get('painel')
+    setPanel(queryPanel || defaultPanel)
+  }, [defaultPanel, id])
 
   function formatDateTime(value: string) {
     if (!value) return '-'
@@ -2430,14 +2440,14 @@ function TournamentOverview() {
           <small>{tournament.status}</small>
         </div>
 
-        <button className={panel === 'overview' ? 'active' : ''} onClick={() => setPanel('overview')}>Dashboard</button>
-        <button onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
-        <button className={panel === 'inscritos' ? 'active' : ''} onClick={() => setPanel('inscritos')}>Inscritos</button>
+        <button className={panel === 'overview' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
+        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>Chaveamento</button>
+        <button className={panel === 'inscritos' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
         <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
-        <button className={panel === 'financeiro' ? 'active' : ''} onClick={() => setPanel('financeiro')}>Financeiro</button>
-        <button className={panel === 'patrocinadores' ? 'active' : ''} onClick={() => setPanel('patrocinadores')}>Patrocinadores</button>
-        <button className={panel === 'publico' ? 'active' : ''} onClick={() => setPanel('publico')}>QR Code público</button>
+        <button className={panel === 'financeiro' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
+        <button className={panel === 'patrocinadores' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
+        <button className={panel === 'publico' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>
       </aside>
 
       <main className="saasMain">
@@ -2952,7 +2962,7 @@ function TournamentSettings() {
         }
 
         alert(`Chave gerada com ${data.matchesCreated} jogo(s).`)
-        navigate(`/tournament/${id}`)
+        navigate(`/tournament/${id}/chaveamento`)
       })
   }
 
@@ -2974,14 +2984,14 @@ function TournamentSettings() {
           <small>{tournament?.status || '-'}</small>
         </div>
 
-        <button onClick={() => navigate(`/tournament/${id}/painel`)}>Dashboard</button>
-        <button onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=inscritos`)}>Inscritos</button>
+        <button onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
+        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>Chaveamento</button>
+        <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button className="active" onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
         <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=financeiro`)}>Financeiro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=patrocinadores`)}>Patrocinadores</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=publico`)}>QR Code público</button>
+        <button onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
+        <button onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
+        <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>
       </aside>
 
       <main className="saasMain">
@@ -5275,14 +5285,14 @@ function TournamentBracket() {
           <small>{tournament?.status || '-'}</small>
         </div>
 
-        <button onClick={() => navigate(`/tournament/${id}/painel`)}>Dashboard</button>
-        <button className="active" onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=inscritos`)}>Inscritos</button>
+        <button onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
+        <button className="active" onClick={() => navigate(`/tournament/${id}/chaveamento`)}>Chaveamento</button>
+        <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
         <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=financeiro`)}>Financeiro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=patrocinadores`)}>Patrocinadores</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=publico`)}>QR Code público</button>
+        <button onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
+        <button onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
+        <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>
       </aside>
 
       <main className="saasMain">
@@ -5783,14 +5793,14 @@ function RefereeMode() {
           <small>{tournament?.status || '-'}</small>
         </div>
 
-        <button onClick={() => navigate(`/tournament/${id}/painel`)}>Dashboard</button>
-        <button onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=inscritos`)}>Inscritos</button>
+        <button onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
+        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>Chaveamento</button>
+        <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
         <button className="active" onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=financeiro`)}>Financeiro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=patrocinadores`)}>Patrocinadores</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=publico`)}>QR Code público</button>
+        <button onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
+        <button onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
+        <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>
       </aside>
 
       <main className="saasMain refereeMain">
