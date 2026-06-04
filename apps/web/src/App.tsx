@@ -1782,6 +1782,7 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
   const [openStatusMenuId, setOpenStatusMenuId] = useState<number | null>(null)
   const [openPaymentMenuId, setOpenPaymentMenuId] = useState<number | null>(null)
   const [overviewQrUrl, setOverviewQrUrl] = useState<string | null>(null)
+  const [bingoState, setBingoState] = useState<any>(null)
   const [addRegistrationForm, setAddRegistrationForm] = useState({
     name: '',
     rg: '',
@@ -1806,6 +1807,15 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
     ? publicTournamentUrl(tournament.publicSlug)
     : ''
   const isBingoTournament = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo'
+  const bingoCards = bingoState?.cards || []
+  const bingoDraws = bingoState?.draws || []
+  const bingoWinners = bingoState?.winners || []
+  const bingoSoldCards = bingoCards.filter((card: any) => card.source === 'online' || ['sold', 'paid', 'confirmed'].includes(card.status)).length
+  const bingoRoundNames = Array.from(new Set([
+    ...bingoDraws.map((draw: any) => draw.roundName).filter(Boolean),
+    ...bingoWinners.map((winner: any) => winner.roundName).filter(Boolean),
+  ]))
+  const bingoRoundCount = bingoRoundNames.length || (bingoDraws.length > 0 ? 1 : 0)
   const expectedRevenue = Number(tournament?.registrationFee || 0) * confirmed.length
   const statusPriority: Record<string, number> = { confirmed: 1, pending: 2, waiting: 3, removed: 4 }
   const registrationRows = [...registrations].sort((a: any, b: any) => {
@@ -1835,7 +1845,12 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
   function loadTournamentOverview() {
     fetch(`${API}/tournaments/${id}`, { headers: authHeaders(), cache: 'no-store' })
       .then(res => res.json())
-      .then(data => setTournament(data))
+      .then(data => {
+        setTournament(data)
+        if (data?.format === 'bingo' || data?.sport?.slug === 'bingo') {
+          loadBingoOverview()
+        }
+      })
 
     fetch(`${API}/tournaments/${id}/bracket`, { cache: 'no-store' })
       .then(res => res.json())
@@ -1844,6 +1859,14 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
     fetch(`${API}/tournaments/${id}/ranking`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => setRanking(Array.isArray(data) ? data : []))
+  }
+
+  function loadBingoOverview() {
+    fetch(`${API}/tournaments/${id}/bingo`, { headers: authHeaders(), cache: 'no-store' })
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (data) setBingoState(data)
+      })
   }
 
   useEffect(() => {
@@ -2444,6 +2467,34 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
       )
     }
 
+    if (isBingoTournament) {
+      return (
+        <section className="panel">
+          <h2>Dashboard do Bingo</h2>
+          <div className="overviewStatsGrid bingoDashboardGrid">
+            <div><span>Cartelas totais</span><strong>{bingoCards.length}</strong></div>
+            <div><span>Cartelas vendidas</span><strong>{bingoSoldCards}</strong></div>
+            <div><span>Rodadas</span><strong>{bingoRoundCount}</strong></div>
+            <div><span>Premiação total</span><strong>{tournament?.prize || '-'}</strong></div>
+          </div>
+
+          <div className="overviewRankingCard">
+            <div>
+              <h3>Últimos números sorteados</h3>
+              <p>Acompanhamento rápido do sorteio em tempo real.</p>
+            </div>
+
+            <div className="bingoNumbers">
+              {bingoDraws.length === 0 && <p className="helperText">Nenhum número sorteado ainda.</p>}
+              {bingoDraws.slice(-20).map((draw: any) => (
+                <span key={draw.id}>{draw.number}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
     return (
       <section className="panel">
         <h2>Dashboard do torneio</h2>
@@ -2502,10 +2553,10 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
         <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingoTournament ? 'AO VIVO' : 'Chaveamento'}</button>
         <button className={panel === 'inscritos' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
-        <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
+        {!isBingoTournament && <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>}
         <button className={panel === 'financeiro' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
         <button className={panel === 'patrocinadores' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
-        <button className={panel === 'publico' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>
+        {!isBingoTournament && <button className={panel === 'publico' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>}
       </aside>
 
       <main className="saasMain">
@@ -2881,6 +2932,12 @@ function TournamentSettings() {
     scheduleMode: 'single_day',
     phaseSchedule: '',
     phaseMatchRules: '',
+    bingoMode: 'physical',
+    bingoDrawMode: 'physical',
+    bingoCardMode: 'physical',
+    bingoMaxNumber: 75,
+    bingoCardPrice: '',
+    bingoCardsPerParticipant: 1,
   })
 
   function loadTournamentSettings(refreshForm = false) {
@@ -2913,6 +2970,12 @@ function TournamentSettings() {
             scheduleMode: data.scheduleMode || 'single_day',
             phaseSchedule: data.phaseSchedule || '',
             phaseMatchRules: data.phaseMatchRules || '',
+            bingoMode: data.bingoMode || 'physical',
+            bingoDrawMode: data.bingoDrawMode || 'physical',
+            bingoCardMode: data.bingoCardMode || 'physical',
+            bingoMaxNumber: data.bingoMaxNumber || 75,
+            bingoCardPrice: data.bingoCardPrice || '',
+            bingoCardsPerParticipant: data.bingoCardsPerParticipant || 1,
           })
           setPhaseRules(safeJsonArray(data.phaseMatchRules))
           const loadedScheduleRows = safeJsonArray(data.phaseSchedule)
@@ -2933,6 +2996,20 @@ function TournamentSettings() {
 
   function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function updateBingoMode(value: string) {
+    setForm((current: any) => {
+      if (value === 'physical') {
+        return { ...current, bingoMode: value, bingoCardMode: 'physical', bingoDrawMode: 'physical' }
+      }
+
+      if (value === 'virtual') {
+        return { ...current, bingoMode: value, bingoCardMode: 'virtual', bingoDrawMode: 'virtual' }
+      }
+
+      return { ...current, bingoMode: value, bingoCardMode: 'mixed', bingoDrawMode: 'virtual' }
+    })
   }
 
   const effectivePlayerLimit = Number(form.playerCount || playerLimit || 0)
@@ -3064,10 +3141,10 @@ function TournamentSettings() {
         <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingoSettings ? 'AO VIVO' : 'Chaveamento'}</button>
         <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button className="active" onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
-        <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
+        {!isBingoSettings && <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>}
         <button onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
         <button onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
-        <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>
+        {!isBingoSettings && <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>}
       </aside>
 
       <main className="saasMain">
@@ -3080,16 +3157,16 @@ function TournamentSettings() {
         <div className="panel settingsPanel">
           <div className="settingsInfoGrid">
             <div>
-              <span>Tipo de torneio</span>
-              <strong>{tournamentFormatLabel(form.format || tournament?.format)}</strong>
+              <span>{isBingoSettings ? 'Tipo de evento' : 'Tipo de torneio'}</span>
+              <strong>{isBingoSettings ? 'Bingo' : tournamentFormatLabel(form.format || tournament?.format)}</strong>
             </div>
             <div>
-              <span>Jogadores definidos</span>
-              <strong>{effectivePlayerLimit || '-'}</strong>
+              <span>{isBingoSettings ? 'Modelo' : 'Jogadores definidos'}</span>
+              <strong>{isBingoSettings ? `${form.bingoMaxNumber || 75} bolas` : effectivePlayerLimit || '-'}</strong>
             </div>
             <div>
-              <span>Mesas</span>
-              <strong>{form.tableCount || tournament?.tableCount || '-'}</strong>
+              <span>{isBingoSettings ? 'Sorteio' : 'Mesas'}</span>
+              <strong>{isBingoSettings ? (form.bingoDrawMode === 'virtual' ? 'Virtual' : 'Físico') : form.tableCount || tournament?.tableCount || '-'}</strong>
             </div>
             <div>
               <span>Status</span>
@@ -3100,39 +3177,114 @@ function TournamentSettings() {
           <label>Nome do torneio</label>
           <input value={form.name} onChange={e => updateField('name', e.target.value)} />
 
-          <label>Quantidade de inscritos</label>
-          <input
-            type="number"
-            min="2"
-            value={form.playerCount}
-            onChange={e => updateField('playerCount', e.target.value)}
-          />
+          {isBingoSettings ? (
+            <>
+              <label>Modelo</label>
+              <select
+                value={form.bingoMaxNumber}
+                onChange={e => updateField('bingoMaxNumber', e.target.value)}
+              >
+                <option value={75}>Bingo 75 bolas — cartela 5 x 5 com coringa no centro</option>
+                <option value={90}>Bingo 90 bolas — cartela tradicional 3 linhas x 5 colunas</option>
+              </select>
 
-          <label>Modelo do torneio</label>
-          <select
-            value={form.format}
-            onChange={e => updateField('format', e.target.value)}
-          >
-            {TOURNAMENT_FORMAT_OPTIONS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {form.format === 'round_robin' && (
-            <p className="helperText">
-              Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou campeonatos com várias etapas/dias e ranking acumulado, use o plano Master.
-            </p>
+              <div className="bingoFormatHint">
+                {Number(form.bingoMaxNumber) === 75
+                  ? '75 bolas: cartela 5 x 5 com letras BINGO e número grátis no centro.'
+                  : '90 bolas: cartela tradicional com 3 linhas e 5 números por linha.'}
+              </div>
+
+              <div className="bingoConfigBox">
+                <h3>Bingo</h3>
+                <p>Configure se o evento será presencial, virtual ou misto.</p>
+
+                <label>Formato do Bingo</label>
+                <select
+                  value={form.bingoMode}
+                  onChange={e => updateBingoMode(e.target.value)}
+                >
+                  <option value="physical">Presencial com estrutura física</option>
+                  <option value="virtual">Totalmente virtual</option>
+                  <option value="mixed">Misto</option>
+                </select>
+
+                <label>Sorteio dos números</label>
+                {form.bingoMode === 'mixed' ? (
+                  <select value={form.bingoDrawMode} onChange={e => updateField('bingoDrawMode', e.target.value)}>
+                    <option value="virtual">Virtual pela plataforma</option>
+                    <option value="physical">Físico pelas bolinhas</option>
+                  </select>
+                ) : (
+                  <div className="readonlyField">
+                    {form.bingoDrawMode === 'virtual'
+                      ? 'Virtual pela plataforma'
+                      : 'Físico pelas bolinhas'}
+                  </div>
+                )}
+
+                <label>Cartelas</label>
+                <div className="readonlyField">
+                  {form.bingoCardMode === 'virtual'
+                    ? 'Cartela virtual'
+                    : form.bingoCardMode === 'mixed'
+                      ? 'Cartela física e virtual'
+                      : 'Cartela física'}
+                </div>
+
+                <label>Valor da cartela online</label>
+                <input
+                  value={form.bingoCardPrice}
+                  onChange={e => updateField('bingoCardPrice', e.target.value)}
+                  placeholder="Ex: 10,00"
+                />
+
+                <label>Limite de cartelas online por participante</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={form.bingoCardsPerParticipant}
+                  onChange={e => updateField('bingoCardsPerParticipant', e.target.value)}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <label>Quantidade de inscritos</label>
+              <input
+                type="number"
+                min="2"
+                value={form.playerCount}
+                onChange={e => updateField('playerCount', e.target.value)}
+              />
+
+              <label>Modelo do torneio</label>
+              <select
+                value={form.format}
+                onChange={e => updateField('format', e.target.value)}
+              >
+                {TOURNAMENT_FORMAT_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {form.format === 'round_robin' && (
+                <p className="helperText">
+                  Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou campeonatos com várias etapas/dias e ranking acumulado, use o plano Master.
+                </p>
+              )}
+              <p className="helperText">Quantidade e modelo só podem ser alterados antes de gerar a chave.</p>
+
+              <label>Número de mesas</label>
+              <input
+                type="number"
+                min="1"
+                value={form.tableCount}
+                onChange={e => updateField('tableCount', e.target.value)}
+              />
+            </>
           )}
-          <p className="helperText">Quantidade e modelo só podem ser alterados antes de gerar a chave.</p>
-
-          <label>Número de mesas</label>
-          <input
-            type="number"
-            min="1"
-            value={form.tableCount}
-            onChange={e => updateField('tableCount', e.target.value)}
-          />
 
           <label>Local</label>
           <input value={form.location} onChange={e => updateField('location', e.target.value)} />
@@ -3242,130 +3394,136 @@ function TournamentSettings() {
           <label>Regras</label>
           <textarea value={form.rules} onChange={e => updateField('rules', e.target.value)} />
 
-          <label>Regras das partidas</label>
-          <select
-            value={form.matchQuantityMode}
-            onChange={e => updateField('matchQuantityMode', e.target.value)}
-          >
-            <option value="">Definir depois</option>
-            <option value="all">Mesmo padrão até o final</option>
-            <option value="by_phase">Alterar partidas por fase</option>
-          </select>
+          {!isBingoSettings && (
+            <>
+              <label>Regras das partidas</label>
+              <select
+                value={form.matchQuantityMode}
+                onChange={e => updateField('matchQuantityMode', e.target.value)}
+              >
+                <option value="">Definir depois</option>
+                <option value="all">Mesmo padrão até o final</option>
+                <option value="by_phase">Alterar partidas por fase</option>
+              </select>
 
-          {form.matchQuantityMode === 'all' && (
-            <div className="settingsGrid">
-              <div>
-                <label>Número de partidas</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={form.matchQuantity}
-                  onChange={e => updateField('matchQuantity', e.target.value)}
-                  placeholder="Ex: 3"
-                />
-              </div>
-
-              <div>
-                <label>Regra aplicada</label>
-                <input
-                  value="Até o final"
-                  readOnly
-                />
-              </div>
-            </div>
-          )}
-
-          {form.matchQuantityMode === 'by_phase' && (
-            <div className="phaseConfigList">
-              <div className="phaseConfigHeader">
-                <span>Fase</span>
-                <span>Número de partidas</span>
-                <span>Regra aplicada</span>
-              </div>
-              {visibleRulePhases().map(phase => {
-                const rule = getPhaseRule(phase.phase)
-                return (
-                  <div key={phase.phase} className="phaseConfigRow">
-                    <strong>{phase.label}</strong>
+              {form.matchQuantityMode === 'all' && (
+                <div className="settingsGrid">
+                  <div>
+                    <label>Número de partidas</label>
                     <input
                       type="number"
                       min="1"
-                      value={rule.matchQuantity}
-                      onChange={e => updatePhaseRule(phase.phase, 'matchQuantity', e.target.value)}
-                      placeholder="Partidas"
-                    />
-                    <select
-                      value={rule.appliesTo}
-                      onChange={e => updatePhaseRule(phase.phase, 'appliesTo', e.target.value)}
-                    >
-                      <option value="phase">Somente esta fase</option>
-                      <option value="until_final">Desta fase até o final</option>
-                    </select>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          <label>Programação</label>
-          <select
-            value={form.scheduleMode}
-            onChange={e => updateField('scheduleMode', e.target.value)}
-          >
-            <option value="single_day">Data única</option>
-            <option value="multi_day">Vários dias e horários</option>
-          </select>
-
-          {form.scheduleMode === 'multi_day' && (
-            <div className="phaseConfigList">
-              <div className="phaseConfigRow">
-                <strong>Quantidade de dias</strong>
-                <input
-                  type="number"
-                  min="1"
-                  value={scheduleDayCount}
-                  onChange={e => updateScheduleDayCount(e.target.value)}
-                />
-                <span className="helperText">Gera uma linha para cada dia.</span>
-              </div>
-
-              {Array.from({ length: scheduleDayCount }, (_, index) => {
-                const day = index + 1
-                const row = getScheduleRow(day)
-                return (
-                  <div key={day} className="phaseConfigRow scheduleDayRow">
-                    <strong>Dia {day}</strong>
-                    <input
-                      value={row.description}
-                      onChange={e => updateScheduleRow(day, 'description', e.target.value)}
-                      placeholder="Descrição: fase inicial, final..."
-                    />
-                    <input
-                      type="date"
-                      value={row.date}
-                      onChange={e => updateScheduleRow(day, 'date', e.target.value)}
-                    />
-                    <input
-                      type="time"
-                      value={row.time}
-                      onChange={e => updateScheduleRow(day, 'time', e.target.value)}
+                      value={form.matchQuantity}
+                      onChange={e => updateField('matchQuantity', e.target.value)}
+                      placeholder="Ex: 3"
                     />
                   </div>
-                )
-              })}
-            </div>
+
+                  <div>
+                    <label>Regra aplicada</label>
+                    <input
+                      value="Até o final"
+                      readOnly
+                    />
+                  </div>
+                </div>
+              )}
+
+              {form.matchQuantityMode === 'by_phase' && (
+                <div className="phaseConfigList">
+                  <div className="phaseConfigHeader">
+                    <span>Fase</span>
+                    <span>Número de partidas</span>
+                    <span>Regra aplicada</span>
+                  </div>
+                  {visibleRulePhases().map(phase => {
+                    const rule = getPhaseRule(phase.phase)
+                    return (
+                      <div key={phase.phase} className="phaseConfigRow">
+                        <strong>{phase.label}</strong>
+                        <input
+                          type="number"
+                          min="1"
+                          value={rule.matchQuantity}
+                          onChange={e => updatePhaseRule(phase.phase, 'matchQuantity', e.target.value)}
+                          placeholder="Partidas"
+                        />
+                        <select
+                          value={rule.appliesTo}
+                          onChange={e => updatePhaseRule(phase.phase, 'appliesTo', e.target.value)}
+                        >
+                          <option value="phase">Somente esta fase</option>
+                          <option value="until_final">Desta fase até o final</option>
+                        </select>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              <label>Programação</label>
+              <select
+                value={form.scheduleMode}
+                onChange={e => updateField('scheduleMode', e.target.value)}
+              >
+                <option value="single_day">Data única</option>
+                <option value="multi_day">Vários dias e horários</option>
+              </select>
+
+              {form.scheduleMode === 'multi_day' && (
+                <div className="phaseConfigList">
+                  <div className="phaseConfigRow">
+                    <strong>Quantidade de dias</strong>
+                    <input
+                      type="number"
+                      min="1"
+                      value={scheduleDayCount}
+                      onChange={e => updateScheduleDayCount(e.target.value)}
+                    />
+                    <span className="helperText">Gera uma linha para cada dia.</span>
+                  </div>
+
+                  {Array.from({ length: scheduleDayCount }, (_, index) => {
+                    const day = index + 1
+                    const row = getScheduleRow(day)
+                    return (
+                      <div key={day} className="phaseConfigRow scheduleDayRow">
+                        <strong>Dia {day}</strong>
+                        <input
+                          value={row.description}
+                          onChange={e => updateScheduleRow(day, 'description', e.target.value)}
+                          placeholder="Descrição: fase inicial, final..."
+                        />
+                        <input
+                          type="date"
+                          value={row.date}
+                          onChange={e => updateScheduleRow(day, 'date', e.target.value)}
+                        />
+                        <input
+                          type="time"
+                          value={row.time}
+                          onChange={e => updateScheduleRow(day, 'time', e.target.value)}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </>
           )}
 
           <button className="primaryButton" onClick={saveSettings}>Salvar edição</button>
 
-          <div className="drawActions">
-            <button className="primaryButton" onClick={() => generateBracket('automatic')}>
-              Gerar sorteio automático
-            </button>
-            <button className="secondaryButton" onClick={() => generateBracket('manual')}>
-              Gerar chave manual pela ordem da lista
-            </button>
-          </div>
+          {!isBingoSettings && (
+            <div className="drawActions">
+              <button className="primaryButton" onClick={() => generateBracket('automatic')}>
+                Gerar sorteio automático
+              </button>
+              <button className="secondaryButton" onClick={() => generateBracket('manual')}>
+                Gerar chave manual pela ordem da lista
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </div>
@@ -5133,6 +5291,8 @@ function TournamentBracket() {
   const [panelMode] = useState<'board' | 'bracket'>('bracket')
   const [bingoState, setBingoState] = useState<any>(null)
   const [physicalNumber, setPhysicalNumber] = useState('')
+  const [bingoRoundName, setBingoRoundName] = useState('Rodada 1')
+  const [bingoRoundPrize, setBingoRoundPrize] = useState('')
   const [winnerName, setWinnerName] = useState('')
   const [winnerPrize, setWinnerPrize] = useState('')
   const matches = rounds.flatMap(round =>
@@ -5150,6 +5310,9 @@ function TournamentBracket() {
   const latestBingoNumber = bingoNumbers[bingoNumbers.length - 1]
   const bingoWinners = bingoState?.winners || []
   const bingoCards = bingoState?.cards || []
+  const latestBingoDraw = bingoState?.draws?.[bingoState.draws.length - 1]
+  const currentBingoRound = latestBingoDraw?.roundName || bingoRoundName || 'Rodada principal'
+  const currentBingoPrize = latestBingoDraw?.prize || bingoRoundPrize || tournament?.prize || '-'
 
   function loadBracket() {
     fetch(`${API}/tournaments/${id}/bracket`, {
@@ -5196,7 +5359,7 @@ function TournamentBracket() {
     fetch(`${API}/tournaments/${id}/bingo/draw`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ source: 'virtual' }),
+      body: JSON.stringify({ source: 'virtual', roundName: bingoRoundName, prize: bingoRoundPrize }),
     })
       .then(res => res.json())
       .then(data => {
@@ -5212,7 +5375,7 @@ function TournamentBracket() {
     fetch(`${API}/tournaments/${id}/bingo/draw`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ source: 'physical', number: Number(physicalNumber) }),
+      body: JSON.stringify({ source: 'physical', number: Number(physicalNumber), roundName: bingoRoundName, prize: bingoRoundPrize }),
     })
       .then(res => res.json())
       .then(data => {
@@ -5229,7 +5392,7 @@ function TournamentBracket() {
     fetch(`${API}/tournaments/${id}/bingo/winners`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ winnerName, prize: winnerPrize }),
+      body: JSON.stringify({ winnerName, roundName: bingoRoundName, prize: winnerPrize || bingoRoundPrize }),
     })
       .then(res => res.json())
       .then(data => {
@@ -5365,10 +5528,10 @@ function TournamentBracket() {
         <button className="active" onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingo ? 'AO VIVO' : 'Chaveamento'}</button>
         <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
-        <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
+        {!isBingo && <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>}
         <button onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
         <button onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
-        <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>
+        {!isBingo && <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>}
       </aside>
 
       <main className="saasMain">
@@ -5394,6 +5557,28 @@ function TournamentBracket() {
           <div className="bingoControlGrid">
             <section className="panel bingoControlPanel">
               <h2>Controle do Bingo</h2>
+              <div className="bingoRoundControls">
+                <div>
+                  <label>Número da rodada</label>
+                  <input
+                    value={bingoRoundName}
+                    onChange={e => setBingoRoundName(e.target.value)}
+                    placeholder="Rodada 1"
+                  />
+                </div>
+                <div>
+                  <label>Premiação da rodada</label>
+                  <input
+                    value={bingoRoundPrize}
+                    onChange={e => setBingoRoundPrize(e.target.value)}
+                    placeholder="Ex: R$ 500,00"
+                  />
+                </div>
+              </div>
+              <div className="bingoRoundSummary">
+                <div><span>Rodada atual</span><strong>{currentBingoRound}</strong></div>
+                <div><span>Premiação da rodada</span><strong>{currentBingoPrize}</strong></div>
+              </div>
               <div className="bingoCurrentNumber">
                 <span>Último número</span>
                 <strong>{latestBingoNumber || '--'}</strong>
@@ -5428,7 +5613,7 @@ function TournamentBracket() {
                 <input
                   value={winnerPrize}
                   onChange={e => setWinnerPrize(e.target.value)}
-                  placeholder="Rodada/prêmio"
+                  placeholder="Prêmio do ganhador"
                 />
                 <button onClick={registerBingoWinner}>Registrar ganhador</button>
               </div>
@@ -5874,10 +6059,10 @@ function RefereeMode() {
         <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingoReferee ? 'AO VIVO' : 'Chaveamento'}</button>
         <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
-        <button className="active" onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
+        {!isBingoReferee && <button className="active" onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>}
         <button onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
         <button onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
-        <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>
+        {!isBingoReferee && <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>}
       </aside>
 
       <main className="saasMain refereeMain">
@@ -6031,6 +6216,10 @@ function TelaoTV() {
   const latestBingoNumber = drawnNumbers[drawnNumbers.length - 1]
   const bingoWinners = bingoState?.winners || []
   const bingoCards = bingoState?.cards || []
+  const bingoDraws = bingoState?.draws || []
+  const latestBingoDraw = bingoDraws[bingoDraws.length - 1]
+  const currentBingoRound = latestBingoDraw?.roundName || bingoWinners[0]?.roundName || 'Rodada principal'
+  const currentBingoPrize = latestBingoDraw?.prize || bingoWinners[0]?.prize || tournament?.prize || '-'
 
   const finalRound = rounds[rounds.length - 1]
   const champion = finalRound?.matches?.[0]?.winner
@@ -6138,6 +6327,16 @@ function TelaoTV() {
       {isBingo && (
         <div className="bingoTv">
           <section className="bingoTvFeatured">
+            <div className="bingoTvRoundMeta">
+              <div>
+                <span>Rodada</span>
+                <strong>{currentBingoRound}</strong>
+              </div>
+              <div>
+                <span>Premiação</span>
+                <strong>{currentBingoPrize}</strong>
+              </div>
+            </div>
             <span>Número sorteado</span>
             <strong>{latestBingoNumber || '--'}</strong>
             <p>

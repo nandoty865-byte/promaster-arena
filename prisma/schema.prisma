@@ -198,6 +198,7 @@ model BingoDraw {
   id           Int      @id @default(autoincrement())
   tournamentId Int
   roundName    String?
+  prize        String?
   number       Int
   source       String   @default("virtual")
   createdAt    DateTime @default(now())
