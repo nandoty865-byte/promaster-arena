@@ -3775,7 +3775,7 @@ app.post('/auth/register-organizer', (req, res) => {
 
       await sendWhatsApp({
         to: phone,
-        text: `ProMaster Arena: cadastro de organizador recebido para ${organizationName}. Confirme seu e-mail e acompanhe a validação no painel: ${APP_URL}/login`,
+        text: `ProMaster Arena: cadastro de organizador recebido para ${organizationName}. Valide seu cadastro por este link: ${verifyUrl}`,
       })
 
       res.json({
@@ -3802,15 +3802,21 @@ app.post('/players/register', async (req, res) => {
       state,
       country,
       favoriteSports,
+      password,
       termsAccepted,
+      noticesAccepted,
     } = req.body
 
-    if (!name || !email || !phone) {
-      return res.status(400).json({ error: 'Nome, e-mail e WhatsApp são obrigatórios' })
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ error: 'Nome, e-mail, WhatsApp e senha são obrigatórios' })
     }
 
     if (!termsAccepted) {
       return res.status(400).json({ error: 'Aceite os termos para criar o perfil do jogador' })
+    }
+
+    if (!noticesAccepted) {
+      return res.status(400).json({ error: 'Aceite o recebimento de avisos por e-mail e WhatsApp para participar dos torneios' })
     }
 
     const exists = await prisma.playerAccount.findUnique({ where: { email } })
@@ -3819,11 +3825,14 @@ app.post('/players/register', async (req, res) => {
       return res.status(400).json({ error: 'Já existe perfil de jogador com este e-mail' })
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const verifyToken = randomUUID()
     const player = await prisma.playerAccount.create({
       data: {
         name,
         nickname: nickname || null,
         email,
+        password: hashedPassword,
         phone: phone || null,
         rg: rg || null,
         city: city || null,
@@ -3831,29 +3840,65 @@ app.post('/players/register', async (req, res) => {
         country: country || null,
         favoriteSports: Array.isArray(favoriteSports) ? favoriteSports.join(', ') : favoriteSports || null,
         termsAcceptedAt: new Date(),
+        noticesAcceptedAt: new Date(),
+        emailVerified: false,
+        verifyToken,
       },
     })
 
+    const verifyUrl = `${APP_URL}/api/players/verify/${verifyToken}`
+
     await sendEmail({
       to: email,
-      subject: 'Perfil de jogador criado - ProMaster Arena',
-      text: `Seu perfil de jogador foi criado. Acesse: ${APP_URL}/jogador/${player.id}`,
+      subject: 'Valide seu cadastro de jogador - ProMaster Arena',
+      text: `Seu perfil de jogador foi criado. Valide seu cadastro: ${verifyUrl}`,
       html: `
-        <h2>Perfil de jogador criado</h2>
-        <p>Olá <strong>${escapeHtml(name)}</strong>, seu perfil no ProMaster Arena está pronto.</p>
-        <p><a href="${APP_URL}/jogador/${player.id}">Ver meu painel de jogador</a></p>
+        <h2>Valide seu cadastro de jogador</h2>
+        <p>Olá <strong>${escapeHtml(name)}</strong>, confirme seu cadastro para ativar seu perfil no ProMaster Arena.</p>
+        <p><a href="${verifyUrl}">Validar cadastro</a></p>
       `,
     })
 
     await sendWhatsApp({
       to: phone,
-      text: `ProMaster Arena: seu perfil de jogador foi criado. Acesse histórico, ranking e avisos em ${APP_URL}/jogador/${player.id}`,
+      text: `ProMaster Arena: valide seu cadastro de jogador por este link: ${verifyUrl}`,
     })
 
-    res.json({ ok: true, player })
+    res.json({
+      ok: true,
+      player: { id: player.id, name: player.name, email: player.email },
+      message: 'Cadastro criado. Enviamos o link de validação por e-mail e WhatsApp.',
+    })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Erro ao criar perfil de jogador' })
+  }
+})
+
+app.get('/players/verify/:token', async (req, res) => {
+  try {
+    const { token } = req.params
+
+    const player = await prisma.playerAccount.findFirst({
+      where: { verifyToken: token },
+    })
+
+    if (!player) {
+      return res.status(400).send('Link de validação inválido ou expirado.')
+    }
+
+    await prisma.playerAccount.update({
+      where: { id: player.id },
+      data: {
+        emailVerified: true,
+        verifyToken: null,
+      },
+    })
+
+    res.redirect(`/jogador/${player.id}?verified=1`)
+  } catch (error) {
+    console.error(error)
+    res.status(500).send('Erro ao validar cadastro de jogador')
   }
 })
 
