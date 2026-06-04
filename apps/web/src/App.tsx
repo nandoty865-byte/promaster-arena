@@ -19,7 +19,7 @@ const TOURNAMENT_FORMAT_OPTIONS = [
   { value: 'round_robin', label: 'Todos contra todos' },
   { value: 'swiss', label: 'Modo suíço' },
 ]
-const SPORT_OPTIONS = ['Sinuca', 'Futebol', 'Vôlei de praia', 'Futebol society', 'Tênis de mesa']
+const SPORT_OPTIONS = ['Sinuca', 'Bingo', 'Futebol society', 'Futebol de campo', 'Tênis de mesa', 'Basquete', 'Vôlei']
 
 function youtubeEmbedUrl(url?: string) {
   if (!url) return ''
@@ -317,24 +317,75 @@ function SignupChoice() {
 }
 
 function OrganizerSignup() {
+  const [step, setStep] = useState(1)
   const [form, setForm] = useState<any>({
+    organizerType: '',
     organizationName: '',
-    name: '',
+    organizationZipCode: '',
+    organizationStreet: '',
+    organizationNeighborhood: '',
+    organizationCity: '',
+    organizationState: '',
+    organizationNumber: '',
+    organizationComplement: '',
+    organizationDocument: '',
     email: '',
     phone: '',
-    address: '',
+    responsibleName: '',
+    responsibleLastName: '',
+    responsibleCpf: '',
+    responsibleZipCode: '',
+    responsibleStreet: '',
+    responsibleNeighborhood: '',
+    responsibleCity: '',
+    responsibleState: '',
+    responsibleNumber: '',
+    responsibleComplement: '',
     password: '',
     confirmPassword: '',
-    documentType: 'CNPJ',
-    documentNumber: '',
     termsAccepted: false,
   })
-  const [sports, setSports] = useState<string[]>(['Sinuca'])
-  const [documentFile, setDocumentFile] = useState<File | null>(null)
+  const [sports, setSports] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const isIndividualOrganizer = form.organizerType === 'organizador'
+  const organizerTypes = [
+    { value: 'organizador', title: 'Organizador', text: 'Pessoa física que organiza torneios sem representar uma empresa.' },
+    { value: 'empresa', title: 'Empresa', text: 'Pessoa jurídica com CNPJ e operação própria.' },
+    { value: 'associacao', title: 'Associação', text: 'Associação, liga ou entidade organizadora.' },
+    { value: 'clube', title: 'Clube', text: 'Clube esportivo ou social.' },
+    { value: 'bar', title: 'Bar', text: 'Bar, pub ou local com eventos.' },
+    { value: 'salao', title: 'Salão', text: 'Salão, arena ou espaço de jogos.' },
+  ]
 
   function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function formatCep(value: string) {
+    const digits = onlyDigits(value).slice(0, 8)
+    return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+  }
+
+  async function lookupCep(value: string, target: 'organization' | 'responsible') {
+    const cep = onlyDigits(value)
+    if (cep.length !== 8) return
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      const data = await response.json()
+
+      if (data.erro) return
+
+      setForm((current: any) => ({
+        ...current,
+        [`${target}Street`]: data.logradouro || current[`${target}Street`],
+        [`${target}Neighborhood`]: data.bairro || current[`${target}Neighborhood`],
+        [`${target}City`]: data.localidade || current[`${target}City`],
+        [`${target}State`]: data.uf || current[`${target}State`],
+      }))
+    } catch {
+      // CEP continua editável manualmente se a consulta externa falhar.
+    }
   }
 
   function toggleSport(sport: string) {
@@ -345,14 +396,44 @@ function OrganizerSignup() {
     ))
   }
 
-  async function register() {
-    if (!form.organizationName || !form.email || !form.phone || !form.password) {
-      alert('Preencha organização, e-mail, telefone e senha.')
+  function nextStep() {
+    if (step === 1 && !form.organizerType) {
+      alert('Selecione o tipo de organizador.')
       return
     }
 
-    if (!form.documentNumber) {
-      alert('Informe o documento do organizador.')
+    if (step === 2 && sports.length === 0) {
+      alert('Selecione pelo menos um esporte.')
+      return
+    }
+
+    if (step === 3) {
+      if (!isIndividualOrganizer && (!form.organizationName || !form.organizationZipCode || !form.organizationDocument || !form.email || !form.phone)) {
+        alert('Preencha os dados principais da organização.')
+        return
+      }
+
+      if (!form.responsibleName || !form.responsibleLastName || !form.responsibleCpf || !form.responsibleZipCode) {
+        alert('Preencha os dados do responsável.')
+        return
+      }
+    }
+
+    setStep(current => Math.min(current + 1, 4))
+  }
+
+  function previousStep() {
+    setStep(current => Math.max(current - 1, 1))
+  }
+
+  async function register() {
+    if (!form.email || !form.phone || !form.password) {
+      alert('Preencha e-mail, WhatsApp e senha.')
+      return
+    }
+
+    if (!isIndividualOrganizer && (!form.organizationName || !form.organizationDocument)) {
+      alert('Preencha nome e CNPJ da organização.')
       return
     }
 
@@ -366,10 +447,21 @@ function OrganizerSignup() {
       return
     }
 
+    const organizationNameForPayload = isIndividualOrganizer ? `${form.responsibleName} ${form.responsibleLastName}`.trim() : form.organizationName
+    const responsibleNameForPayload = `${form.responsibleName} ${form.responsibleLastName}`.trim()
+    const addressForPayload = isIndividualOrganizer
+      ? [form.responsibleStreet, form.responsibleNumber, form.responsibleComplement, form.responsibleNeighborhood, form.responsibleCity, form.responsibleState].filter(Boolean).join(', ')
+      : [form.organizationStreet, form.organizationNumber, form.organizationComplement, form.organizationNeighborhood, form.organizationCity, form.organizationState].filter(Boolean).join(', ')
     const payload = new FormData()
-    Object.entries(form).forEach(([key, value]) => payload.append(key, String(value)))
-    payload.append('supportedSports', sports.join(', '))
-    if (documentFile) payload.append('document', documentFile)
+    Object.entries({
+      ...form,
+      organizationName: organizationNameForPayload,
+      name: responsibleNameForPayload,
+      documentType: isIndividualOrganizer ? 'CPF' : 'CNPJ',
+      documentNumber: isIndividualOrganizer ? form.responsibleCpf : form.organizationDocument,
+      address: addressForPayload,
+      supportedSports: sports.join(', '),
+    }).forEach(([key, value]) => payload.append(key, String(value)))
 
     setLoading(true)
 
@@ -396,8 +488,8 @@ function OrganizerSignup() {
     <div className="onboardingPage">
       <section className="onboardingHero">
         <span>Cadastro de organizador</span>
-        <h1>Crie sua arena com validação e controle profissional.</h1>
-        <p>Organizadores podem operar torneios de vários esportes, aceitar inscrições públicas e definir a cobrança individualmente em cada torneio.</p>
+        <h1>Crie sua conta para organizar torneios.</h1>
+        <p>Informe seu perfil, modalidades, dados cadastrais e crie seu acesso ao ProMaster Arena.</p>
         <div className="onboardingSwitch">
           <a className="active" href="/cadastro-organizador">Sou organizador</a>
           <a href="/cadastro-jogador">Sou jogador</a>
@@ -405,83 +497,203 @@ function OrganizerSignup() {
       </section>
 
       <section className="onboardingCard">
-        <h2>Dados da organização</h2>
-        <div className="onboardingGrid">
-          <div>
-            <label>Nome da organização *</label>
-            <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
-          </div>
-          <div>
-            <label>Responsável</label>
-            <input value={form.name} onChange={e => updateField('name', e.target.value)} />
-          </div>
-          <div>
-            <label>E-mail *</label>
-            <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
-          </div>
-          <div>
-            <label>WhatsApp *</label>
-            <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
-          </div>
-          <div className="fullSpan">
-            <label>Endereço</label>
-            <input value={form.address} onChange={e => updateField('address', e.target.value)} />
-          </div>
-        </div>
-
-        <h2>Validação do organizador</h2>
-        <div className="onboardingGrid">
-          <div>
-            <label>Tipo de documento</label>
-            <select value={form.documentType} onChange={e => updateField('documentType', e.target.value)}>
-              <option value="CNPJ">CNPJ</option>
-              <option value="CPF">CPF</option>
-              <option value="RG">RG</option>
-            </select>
-          </div>
-          <div>
-            <label>Número do documento *</label>
-            <input value={form.documentNumber} onChange={e => updateField('documentNumber', e.target.value)} />
-          </div>
-          <div className="fullSpan">
-            <label>Documento para análise</label>
-            <input type="file" accept="image/*,.pdf" onChange={e => setDocumentFile(e.target.files?.[0] || null)} />
-          </div>
-        </div>
-
-        <h2>Operação e cobrança</h2>
-        <div className="sportsPicker">
-          {SPORT_OPTIONS.map(sport => (
-            <label key={sport}>
-              <input type="checkbox" checked={sports.includes(sport)} onChange={() => toggleSport(sport)} />
-              {sport}
-            </label>
+        <div className="onboardingSteps">
+          {[1, 2, 3, 4].map(item => (
+            <span key={item} className={step === item ? 'active' : step > item ? 'done' : ''}>{item}</span>
           ))}
         </div>
 
-        <div className="onboardingGrid">
-          <div>
-            <label>Senha *</label>
-            <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} />
-          </div>
-          <div>
-            <label>Confirmar senha *</label>
-            <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} />
-          </div>
+        {step === 1 && (
+          <>
+            <h2>Você está se cadastrando como?</h2>
+            <div className="organizerTypeGrid">
+              {organizerTypes.map(type => (
+                <button
+                  type="button"
+                  key={type.value}
+                  className={form.organizerType === type.value ? 'active' : ''}
+                  onClick={() => updateField('organizerType', type.value)}
+                >
+                  <strong>{type.title}</strong>
+                  <span>{type.text}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <h2>Qual seu esporte?</h2>
+            <div className="sportsPicker">
+              {SPORT_OPTIONS.map(sport => (
+                <label key={sport}>
+                  <input type="checkbox" checked={sports.includes(sport)} onChange={() => toggleSport(sport)} />
+                  {sport}
+                </label>
+              ))}
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            {!isIndividualOrganizer && (
+              <>
+                <h2>Dados da organização</h2>
+                <div className="onboardingGrid">
+                  <div>
+                    <label>Nome da organização *</label>
+                    <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>CNPJ *</label>
+                    <input value={form.organizationDocument} onChange={e => updateField('organizationDocument', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>CEP *</label>
+                    <input
+                      value={form.organizationZipCode}
+                      onChange={e => updateField('organizationZipCode', formatCep(e.target.value))}
+                      onBlur={e => lookupCep(e.target.value, 'organization')}
+                    />
+                  </div>
+                  <div>
+                    <label>Logradouro</label>
+                    <input value={form.organizationStreet} onChange={e => updateField('organizationStreet', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Bairro</label>
+                    <input value={form.organizationNeighborhood} onChange={e => updateField('organizationNeighborhood', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Cidade</label>
+                    <input value={form.organizationCity} onChange={e => updateField('organizationCity', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Estado</label>
+                    <input value={form.organizationState} onChange={e => updateField('organizationState', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Número *</label>
+                    <input value={form.organizationNumber} onChange={e => updateField('organizationNumber', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Complemento</label>
+                    <input value={form.organizationComplement} onChange={e => updateField('organizationComplement', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>E-mail *</label>
+                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>WhatsApp *</label>
+                    <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <h2>Dados do responsável</h2>
+            <div className="onboardingGrid">
+              <div>
+                <label>Nome *</label>
+                <input value={form.responsibleName} onChange={e => updateField('responsibleName', e.target.value)} />
+              </div>
+              <div>
+                <label>Sobrenome *</label>
+                <input value={form.responsibleLastName} onChange={e => updateField('responsibleLastName', e.target.value)} />
+              </div>
+              <div>
+                <label>CPF *</label>
+                <input value={form.responsibleCpf} onChange={e => updateField('responsibleCpf', e.target.value)} />
+              </div>
+              {isIndividualOrganizer && (
+                <>
+                  <div>
+                    <label>E-mail *</label>
+                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>WhatsApp *</label>
+                    <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+                  </div>
+                </>
+              )}
+              <div>
+                <label>CEP *</label>
+                <input
+                  value={form.responsibleZipCode}
+                  onChange={e => updateField('responsibleZipCode', formatCep(e.target.value))}
+                  onBlur={e => lookupCep(e.target.value, 'responsible')}
+                />
+              </div>
+              <div>
+                <label>Logradouro</label>
+                <input value={form.responsibleStreet} onChange={e => updateField('responsibleStreet', e.target.value)} />
+              </div>
+              <div>
+                <label>Bairro</label>
+                <input value={form.responsibleNeighborhood} onChange={e => updateField('responsibleNeighborhood', e.target.value)} />
+              </div>
+              <div>
+                <label>Cidade</label>
+                <input value={form.responsibleCity} onChange={e => updateField('responsibleCity', e.target.value)} />
+              </div>
+              <div>
+                <label>Estado</label>
+                <input value={form.responsibleState} onChange={e => updateField('responsibleState', e.target.value)} />
+              </div>
+              <div>
+                <label>Número *</label>
+                <input value={form.responsibleNumber} onChange={e => updateField('responsibleNumber', e.target.value)} />
+              </div>
+              <div>
+                <label>Complemento</label>
+                <input value={form.responsibleComplement} onChange={e => updateField('responsibleComplement', e.target.value)} />
+              </div>
+            </div>
+          </>
+        )}
+
+        {step === 4 && (
+          <>
+            <h2>Criação de login</h2>
+            <div className="onboardingGrid">
+              <div>
+                <label>E-mail de acesso</label>
+                <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+              </div>
+              <div>
+                <label>Senha *</label>
+                <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} />
+              </div>
+              <div>
+                <label>Confirmar senha *</label>
+                <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} />
+              </div>
+            </div>
+
+            <label className="termsLine">
+              <input
+                type="checkbox"
+                checked={form.termsAccepted}
+                onChange={e => updateField('termsAccepted', e.target.checked)}
+              />
+              Aceito os termos de uso e a política de comunicação da plataforma.
+            </label>
+          </>
+        )}
+
+        <div className="onboardingActions">
+          {step > 1 && <button type="button" onClick={previousStep}>Voltar</button>}
+          {step < 4 && <button type="button" className="primaryButton" onClick={nextStep}>Próximo</button>}
+          {step === 4 && (
+            <button className="primaryButton" onClick={register} disabled={loading}>
+              {loading ? 'Enviando...' : 'Criar conta do organizador'}
+            </button>
+          )}
         </div>
-
-        <label className="termsLine">
-          <input
-            type="checkbox"
-            checked={form.termsAccepted}
-            onChange={e => updateField('termsAccepted', e.target.checked)}
-          />
-          Aceito os termos de uso, política de comunicação e validação do organizador.
-        </label>
-
-        <button className="primaryButton" onClick={register} disabled={loading}>
-          {loading ? 'Enviando...' : 'Criar conta de organizador'}
-        </button>
         <a href="/login">Já tenho conta</a>
       </section>
     </div>
