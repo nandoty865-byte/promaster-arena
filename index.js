@@ -2099,11 +2099,23 @@ app.get('/tournaments/:id/bingo', async (req, res) => {
       }),
     ])
 
+    const currentRoundNumber = Number(tournament.bingoCurrentRound || 1)
+    const currentRoundName = `Rodada ${currentRoundNumber}`
+    const currentDraws = draws.filter(draw => (draw.roundName || 'Rodada 1') === currentRoundName)
+
     res.json({
       tournament,
       cards,
       draws,
-      drawnNumbers: draws.map(draw => draw.number),
+      currentRound: {
+        number: currentRoundNumber,
+        name: currentRoundName,
+        prize: tournament.bingoRoundPrize || currentDraws[currentDraws.length - 1]?.prize || null,
+        status: tournament.bingoRoundStatus || 'open',
+      },
+      currentDraws,
+      drawnNumbers: currentDraws.map(draw => draw.number),
+      allDrawnNumbers: draws.map(draw => draw.number),
       winners,
     })
   } catch (error) {
@@ -2122,10 +2134,22 @@ app.post('/tournaments/:id/bingo/draw', auth, requireRole('admin', 'operator'), 
     }
 
     const maxNumber = tournament.bingoMaxNumber || 75
+    if ((tournament.bingoRoundStatus || 'open') === 'closed') {
+      return res.status(400).json({ error: 'A rodada atual está encerrada. Abra uma nova rodada para continuar.' })
+    }
+
+    const currentRoundNumber = Number(tournament.bingoCurrentRound || 1)
+    const currentRoundName = req.body.roundName || `Rodada ${currentRoundNumber}`
+    const currentRoundPrize = req.body.prize || tournament.bingoRoundPrize || null
     const source = tournament.bingoDrawMode === 'physical' && req.body.source === 'physical'
       ? 'physical'
       : 'virtual'
-    const existingDraws = await prisma.bingoDraw.findMany({ where: { tournamentId } })
+    const existingDraws = await prisma.bingoDraw.findMany({
+      where: {
+        tournamentId,
+        roundName: currentRoundName,
+      },
+    })
     const drawnSet = new Set(existingDraws.map(draw => draw.number))
 
     let number = req.body.number ? Number(req.body.number) : null
@@ -2154,8 +2178,8 @@ app.post('/tournaments/:id/bingo/draw', auth, requireRole('admin', 'operator'), 
         tournamentId,
         number,
         source,
-        roundName: req.body.roundName || 'Rodada principal',
-        prize: req.body.prize || null,
+        roundName: currentRoundName,
+        prize: currentRoundPrize,
       },
     })
 
@@ -2163,6 +2187,93 @@ app.post('/tournaments/:id/bingo/draw', auth, requireRole('admin', 'operator'), 
   } catch (error) {
     console.error(error)
     res.status(error.status || 500).json({ error: error.message || 'Erro ao sortear número' })
+  }
+})
+
+app.post('/tournaments/:id/bingo/rounds', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const tournamentId = Number(req.params.id)
+    const tournament = await requireOwnedTournament(tournamentId, req.user.organizationId)
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    const roundNumber = Math.max(1, Number(req.body.roundNumber || Number(tournament.bingoCurrentRound || 1) + 1))
+    const updated = await prisma.tournament.update({
+      where: { id: tournamentId },
+      data: {
+        bingoCurrentRound: roundNumber,
+        bingoRoundPrize: req.body.prize || null,
+        bingoRoundStatus: 'open',
+      },
+    })
+
+    res.json({
+      ok: true,
+      currentRound: {
+        number: updated.bingoCurrentRound,
+        name: `Rodada ${updated.bingoCurrentRound}`,
+        prize: updated.bingoRoundPrize,
+        status: updated.bingoRoundStatus,
+      },
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(error.status || 500).json({ error: error.message || 'Erro ao abrir nova rodada' })
+  }
+})
+
+app.post('/tournaments/:id/bingo/rounds/close', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const tournamentId = Number(req.params.id)
+    const tournament = await requireOwnedTournament(tournamentId, req.user.organizationId)
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    const updated = await prisma.tournament.update({
+      where: { id: tournamentId },
+      data: { bingoRoundStatus: 'closed' },
+    })
+
+    res.json({
+      ok: true,
+      currentRound: {
+        number: updated.bingoCurrentRound,
+        name: `Rodada ${updated.bingoCurrentRound || 1}`,
+        prize: updated.bingoRoundPrize,
+        status: updated.bingoRoundStatus,
+      },
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(error.status || 500).json({ error: error.message || 'Erro ao encerrar rodada' })
+  }
+})
+
+app.post('/tournaments/:id/bingo/claim', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const tournamentId = Number(req.params.id)
+    const tournament = await requireOwnedTournament(tournamentId, req.user.organizationId)
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    const updated = await prisma.tournament.update({
+      where: { id: tournamentId },
+      data: {
+        bingoLastClaimAt: new Date(),
+        bingoLastClaimName: String(req.body.winnerName || req.body.name || 'BINGO').trim() || 'BINGO',
+      },
+    })
+
+    res.json({ ok: true, tournament: updated })
+  } catch (error) {
+    console.error(error)
+    res.status(error.status || 500).json({ error: error.message || 'Erro ao registrar BINGO' })
   }
 })
 
@@ -2277,6 +2388,41 @@ app.post('/public/:slug/bingo/cards', async (req, res) => {
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Erro ao reservar cartela' })
+  }
+})
+
+app.post('/public/:slug/bingo/claim', async (req, res) => {
+  try {
+    const { slug } = req.params
+    const tournament = await prisma.tournament.findUnique({
+      where: { publicSlug: slug },
+      include: { sport: true },
+    })
+
+    if (!tournament) {
+      return res.status(404).json({ error: 'Evento não encontrado' })
+    }
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    if (!['virtual', 'mixed'].includes(tournament.bingoCardMode || 'physical')) {
+      return res.status(400).json({ error: 'Este Bingo não aceita BINGO virtual' })
+    }
+
+    const updated = await prisma.tournament.update({
+      where: { id: tournament.id },
+      data: {
+        bingoLastClaimAt: new Date(),
+        bingoLastClaimName: String(req.body.name || 'Participante online').trim() || 'Participante online',
+      },
+    })
+
+    res.json({ ok: true, tournament: updated })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao registrar BINGO virtual' })
   }
 })
 
