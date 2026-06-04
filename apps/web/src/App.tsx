@@ -4475,9 +4475,6 @@ function CreateTournament({ user }: any) {
     const templateSport = templateSports.find((sport: any) => sport.slug === baseSport.slug)
     return templateSport || baseSport
   })
-  const filteredTemplates = templates.filter(template => (
-    template.sport?.slug ? template.sport.slug === sportSlug : true
-  ))
   const selectedTemplate = templates.find(template => Number(template.id) === Number(templateId))
   const isBingo = tournamentFormat === 'bingo' || selectedTemplate?.format === 'bingo' || selectedTemplate?.sport?.slug === 'bingo'
   const selectedSport = sports.find((sport: any) => sport.slug === sportSlug)
@@ -4724,7 +4721,7 @@ function CreateTournament({ user }: any) {
               </button>
             </div>
 
-            <label>Modelo</label>
+            <label>{isBingo ? 'Modelo' : 'Formato do torneio'}</label>
             {isBingo ? (
               <>
                 <select
@@ -4742,25 +4739,19 @@ function CreateTournament({ user }: any) {
                 </div>
               </>
             ) : (
-              <select
-                value={templateId}
-                onChange={e => {
-                  const nextTemplateId = Number(e.target.value)
-                  const nextTemplate = templates.find(template => Number(template.id) === nextTemplateId)
-                  setTemplateId(nextTemplateId)
-                  if (nextTemplate) {
-                    setSportSlug(nextTemplate.sport?.slug || sportSlug)
-                    setTournamentFormat(nextTemplate.format || (nextTemplate.sport?.slug === 'bingo' ? 'bingo' : 'knockout'))
-                    if (nextTemplate.playerCount) setPlayerCount(Number(nextTemplate.playerCount))
-                  }
-                }}
-              >
-                {filteredTemplates.map(t => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+              <>
+                <select value={tournamentFormat} onChange={e => setTournamentFormat(e.target.value)}>
+                  {TOURNAMENT_FORMAT_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <p className="helperText">
+                  O chaveamento será gerado conforme o formato escolhido e a quantidade de inscritos.
+                </p>
+              </>
             )}
 
             {!isBingo && (
@@ -4772,15 +4763,6 @@ function CreateTournament({ user }: any) {
                   value={playerCount}
                   onChange={e => setPlayerCount(Math.max(2, Number(e.target.value) || 2))}
                 />
-
-                <label>Formato do torneio</label>
-                <select value={tournamentFormat} onChange={e => setTournamentFormat(e.target.value)}>
-                  {TOURNAMENT_FORMAT_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
               </>
             )}
             {tournamentFormat === 'round_robin' && (
