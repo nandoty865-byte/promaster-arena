@@ -280,6 +280,7 @@ responsibleComplement String?
 responsibleNeighborhood String?
 responsibleCity String?
 responsibleState String?
+responsibleCountry String?
 kycStatus String @default("pending")
 kycDocumentUrl String?
 termsAcceptedAt DateTime?
