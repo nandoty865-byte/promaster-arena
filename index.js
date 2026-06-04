@@ -3794,10 +3794,18 @@ app.post('/players/register', async (req, res) => {
   try {
     const {
       name,
+      firstName,
+      lastName,
       nickname,
       email,
       phone,
       rg,
+      cpf,
+      zipCode,
+      street,
+      addressNumber,
+      complement,
+      neighborhood,
       city,
       state,
       country,
@@ -3807,8 +3815,16 @@ app.post('/players/register', async (req, res) => {
       noticesAccepted,
     } = req.body
 
-    if (!name || !email || !phone || !password) {
+    const fullName = String(name || `${firstName || ''} ${lastName || ''}`).trim()
+
+    if (!fullName || !email || !phone || !password) {
       return res.status(400).json({ error: 'Nome, e-mail, WhatsApp e senha são obrigatórios' })
+    }
+
+    if (String(country || '').toLowerCase() === 'brasil') {
+      if (!cpf || !zipCode || !street || !addressNumber || !neighborhood || !city || !state) {
+        return res.status(400).json({ error: 'CPF, CEP, endereço, número, bairro, cidade e estado são obrigatórios para jogadores do Brasil' })
+      }
     }
 
     if (!termsAccepted) {
@@ -3829,12 +3845,20 @@ app.post('/players/register', async (req, res) => {
     const verifyToken = randomUUID()
     const player = await prisma.playerAccount.create({
       data: {
-        name,
+        name: fullName,
+        firstName: firstName || null,
+        lastName: lastName || null,
         nickname: nickname || null,
         email,
         password: hashedPassword,
         phone: phone || null,
         rg: rg || null,
+        cpf: cpf || null,
+        zipCode: zipCode || null,
+        street: street || null,
+        addressNumber: addressNumber || null,
+        complement: complement || null,
+        neighborhood: neighborhood || null,
         city: city || null,
         state: state || null,
         country: country || null,
@@ -3854,7 +3878,7 @@ app.post('/players/register', async (req, res) => {
       text: `Seu perfil de jogador foi criado. Valide seu cadastro: ${verifyUrl}`,
       html: `
         <h2>Valide seu cadastro de jogador</h2>
-        <p>Olá <strong>${escapeHtml(name)}</strong>, confirme seu cadastro para ativar seu perfil no ProMaster Arena.</p>
+        <p>Olá <strong>${escapeHtml(fullName)}</strong>, confirme seu cadastro para ativar seu perfil no ProMaster Arena.</p>
         <p><a href="${verifyUrl}">Validar cadastro</a></p>
       `,
     })

@@ -20,6 +20,95 @@ const TOURNAMENT_FORMAT_OPTIONS = [
   { value: 'swiss', label: 'Modo suíço' },
 ]
 const SPORT_OPTIONS = ['Sinuca', 'Bingo', 'Futebol society', 'Futebol de campo', 'Tênis de mesa', 'Basquete', 'Vôlei']
+const COUNTRY_OPTIONS = [
+  'Brasil',
+  'Afeganistão',
+  'África do Sul',
+  'Albânia',
+  'Alemanha',
+  'Andorra',
+  'Angola',
+  'Arábia Saudita',
+  'Argélia',
+  'Argentina',
+  'Armênia',
+  'Austrália',
+  'Áustria',
+  'Bahamas',
+  'Bangladesh',
+  'Bélgica',
+  'Bolívia',
+  'Bósnia e Herzegovina',
+  'Bulgária',
+  'Cabo Verde',
+  'Camarões',
+  'Canadá',
+  'China',
+  'Chile',
+  'Colômbia',
+  'Coreia do Sul',
+  'Costa Rica',
+  'Croácia',
+  'Cuba',
+  'Dinamarca',
+  'Egito',
+  'El Salvador',
+  'Emirados Árabes Unidos',
+  'Equador',
+  'Espanha',
+  'Estados Unidos',
+  'Estônia',
+  'Etiópia',
+  'Filipinas',
+  'Finlândia',
+  'França',
+  'Gana',
+  'Grécia',
+  'Guatemala',
+  'Guiné-Bissau',
+  'Haiti',
+  'Holanda',
+  'Honduras',
+  'Hungria',
+  'Índia',
+  'Indonésia',
+  'Irlanda',
+  'Islândia',
+  'Israel',
+  'Itália',
+  'Japão',
+  'Letônia',
+  'Líbano',
+  'Lituânia',
+  'Luxemburgo',
+  'Marrocos',
+  'México',
+  'Moçambique',
+  'Nicarágua',
+  'Nigéria',
+  'Noruega',
+  'Nova Zelândia',
+  'Panamá',
+  'Paraguai',
+  'Peru',
+  'Polônia',
+  'Portugal',
+  'Reino Unido',
+  'República Dominicana',
+  'Romênia',
+  'Rússia',
+  'Senegal',
+  'Sérvia',
+  'Suécia',
+  'Suíça',
+  'Tailândia',
+  'Timor-Leste',
+  'Turquia',
+  'Ucrânia',
+  'Uruguai',
+  'Venezuela',
+  'Outro',
+]
 
 function youtubeEmbedUrl(url?: string) {
   if (!url) return ''
@@ -148,6 +237,23 @@ function formatRg(value: string) {
 function isValidRg(value: string) {
   const clean = String(value || '').replace(/[^0-9A-Za-z]/g, '')
   return clean.length >= 5 && clean.length <= 12
+}
+
+function formatCpf(value: string) {
+  const digits = onlyDigits(value).slice(0, 11)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+}
+
+function formatCep(value: string) {
+  const digits = onlyDigits(value).slice(0, 8)
+  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+}
+
+function isBrazilCountry(country: string) {
+  return String(country || '').toLowerCase() === 'brasil'
 }
 
 function buildTournamentPhases(playerCount: number) {
@@ -704,14 +810,20 @@ function PlayerSignup() {
   const [step, setStep] = useState(1)
   const [createdPlayer, setCreatedPlayer] = useState<any>(null)
   const [form, setForm] = useState<any>({
-    name: '',
+    firstName: '',
+    lastName: '',
     nickname: '',
     email: '',
     phone: '',
-    rg: '',
+    country: 'Brasil',
+    cpf: '',
+    zipCode: '',
+    street: '',
+    addressNumber: '',
+    complement: '',
+    neighborhood: '',
     city: '',
     state: '',
-    country: 'Brasil',
     password: '',
     confirmPassword: '',
     termsAccepted: false,
@@ -722,6 +834,28 @@ function PlayerSignup() {
 
   function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  async function lookupPlayerCep(value: string) {
+    const cep = onlyDigits(value)
+    if (!isBrazilCountry(form.country) || cep.length !== 8) return
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      const data = await response.json()
+
+      if (data.erro) return
+
+      setForm((current: any) => ({
+        ...current,
+        street: data.logradouro || current.street,
+        neighborhood: data.bairro || current.neighborhood,
+        city: data.localidade || current.city,
+        state: data.uf || current.state,
+      }))
+    } catch {
+      // Endereço continua editável manualmente se a consulta externa falhar.
+    }
   }
 
   function toggleSport(sport: string) {
@@ -738,8 +872,20 @@ function PlayerSignup() {
       return
     }
 
-    if (step === 2 && (!form.name || !form.email || !form.phone)) {
-      alert('Preencha nome, e-mail e WhatsApp.')
+    if (step === 2 && (!form.firstName || !form.lastName || !form.email || !form.phone || !form.country)) {
+      alert('Preencha nome, sobrenome, e-mail, WhatsApp e país.')
+      return
+    }
+
+    if (step === 2 && isBrazilCountry(form.country)) {
+      if (!form.cpf || !form.zipCode || !form.street || !form.addressNumber || !form.neighborhood || !form.city || !form.state) {
+        alert('Preencha CPF, CEP, endereço, número, bairro, cidade e estado.')
+        return
+      }
+    }
+
+    if (step === 2 && !isBrazilCountry(form.country) && !form.addressNumber && (form.street || form.city || form.state)) {
+      alert('Preencha o número do endereço.')
       return
     }
 
@@ -772,11 +918,13 @@ function PlayerSignup() {
     }
 
     setLoading(true)
+    const fullName = `${form.firstName} ${form.lastName}`.trim()
     fetch(`${API}/players/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...form,
+        name: fullName,
         favoriteSports: sports,
         phone: normalizeBrazilPhone(form.phone),
       }),
@@ -849,8 +997,12 @@ function PlayerSignup() {
             <h2>Dados do jogador</h2>
             <div className="onboardingGrid">
               <div>
-                <label>Nome completo *</label>
-                <input value={form.name} onChange={e => updateField('name', e.target.value)} />
+                <label>Nome *</label>
+                <input value={form.firstName} onChange={e => updateField('firstName', e.target.value)} />
+              </div>
+              <div>
+                <label>Sobrenome *</label>
+                <input value={form.lastName} onChange={e => updateField('lastName', e.target.value)} />
               </div>
               <div>
                 <label>Apelido</label>
@@ -865,20 +1017,48 @@ function PlayerSignup() {
                 <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
               </div>
               <div>
-                <label>RG</label>
-                <input value={form.rg} onChange={e => updateField('rg', formatRg(e.target.value))} />
+                <label>País *</label>
+                <select value={form.country} onChange={e => updateField('country', e.target.value)}>
+                  {COUNTRY_OPTIONS.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label>Cidade</label>
+                <label>CPF{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input value={form.cpf} onChange={e => updateField('cpf', formatCpf(e.target.value))} />
+              </div>
+              <div>
+                <label>CEP{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input
+                  value={form.zipCode}
+                  onChange={e => updateField('zipCode', formatCep(e.target.value))}
+                  onBlur={e => lookupPlayerCep(e.target.value)}
+                />
+              </div>
+              <div>
+                <label>Endereço{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input value={form.street} onChange={e => updateField('street', e.target.value)} />
+              </div>
+              <div>
+                <label>Número{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input value={form.addressNumber} onChange={e => updateField('addressNumber', e.target.value)} />
+              </div>
+              <div>
+                <label>Complemento</label>
+                <input value={form.complement} onChange={e => updateField('complement', e.target.value)} />
+              </div>
+              <div>
+                <label>Bairro{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input value={form.neighborhood} onChange={e => updateField('neighborhood', e.target.value)} />
+              </div>
+              <div>
+                <label>Cidade{isBrazilCountry(form.country) ? ' *' : ''}</label>
                 <input value={form.city} onChange={e => updateField('city', e.target.value)} />
               </div>
               <div>
-                <label>Estado</label>
+                <label>Estado{isBrazilCountry(form.country) ? ' *' : ''}</label>
                 <input value={form.state} onChange={e => updateField('state', e.target.value)} />
-              </div>
-              <div>
-                <label>País</label>
-                <input value={form.country} onChange={e => updateField('country', e.target.value)} />
               </div>
             </div>
           </>
