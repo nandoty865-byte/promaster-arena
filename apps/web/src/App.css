@@ -3571,6 +3571,52 @@ button:hover {
   min-height: 260px;
 }
 
+.bingoDashboardGrid div strong {
+  overflow-wrap: anywhere;
+}
+
+.bingoRoundControls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.bingoRoundControls label {
+  display: block;
+  margin-bottom: 6px;
+  color: #93c5fd;
+  font-weight: 900;
+}
+
+.bingoRoundSummary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.bingoRoundSummary div {
+  padding: 12px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #020617;
+}
+
+.bingoRoundSummary span {
+  display: block;
+  color: #94a3b8;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.bingoRoundSummary strong {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
 .bingoCurrentNumber {
   display: grid;
   place-items: center;
@@ -4406,6 +4452,37 @@ button:hover {
   color: #cbd5e1;
   font-size: 26px;
   font-weight: 800;
+}
+
+.bingoTvRoundMeta {
+  width: min(100%, 980px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.bingoTvRoundMeta div {
+  padding: 16px;
+  border: 1px solid rgba(96, 165, 250, .35);
+  border-radius: 18px;
+  background: rgba(2, 6, 23, .72);
+}
+
+.bingoTvRoundMeta span {
+  display: block;
+  color: #93c5fd;
+  font-size: 18px;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.bingoTvRoundMeta strong {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(24px, 3vw, 44px);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 .bingoTvGrid {

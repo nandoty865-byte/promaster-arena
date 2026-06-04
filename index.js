@@ -2155,6 +2155,7 @@ app.post('/tournaments/:id/bingo/draw', auth, requireRole('admin', 'operator'), 
         number,
         source,
         roundName: req.body.roundName || 'Rodada principal',
+        prize: req.body.prize || null,
       },
     })
 

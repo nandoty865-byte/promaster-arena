@@ -1,0 +1,1 @@
+ALTER TABLE "BingoDraw" ADD COLUMN "prize" TEXT;
