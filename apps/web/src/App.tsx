@@ -1596,6 +1596,10 @@ function Dashboard({ user }: any) {
                         <td><span className={`statusBadge ${t.status}`}>{t.status}</span></td>
                         <td>
                           <div className="tableActions">
+                            <button onClick={() => navigate(`/tournament/${t.id}`)}>Painel</button>
+                            <button onClick={() => navigate(`/tournament/${t.id}/inscritos`)}>Inscritos</button>
+                            <button onClick={() => navigate(`/tournament/${t.id}/settings`)}>Editar</button>
+                            <button onClick={() => window.open(`/telao/${t.id}`, '_blank')}>Telão</button>
                             <button onClick={() => setDetailsTournament(t)}>Detalhes</button>
                             {t.publicSlug && (
                               <>
