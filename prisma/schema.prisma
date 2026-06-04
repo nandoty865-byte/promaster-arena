@@ -108,11 +108,19 @@ model Player {
 model PlayerAccount {
   id              Int      @id @default(autoincrement())
   name            String
+  firstName       String?
+  lastName        String?
   nickname        String?
   email           String   @unique
   password        String?
   phone           String?
   rg              String?
+  cpf             String?
+  zipCode         String?
+  street          String?
+  addressNumber   String?
+  complement      String?
+  neighborhood    String?
   city            String?
   state           String?
   country         String?
