@@ -63,6 +63,12 @@ function publicTournamentUrl(slug?: string) {
   return `${window.location.origin}/public/${slug}`
 }
 
+function appUrlWithFreshVersion(path: string) {
+  const url = new URL(path, window.location.origin)
+  url.searchParams.set('v', Date.now().toString())
+  return `${url.pathname}${url.search}${url.hash}`
+}
+
 function isPublicPath(path: string) {
   return (
     path === '/' ||
@@ -695,11 +701,11 @@ function Login() {
   const redirect = new URLSearchParams(window.location.search).get('redirect')
 
   if (data.user?.role === 'superadmin') {
-    window.location.href = '/admin'
+    window.location.href = appUrlWithFreshVersion('/admin')
   } else if (redirect && redirect !== '/login') {
-    window.location.href = redirect
+    window.location.href = appUrlWithFreshVersion(redirect)
   } else {
-    window.location.href = '/app'
+    window.location.href = appUrlWithFreshVersion('/app')
   }
 })
   }
