@@ -706,6 +706,11 @@ function PlayerDashboard() {
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const redirectParam = new URLSearchParams(window.location.search).get('redirect')
+  const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//') && redirectParam !== '/login'
+    ? redirectParam
+    : ''
+  const signupHref = `/inscreva-se${safeRedirect ? `?redirect=${encodeURIComponent(safeRedirect)}` : ''}`
 
   function login() {
     fetch(`${API}/auth/login`, {
@@ -721,12 +726,11 @@ function Login() {
   }
 
   localStorage.setItem('token', data.token)
-  const redirect = new URLSearchParams(window.location.search).get('redirect')
 
   if (data.user?.role === 'superadmin') {
     window.location.href = appUrlWithFreshVersion('/admin')
-  } else if (redirect && redirect !== '/login') {
-    window.location.href = appUrlWithFreshVersion(redirect)
+  } else if (safeRedirect) {
+    window.location.href = appUrlWithFreshVersion(safeRedirect)
   } else {
     window.location.href = appUrlWithFreshVersion('/app')
   }
@@ -739,7 +743,7 @@ function Login() {
         <h1>Login</h1>
         <p>ProMaster Arena</p>
 
-        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" />
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Usuário ou e-mail" />
         <input
           value={password}
           onChange={e => setPassword(e.target.value)}
@@ -750,7 +754,7 @@ function Login() {
         <button className="primaryButton" onClick={login}>Entrar</button>
         <div className="loginLinks">
           <a href="/forgot-password">Esqueci minha senha</a>
-          <a href="/cadastro-organizador">Criar nova conta</a>
+          <a href={signupHref}>Não sou cadastrado</a>
         </div>
       </div>
     </div>
@@ -3862,18 +3866,6 @@ function PublicTournament() {
   const { slug } = useParams()
   const [data, setData] = useState<any>(null)
   const [error, setError] = useState('')
-  const [registrationForm, setRegistrationForm] = useState<any>({
-    name: '',
-    rg: '',
-    email: '',
-    phone: '',
-    representsOrganization: false,
-    representedOrganizationName: '',
-    representedOrganizationType: '',
-    representedOrganizationDocument: '',
-  })
-  const [registrationLoading, setRegistrationLoading] = useState(false)
-  const [registrationPayment, setRegistrationPayment] = useState<any>(null)
   const [bingoBuyer, setBingoBuyer] = useState({ name: '', email: '', whatsapp: '', quantity: 1 })
   const [bingoMessage, setBingoMessage] = useState('')
 
@@ -3900,23 +3892,6 @@ function PublicTournament() {
     const interval = setInterval(loadPublicTournament, 15000)
     return () => clearInterval(interval)
   }, [slug])
-
-  useEffect(() => {
-    if (!registrationPayment?.registrationId || !registrationPayment?.paymentId) return
-
-    const interval = setInterval(() => {
-      fetch(`${API}/public/registrations/${registrationPayment.registrationId}/payment-status`, { cache: 'no-store' })
-        .then(res => res.json())
-        .then(result => {
-          if (result.paymentStatus === 'paid') {
-            setRegistrationPayment((current: any) => ({ ...current, status: 'approved', paymentStatus: 'paid' }))
-            loadPublicTournament()
-          }
-        })
-    }, 8000)
-
-    return () => clearInterval(interval)
-  }, [registrationPayment?.registrationId, registrationPayment?.paymentId])
 
   if (error) {
     return (
@@ -3956,64 +3931,9 @@ function PublicTournament() {
     : []
   const confirmedRegistrations = registrations.filter((registration: any) => registration.status === 'confirmed')
   const waitingRegistrations = registrations.filter((registration: any) => registration.status === 'waiting')
-
-  function updateRegistrationField(field: string, value: string | boolean) {
-    setRegistrationForm((current: any) => ({ ...current, [field]: value }))
-  }
-
-  function registerPlayer() {
-    if (!registrationForm.name || !registrationForm.rg || !registrationForm.email || !registrationForm.phone) {
-      alert('Preencha nome, RG, e-mail e WhatsApp.')
-      return
-    }
-
-    if (!isValidRg(registrationForm.rg)) {
-      alert('Informe um RG válido. Use apenas números/letras, com 5 a 12 caracteres.')
-      return
-    }
-
-    if (!isValidBrazilCellphone(registrationForm.phone)) {
-      alert('Informe um celular válido com DDD. Exemplo: (11) 99009-8000.')
-      return
-    }
-
-    setRegistrationLoading(true)
-    fetch(`${API}/public/${slug}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...registrationForm,
-        rg: formatRg(registrationForm.rg),
-        phone: normalizeBrazilPhone(registrationForm.phone),
-      }),
-    })
-      .then(res => res.json())
-      .then(result => {
-        if (result.error) {
-          alert(result.error)
-          return
-        }
-
-        setRegistrationForm({
-          name: '',
-          rg: '',
-          email: '',
-          phone: '',
-          representsOrganization: false,
-          representedOrganizationName: '',
-          representedOrganizationType: '',
-          representedOrganizationDocument: '',
-        })
-        setRegistrationPayment(result.payment ? {
-          ...result.payment,
-          registrationId: result.registration?.id,
-          paymentStatus: result.registration?.paymentStatus,
-        } : null)
-        loadPublicTournament()
-        alert(result.payment ? 'Inscrição recebida. Gere o pagamento Pix e confirme sua participação pelo link enviado.' : 'Inscrição recebida. Enviamos um link por e-mail e WhatsApp para confirmar sua participação.')
-      })
-      .finally(() => setRegistrationLoading(false))
-  }
+  const publicSignupPath = `/public/${slug}`
+  const publicSignupLoginUrl = `/login?redirect=${encodeURIComponent(publicSignupPath)}`
+  const publicSignupRegisterUrl = `/inscreva-se?redirect=${encodeURIComponent(publicSignupPath)}`
 
   function reserveBingoCard() {
     setBingoMessage('')
@@ -4208,115 +4128,24 @@ function PublicTournament() {
 
         {!isBingo && (
           <section className="publicRegistrationGrid">
-            <div className="publicCard publicRegistrationForm">
+            <div className="publicCard publicSignupCard">
               <span className="publicCardLabel">Inscrição</span>
               {!tournament.registrationOpen ? (
                 <div className="publicClosedBox">
                   <strong>Inscrições encerradas</strong>
                 </div>
               ) : (
-                <>
-                  <h2>Inscrever-se no torneio</h2>
-                  <p>Preencha seus dados para participar.</p>
-                  <input
-                    value={registrationForm.name}
-                    onChange={e => updateRegistrationField('name', e.target.value)}
-                    placeholder="Nome completo"
-                    disabled={registrationLoading}
-                  />
-                  <input
-                    value={registrationForm.rg}
-                    onChange={e => updateRegistrationField('rg', formatRg(e.target.value))}
-                    placeholder="RG"
-                    disabled={registrationLoading}
-                  />
-                  <input
-                    type="email"
-                    value={registrationForm.email}
-                    onChange={e => updateRegistrationField('email', e.target.value)}
-                    placeholder="E-mail"
-                    disabled={registrationLoading}
-                  />
-                  <input
-                    value={registrationForm.phone}
-                    onChange={e => updateRegistrationField('phone', formatBrazilCellphone(e.target.value))}
-                    placeholder="WhatsApp com DDD. Ex: (11) 99009-8000"
-                    inputMode="numeric"
-                    disabled={registrationLoading}
-                  />
-
-                  <label className="publicCheckboxLine">
-                    <input
-                      type="checkbox"
-                      checked={registrationForm.representsOrganization}
-                      onChange={e => updateRegistrationField('representsOrganization', e.target.checked)}
-                      disabled={registrationLoading}
-                    />
-                    Represento clube, salão, arena ou organização
-                  </label>
-
-                  {registrationForm.representsOrganization && (
-                    <div className="publicOrgFields">
-                      <input
-                        value={registrationForm.representedOrganizationName}
-                        onChange={e => updateRegistrationField('representedOrganizationName', e.target.value)}
-                        placeholder="Nome da organização representada"
-                        disabled={registrationLoading}
-                      />
-                      <select
-                        value={registrationForm.representedOrganizationType}
-                        onChange={e => updateRegistrationField('representedOrganizationType', e.target.value)}
-                        disabled={registrationLoading}
-                      >
-                        <option value="">Tipo</option>
-                        <option value="clube">Clube</option>
-                        <option value="salao">Salão</option>
-                        <option value="arena">Arena</option>
-                        <option value="associacao">Associação</option>
-                        <option value="outro">Outro</option>
-                      </select>
-                      <input
-                        value={registrationForm.representedOrganizationDocument}
-                        onChange={e => updateRegistrationField('representedOrganizationDocument', e.target.value)}
-                        placeholder="Documento da organização, se houver"
-                        disabled={registrationLoading}
-                      />
-                    </div>
-                  )}
-
-                  <button onClick={registerPlayer} disabled={registrationLoading}>
-                    {registrationLoading ? 'Enviando...' : 'Confirmar inscrição'}
-                  </button>
-
-                  {tournament.paymentCollectionMode !== 'manual' && Number(tournament.registrationFee || 0) > 0 && (
-                    <p className="publicPaymentHint">
-                      Pagamento automático via Pix: R$ {Number(tournament.registrationFee).toFixed(2).replace('.', ',')}
-                    </p>
-                  )}
-
-                  {registrationPayment && (
-                    <div className="publicPaymentBox">
-                      <strong>Pagamento da inscrição</strong>
-                      <span>Status: {registrationPayment.paymentStatus === 'paid' || registrationPayment.status === 'approved' ? 'pago' : 'aguardando Pix'}</span>
-                      {registrationPayment.qrCodeBase64 && (
-                        <img
-                          src={`data:image/png;base64,${registrationPayment.qrCodeBase64}`}
-                          alt="QR Code Pix da inscrição"
-                        />
-                      )}
-                      {registrationPayment.qrCode && (
-                        <button type="button" onClick={() => navigator.clipboard.writeText(registrationPayment.qrCode)}>
-                          Copiar código Pix
-                        </button>
-                      )}
-                      {registrationPayment.ticketUrl && (
-                        <button type="button" onClick={() => window.open(registrationPayment.ticketUrl, '_blank')}>
-                          Abrir pagamento
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </>
+                <div className="publicSignupCta">
+                  <span className="publicSignupBurst">Vagas abertas</span>
+                  <h2>Participe deste torneio</h2>
+                  <p>Entre na sua conta para iniciar a inscrição.</p>
+                  <a className="publicSignupButton" href={publicSignupLoginUrl}>
+                    Inscreva-se
+                  </a>
+                  <a className="publicSignupSecondary" href={publicSignupRegisterUrl}>
+                    Não sou cadastrado
+                  </a>
+                </div>
               )}
             </div>
 
