@@ -6030,10 +6030,85 @@ button:hover {
   margin-top: 0;
 }
 
+.onboardingSteps {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.onboardingSteps span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #020617;
+  border: 1px solid #334155;
+  color: #93c5fd;
+  font-weight: 950;
+}
+
+.onboardingSteps span.active,
+.onboardingSteps span.done {
+  background: #2563eb;
+  color: #fff;
+  border-color: #60a5fa;
+}
+
+.organizerTypeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.organizerTypeGrid button {
+  display: grid;
+  gap: 8px;
+  min-height: 132px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #334155;
+  background: #020617;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.organizerTypeGrid button.active,
+.organizerTypeGrid button:hover {
+  border-color: #60a5fa;
+  background: rgba(37, 99, 235, .18);
+}
+
+.organizerTypeGrid strong {
+  font-size: 20px;
+}
+
+.organizerTypeGrid span {
+  color: #bfdbfe;
+}
+
 .onboardingGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+}
+
+.onboardingGrid label {
+  display: block;
+  margin-bottom: 6px;
+  color: #bfdbfe;
+  font-weight: 900;
+}
+
+.onboardingGrid input,
+.onboardingGrid select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background: #020617;
+  color: #fff;
 }
 
 .onboardingGrid .fullSpan {
@@ -6061,6 +6136,18 @@ button:hover {
 
 .termsLine {
   margin: 18px 0;
+}
+
+.onboardingActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.onboardingActions button {
+  width: auto;
+  min-width: 150px;
 }
 
 .playerStatsGrid {
@@ -6177,6 +6264,7 @@ button:hover {
   .seasonRankingHead,
   .seasonRankingRow,
   .onboardingGrid,
+  .organizerTypeGrid,
   .sportsPicker,
   .playerStatsGrid,
   .playerPortalGrid {
@@ -6194,6 +6282,14 @@ button:hover {
   .refereePrimaryActions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .onboardingActions {
+    flex-direction: column;
+  }
+
+  .onboardingActions button {
+    width: 100%;
   }
 
   .refereeDashboardGrid,

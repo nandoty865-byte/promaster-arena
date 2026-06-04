@@ -3668,20 +3668,31 @@ app.post('/auth/register-organizer', (req, res) => {
         phone,
         address,
         password,
+        organizerType = 'organizador',
         organizationName,
         documentType,
         documentNumber,
-        paymentCollectionMode = 'manual',
+        organizationZipCode,
+        organizationStreet,
+        organizationNeighborhood,
+        organizationCity,
+        organizationState,
+        organizationNumber,
+        organizationComplement,
+        responsibleCpf,
+        responsibleZipCode,
+        responsibleStreet,
+        responsibleNeighborhood,
+        responsibleCity,
+        responsibleState,
+        responsibleNumber,
+        responsibleComplement,
         supportedSports = '',
         termsAccepted,
       } = req.body
 
       if (!organizationName || !email || !phone || !password) {
         return res.status(400).json({ error: 'Organização, e-mail, telefone e senha são obrigatórios' })
-      }
-
-      if (!documentType || !documentNumber) {
-        return res.status(400).json({ error: 'Informe tipo e número do documento do organizador' })
       }
 
       if (termsAccepted !== 'true' && termsAccepted !== true) {
@@ -3705,14 +3716,27 @@ app.post('/auth/register-organizer', (req, res) => {
           name: organizationName,
           slug: `${slug}-${Date.now()}`,
           address: address || null,
-          documentType,
-          documentNumber,
-          kycStatus: req.file ? 'under_review' : 'pending',
+          street: organizationStreet || responsibleStreet || null,
+          number: organizationNumber || responsibleNumber || null,
+          complement: organizationComplement || responsibleComplement || null,
+          zipCode: organizationZipCode || responsibleZipCode || null,
+          neighborhood: organizationNeighborhood || responsibleNeighborhood || null,
+          city: organizationCity || responsibleCity || null,
+          state: organizationState || responsibleState || null,
+          documentType: documentType || (organizerType === 'organizador' ? 'CPF' : 'CNPJ'),
+          documentNumber: documentNumber || null,
+          responsibleCpf: responsibleCpf || null,
+          responsibleZipCode: responsibleZipCode || null,
+          responsibleStreet: responsibleStreet || null,
+          responsibleNumber: responsibleNumber || null,
+          responsibleComplement: responsibleComplement || null,
+          responsibleNeighborhood: responsibleNeighborhood || null,
+          responsibleCity: responsibleCity || null,
+          responsibleState: responsibleState || null,
+          kycStatus: 'not_required',
           kycDocumentUrl: req.file ? `/api/uploads/kyc/${req.file.filename}` : null,
           termsAcceptedAt: new Date(),
-          paymentCollectionMode: ['manual', 'platform', 'both'].includes(paymentCollectionMode)
-            ? paymentCollectionMode
-            : 'manual',
+          paymentCollectionMode: 'manual',
           supportedSports: supportedSports || null,
           plan: 'trial',
           trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -3744,8 +3768,7 @@ app.post('/auth/register-organizer', (req, res) => {
         text: `Seu cadastro de organizador foi recebido. Confirme seu e-mail: ${verifyUrl}`,
         html: `
           <h2>Cadastro de organizador recebido</h2>
-          <p>Sua arena <strong>${escapeHtml(organizationName)}</strong> foi criada em análise.</p>
-          <p>Status da validação: <strong>${req.file ? 'em análise' : 'pendente de documento'}</strong>.</p>
+          <p>Sua conta <strong>${escapeHtml(organizationName)}</strong> foi criada.</p>
           <p><a href="${verifyUrl}">Confirmar e-mail</a></p>
         `,
       })
@@ -3758,7 +3781,7 @@ app.post('/auth/register-organizer', (req, res) => {
       res.json({
         ok: true,
         organizationId: organization.id,
-        message: 'Cadastro criado. Enviamos confirmação por e-mail e WhatsApp. A documentação ficará em análise.',
+        message: 'Cadastro criado. Enviamos confirmação por e-mail e WhatsApp.',
       })
     } catch (error) {
       console.error(error)

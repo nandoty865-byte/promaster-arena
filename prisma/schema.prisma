@@ -252,12 +252,22 @@ address String?
 street String?
 number String?
 complement String?
+zipCode String?
+neighborhood String?
 country String?
 state String?
 city String?
 logoUrl String?
 documentType String?
 documentNumber String?
+responsibleCpf String?
+responsibleZipCode String?
+responsibleStreet String?
+responsibleNumber String?
+responsibleComplement String?
+responsibleNeighborhood String?
+responsibleCity String?
+responsibleState String?
 kycStatus String @default("pending")
 kycDocumentUrl String?
 termsAcceptedAt DateTime?
