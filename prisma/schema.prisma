@@ -57,6 +57,11 @@ bingoCardPrice Float?
 bingoCardsPerParticipant Int @default(1)
 bingoDrawnNumbers String?
 bingoWinners String?
+bingoCurrentRound Int @default(1)
+bingoRoundPrize String?
+bingoRoundStatus String @default("open")
+bingoLastClaimAt DateTime?
+bingoLastClaimName String?
   sport   Sport   @relation(fields: [sportId], references: [id])
   players Player[]
   matches Match[]
