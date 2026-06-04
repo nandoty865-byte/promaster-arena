@@ -63,6 +63,29 @@ function publicTournamentUrl(slug?: string) {
   return `${window.location.origin}/public/${slug}`
 }
 
+function tournamentStatusLabel(status?: string) {
+  const normalized = String(status || '').toLowerCase()
+  const labels: Record<string, string> = {
+    draft: 'Rascunho',
+    rascunho: 'Rascunho',
+    rescheduled: 'Reagendado',
+    reagendado: 'Reagendado',
+    running: 'Em andamento',
+    playing: 'Em andamento',
+    started: 'Em andamento',
+    in_progress: 'Em andamento',
+    finished: 'Encerrado',
+    ended: 'Encerrado',
+    closed: 'Encerrado',
+    encerrado: 'Encerrado',
+    canceled: 'Cancelado',
+    cancelled: 'Cancelado',
+    cancelado: 'Cancelado',
+  }
+
+  return labels[normalized] || status || '-'
+}
+
 function appUrlWithFreshVersion(path: string) {
   const url = new URL(path, window.location.origin)
   url.searchParams.set('v', Date.now().toString())
@@ -1492,6 +1515,7 @@ function Dashboard({ user }: any) {
   const [tournaments, setTournaments] = useState<any[]>([])
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [detailsTournament, setDetailsTournament] = useState<any>(null)
+  const [openTournamentMenuId, setOpenTournamentMenuId] = useState<number | null>(null)
   const plan = user?.organization?.plan || 'trial'
   const isMasterPlan = plan === 'master' || plan === 'free'
   const finishedCount = tournaments.filter(t => t.status === 'finished').length
@@ -1599,21 +1623,43 @@ function Dashboard({ user }: any) {
                         </td>
                         <td>{t.location || 'Local não informado'}</td>
                         <td>{t.eventDate ? new Date(t.eventDate).toLocaleDateString() : '-'}</td>
-                        <td><span className={`statusBadge ${t.status}`}>{t.status}</span></td>
+                        <td><span className={`statusBadge ${t.status}`}>{tournamentStatusLabel(t.status)}</span></td>
                         <td>
                           <div className="tableActions">
-                            <button onClick={() => navigate(`/tournament/${t.id}`)}>Painel</button>
-                            <button onClick={() => navigate(`/tournament/${t.id}/inscritos`)}>Inscritos</button>
-                            <button onClick={() => navigate(`/tournament/${t.id}/settings`)}>Editar</button>
-                            <button onClick={() => window.open(`/telao/${t.id}`, '_blank')}>Telão</button>
-                            <button onClick={() => setDetailsTournament(t)}>Detalhes</button>
-                            {t.publicSlug && (
-                              <>
-                                <button onClick={() => navigator.clipboard.writeText(publicUrl)}>Copiar link</button>
-                                <button onClick={() => window.open(publicUrl, '_blank')}>Público</button>
-                                <button onClick={() => setQrUrl(publicUrl)}>QR Code</button>
-                              </>
-                            )}
+                            <button className="tableActionIconButton" title="Painel" onClick={() => navigate(`/tournament/${t.id}`)}>▣</button>
+                            <button className="tableActionIconButton" title="Detalhes" onClick={() => setDetailsTournament(t)}>i</button>
+                            <button className="tableActionIconButton" title="Financeiro" onClick={() => navigate(`/tournament/${t.id}/financeiro`)}>$</button>
+                            <div className="tableActionMenu">
+                              <button
+                                className="tableActionIconButton"
+                                title="Mais ações"
+                                onClick={() => setOpenTournamentMenuId(current => current === t.id ? null : t.id)}
+                              >
+                                ⋯
+                              </button>
+                              {openTournamentMenuId === t.id && (
+                                <div className="tableActionMenuList">
+                                  <button
+                                    disabled={!t.publicSlug}
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(publicUrl)
+                                      setOpenTournamentMenuId(null)
+                                    }}
+                                  >
+                                    Copiar link
+                                  </button>
+                                  <button
+                                    disabled={!t.publicSlug}
+                                    onClick={() => {
+                                      setQrUrl(publicUrl)
+                                      setOpenTournamentMenuId(null)
+                                    }}
+                                  >
+                                    QR Code
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -1650,7 +1696,7 @@ function Dashboard({ user }: any) {
               <div className="detailsList">
                 <div>
                   <span>Status</span>
-                  <strong>{detailsTournament.status}</strong>
+                  <strong>{tournamentStatusLabel(detailsTournament.status)}</strong>
                 </div>
                 <div>
                   <span>Jogadores</span>
@@ -1735,6 +1781,7 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
   const [showGeneralMessageMenu, setShowGeneralMessageMenu] = useState(false)
   const [openStatusMenuId, setOpenStatusMenuId] = useState<number | null>(null)
   const [openPaymentMenuId, setOpenPaymentMenuId] = useState<number | null>(null)
+  const [overviewQrUrl, setOverviewQrUrl] = useState<string | null>(null)
   const [addRegistrationForm, setAddRegistrationForm] = useState({
     name: '',
     rg: '',
@@ -1758,6 +1805,7 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
   const publicUrl = tournament?.publicSlug
     ? publicTournamentUrl(tournament.publicSlug)
     : ''
+  const isBingoTournament = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo'
   const expectedRevenue = Number(tournament?.registrationFee || 0) * confirmed.length
   const statusPriority: Record<string, number> = { confirmed: 1, pending: 2, waiting: 3, removed: 4 }
   const registrationRows = [...registrations].sort((a: any, b: any) => {
@@ -2400,7 +2448,7 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
       <section className="panel">
         <h2>Dashboard do torneio</h2>
         <div className="overviewStatsGrid">
-          <div><span>Status</span><strong>{tournament?.status || '-'}</strong></div>
+          <div><span>Status</span><strong>{tournamentStatusLabel(tournament?.status)}</strong></div>
           <div><span>Inscritos</span><strong>{confirmed.length}/{tournament?.playerCount || 0}</strong></div>
           <div><span>Jogos</span><strong>{matches.length}</strong></div>
           <div><span>Em andamento</span><strong>{playingMatches.length}</strong></div>
@@ -2447,11 +2495,11 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
         <div className="tournamentSidebarInfo">
           <span>Torneio</span>
           <strong>{tournament.name}</strong>
-          <small>{tournament.status}</small>
+          <small>{tournamentStatusLabel(tournament.status)}</small>
         </div>
 
         <button className={panel === 'overview' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
-        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>Chaveamento</button>
+        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingoTournament ? 'AO VIVO' : 'Chaveamento'}</button>
         <button className={panel === 'inscritos' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
         <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
@@ -2465,6 +2513,12 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
           <div className="badge">Painel do Torneio</div>
           <h1>{tournament.name}</h1>
           <p>{tournament.location || 'Local não informado'}{tournament.eventDate ? ` • ${new Date(tournament.eventDate).toLocaleDateString()}` : ''}</p>
+          <div className="heroActions tournamentHeroActions">
+            <button onClick={() => window.open(`/telao/${id}`, '_blank')}>Telão</button>
+            <button disabled={!publicUrl} onClick={() => publicUrl && window.open(publicUrl, '_blank')}>Público</button>
+            <button disabled={!publicUrl} onClick={() => publicUrl && navigator.clipboard.writeText(publicUrl)}>Compartilhar link</button>
+            <button disabled={!publicUrl} onClick={() => publicUrl && setOverviewQrUrl(publicUrl)}>QR Code</button>
+          </div>
         </header>
 
         <div className="tournamentWorkspace">
@@ -2472,6 +2526,17 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
             {renderPanel()}
           </div>
         </div>
+
+        {overviewQrUrl && (
+          <div className="qrModal" onClick={() => setOverviewQrUrl(null)}>
+            <div className="qrContent" onClick={event => event.stopPropagation()}>
+              <h3>QR Code do Torneio</h3>
+              <QRCodeCanvas value={overviewQrUrl} size={220} />
+              <p>{overviewQrUrl}</p>
+              <button onClick={() => setOverviewQrUrl(null)}>Fechar</button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
@@ -2979,6 +3044,7 @@ function TournamentSettings() {
   const mainRegistrations = registrations
     .filter(registration => registration.status === 'confirmed')
     .sort((a, b) => Number(a.sortOrder || 9999) - Number(b.sortOrder || 9999))
+  const isBingoSettings = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo' || form.format === 'bingo'
 
   return (
     <div className="tournamentPageLayout">
@@ -2991,11 +3057,11 @@ function TournamentSettings() {
         <div className="tournamentSidebarInfo">
           <span>Torneio</span>
           <strong>{tournament?.name || form.name || 'Carregando...'}</strong>
-          <small>{tournament?.status || '-'}</small>
+          <small>{tournamentStatusLabel(tournament?.status)}</small>
         </div>
 
         <button onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
-        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>Chaveamento</button>
+        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingoSettings ? 'AO VIVO' : 'Chaveamento'}</button>
         <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button className="active" onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
         <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
@@ -3027,7 +3093,7 @@ function TournamentSettings() {
             </div>
             <div>
               <span>Status</span>
-              <strong>{tournament?.status || '-'}</strong>
+              <strong>{tournamentStatusLabel(tournament?.status)}</strong>
             </div>
           </div>
 
@@ -3830,7 +3896,7 @@ function PublicTournament() {
 
           <div className="publicCard publicMiniInfoCard">
             <span className="publicCardLabel">Status</span>
-            <strong>{tournament.status}</strong>
+            <strong>{tournamentStatusLabel(tournament.status)}</strong>
             <p>{tournament.location || 'Local não informado'}</p>
             {tournament.venueAddress && <p>{tournament.venueAddress}</p>}
             <p>
@@ -4298,7 +4364,7 @@ function SeasonsPage({ user }: any) {
                 <div key={tournament.id} className="clientTournamentRow">
                   <div>
                     <strong>{tournament.name}</strong>
-                    <span>{tournament.status} • {tournament.playerCount} jogadores</span>
+                  <span>{tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores</span>
                   </div>
                   <button onClick={() => navigate(`/tournament/${tournament.id}`)}>Painel</button>
                 </div>
@@ -5292,11 +5358,11 @@ function TournamentBracket() {
         <div className="tournamentSidebarInfo">
           <span>Torneio</span>
           <strong>{tournament?.name || 'Carregando...'}</strong>
-          <small>{tournament?.status || '-'}</small>
+          <small>{tournamentStatusLabel(tournament?.status)}</small>
         </div>
 
         <button onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
-        <button className="active" onClick={() => navigate(`/tournament/${id}/chaveamento`)}>Chaveamento</button>
+        <button className="active" onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingo ? 'AO VIVO' : 'Chaveamento'}</button>
         <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
         <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
@@ -5788,6 +5854,7 @@ function RefereeMode() {
   const selectedMatch = currentMatchForTable(currentTable)
   const nextSameTable = nextPendingForTable(currentTable, selectedMatch?.id)
   const otherNextMatches = otherTablesPendingMatches(currentTable)
+  const isBingoReferee = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo'
 
   return (
     <div className="tournamentPageLayout">
@@ -5800,11 +5867,11 @@ function RefereeMode() {
         <div className="tournamentSidebarInfo">
           <span>Torneio</span>
           <strong>{tournament?.name || 'Carregando...'}</strong>
-          <small>{tournament?.status || '-'}</small>
+          <small>{tournamentStatusLabel(tournament?.status)}</small>
         </div>
 
         <button onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
-        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>Chaveamento</button>
+        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingoReferee ? 'AO VIVO' : 'Chaveamento'}</button>
         <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
         <button className="active" onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
@@ -6534,7 +6601,7 @@ function AdminClientes() {
                   <div key={tournament.id} className="clientTournamentRow">
                     <div>
                       <strong>{tournament.name}</strong>
-                      <span>{tournament.status} • {tournament.playerCount} jogadores</span>
+                      <span>{tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores</span>
                     </div>
                     <button onClick={() => navigate(`/tournament/${tournament.id}`)}>
                       Abrir
