@@ -671,10 +671,6 @@ function OrganizerSignup() {
                     <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
                   </div>
                   <div>
-                    <label>CNPJ *</label>
-                    <input value={form.organizationDocument} onChange={e => updateField('organizationDocument', e.target.value)} />
-                  </div>
-                  <div>
                     <label>E-mail *</label>
                     <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
                   </div>
@@ -691,6 +687,10 @@ function OrganizerSignup() {
                     </select>
                   </div>
                   <div>
+                    <label>{isBrazilCountry(form.organizationCountry) ? 'CNPJ *' : 'ID *'}</label>
+                    <input value={form.organizationDocument} onChange={e => updateField('organizationDocument', e.target.value)} />
+                  </div>
+                  <div>
                     <label>CEP{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
                     <input
                       value={form.organizationZipCode}
@@ -699,8 +699,16 @@ function OrganizerSignup() {
                     />
                   </div>
                   <div>
-                    <label>Logradouro{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
+                    <label>Endereço{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
                     <input value={form.organizationStreet} onChange={e => updateField('organizationStreet', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Número{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
+                    <input value={form.organizationNumber} onChange={e => updateField('organizationNumber', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Complemento</label>
+                    <input value={form.organizationComplement} onChange={e => updateField('organizationComplement', e.target.value)} />
                   </div>
                   <div>
                     <label>Bairro{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
@@ -713,14 +721,6 @@ function OrganizerSignup() {
                   <div>
                     <label>Estado{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
                     <input value={form.organizationState} onChange={e => updateField('organizationState', e.target.value)} />
-                  </div>
-                  <div>
-                    <label>Número{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
-                    <input value={form.organizationNumber} onChange={e => updateField('organizationNumber', e.target.value)} />
-                  </div>
-                  <div>
-                    <label>Complemento</label>
-                    <input value={form.organizationComplement} onChange={e => updateField('organizationComplement', e.target.value)} />
                   </div>
                 </div>
               </>
@@ -735,10 +735,6 @@ function OrganizerSignup() {
               <div>
                 <label>Sobrenome *</label>
                 <input value={form.responsibleLastName} onChange={e => updateField('responsibleLastName', e.target.value)} />
-              </div>
-              <div>
-                <label>CPF *</label>
-                <input value={form.responsibleCpf} onChange={e => updateField('responsibleCpf', e.target.value)} />
               </div>
               {isIndividualOrganizer && (
                 <>
@@ -761,6 +757,10 @@ function OrganizerSignup() {
                 </select>
               </div>
               <div>
+                <label>{isBrazilCountry(form.responsibleCountry) ? 'CPF *' : 'ID *'}</label>
+                <input value={form.responsibleCpf} onChange={e => updateField('responsibleCpf', e.target.value)} />
+              </div>
+              <div>
                 <label>CEP{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
                 <input
                   value={form.responsibleZipCode}
@@ -769,8 +769,16 @@ function OrganizerSignup() {
                 />
               </div>
               <div>
-                <label>Logradouro{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
+                <label>Endereço{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
                 <input value={form.responsibleStreet} onChange={e => updateField('responsibleStreet', e.target.value)} />
+              </div>
+              <div>
+                <label>Número{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
+                <input value={form.responsibleNumber} onChange={e => updateField('responsibleNumber', e.target.value)} />
+              </div>
+              <div>
+                <label>Complemento</label>
+                <input value={form.responsibleComplement} onChange={e => updateField('responsibleComplement', e.target.value)} />
               </div>
               <div>
                 <label>Bairro{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
@@ -783,14 +791,6 @@ function OrganizerSignup() {
               <div>
                 <label>Estado{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
                 <input value={form.responsibleState} onChange={e => updateField('responsibleState', e.target.value)} />
-              </div>
-              <div>
-                <label>Número{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
-                <input value={form.responsibleNumber} onChange={e => updateField('responsibleNumber', e.target.value)} />
-              </div>
-              <div>
-                <label>Complemento</label>
-                <input value={form.responsibleComplement} onChange={e => updateField('responsibleComplement', e.target.value)} />
               </div>
             </div>
           </>
