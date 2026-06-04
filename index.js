@@ -3677,6 +3677,7 @@ app.post('/auth/register-organizer', (req, res) => {
         organizationNeighborhood,
         organizationCity,
         organizationState,
+        organizationCountry,
         organizationNumber,
         organizationComplement,
         responsibleCpf,
@@ -3685,6 +3686,7 @@ app.post('/auth/register-organizer', (req, res) => {
         responsibleNeighborhood,
         responsibleCity,
         responsibleState,
+        responsibleCountry,
         responsibleNumber,
         responsibleComplement,
         supportedSports = '',
@@ -3697,6 +3699,16 @@ app.post('/auth/register-organizer', (req, res) => {
 
       if (termsAccepted !== 'true' && termsAccepted !== true) {
         return res.status(400).json({ error: 'Aceite os termos de uso para continuar' })
+      }
+
+      if (String(organizationCountry || responsibleCountry || '').toLowerCase() === 'brasil') {
+        const hasBrazilAddress = organizerType === 'organizador'
+          ? responsibleZipCode && responsibleStreet && responsibleNumber && responsibleNeighborhood && responsibleCity && responsibleState
+          : organizationZipCode && organizationStreet && organizationNumber && organizationNeighborhood && organizationCity && organizationState
+
+        if (!hasBrazilAddress) {
+          return res.status(400).json({ error: 'CEP, logradouro, número, bairro, cidade e estado são obrigatórios para cadastro no Brasil' })
+        }
       }
 
       const exists = await prisma.user.findUnique({ where: { email } })
@@ -3721,6 +3733,7 @@ app.post('/auth/register-organizer', (req, res) => {
           complement: organizationComplement || responsibleComplement || null,
           zipCode: organizationZipCode || responsibleZipCode || null,
           neighborhood: organizationNeighborhood || responsibleNeighborhood || null,
+          country: organizationCountry || responsibleCountry || null,
           city: organizationCity || responsibleCity || null,
           state: organizationState || responsibleState || null,
           documentType: documentType || (organizerType === 'organizador' ? 'CPF' : 'CNPJ'),
@@ -3733,6 +3746,7 @@ app.post('/auth/register-organizer', (req, res) => {
           responsibleNeighborhood: responsibleNeighborhood || null,
           responsibleCity: responsibleCity || null,
           responsibleState: responsibleState || null,
+          responsibleCountry: responsibleCountry || null,
           kycStatus: 'not_required',
           kycDocumentUrl: req.file ? `/api/uploads/kyc/${req.file.filename}` : null,
           termsAcceptedAt: new Date(),

@@ -432,6 +432,7 @@ function OrganizerSignup() {
     organizationNeighborhood: '',
     organizationCity: '',
     organizationState: '',
+    organizationCountry: 'Brasil',
     organizationNumber: '',
     organizationComplement: '',
     organizationDocument: '',
@@ -445,6 +446,7 @@ function OrganizerSignup() {
     responsibleNeighborhood: '',
     responsibleCity: '',
     responsibleState: '',
+    responsibleCountry: 'Brasil',
     responsibleNumber: '',
     responsibleComplement: '',
     password: '',
@@ -474,6 +476,8 @@ function OrganizerSignup() {
 
   async function lookupCep(value: string, target: 'organization' | 'responsible') {
     const cep = onlyDigits(value)
+    const country = target === 'organization' ? form.organizationCountry : form.responsibleCountry
+    if (!isBrazilCountry(country)) return
     if (cep.length !== 8) return
 
     try {
@@ -514,14 +518,28 @@ function OrganizerSignup() {
     }
 
     if (step === 3) {
-      if (!isIndividualOrganizer && (!form.organizationName || !form.organizationZipCode || !form.organizationDocument || !form.email || !form.phone)) {
+      if (!isIndividualOrganizer && (!form.organizationName || !form.organizationDocument || !form.email || !form.phone || !form.organizationCountry)) {
         alert('Preencha os dados principais da organização.')
         return
       }
 
-      if (!form.responsibleName || !form.responsibleLastName || !form.responsibleCpf || !form.responsibleZipCode) {
+      if (!isIndividualOrganizer && isBrazilCountry(form.organizationCountry)) {
+        if (!form.organizationZipCode || !form.organizationStreet || !form.organizationNumber || !form.organizationNeighborhood || !form.organizationCity || !form.organizationState) {
+          alert('Preencha CEP, logradouro, número, bairro, cidade e estado da organização.')
+          return
+        }
+      }
+
+      if (!form.responsibleName || !form.responsibleLastName || !form.responsibleCpf || !form.responsibleCountry) {
         alert('Preencha os dados do responsável.')
         return
+      }
+
+      if (isBrazilCountry(form.responsibleCountry)) {
+        if (!form.responsibleZipCode || !form.responsibleStreet || !form.responsibleNumber || !form.responsibleNeighborhood || !form.responsibleCity || !form.responsibleState) {
+          alert('Preencha CEP, logradouro, número, bairro, cidade e estado do responsável.')
+          return
+        }
       }
     }
 
@@ -556,8 +574,8 @@ function OrganizerSignup() {
     const organizationNameForPayload = isIndividualOrganizer ? `${form.responsibleName} ${form.responsibleLastName}`.trim() : form.organizationName
     const responsibleNameForPayload = `${form.responsibleName} ${form.responsibleLastName}`.trim()
     const addressForPayload = isIndividualOrganizer
-      ? [form.responsibleStreet, form.responsibleNumber, form.responsibleComplement, form.responsibleNeighborhood, form.responsibleCity, form.responsibleState].filter(Boolean).join(', ')
-      : [form.organizationStreet, form.organizationNumber, form.organizationComplement, form.organizationNeighborhood, form.organizationCity, form.organizationState].filter(Boolean).join(', ')
+      ? [form.responsibleStreet, form.responsibleNumber, form.responsibleComplement, form.responsibleNeighborhood, form.responsibleCity, form.responsibleState, form.responsibleCountry].filter(Boolean).join(', ')
+      : [form.organizationStreet, form.organizationNumber, form.organizationComplement, form.organizationNeighborhood, form.organizationCity, form.organizationState, form.organizationCountry].filter(Boolean).join(', ')
     const payload = new FormData()
     Object.entries({
       ...form,
@@ -657,7 +675,23 @@ function OrganizerSignup() {
                     <input value={form.organizationDocument} onChange={e => updateField('organizationDocument', e.target.value)} />
                   </div>
                   <div>
-                    <label>CEP *</label>
+                    <label>E-mail *</label>
+                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>WhatsApp *</label>
+                    <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+                  </div>
+                  <div>
+                    <label>País *</label>
+                    <select value={form.organizationCountry} onChange={e => updateField('organizationCountry', e.target.value)}>
+                      {COUNTRY_OPTIONS.map(country => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label>CEP{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
                     <input
                       value={form.organizationZipCode}
                       onChange={e => updateField('organizationZipCode', formatCep(e.target.value))}
@@ -665,36 +699,28 @@ function OrganizerSignup() {
                     />
                   </div>
                   <div>
-                    <label>Logradouro</label>
+                    <label>Logradouro{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
                     <input value={form.organizationStreet} onChange={e => updateField('organizationStreet', e.target.value)} />
                   </div>
                   <div>
-                    <label>Bairro</label>
+                    <label>Bairro{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
                     <input value={form.organizationNeighborhood} onChange={e => updateField('organizationNeighborhood', e.target.value)} />
                   </div>
                   <div>
-                    <label>Cidade</label>
+                    <label>Cidade{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
                     <input value={form.organizationCity} onChange={e => updateField('organizationCity', e.target.value)} />
                   </div>
                   <div>
-                    <label>Estado</label>
+                    <label>Estado{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
                     <input value={form.organizationState} onChange={e => updateField('organizationState', e.target.value)} />
                   </div>
                   <div>
-                    <label>Número *</label>
+                    <label>Número{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
                     <input value={form.organizationNumber} onChange={e => updateField('organizationNumber', e.target.value)} />
                   </div>
                   <div>
                     <label>Complemento</label>
                     <input value={form.organizationComplement} onChange={e => updateField('organizationComplement', e.target.value)} />
-                  </div>
-                  <div>
-                    <label>E-mail *</label>
-                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
-                  </div>
-                  <div>
-                    <label>WhatsApp *</label>
-                    <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
                   </div>
                 </div>
               </>
@@ -727,7 +753,15 @@ function OrganizerSignup() {
                 </>
               )}
               <div>
-                <label>CEP *</label>
+                <label>País *</label>
+                <select value={form.responsibleCountry} onChange={e => updateField('responsibleCountry', e.target.value)}>
+                  {COUNTRY_OPTIONS.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>CEP{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
                 <input
                   value={form.responsibleZipCode}
                   onChange={e => updateField('responsibleZipCode', formatCep(e.target.value))}
@@ -735,23 +769,23 @@ function OrganizerSignup() {
                 />
               </div>
               <div>
-                <label>Logradouro</label>
+                <label>Logradouro{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
                 <input value={form.responsibleStreet} onChange={e => updateField('responsibleStreet', e.target.value)} />
               </div>
               <div>
-                <label>Bairro</label>
+                <label>Bairro{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
                 <input value={form.responsibleNeighborhood} onChange={e => updateField('responsibleNeighborhood', e.target.value)} />
               </div>
               <div>
-                <label>Cidade</label>
+                <label>Cidade{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
                 <input value={form.responsibleCity} onChange={e => updateField('responsibleCity', e.target.value)} />
               </div>
               <div>
-                <label>Estado</label>
+                <label>Estado{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
                 <input value={form.responsibleState} onChange={e => updateField('responsibleState', e.target.value)} />
               </div>
               <div>
-                <label>Número *</label>
+                <label>Número{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
                 <input value={form.responsibleNumber} onChange={e => updateField('responsibleNumber', e.target.value)} />
               </div>
               <div>
@@ -800,7 +834,6 @@ function OrganizerSignup() {
             </button>
           )}
         </div>
-        <a href="/login">Já tenho conta</a>
       </section>
     </div>
   )
