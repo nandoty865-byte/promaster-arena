@@ -274,6 +274,9 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/admin/financeiro" element={<Financeiro />} />
       <Route path="/admin/clientes" element={<AdminClientes />} />
+      <Route path="/admin/clientes/:id" element={<AdminClientPage defaultPanel="dashboard" />} />
+      <Route path="/admin/clientes/:id/financeiro" element={<AdminClientPage defaultPanel="financeiro" />} />
+      <Route path="/admin/clientes/:id/perfil" element={<AdminClientPage defaultPanel="perfil" />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="*" element={<Navigate to="/" />} />
 
@@ -6704,29 +6707,59 @@ function TelaoTV() {
   )
 }
 
+function adminPlanLabel(plan: string) {
+  if (plan === 'free') return 'Acesso gratuito'
+  if (plan === 'trial') return 'Trial'
+  if (plan === 'pro') return 'Pro'
+  if (plan === 'master') return 'Master'
+  return plan || '-'
+}
+
+function clientStatusLabel(status: string) {
+  return status === 'blocked' ? 'Bloqueado' : 'Ativo'
+}
+
+function clientPersonType(org: any) {
+  const type = String(org.documentType || '').toLowerCase()
+  if (['cpf', 'pf', 'fisica', 'pessoa_fisica'].includes(type)) return 'pf'
+  if (['cnpj', 'pj', 'juridica', 'pessoa_juridica'].includes(type)) return 'pj'
+  return 'nao_informado'
+}
+
+function clientPersonTypeLabel(org: any) {
+  const type = clientPersonType(org)
+  if (type === 'pf') return 'Pessoa física'
+  if (type === 'pj') return 'Pessoa jurídica'
+  return 'Não informado'
+}
+
+function adminMoney(value: number) {
+  return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
+}
+
 function AdminClientes() {
   const navigate = useNavigate()
   const [orgs, setOrgs] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [planFilter, setPlanFilter] = useState('todos')
-  const [selectedOrg, setSelectedOrg] = useState<any>(null)
-  const [editingOrg, setEditingOrg] = useState<any>(null)
-  const [editForm, setEditForm] = useState<any>({
-    name: '',
-    email: '',
-    phone: '',
-    organizationName: '',
-    street: '',
-    number: '',
-    complement: '',
-    country: '',
-    state: '',
-    city: '',
-  })
+  const [statusFilter, setStatusFilter] = useState('todos')
+  const [typeFilter, setTypeFilter] = useState('todos')
+  const [sortBy, setSortBy] = useState('created_desc')
   const filteredOrgs = orgs
-    .filter(org => org.name?.toLowerCase().includes(search.toLowerCase()))
+    .filter(org => {
+      const adminUser = org.users?.find((user: any) => user.role === 'admin') || org.users?.[0]
+      const text = `${org.name || ''} ${adminUser?.name || ''} ${adminUser?.email || ''}`.toLowerCase()
+      return text.includes(search.toLowerCase())
+    })
     .filter(org => planFilter === 'todos' ? true : org.plan === planFilter)
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .filter(org => statusFilter === 'todos' ? true : (org.status || 'active') === statusFilter)
+    .filter(org => typeFilter === 'todos' ? true : clientPersonType(org) === typeFilter)
+    .sort((a, b) => {
+      if (sortBy === 'alpha_asc') return String(a.name || '').localeCompare(String(b.name || ''))
+      if (sortBy === 'alpha_desc') return String(b.name || '').localeCompare(String(a.name || ''))
+      if (sortBy === 'created_asc') return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    })
 
   function loadClientes() {
     fetch(`${API}/admin/organizations`, {
@@ -6741,11 +6774,18 @@ function AdminClientes() {
       })
   }
 
-  function changePlan(id: number, plan: string) {
-    fetch(`${API}/admin/organization/${id}/plan`, {
-      method: 'POST',
+  function toggleBlock(org: any) {
+    const nextStatus = org.status === 'blocked' ? 'active' : 'blocked'
+    const message = nextStatus === 'blocked'
+      ? `Bloquear o cliente ${org.name}? O histórico será mantido.`
+      : `Desbloquear o cliente ${org.name}?`
+
+    if (!confirm(message)) return
+
+    fetch(`${API}/admin/organization/${org.id}/status`, {
+      method: 'PATCH',
       headers: authHeaders(),
-      body: JSON.stringify({ plan }),
+      body: JSON.stringify({ status: nextStatus }),
     })
       .then(res => res.json())
       .then(data => {
@@ -6758,47 +6798,15 @@ function AdminClientes() {
       })
   }
 
-  function openEditClient(org: any) {
+  function messageClient(org: any) {
     const adminUser = org.users?.find((user: any) => user.role === 'admin') || org.users?.[0]
 
-    setEditingOrg(org)
-    setEditForm({
-      name: adminUser?.name || '',
-      email: adminUser?.email || '',
-      phone: adminUser?.phone || '',
-      organizationName: org.name || '',
-      street: org.street || org.address || '',
-      number: org.number || '',
-      complement: org.complement || '',
-      country: org.country || '',
-      state: org.state || '',
-      city: org.city || '',
-    })
-  }
+    if (!adminUser?.email) {
+      alert('Cliente sem e-mail principal cadastrado.')
+      return
+    }
 
-  function updateEditField(field: string, value: string) {
-    setEditForm((current: any) => ({ ...current, [field]: value }))
-  }
-
-  function saveClientEdit() {
-    if (!editingOrg) return
-
-    fetch(`${API}/admin/organization/${editingOrg.id}/profile`, {
-      method: 'PUT',
-      headers: authHeaders(),
-      body: JSON.stringify(editForm),
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          alert(data.error)
-          return
-        }
-
-        setEditingOrg(null)
-        loadClientes()
-        alert('Cliente atualizado.')
-      })
+    window.location.href = `mailto:${adminUser.email}?subject=${encodeURIComponent('ProMaster Arena')}`
   }
 
  useEffect(() => {
@@ -6827,7 +6835,7 @@ function AdminClientes() {
         <header className="hero">
           <div className="badge">👑 Superadmin</div>
           <h1>Clientes / Arenas</h1>
-          <p>Gerencie organizações, planos, usuários e torneios.</p>
+          <p>Gerencie organizações, bloqueios, planos, usuários e histórico.</p>
         </header>
 
         <div className="panel">
@@ -6837,7 +6845,7 @@ function AdminClientes() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Pesquisar por nome"
+              placeholder="Pesquisar por cliente, responsável ou e-mail"
             />
 
             <select value={planFilter} onChange={e => setPlanFilter(e.target.value)}>
@@ -6847,146 +6855,453 @@ function AdminClientes() {
               <option value="pro">Pro</option>
               <option value="master">Master</option>
             </select>
+
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+              <option value="todos">Todos os status</option>
+              <option value="active">Clientes ativos</option>
+              <option value="blocked">Clientes bloqueados</option>
+            </select>
+
+            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+              <option value="todos">Pessoa física e jurídica</option>
+              <option value="pf">Pessoa física</option>
+              <option value="pj">Pessoa jurídica</option>
+              <option value="nao_informado">Não informado</option>
+            </select>
+
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+              <option value="created_desc">Mais novos primeiro</option>
+              <option value="created_asc">Mais antigos primeiro</option>
+              <option value="alpha_asc">Nome A-Z</option>
+              <option value="alpha_desc">Nome Z-A</option>
+            </select>
           </div>
 
           {filteredOrgs.length === 0 && <p>Nenhum cliente encontrado.</p>}
 
-          {filteredOrgs.map(org => (
-            <div key={org.id} className="clientCard">
-              <div>
-                <strong>{org.name}</strong>
-                <span>Cadastro: {org.createdAt ? new Date(org.createdAt).toLocaleDateString() : '-'}</span>
-              </div>
-
-              <div className="clientMetrics">
-                <span>Plano: {org.plan === 'free' ? 'acesso gratuito' : org.plan}</span>
-                <span>Usuários: {org.users?.length || 0}</span>
-                <span>Torneios: {org.tournaments?.length || 0}</span>
-              </div>
-
-              <div className="clientActions">
-                <button onClick={() => changePlan(org.id, 'trial')}>Trial</button>
-                <button onClick={() => changePlan(org.id, 'pro')}>Pro</button>
-                <button onClick={() => changePlan(org.id, 'master')}>Master</button>
-                <button className="clientEditButton" onClick={() => openEditClient(org)}>
-                  Editar cliente/arena
-                </button>
-                <button onClick={() => setSelectedOrg(org)}>Torneios</button>
-                <button onClick={() => changePlan(org.id, 'free')}>Acesso gratuito</button>
-              </div>
+          {filteredOrgs.length > 0 && (
+            <div className="adminClientTableWrap">
+              <table className="adminClientTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Pessoa</th>
+                    <th>Plano</th>
+                    <th>Status</th>
+                    <th>Data cadastro</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrgs.map(org => (
+                    <tr key={org.id} className={org.status === 'blocked' ? 'blocked' : ''}>
+                      <td>#{org.id}</td>
+                      <td>
+                        <button className="tableNameButton" onClick={() => navigate(`/admin/clientes/${org.id}`)}>
+                          {org.name}
+                        </button>
+                      </td>
+                      <td>{clientPersonTypeLabel(org)}</td>
+                      <td>{adminPlanLabel(org.plan)}</td>
+                      <td>{clientStatusLabel(org.status || 'active')}</td>
+                      <td>{org.createdAt ? new Date(org.createdAt).toLocaleDateString() : '-'}</td>
+                      <td>
+                        <div className="adminClientActions">
+                          <button onClick={() => toggleBlock(org)}>
+                            {org.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}
+                          </button>
+                          <button onClick={() => messageClient(org)}>Mensagem</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
+          )}
         </div>
+      </main>
+    </div>
+  )
+}
 
-        {editingOrg && (
-          <div className="qrModal" onClick={() => setEditingOrg(null)}>
-            <div className="detailsContent adminEditModal" onClick={e => e.stopPropagation()}>
-              <div className="detailsHeader">
-                <div>
-                  <span>Editar cliente/arena</span>
-                  <h3>{editingOrg.name}</h3>
-                  <p>Atualize os dados principais do cliente, contato e endereço da arena.</p>
-                </div>
-                <button className="modalCloseButton" onClick={() => setEditingOrg(null)}>Fechar</button>
+function AdminClientSidebar({ orgId, panel, orgName }: any) {
+  const navigate = useNavigate()
+
+  function logout() {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebarLogo">👑 Admin Master</div>
+      <div className="adminClientSidebarContext">
+        <span>Cliente</span>
+        <strong>{orgName || 'Carregando...'}</strong>
+      </div>
+      <button className={panel === 'dashboard' ? 'active' : ''} onClick={() => navigate(`/admin/clientes/${orgId}`)}>Dashboard</button>
+      <button className={panel === 'financeiro' ? 'active' : ''} onClick={() => navigate(`/admin/clientes/${orgId}/financeiro`)}>Financeiro</button>
+      <button className={panel === 'perfil' ? 'active' : ''} onClick={() => navigate(`/admin/clientes/${orgId}/perfil`)}>Perfil</button>
+      <button onClick={() => navigate('/admin/clientes')}>Voltar aos clientes</button>
+      <button className="sidebarFooterButton" onClick={logout}>Sair</button>
+    </aside>
+  )
+}
+
+function AdminClientPage({ defaultPanel }: any) {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const panel = defaultPanel || 'dashboard'
+  const [data, setData] = useState<any>(null)
+  const [profileForm, setProfileForm] = useState<any>({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    organizationName: '',
+    documentType: '',
+    documentNumber: '',
+    supportedSports: '',
+    street: '',
+    number: '',
+    complement: '',
+    country: '',
+    state: '',
+    city: '',
+  })
+
+  const org = data?.organization
+  const summary = data?.summary || {}
+  const payments = data?.payments || []
+  const adminUser = org?.users?.find((user: any) => user.role === 'admin') || org?.users?.[0]
+
+  function loadClient() {
+    if (!id) return
+
+    fetch(`${API}/admin/organization/${id}`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          alert(result.error)
+          navigate('/admin/clientes')
+          return
+        }
+
+        setData(result)
+      })
+  }
+
+  function updateProfileField(field: string, value: string) {
+    setProfileForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function changePlan(plan: string) {
+    if (!id) return
+
+    fetch(`${API}/admin/organization/${id}/plan`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ plan }),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          alert(result.error)
+          return
+        }
+
+        loadClient()
+      })
+  }
+
+  function toggleBlock() {
+    if (!id || !org) return
+
+    const nextStatus = org.status === 'blocked' ? 'active' : 'blocked'
+    const message = nextStatus === 'blocked'
+      ? `Bloquear o cliente ${org.name}? O histórico será mantido.`
+      : `Desbloquear o cliente ${org.name}?`
+
+    if (!confirm(message)) return
+
+    fetch(`${API}/admin/organization/${id}/status`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ status: nextStatus }),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          alert(result.error)
+          return
+        }
+
+        loadClient()
+      })
+  }
+
+  function saveProfile() {
+    if (!id) return
+
+    fetch(`${API}/admin/organization/${id}/profile`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(profileForm),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          alert(result.error)
+          return
+        }
+
+        setProfileForm((current: any) => ({ ...current, password: '' }))
+        loadClient()
+        alert('Cliente atualizado.')
+      })
+  }
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      goHome()
+      return
+    }
+
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(result => {
+        if (result.user?.role !== 'superadmin') {
+          goHome()
+          return
+        }
+
+        loadClient()
+      })
+  }, [id])
+
+  useEffect(() => {
+    if (!org) return
+
+    setProfileForm({
+      name: adminUser?.name || '',
+      email: adminUser?.email || '',
+      phone: adminUser?.phone || '',
+      password: '',
+      organizationName: org.name || '',
+      documentType: org.documentType || '',
+      documentNumber: org.documentNumber || '',
+      supportedSports: org.supportedSports || '',
+      street: org.street || org.address || '',
+      number: org.number || '',
+      complement: org.complement || '',
+      country: org.country || '',
+      state: org.state || '',
+      city: org.city || '',
+    })
+  }, [org?.id])
+
+  return (
+    <div className="saasLayout">
+      <AdminClientSidebar orgId={id} panel={panel} orgName={org?.name} />
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">👑 Cliente Master</div>
+          <h1>{org?.name || 'Cliente'}</h1>
+          <p>
+            {adminPlanLabel(org?.plan)} • {clientStatusLabel(org?.status || 'active')} • {clientPersonTypeLabel(org || {})}
+          </p>
+          {org && (
+            <div className="tournamentActions">
+              <button onClick={toggleBlock}>{org.status === 'blocked' ? 'Desbloquear cliente' : 'Bloquear cliente'}</button>
+              <button onClick={() => window.location.href = `mailto:${adminUser?.email || ''}`}>Mensagem</button>
+            </div>
+          )}
+        </header>
+
+        {!org && <div className="panel">Carregando cliente...</div>}
+
+        {org && panel === 'dashboard' && (
+          <>
+            <div className="financeGrid adminStatsGrid">
+              <div className="financeCard">
+                <span>Torneios criados</span>
+                <strong>{summary.tournamentCount || 0}</strong>
               </div>
 
-              <div className="adminEditSection">
-                <h4>Dados do cliente</h4>
-                <div className="adminEditGrid">
-                  <div>
-                    <label>Nome do responsável</label>
-                    <input value={editForm.name} onChange={e => updateEditField('name', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>E-mail</label>
-                    <input type="email" value={editForm.email} onChange={e => updateEditField('email', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Telefone / WhatsApp</label>
-                    <input value={editForm.phone} onChange={e => updateEditField('phone', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Nome da arena / organização</label>
-                    <input value={editForm.organizationName} onChange={e => updateEditField('organizationName', e.target.value)} />
-                  </div>
-                </div>
+              <div className="financeCard">
+                <span>Participantes</span>
+                <strong>{summary.participantsCount || 0}</strong>
               </div>
 
-              <div className="adminEditSection">
-                <h4>Endereço da arena</h4>
-                <div className="adminEditGrid">
-                  <div className="adminEditWide">
-                    <label>Logradouro</label>
-                    <input value={editForm.street} onChange={e => updateEditField('street', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Número</label>
-                    <input value={editForm.number} onChange={e => updateEditField('number', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Complemento</label>
-                    <input value={editForm.complement} onChange={e => updateEditField('complement', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>País</label>
-                    <input value={editForm.country} onChange={e => updateEditField('country', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Estado</label>
-                    <input value={editForm.state} onChange={e => updateEditField('state', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Cidade</label>
-                    <input value={editForm.city} onChange={e => updateEditField('city', e.target.value)} />
-                  </div>
-                </div>
+              <div className="financeCard">
+                <span>Valor arrecadado</span>
+                <strong>{adminMoney(summary.revenue || 0)}</strong>
               </div>
 
-              <div className="adminModalActions">
-                <button onClick={() => setEditingOrg(null)}>Cancelar</button>
-                <button className="primaryButton" onClick={saveClientEdit}>
-                  Salvar cliente/arena
-                </button>
+              <div className="financeCard">
+                <span>Usuários</span>
+                <strong>{summary.usersCount || 0}</strong>
               </div>
             </div>
-          </div>
-        )}
 
-        {selectedOrg && (
-          <div className="qrModal" onClick={() => setSelectedOrg(null)}>
-            <div className="detailsContent" onClick={e => e.stopPropagation()}>
-              <div className="detailsHeader">
-                <div>
-                  <span>Torneios do cliente</span>
-                  <h3>{selectedOrg.name}</h3>
-                </div>
-                <button onClick={() => setSelectedOrg(null)}>Fechar</button>
-              </div>
-
-              {(selectedOrg.tournaments || []).length === 0 && <p>Nenhum torneio encontrado.</p>}
-
+            <div className="panel">
+              <h2>Torneios do cliente</h2>
+              {(org.tournaments || []).length === 0 && <p>Nenhum torneio criado.</p>}
               <div className="clientTournamentList">
-                {(selectedOrg.tournaments || []).map((tournament: any) => (
+                {(org.tournaments || []).map((tournament: any) => (
                   <div key={tournament.id} className="clientTournamentRow">
                     <div>
                       <strong>{tournament.name}</strong>
-                      <span>{tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores</span>
+                      <span>
+                        {tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores • {tournament.createdAt ? new Date(tournament.createdAt).toLocaleDateString() : '-'}
+                      </span>
                     </div>
-                    <button onClick={() => navigate(`/tournament/${tournament.id}`)}>
-                      Abrir
-                    </button>
+                    <button onClick={() => navigate(`/tournament/${tournament.id}`)}>Abrir</button>
                   </div>
                 ))}
               </div>
             </div>
+          </>
+        )}
+
+        {org && panel === 'financeiro' && (
+          <>
+            <div className="financeGrid">
+              <div className="financeCard">
+                <span>Plano atual</span>
+                <strong>{adminPlanLabel(org.plan)}</strong>
+              </div>
+
+              <div className="financeCard">
+                <span>Valor arrecadado</span>
+                <strong>{adminMoney(summary.revenue || 0)}</strong>
+              </div>
+
+              <div className="financeCard">
+                <span>Pagamentos aprovados</span>
+                <strong>{summary.approvedPayments || 0}</strong>
+              </div>
+
+              <div className="financeCard">
+                <span>Pagamentos pendentes</span>
+                <strong>{summary.pendingPayments || 0}</strong>
+              </div>
+            </div>
+
+            <div className="panel">
+              <h2>Alterar plano</h2>
+              <div className="adminClientPlanActions">
+                <button onClick={() => changePlan('trial')}>Trial</button>
+                <button onClick={() => changePlan('pro')}>Pro</button>
+                <button onClick={() => changePlan('master')}>Master</button>
+                <button onClick={() => changePlan('free')}>Acesso gratuito</button>
+              </div>
+            </div>
+
+            <div className="panel">
+              <h2>Histórico financeiro</h2>
+              {payments.length === 0 && <p>Nenhum pagamento registrado.</p>}
+              {payments.map((payment: any) => (
+                <div key={payment.id} className="paymentRow">
+                  <div>
+                    <strong>{adminPlanLabel(payment.plan)}</strong>
+                    <span>{payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : '-'}</span>
+                  </div>
+
+                  <div>
+                    <strong>{adminMoney(payment.amount)}</strong>
+                    <span className={`statusBadge ${payment.status}`}>{payment.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {org && panel === 'perfil' && (
+          <div className="panel">
+            <h2>Perfil do cliente</h2>
+
+            <div className="adminClientProfileGrid">
+              <div>
+                <label>Nome do responsável</label>
+                <input value={profileForm.name} onChange={e => updateProfileField('name', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Login / e-mail</label>
+                <input type="email" value={profileForm.email} onChange={e => updateProfileField('email', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Nova senha</label>
+                <input type="password" value={profileForm.password} onChange={e => updateProfileField('password', e.target.value)} placeholder="Deixe em branco para manter" />
+              </div>
+
+              <div>
+                <label>Telefone / WhatsApp</label>
+                <input value={profileForm.phone} onChange={e => updateProfileField('phone', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Nome da organização</label>
+                <input value={profileForm.organizationName} onChange={e => updateProfileField('organizationName', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Pessoa física / jurídica</label>
+                <select value={profileForm.documentType} onChange={e => updateProfileField('documentType', e.target.value)}>
+                  <option value="">Não informado</option>
+                  <option value="cpf">Pessoa física</option>
+                  <option value="cnpj">Pessoa jurídica</option>
+                </select>
+              </div>
+
+              <div>
+                <label>CPF / CNPJ</label>
+                <input value={profileForm.documentNumber} onChange={e => updateProfileField('documentNumber', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Modalidades atendidas</label>
+                <input value={profileForm.supportedSports} onChange={e => updateProfileField('supportedSports', e.target.value)} />
+              </div>
+
+              <div className="adminEditWide">
+                <label>Logradouro</label>
+                <input value={profileForm.street} onChange={e => updateProfileField('street', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Número</label>
+                <input value={profileForm.number} onChange={e => updateProfileField('number', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Complemento</label>
+                <input value={profileForm.complement} onChange={e => updateProfileField('complement', e.target.value)} />
+              </div>
+
+              <div>
+                <label>País</label>
+                <input value={profileForm.country} onChange={e => updateProfileField('country', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Estado</label>
+                <input value={profileForm.state} onChange={e => updateProfileField('state', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Cidade</label>
+                <input value={profileForm.city} onChange={e => updateProfileField('city', e.target.value)} />
+              </div>
+            </div>
+
+            <button className="primaryButton" onClick={saveProfile}>Salvar perfil do cliente</button>
           </div>
         )}
       </main>

@@ -5589,7 +5589,7 @@ button:hover {
 
 .clientFilters {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) 220px;
+  grid-template-columns: minmax(240px, 1fr) repeat(4, minmax(160px, 210px));
   gap: 12px;
   margin-bottom: 18px;
 }
@@ -5602,6 +5602,114 @@ button:hover {
   border: 1px solid #334155;
   background: #020617;
   color: white;
+}
+
+.adminClientTableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  background: #020617;
+}
+
+.adminClientTable {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+}
+
+.adminClientTable th,
+.adminClientTable td {
+  padding: 13px 14px;
+  border-bottom: 1px solid #1e293b;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.adminClientTable th {
+  color: #93c5fd;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  background: #0f172a;
+}
+
+.adminClientTable tr:last-child td {
+  border-bottom: 0;
+}
+
+.adminClientTable tr.blocked td {
+  background: rgba(248, 113, 113, .08);
+}
+
+.tableNameButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-weight: 950;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tableNameButton:hover {
+  color: #60a5fa;
+}
+
+.adminClientActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.adminClientActions button {
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.adminClientSidebarContext {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 18px;
+  padding: 12px;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  background: #020617;
+}
+
+.adminClientSidebarContext span {
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.adminClientSidebarContext strong {
+  color: #fff;
+  line-height: 1.2;
+}
+
+.adminClientPlanActions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.adminClientProfileGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.adminClientProfileGrid input,
+.adminClientProfileGrid select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background: #020617;
+  color: #fff;
 }
 
 .clientTournamentList {
@@ -6059,6 +6167,8 @@ button:hover {
   .clientCard,
   .clientFilters,
   .clientTournamentRow,
+  .adminClientPlanActions,
+  .adminClientProfileGrid,
   .usersLayout,
   .userRow,
   .seasonLayout,
