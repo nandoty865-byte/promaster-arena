@@ -13,6 +13,31 @@ import {
 import './App.css'
 
 const API = '/api'
+const TOURNAMENT_FORMAT_OPTIONS = [
+  { value: 'knockout', label: 'Mata-mata' },
+  { value: 'double_elimination', label: 'Dupla eliminatória' },
+  { value: 'round_robin', label: 'Todos contra todos' },
+  { value: 'swiss', label: 'Modo suíço' },
+]
+const SPORT_OPTIONS = ['Sinuca', 'Futebol', 'Vôlei de praia', 'Futebol society', 'Tênis de mesa']
+
+function youtubeEmbedUrl(url?: string) {
+  if (!url) return ''
+
+  const patterns = [
+    /youtube\.com\/watch\?v=([^&]+)/,
+    /youtu\.be\/([^?]+)/,
+    /youtube\.com\/live\/([^?]+)/,
+    /youtube\.com\/embed\/([^?]+)/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match?.[1]) return `https://www.youtube.com/embed/${match[1]}`
+  }
+
+  return url
+}
 
 function authHeaders() {
   return {
@@ -33,24 +58,6 @@ function goHome() {
   window.location.href = '/'
 }
 
-function youtubeEmbedUrl(url?: string) {
-  if (!url) return ''
-
-  const patterns = [
-    /youtube\.com\/watch\?v=([^&]+)/,
-    /youtu\.be\/([^?]+)/,
-    /youtube\.com\/live\/([^?]+)/,
-    /youtube\.com\/embed\/([^?]+)/,
-  ]
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern)
-    if (match?.[1]) return `https://www.youtube.com/embed/${match[1]}`
-  }
-
-  return url
-}
-
 function publicTournamentUrl(slug?: string) {
   if (!slug) return ''
   return `${window.location.origin}/public/${slug}`
@@ -62,9 +69,108 @@ function isPublicPath(path: string) {
     path === '/login' ||
     path === '/register' ||
     path === '/forgot-password' ||
+    path === '/reset-password' ||
+    path === '/inscreva-se' ||
+    path === '/cadastro-organizador' ||
+    path === '/cadastro-jogador' ||
+    path.startsWith('/jogador/') ||
     path.startsWith('/telao/') ||
     path.startsWith('/public/')
   )
+}
+
+function safeJsonArray(value: string) {
+  try {
+    const parsed = JSON.parse(value || '[]')
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function onlyDigits(value: string) {
+  return String(value || '').replace(/\D/g, '')
+}
+
+function normalizeBrazilPhone(value: string) {
+  const digits = onlyDigits(value)
+  if (digits.startsWith('55') && digits.length === 13) return digits
+  if (digits.length === 11) return `55${digits}`
+  return digits
+}
+
+function isValidBrazilCellphone(value: string) {
+  const digits = onlyDigits(value)
+  const local = digits.startsWith('55') ? digits.slice(2) : digits
+  return /^[1-9]{2}9\d{8}$/.test(local)
+}
+
+function formatBrazilCellphone(value: string) {
+  const digits = onlyDigits(value).replace(/^55/, '').slice(0, 11)
+  if (digits.length <= 2) return digits
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+}
+
+function formatRg(value: string) {
+  return String(value || '').replace(/[^0-9A-Za-z.-]/g, '').toUpperCase().slice(0, 14)
+}
+
+function isValidRg(value: string) {
+  const clean = String(value || '').replace(/[^0-9A-Za-z]/g, '')
+  return clean.length >= 5 && clean.length <= 12
+}
+
+function buildTournamentPhases(playerCount: number) {
+  const rounds = Math.max(1, Math.ceil(Math.log2(Math.max(2, Number(playerCount) || 2))))
+  return Array.from({ length: rounds }, (_, index) => {
+    const phase = index + 1
+    const remaining = rounds - index
+    const label = remaining === 1
+      ? 'Final'
+      : remaining === 2
+        ? 'Semifinal'
+        : remaining === 3
+          ? 'Quartas'
+          : `Fase ${phase}`
+    return { phase, label }
+  })
+}
+
+function tournamentFormatLabel(format: string) {
+  const normalized = String(format || '').toLowerCase()
+  const option = TOURNAMENT_FORMAT_OPTIONS.find(item => item.value === normalized)
+  if (option) return option.label
+  if (normalized.includes('double') || normalized.includes('dupla')) return 'Dupla eliminatória'
+  if (normalized.includes('group') || normalized.includes('grupo')) return 'Grupos'
+  if (normalized.includes('round') || normalized.includes('todos')) return 'Todos contra todos'
+  if (normalized.includes('swiss') || normalized.includes('sui')) return 'Suíço'
+  if (normalized.includes('mata') || normalized.includes('single') || normalized.includes('knockout')) return 'Mata-mata'
+  return format || 'Formato não informado'
+}
+
+function buildBracketSkeletonRounds(playerCount: number) {
+  const slots = Math.pow(2, Math.ceil(Math.log2(Math.max(2, Number(playerCount) || 2))))
+  const rounds = []
+  let matchCount = Math.max(1, slots / 2)
+  let round = 1
+
+  while (matchCount >= 1) {
+    rounds.push({
+      round,
+      matches: Array.from({ length: matchCount }, (_, index) => ({
+        id: `skeleton-${round}-${index + 1}`,
+        matchNumber: index + 1,
+        table: '-',
+        status: 'skeleton',
+        skeleton: true,
+      })),
+    })
+    matchCount = matchCount / 2
+    round += 1
+  }
+
+  return rounds
 }
 
 export default function App() {
@@ -112,13 +218,20 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/inscreva-se" element={<SignupChoice />} />
+      <Route path="/cadastro-organizador" element={<OrganizerSignup />} />
+      <Route path="/cadastro-jogador" element={<PlayerSignup />} />
+      <Route path="/jogador/:id" element={<PlayerDashboard />} />
       <Route path="/" element={<Landing />} />
       <Route path="/planos" element={<PlansComparison />} />
       <Route path="/app" element={<Dashboard user={user} />} />
       <Route path="/app/perfil" element={<ProfilePage />} />
+      <Route path="/app/usuarios" element={<UsersPage />} />
       <Route path="/upgrade" element={<Upgrade />} />
       <Route path="/campeonatos" element={<SeasonsPage user={user} />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
+      <Route path="/tournament/:id/painel" element={<TournamentOverview />} />
       <Route path="/tournament/:id/settings" element={<TournamentSettings />} />
       <Route path="/public/:slug" element={<PublicTournament />} />
       <Route path="/admin/financeiro" element={<Financeiro />} />
@@ -126,6 +239,7 @@ export default function App() {
       <Route path="/admin" element={<Admin />} />
       <Route path="*" element={<Navigate to="/" />} />
 <Route path="/tournament/:id" element={<TournamentBracket />} />
+<Route path="/arbitro/:id" element={<RefereeMode />} />
 <Route path="/telao/:id" element={<TelaoTV />} />
 <Route path="/register" element={<Register />} />
 
@@ -134,38 +248,256 @@ export default function App() {
 }
 
 function Register() {
-  const [organizationName, setOrganizationName] = useState('')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [address, setAddress] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  return <OrganizerSignup />
+}
+
+function SignupChoice() {
+  return (
+    <div className="onboardingPage signupChoicePage">
+      <section className="onboardingHero">
+        <span>Inscreva-se</span>
+        <h1>Escolha como você quer entrar no ProMaster Arena.</h1>
+        <p>Organizadores criam e operam torneios. Jogadores acompanham histórico, ranking, estatísticas e avisos dos eventos.</p>
+      </section>
+
+      <section className="signupChoiceGrid">
+        <a className="signupChoiceCard" href="/cadastro-organizador">
+          <span>🏆</span>
+          <h2>Sou organizador</h2>
+          <p>Cadastre sua arena, clube, bar ou associação para criar torneios, abrir inscrições e controlar pagamentos por evento.</p>
+          <strong>Cadastrar organizador</strong>
+        </a>
+
+        <a className="signupChoiceCard" href="/cadastro-jogador">
+          <span>🎱</span>
+          <h2>Sou jogador</h2>
+          <p>Crie seu perfil para acompanhar inscrições, ranking, histórico de torneios, resultados e conquistas.</p>
+          <strong>Cadastrar jogador</strong>
+        </a>
+      </section>
+    </div>
+  )
+}
+
+function OrganizerSignup() {
+  const [form, setForm] = useState<any>({
+    organizationName: '',
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    password: '',
+    confirmPassword: '',
+    documentType: 'CNPJ',
+    documentNumber: '',
+    termsAccepted: false,
+  })
+  const [sports, setSports] = useState<string[]>(['Sinuca'])
+  const [documentFile, setDocumentFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
 
-  function register() {
-    if (!organizationName || !email || !phone || !password) {
-      alert('Preencha organização, e-mail, telefone e senha')
+  function updateField(field: string, value: string | boolean) {
+    setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function toggleSport(sport: string) {
+    setSports(current => (
+      current.includes(sport)
+        ? current.filter(item => item !== sport)
+        : [...current, sport]
+    ))
+  }
+
+  async function register() {
+    if (!form.organizationName || !form.email || !form.phone || !form.password) {
+      alert('Preencha organização, e-mail, telefone e senha.')
       return
     }
 
-    if (password !== confirmPassword) {
-      alert('As senhas não conferem')
+    if (!form.documentNumber) {
+      alert('Informe o documento do organizador.')
+      return
+    }
+
+    if (!form.termsAccepted) {
+      alert('Aceite os termos de uso para continuar.')
+      return
+    }
+
+    if (form.password !== form.confirmPassword) {
+      alert('As senhas não conferem.')
+      return
+    }
+
+    const payload = new FormData()
+    Object.entries(form).forEach(([key, value]) => payload.append(key, String(value)))
+    payload.append('supportedSports', sports.join(', '))
+    if (documentFile) payload.append('document', documentFile)
+
+    setLoading(true)
+
+    try {
+      const response = await fetch(`${API}/auth/register-organizer`, {
+        method: 'POST',
+        body: payload,
+      })
+      const data = await response.json()
+
+      if (data.error) {
+        alert(data.error)
+        return
+      }
+
+      alert(data.message || 'Cadastro criado. Enviamos confirmação por e-mail e WhatsApp.')
+      window.location.href = '/login'
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="onboardingPage">
+      <section className="onboardingHero">
+        <span>Cadastro de organizador</span>
+        <h1>Crie sua arena com validação e controle profissional.</h1>
+        <p>Organizadores podem operar torneios de vários esportes, aceitar inscrições públicas e definir a cobrança individualmente em cada torneio.</p>
+        <div className="onboardingSwitch">
+          <a className="active" href="/cadastro-organizador">Sou organizador</a>
+          <a href="/cadastro-jogador">Sou jogador</a>
+        </div>
+      </section>
+
+      <section className="onboardingCard">
+        <h2>Dados da organização</h2>
+        <div className="onboardingGrid">
+          <div>
+            <label>Nome da organização *</label>
+            <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
+          </div>
+          <div>
+            <label>Responsável</label>
+            <input value={form.name} onChange={e => updateField('name', e.target.value)} />
+          </div>
+          <div>
+            <label>E-mail *</label>
+            <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+          </div>
+          <div>
+            <label>WhatsApp *</label>
+            <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+          </div>
+          <div className="fullSpan">
+            <label>Endereço</label>
+            <input value={form.address} onChange={e => updateField('address', e.target.value)} />
+          </div>
+        </div>
+
+        <h2>Validação do organizador</h2>
+        <div className="onboardingGrid">
+          <div>
+            <label>Tipo de documento</label>
+            <select value={form.documentType} onChange={e => updateField('documentType', e.target.value)}>
+              <option value="CNPJ">CNPJ</option>
+              <option value="CPF">CPF</option>
+              <option value="RG">RG</option>
+            </select>
+          </div>
+          <div>
+            <label>Número do documento *</label>
+            <input value={form.documentNumber} onChange={e => updateField('documentNumber', e.target.value)} />
+          </div>
+          <div className="fullSpan">
+            <label>Documento para análise</label>
+            <input type="file" accept="image/*,.pdf" onChange={e => setDocumentFile(e.target.files?.[0] || null)} />
+          </div>
+        </div>
+
+        <h2>Operação e cobrança</h2>
+        <div className="sportsPicker">
+          {SPORT_OPTIONS.map(sport => (
+            <label key={sport}>
+              <input type="checkbox" checked={sports.includes(sport)} onChange={() => toggleSport(sport)} />
+              {sport}
+            </label>
+          ))}
+        </div>
+
+        <div className="onboardingGrid">
+          <div>
+            <label>Senha *</label>
+            <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} />
+          </div>
+          <div>
+            <label>Confirmar senha *</label>
+            <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} />
+          </div>
+        </div>
+
+        <label className="termsLine">
+          <input
+            type="checkbox"
+            checked={form.termsAccepted}
+            onChange={e => updateField('termsAccepted', e.target.checked)}
+          />
+          Aceito os termos de uso, política de comunicação e validação do organizador.
+        </label>
+
+        <button className="primaryButton" onClick={register} disabled={loading}>
+          {loading ? 'Enviando...' : 'Criar conta de organizador'}
+        </button>
+        <a href="/login">Já tenho conta</a>
+      </section>
+    </div>
+  )
+}
+
+function PlayerSignup() {
+  const navigate = useNavigate()
+  const [form, setForm] = useState<any>({
+    name: '',
+    nickname: '',
+    email: '',
+    phone: '',
+    rg: '',
+    city: '',
+    state: '',
+    country: 'Brasil',
+    termsAccepted: false,
+  })
+  const [sports, setSports] = useState<string[]>(['Sinuca'])
+  const [loading, setLoading] = useState(false)
+
+  function updateField(field: string, value: string | boolean) {
+    setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function toggleSport(sport: string) {
+    setSports(current => (
+      current.includes(sport)
+        ? current.filter(item => item !== sport)
+        : [...current, sport]
+    ))
+  }
+
+  function registerPlayerAccount() {
+    if (!form.name || !form.email || !form.phone) {
+      alert('Preencha nome, e-mail e WhatsApp.')
+      return
+    }
+
+    if (!form.termsAccepted) {
+      alert('Aceite os termos para criar o perfil.')
       return
     }
 
     setLoading(true)
-
-    fetch(`${API}/auth/register`, {
+    fetch(`${API}/players/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        organizationName,
-        name,
-        email,
-        phone,
-        address,
-        password,
+        ...form,
+        favoriteSports: sports,
+        phone: normalizeBrazilPhone(form.phone),
       }),
     })
       .then(res => res.json())
@@ -175,46 +507,164 @@ function Register() {
           return
         }
 
-        alert('Cadastro criado! Você já pode entrar com seu e-mail e senha.')
-        window.location.href = '/login'
+        navigate(`/jogador/${data.player.id}`)
       })
       .finally(() => setLoading(false))
   }
 
   return (
-    <div className="registerPage">
-      <div className="registerCard">
-        <div className="badge">🎱 ProMaster Arena</div>
-        <h1>Comece grátis</h1>
-        <p>Crie sua arena e teste por 7 dias.</p>
+    <div className="onboardingPage">
+      <section className="onboardingHero playerHero">
+        <span>Cadastro de jogador</span>
+        <h1>Seu histórico competitivo em um só lugar.</h1>
+        <p>Acompanhe torneios, ranking Elo, últimas partidas, conquistas e avisos dos organizadores.</p>
+        <div className="onboardingSwitch">
+          <a href="/cadastro-organizador">Sou organizador</a>
+          <a className="active" href="/cadastro-jogador">Sou jogador</a>
+        </div>
+      </section>
 
-        <label>Nome da organização *</label>
-        <input value={organizationName} onChange={e => setOrganizationName(e.target.value)} />
+      <section className="onboardingCard">
+        <h2>Dados do jogador</h2>
+        <div className="onboardingGrid">
+          <div>
+            <label>Nome completo *</label>
+            <input value={form.name} onChange={e => updateField('name', e.target.value)} />
+          </div>
+          <div>
+            <label>Apelido</label>
+            <input value={form.nickname} onChange={e => updateField('nickname', e.target.value)} />
+          </div>
+          <div>
+            <label>E-mail *</label>
+            <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+          </div>
+          <div>
+            <label>WhatsApp *</label>
+            <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+          </div>
+          <div>
+            <label>RG</label>
+            <input value={form.rg} onChange={e => updateField('rg', formatRg(e.target.value))} />
+          </div>
+          <div>
+            <label>Cidade</label>
+            <input value={form.city} onChange={e => updateField('city', e.target.value)} />
+          </div>
+          <div>
+            <label>Estado</label>
+            <input value={form.state} onChange={e => updateField('state', e.target.value)} />
+          </div>
+          <div>
+            <label>País</label>
+            <input value={form.country} onChange={e => updateField('country', e.target.value)} />
+          </div>
+        </div>
 
-        <label>Seu nome</label>
-        <input value={name} onChange={e => setName(e.target.value)} />
+        <h2>Esportes</h2>
+        <div className="sportsPicker">
+          {SPORT_OPTIONS.map(sport => (
+            <label key={sport}>
+              <input type="checkbox" checked={sports.includes(sport)} onChange={() => toggleSport(sport)} />
+              {sport}
+            </label>
+          ))}
+        </div>
 
-        <label>E-mail *</label>
-        <input value={email} onChange={e => setEmail(e.target.value)} />
+        <label className="termsLine">
+          <input
+            type="checkbox"
+            checked={form.termsAccepted}
+            onChange={e => updateField('termsAccepted', e.target.checked)}
+          />
+          Aceito receber avisos de torneios, chamadas de partidas e atualizações do meu ranking.
+        </label>
 
-        <label>Telefone *</label>
-        <input value={phone} onChange={e => setPhone(e.target.value)} />
-
-        <label>Endereço</label>
-        <input value={address} onChange={e => setAddress(e.target.value)} />
-
-        <label>Senha *</label>
-        <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
-
-        <label>Confirmar senha *</label>
-        <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-
-        <button className="primaryButton" onClick={register} disabled={loading}>
-          {loading ? 'Criando...' : 'Criar conta grátis'}
+        <button className="primaryButton" onClick={registerPlayerAccount} disabled={loading}>
+          {loading ? 'Criando...' : 'Criar perfil de jogador'}
         </button>
+      </section>
+    </div>
+  )
+}
 
-        <a href="/login">Já tenho conta</a>
-      </div>
+function PlayerDashboard() {
+  const { id } = useParams()
+  const [data, setData] = useState<any>(null)
+
+  useEffect(() => {
+    fetch(`${API}/players/${id}/dashboard`, { cache: 'no-store' })
+      .then(res => res.json())
+      .then(setData)
+  }, [id])
+
+  if (!data?.player) {
+    return <div className="publicPage">Carregando jogador...</div>
+  }
+
+  const { player, stats, latestResults = [], achievements = [], notices = [], registrations = [] } = data
+
+  return (
+    <div className="playerPortalPage">
+      <header className="playerPortalHero">
+        <span>Perfil do jogador</span>
+        <h1>{player.nickname || player.name}</h1>
+        <p>{player.city || 'Cidade não informada'}{player.state ? ` • ${player.state}` : ''}</p>
+      </header>
+
+      <section className="playerStatsGrid">
+        <div><span>Elo</span><strong>{stats.elo}</strong></div>
+        <div><span>Vitórias</span><strong>{stats.wins}</strong></div>
+        <div><span>Derrotas</span><strong>{stats.losses}</strong></div>
+        <div><span>Aproveitamento</span><strong>{stats.winRate}%</strong></div>
+        <div><span>Torneios</span><strong>{stats.tournaments}</strong></div>
+        <div><span>Títulos</span><strong>{stats.championCount}</strong></div>
+      </section>
+
+      <main className="playerPortalGrid">
+        <section className="playerPortalCard">
+          <h2>Últimos resultados</h2>
+          {latestResults.length === 0 && <p>Nenhuma partida finalizada encontrada.</p>}
+          {latestResults.map((result: any) => (
+            <div key={result.id} className="playerResultRow">
+              <strong>{result.result}</strong>
+              <span>{result.tournament}</span>
+              <small>{result.opponent} • {result.score}</small>
+            </div>
+          ))}
+        </section>
+
+        <section className="playerPortalCard">
+          <h2>Histórico de torneios</h2>
+          {registrations.length === 0 && <p>Nenhum torneio vinculado ao perfil.</p>}
+          {registrations.map((registration: any) => (
+            <div key={registration.id} className="playerResultRow">
+              <strong>{registration.tournament}</strong>
+              <span>{registration.status} • {registration.paymentStatus}</span>
+              <small>{registration.date ? new Date(registration.date).toLocaleDateString() : 'Data a confirmar'}</small>
+            </div>
+          ))}
+        </section>
+
+        <section className="playerPortalCard">
+          <h2>Conquistas</h2>
+          {achievements.length === 0 && <p>As conquistas aparecerão conforme os torneios forem finalizados.</p>}
+          {achievements.map((item: string) => (
+            <div key={item} className="achievementPill">{item}</div>
+          ))}
+        </section>
+
+        <section className="playerPortalCard">
+          <h2>Avisos</h2>
+          {notices.length === 0 && <p>Nenhum aviso ativo.</p>}
+          {notices.map((notice: any) => (
+            <div key={notice.id} className="playerResultRow">
+              <strong>{notice.title}</strong>
+              <span>{notice.text}</span>
+            </div>
+          ))}
+        </section>
+      </main>
     </div>
   )
 }
@@ -266,7 +716,7 @@ function Login() {
         <button className="primaryButton" onClick={login}>Entrar</button>
         <div className="loginLinks">
           <a href="/forgot-password">Esqueci minha senha</a>
-          <a href="/register">Criar nova conta</a>
+          <a href="/cadastro-organizador">Criar nova conta</a>
         </div>
       </div>
     </div>
@@ -275,20 +725,119 @@ function Login() {
 
 function ForgotPassword() {
   const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  function requestReset() {
+    if (!email) {
+      alert('Informe seu e-mail.')
+      return
+    }
+
+    setLoading(true)
+    fetch(`${API}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        alert(data.message || 'Se o e-mail estiver cadastrado, enviaremos as instruções.')
+      })
+      .finally(() => setLoading(false))
+  }
 
   return (
     <div className="app">
       <div className="panel" style={{ maxWidth: 420, margin: '80px auto' }}>
         <h1>Recuperar senha</h1>
-        <p>Informe seu e-mail. A recuperação automática ainda está em implantação.</p>
+        <p>Informe seu e-mail para receber o link de redefinição.</p>
 
         <input value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" />
 
         <button
           className="primaryButton"
-          onClick={() => alert('Recuperação de senha em implantação. Entre em contato com o suporte para redefinir o acesso.')}
+          onClick={requestReset}
+          disabled={loading}
         >
-          Solicitar recuperação
+          {loading ? 'Enviando...' : 'Solicitar recuperação'}
+        </button>
+
+        <div className="loginLinks">
+          <a href="/login">Voltar ao login</a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ResetPassword() {
+  const token = new URLSearchParams(window.location.search).get('token') || ''
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  function resetPassword() {
+    if (!token) {
+      alert('Link inválido.')
+      return
+    }
+
+    if (!password || password.length < 6) {
+      alert('A senha deve ter pelo menos 6 caracteres.')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      alert('As senhas não conferem.')
+      return
+    }
+
+    setLoading(true)
+    fetch(`${API}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        alert('Senha alterada com sucesso.')
+        window.location.href = '/login'
+      })
+      .finally(() => setLoading(false))
+  }
+
+  return (
+    <div className="app">
+      <div className="panel" style={{ maxWidth: 420, margin: '80px auto' }}>
+        <h1>Nova senha</h1>
+        <p>Crie uma nova senha para acessar o ProMaster Arena.</p>
+
+        <input
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="Nova senha"
+        />
+
+        <input
+          type="password"
+          value={confirmPassword}
+          onChange={e => setConfirmPassword(e.target.value)}
+          placeholder="Confirmar nova senha"
+        />
+
+        <button className="primaryButton" onClick={resetPassword} disabled={loading}>
+          {loading ? 'Salvando...' : 'Alterar senha'}
         </button>
 
         <div className="loginLinks">
@@ -336,6 +885,7 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
     <aside className="sidebar">
       <div className="sidebarLogo">🎱 ProMaster</div>
       <button onClick={() => navigate('/app')}>Dashboard</button>
+      <button onClick={() => navigate('/app/perfil')}>Perfil</button>
       <button onClick={goToTournaments}>Meus Torneios</button>
       <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
       <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
@@ -382,19 +932,26 @@ function ProfilePage() {
     country: '',
     state: '',
     city: '',
+    documentType: 'CNPJ',
+    documentNumber: '',
+    supportedSports: '',
   })
+  const [profileSports, setProfileSports] = useState<string[]>([])
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   })
   const [logoUploading, setLogoUploading] = useState(false)
+  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null)
 
   function loadProfile() {
     fetch(`${API}/me`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => {
         setUser(data.user)
+        const supportedSports = data.user?.organization?.supportedSports || ''
+        setProfileSports(String(supportedSports).split(',').map((item: string) => item.trim()).filter(Boolean))
         setForm({
           name: data.user?.name || '',
           email: data.user?.email || '',
@@ -406,11 +963,14 @@ function ProfilePage() {
           country: data.user?.organization?.country || '',
           state: data.user?.organization?.state || '',
           city: data.user?.organization?.city || '',
+          documentType: data.user?.organization?.documentType || 'CNPJ',
+          documentNumber: data.user?.organization?.documentNumber || '',
+          supportedSports,
         })
       })
   }
 
-  function updateField(field: string, value: string) {
+  function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
   }
 
@@ -418,11 +978,22 @@ function ProfilePage() {
     setPasswordForm(current => ({ ...current, [field]: value }))
   }
 
+  function toggleProfileSport(sport: string) {
+    setProfileSports(current => (
+      current.includes(sport)
+        ? current.filter(item => item !== sport)
+        : [...current, sport]
+    ))
+  }
+
   function saveProfile() {
     fetch(`${API}/me/profile`, {
       method: 'PUT',
       headers: authHeaders(),
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        ...form,
+        supportedSports: profileSports.join(', '),
+      }),
     })
       .then(res => res.json())
       .then(data => {
@@ -476,30 +1047,64 @@ function ProfilePage() {
       })
   }
 
-  function uploadLogo(file?: File) {
-    if (!file) return
+  async function uploadLogo() {
+    if (!selectedLogoFile) {
+      alert('Selecione uma imagem para enviar.')
+      return
+    }
+
+    if (!selectedLogoFile.type.startsWith('image/')) {
+      alert('Selecione um arquivo de imagem.')
+      return
+    }
+
+    if (selectedLogoFile.size > 3 * 1024 * 1024) {
+      alert('A logo deve ter no máximo 3 MB.')
+      return
+    }
 
     const data = new FormData()
-    data.append('logo', file)
+    data.append('logo', selectedLogoFile)
     setLogoUploading(true)
 
-    fetch(`${API}/me/logo`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: data,
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          alert(data.error)
-          return
-        }
-
-        loadProfile()
+    try {
+      const response = await fetch(`${API}/me/logo`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: data,
       })
-      .finally(() => setLogoUploading(false))
+
+      const text = await response.text()
+      let result: any = {}
+
+      try {
+        result = text ? JSON.parse(text) : {}
+      } catch {
+        result = { error: text || 'Resposta inválida do servidor.' }
+      }
+
+      if (!response.ok || result.error) {
+        alert(result.error || 'Não foi possível enviar a logo.')
+        return
+      }
+
+      setSelectedLogoFile(null)
+      setUser((current: any) => ({
+        ...current,
+        organization: {
+          ...current?.organization,
+          logoUrl: result.logoUrl,
+        },
+      }))
+      loadProfile()
+      alert('Logo enviada com sucesso.')
+    } catch {
+      alert('Falha de conexão ao enviar a logo.')
+    } finally {
+      setLogoUploading(false)
+    }
   }
 
   useEffect(() => {
@@ -532,14 +1137,27 @@ function ProfilePage() {
             )}
 
             <label className="fileButton">
-              {logoUploading ? 'Enviando...' : 'Enviar logo'}
+              Selecionar arquivo
               <input
                 type="file"
                 accept="image/*"
-                onChange={e => uploadLogo(e.target.files?.[0])}
+                onChange={e => setSelectedLogoFile(e.target.files?.[0] || null)}
                 disabled={logoUploading}
               />
             </label>
+
+            {selectedLogoFile && (
+              <p className="fileHint">{selectedLogoFile.name}</p>
+            )}
+
+            <button
+              className="primaryButton"
+              type="button"
+              onClick={uploadLogo}
+              disabled={logoUploading || !selectedLogoFile}
+            >
+              {logoUploading ? 'Enviando...' : 'Salvar logo'}
+            </button>
           </div>
 
           <div className="panel settingsPanel">
@@ -556,6 +1174,40 @@ function ProfilePage() {
 
             <label>Nome da arena / organização</label>
             <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
+
+            <div className="profileAddressGrid">
+              <div>
+                <label>Tipo de documento</label>
+                <select value={form.documentType} onChange={e => updateField('documentType', e.target.value)}>
+                  <option value="CNPJ">CNPJ</option>
+                  <option value="CPF">CPF</option>
+                  <option value="RG">RG</option>
+                </select>
+              </div>
+
+              <div>
+                <label>Número do documento</label>
+                <input value={form.documentNumber} onChange={e => updateField('documentNumber', e.target.value)} />
+              </div>
+            </div>
+
+            <label>Esportes atendidos</label>
+            <div className="sportsPicker">
+              {SPORT_OPTIONS.map(sport => (
+                <label key={sport}>
+                  <input
+                    type="checkbox"
+                    checked={profileSports.includes(sport)}
+                    onChange={() => toggleProfileSport(sport)}
+                  />
+                  {sport}
+                </label>
+              ))}
+            </div>
+
+            <p className="helperText">
+              Validação: {user?.organization?.kycStatus || 'pending'}
+            </p>
 
             <div className="profileAddressGrid">
               <div>
@@ -622,6 +1274,202 @@ function ProfilePage() {
               Alterar senha
             </button>
           </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+function UsersPage() {
+  const [user, setUser] = useState<any>(null)
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    role: 'operator',
+  })
+
+  const isMasterPlan = user?.organization?.plan === 'master' || user?.organization?.plan === 'free'
+  const allowedUsers = isMasterPlan ? 4 : 1
+  const remainingUsers = Math.max(allowedUsers - users.length, 0)
+
+  function loadUsers() {
+    setLoading(true)
+    fetch(`${API}/me/users`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setUser(data.user)
+        setUsers(data.users || [])
+      })
+      .finally(() => setLoading(false))
+  }
+
+  function updateUserField(field: string, value: string) {
+    setForm(current => ({ ...current, [field]: value }))
+  }
+
+  async function createUser() {
+    if (!form.name || !form.email || !form.password) {
+      alert('Preencha nome, e-mail e senha.')
+      return
+    }
+
+    if (!isMasterPlan) {
+      alert('Usuários/equipe está disponível no plano Master.')
+      return
+    }
+
+    setSaving(true)
+    try {
+      const response = await fetch(`${API}/me/users/create`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(form),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || data.error) {
+        alert(data.error || 'Não foi possível criar o usuário.')
+        return
+      }
+
+        setForm({
+          name: '',
+          email: '',
+          phone: '',
+          password: '',
+          role: 'operator',
+        })
+      loadUsers()
+      alert('Usuário criado com sucesso.')
+    } catch {
+      alert('Falha de conexão ao criar usuário.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      goHome()
+      return
+    }
+
+    loadUsers()
+  }, [])
+
+  return (
+    <div className="saasLayout">
+      <ClientSidebar isMasterPlan={isMasterPlan} />
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">👥 Usuários</div>
+          <h1>Usuários da equipe</h1>
+          <p>Crie acessos para organizadores acompanharem e operarem torneios da arena.</p>
+        </header>
+
+        <div className="usersLayout">
+          <section className="panel settingsPanel">
+            <h2>Novo usuário</h2>
+
+            {!isMasterPlan && (
+              <div className="noticeBox">
+                Usuários/equipe está disponível no plano Master.
+              </div>
+            )}
+
+            <label>Nome</label>
+            <input
+              value={form.name}
+              onChange={e => updateUserField('name', e.target.value)}
+              disabled={!isMasterPlan || saving}
+            />
+
+            <label>E-mail</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={e => updateUserField('email', e.target.value)}
+              disabled={!isMasterPlan || saving}
+            />
+
+            <label>WhatsApp</label>
+            <input
+              value={form.phone}
+              onChange={e => updateUserField('phone', e.target.value)}
+              placeholder="Ex: 11999999999"
+              disabled={!isMasterPlan || saving}
+            />
+
+            <label>Senha inicial</label>
+            <input
+              type="password"
+              value={form.password}
+              onChange={e => updateUserField('password', e.target.value)}
+              disabled={!isMasterPlan || saving}
+            />
+
+            <label>Perfil</label>
+            <select
+              value={form.role}
+              onChange={e => updateUserField('role', e.target.value)}
+              disabled={!isMasterPlan || saving}
+            >
+              <option value="operator">Organizador</option>
+              <option value="viewer">Visualizador</option>
+              <option value="admin">Administrador</option>
+            </select>
+
+            <button
+              className="primaryButton"
+              onClick={createUser}
+              disabled={!isMasterPlan || saving || remainingUsers === 0}
+            >
+              {saving ? 'Criando...' : 'Criar usuário'}
+            </button>
+          </section>
+
+          <section className="panel">
+            <div className="usersHeader">
+              <div>
+                <h2>Equipe cadastrada</h2>
+                <p>{users.length} de {allowedUsers} usuário(s) usados</p>
+              </div>
+              <strong>{remainingUsers} vaga(s)</strong>
+            </div>
+
+            {loading ? (
+              <p className="emptyColumn">Carregando usuários...</p>
+            ) : users.length === 0 ? (
+              <p className="emptyColumn">Nenhum usuário cadastrado.</p>
+            ) : (
+              <div className="usersList">
+                {users.map(teamUser => (
+                  <div key={teamUser.id} className="userRow">
+                    <div>
+                      <strong>{teamUser.name}</strong>
+                      <span>{teamUser.email}</span>
+                      {teamUser.phone && <span>WhatsApp: {teamUser.phone}</span>}
+                    </div>
+                    <span className={`statusBadge ${teamUser.role}`}>
+                      {teamUser.role === 'admin' ? 'Administrador' : teamUser.role === 'viewer' ? 'Visualizador' : 'Organizador'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </main>
     </div>
@@ -715,55 +1563,51 @@ function Dashboard({ user }: any) {
 
           {tournaments.length === 0 && <p>Nenhum torneio encontrado.</p>}
 
-          {tournaments.map(t => {
-            const publicUrl = publicTournamentUrl(t.publicSlug)
+          {tournaments.length > 0 && (
+            <div className="tournamentsTableWrap">
+              <table className="tournamentsTable">
+                <thead>
+                  <tr>
+                    <th>Nome do torneio</th>
+                    <th>Local</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tournaments.map(t => {
+                    const publicUrl = publicTournamentUrl(t.publicSlug)
 
-            return (
-              <div key={t.id} className="tournamentCard">
-                <div className="tournamentHeader">
-                  <div className="tournamentTitleBlock">
-                    <strong>{t.name}</strong>
-                    <span>{t.location ? `📍 ${t.location}` : 'Local não informado'}</span>
-                  </div>
-                  <span className={`statusBadge ${t.status}`}>{t.status}</span>
-                </div>
-
-                <div className="tournamentActions">
-                  <button onClick={() => navigate(`/tournament/${t.id}`)}>
-                    Painel
-                  </button>
-
-                  <button onClick={() => setDetailsTournament(t)}>
-                    Detalhes
-                  </button>
-
-                  <button onClick={() => window.open(`/telao/${t.id}`, '_blank')}>
-                    Telão
-                  </button>
-
-                    <button onClick={() => navigate(`/tournament/${t.id}/settings`)}>
-                      Editar
-                  </button>
-
-                  {t.publicSlug && (
-                    <>
-                      <button onClick={() => navigator.clipboard.writeText(publicUrl)}>
-                        Copiar link
-                      </button>
-
-                      <button onClick={() => window.open(publicUrl, '_blank')}>
-                        Público
-                      </button>
-
-                      <button onClick={() => setQrUrl(publicUrl)}>
-                        QR Code
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+                    return (
+                      <tr key={t.id}>
+                        <td>
+                          <button className="tableLinkButton" onClick={() => navigate(`/tournament/${t.id}/painel`)}>
+                            {t.name}
+                          </button>
+                        </td>
+                        <td>{t.location || 'Local não informado'}</td>
+                        <td>{t.eventDate ? new Date(t.eventDate).toLocaleDateString() : '-'}</td>
+                        <td><span className={`statusBadge ${t.status}`}>{t.status}</span></td>
+                        <td>
+                          <div className="tableActions">
+                            <button onClick={() => setDetailsTournament(t)}>Detalhes</button>
+                            {t.publicSlug && (
+                              <>
+                                <button onClick={() => navigator.clipboard.writeText(publicUrl)}>Copiar link</button>
+                                <button onClick={() => window.open(publicUrl, '_blank')}>Público</button>
+                                <button onClick={() => setQrUrl(publicUrl)}>QR Code</button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {qrUrl && (
@@ -806,12 +1650,22 @@ function Dashboard({ user }: any) {
                   <strong>{detailsTournament.eventTime || '-'}</strong>
                 </div>
                 <div>
+                  <span>Endereço</span>
+                  <strong>{detailsTournament.venueAddress || '-'}</strong>
+                </div>
+                <div>
                   <span>Premiação</span>
                   <strong>{detailsTournament.prize || '-'}</strong>
                 </div>
                 <div>
                   <span>Transmissão</span>
-                  <strong>{detailsTournament.youtubeUrl ? 'YouTube configurado' : 'Não configurada'}</strong>
+                  <strong>
+                    {detailsTournament.broadcastType === 'obs'
+                      ? 'OBS configurado'
+                      : detailsTournament.youtubeUrl
+                        ? 'YouTube configurado'
+                        : 'Não configurada'}
+                  </strong>
                 </div>
                 {detailsTournament.youtubeUrl && (
                   <div>
@@ -819,6 +1673,12 @@ function Dashboard({ user }: any) {
                     <a href={detailsTournament.youtubeUrl} target="_blank" rel="noreferrer">
                       Abrir transmissão
                     </a>
+                  </div>
+                )}
+                {detailsTournament.broadcastType === 'obs' && detailsTournament.obsStreamUrl && (
+                  <div>
+                    <span>URL OBS / RTMP</span>
+                    <strong>{detailsTournament.obsStreamUrl}</strong>
                   </div>
                 )}
                 {detailsTournament.publicSlug && (
@@ -837,6 +1697,761 @@ function Dashboard({ user }: any) {
             </div>
           </div>
         )}
+      </main>
+    </div>
+  )
+}
+
+function TournamentOverview() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [tournament, setTournament] = useState<any>(null)
+  const [rounds, setRounds] = useState<any[]>([])
+  const [ranking, setRanking] = useState<any[]>([])
+  const initialPanel = new URLSearchParams(window.location.search).get('painel') || 'overview'
+  const [panel, setPanel] = useState(initialPanel)
+  const [selectedRegistrationIds, setSelectedRegistrationIds] = useState<number[]>([])
+  const [registrationSearch, setRegistrationSearch] = useState('')
+  const [registrationStatusFilter, setRegistrationStatusFilter] = useState('all')
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('all')
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
+  const [showAddRegistration, setShowAddRegistration] = useState(false)
+  const [addRegistrationLoading, setAddRegistrationLoading] = useState(false)
+  const [showGeneralMessageMenu, setShowGeneralMessageMenu] = useState(false)
+  const [openStatusMenuId, setOpenStatusMenuId] = useState<number | null>(null)
+  const [openPaymentMenuId, setOpenPaymentMenuId] = useState<number | null>(null)
+  const [addRegistrationForm, setAddRegistrationForm] = useState({
+    name: '',
+    rg: '',
+    email: '',
+    phone: '',
+  })
+
+  const registrations = Array.isArray(tournament?.registrations) ? tournament.registrations : []
+  const confirmed = registrations.filter((registration: any) => registration.status === 'confirmed')
+  const pending = registrations.filter((registration: any) => registration.status === 'pending')
+  const waiting = registrations.filter((registration: any) => registration.status === 'waiting')
+  const removed = registrations.filter((registration: any) => registration.status === 'removed')
+  const activeRegistrations = registrations.filter((registration: any) => registration.status !== 'removed')
+  const paidRegistrations = registrations.filter((registration: any) => registration.paymentStatus === 'paid' || registration.checkedIn)
+  const matches = rounds.flatMap(round => round.matches || [])
+  const playingMatches = matches.filter((match: any) => match.status === 'playing')
+  const pendingMatches = matches.filter((match: any) => match.status === 'pending')
+  const finishedMatches = matches.filter((match: any) => match.status === 'finished')
+  const tournamentTableCount = Math.max(1, Number(tournament?.tableCount || 1))
+  const tournamentTables = Array.from({ length: tournamentTableCount }, (_, index) => index + 1)
+  const publicUrl = tournament?.publicSlug
+    ? publicTournamentUrl(tournament.publicSlug)
+    : ''
+  const expectedRevenue = Number(tournament?.registrationFee || 0) * confirmed.length
+  const statusPriority: Record<string, number> = { confirmed: 1, pending: 2, waiting: 3, removed: 4 }
+  const registrationRows = [...registrations].sort((a: any, b: any) => {
+    const statusDiff = (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99)
+    if (statusDiff !== 0) return statusDiff
+
+    const orderDiff = Number(a.sortOrder || 9999) - Number(b.sortOrder || 9999)
+    if (orderDiff !== 0) return orderDiff
+
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+  })
+  const normalizedRegistrationSearch = registrationSearch.trim().toLowerCase()
+  const filteredRegistrationRows = registrationRows.filter((registration: any) => {
+    const matchesSearch = !normalizedRegistrationSearch
+      || String(registration.name || '').toLowerCase().includes(normalizedRegistrationSearch)
+      || String(registration.email || '').toLowerCase().includes(normalizedRegistrationSearch)
+      || String(registration.phone || '').toLowerCase().includes(normalizedRegistrationSearch)
+    const matchesStatus = registrationStatusFilter === 'all' || registration.status === registrationStatusFilter
+    const matchesPayment = paymentStatusFilter === 'all' || paymentStatusValue(registration) === paymentStatusFilter
+    const matchesMethod = paymentMethodFilter === 'all' || paymentMethodValue(registration) === paymentMethodFilter
+
+    return matchesSearch && matchesStatus && matchesPayment && matchesMethod
+  })
+  const allRowsSelected = filteredRegistrationRows.length > 0
+    && filteredRegistrationRows.every((registration: any) => selectedRegistrationIds.includes(registration.id))
+
+  function loadTournamentOverview() {
+    fetch(`${API}/tournaments/${id}`, { headers: authHeaders(), cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => setTournament(data))
+
+    fetch(`${API}/tournaments/${id}/bracket`, { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => setRounds(Array.isArray(data.rounds) ? data.rounds : []))
+
+    fetch(`${API}/tournaments/${id}/ranking`, { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => setRanking(Array.isArray(data) ? data : []))
+  }
+
+  useEffect(() => {
+    loadTournamentOverview()
+  }, [id])
+
+  function formatDateTime(value: string) {
+    if (!value) return '-'
+    const date = new Date(value)
+    return `${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+  }
+
+  function registrationStatusLabel(status: string) {
+    const labels: Record<string, string> = {
+      confirmed: 'Confirmado',
+      pending: 'Pendente',
+      waiting: 'Lista de espera',
+      removed: 'Cancelado',
+    }
+
+    return labels[status] || status || '-'
+  }
+
+  function paymentStatusValue(registration: any) {
+    if (registration.paymentStatus === 'paid' || registration.checkedIn) return 'paid'
+    if (registration.paymentStatus === 'canceled' || registration.paymentStatus === 'refunded') return 'refunded'
+    return 'pending'
+  }
+
+  function paymentStatusLabel(registration: any) {
+    const status = paymentStatusValue(registration)
+    if (status === 'paid') return 'Pago'
+    if (status === 'refunded') return 'Estorno'
+    return 'Aguardando'
+  }
+
+  function paymentStatusClass(registration: any) {
+    return paymentStatusValue(registration)
+  }
+
+  function paymentMethodValue(registration: any) {
+    return ['pix', 'card', 'cash'].includes(registration.paymentMethod)
+      ? registration.paymentMethod
+      : ''
+  }
+
+  function paymentMethodLabel(method: string) {
+    const labels: Record<string, string> = {
+      pix: 'Pix',
+      card: 'Cartão',
+      cash: 'Dinheiro',
+    }
+
+    return labels[method] || '-'
+  }
+
+  async function readApiResponse(response: Response, fallbackMessage: string) {
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok || data.error) {
+      alert(data.error || fallbackMessage)
+      return null
+    }
+
+    return data
+  }
+
+  function toggleOverviewRegistrationSelection(registrationId: number, selected: boolean) {
+    setSelectedRegistrationIds(current =>
+      selected
+        ? Array.from(new Set([...current, registrationId]))
+        : current.filter(id => id !== registrationId)
+    )
+  }
+
+  function toggleAllOverviewRegistrations(selected: boolean) {
+    setSelectedRegistrationIds(selected ? filteredRegistrationRows.map((registration: any) => registration.id) : [])
+  }
+
+  async function updateOverviewRegistrationStatus(registration: any, status: string) {
+    const response = await fetch(`${API}/registrations/${registration.id}/move`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ status }),
+    })
+
+    const data = await readApiResponse(response, 'Erro ao atualizar status da inscrição')
+    if (!data) return
+
+    setOpenStatusMenuId(null)
+    loadTournamentOverview()
+  }
+
+  async function updateOverviewRegistrationPayment(registration: any, paymentStatus: string, paymentMethod = paymentMethodValue(registration)) {
+    const response = await fetch(`${API}/registrations/${registration.id}/payment`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ paymentStatus, paymentMethod }),
+    })
+
+    const data = await readApiResponse(response, 'Erro ao atualizar pagamento da inscrição')
+    if (!data) return
+
+    setOpenPaymentMenuId(null)
+    loadTournamentOverview()
+  }
+
+  function updateAddRegistrationField(field: string, value: string) {
+    setAddRegistrationForm(current => ({ ...current, [field]: value }))
+  }
+
+  async function addOverviewRegistrationFromOrganizer() {
+    if (!addRegistrationForm.name || !addRegistrationForm.rg || !addRegistrationForm.email || !addRegistrationForm.phone) {
+      alert('Preencha nome, RG, e-mail e WhatsApp.')
+      return
+    }
+
+    if (!isValidRg(addRegistrationForm.rg)) {
+      alert('Informe um RG válido. Use apenas números/letras, com 5 a 12 caracteres.')
+      return
+    }
+
+    if (!isValidBrazilCellphone(addRegistrationForm.phone)) {
+      alert('Informe um celular válido com DDD. Exemplo: (11) 99009-8000.')
+      return
+    }
+
+    setAddRegistrationLoading(true)
+
+    const response = await fetch(`${API}/tournaments/${id}/registrations`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        ...addRegistrationForm,
+        rg: formatRg(addRegistrationForm.rg),
+        phone: normalizeBrazilPhone(addRegistrationForm.phone),
+      }),
+    })
+
+    const data = await readApiResponse(response, 'Erro ao adicionar inscrição')
+    setAddRegistrationLoading(false)
+    if (!data) return
+
+    setAddRegistrationForm({ name: '', rg: '', email: '', phone: '' })
+    setShowAddRegistration(false)
+    loadTournamentOverview()
+    alert('Inscrição criada. O jogador receberá o link de confirmação por e-mail e WhatsApp.')
+  }
+
+  async function sendGeneralNotice(noticeType: string) {
+    const labels: Record<string, string> = {
+      confirmation: 'confirmação do torneio',
+      cancellation: 'cancelamento do torneio',
+      reschedule: 'alteração de data do torneio',
+      refund: 'reembolso da inscrição',
+    }
+
+    if (!confirm(`Enviar mensagem geral de ${labels[noticeType]} aos inscritos?`)) return
+
+    const response = await fetch(`${API}/tournaments/${id}/notify-players`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ noticeType }),
+    })
+
+    const data = await readApiResponse(response, 'Erro ao enviar mensagem geral')
+    if (!data) return
+
+    setShowGeneralMessageMenu(false)
+    alert(`Mensagem geral enviada. E-mails: ${data.sentEmail || 0}. WhatsApp: ${data.sentWhatsApp || 0}.`)
+  }
+
+  function showRegistrationContact(registration: any) {
+    alert([
+      `Jogador: ${registration.name}`,
+      `E-mail: ${registration.email || 'não informado'}`,
+      `WhatsApp: ${registration.phone || 'não informado'}`,
+      `RG: ${registration.rg || 'não informado'}`,
+    ].join('\n'))
+  }
+
+  async function sendOverviewRegistrationMessage(registration: any) {
+    const message = prompt(
+      `Mensagem para ${registration.name}`,
+      `Olá ${registration.name}, segue atualização sobre o torneio ${tournament.name}.`
+    )
+
+    if (!message || !message.trim()) return
+
+    const response = await fetch(`${API}/registrations/${registration.id}/message`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ message }),
+    })
+
+    const data = await readApiResponse(response, 'Erro ao enviar mensagem ao inscrito')
+    if (!data) return
+
+    alert('Mensagem enviada por e-mail e/ou WhatsApp conforme cadastro do jogador.')
+  }
+
+  function overviewMatchStatusLabel(status: string) {
+    if (status === 'playing') return 'Em andamento'
+    if (status === 'finished') return 'Finalizado'
+    return 'Aguardando'
+  }
+
+  function matchesForTournamentTable(table: number) {
+    return matches
+      .filter((match: any) => Number(match.table || 0) === Number(table))
+      .sort((a: any, b: any) => {
+        const statusOrder: Record<string, number> = { playing: 1, pending: 2, finished: 3 }
+        const statusDiff = (statusOrder[a.status] || 9) - (statusOrder[b.status] || 9)
+        if (statusDiff !== 0) return statusDiff
+        return Number(a.round || 0) - Number(b.round || 0) || Number(a.id || 0) - Number(b.id || 0)
+      })
+  }
+
+  function primaryMatchForTournamentTable(table: number) {
+    const tableMatches = matchesForTournamentTable(table)
+    return tableMatches.find((match: any) => match.status === 'playing') ||
+      tableMatches.find((match: any) => match.status === 'pending') ||
+      tableMatches[0] ||
+      null
+  }
+
+  function renderPanel() {
+    if (panel === 'inscritos') {
+      return (
+        <section className="panel">
+          <div className="sectionTitleRow">
+            <div>
+              <h2>Inscritos</h2>
+              <p>Controle inscrições, status, pagamento e comunicação com os jogadores.</p>
+            </div>
+
+            <div className="sectionHeaderActions">
+              <button className="primaryButton" onClick={() => setShowAddRegistration(true)}>
+                + Nova inscrição
+              </button>
+              <div className="quickMenu">
+                <button onClick={() => setShowGeneralMessageMenu(current => !current)}>
+                  Mensagem geral
+                </button>
+                {showGeneralMessageMenu && (
+                  <div className="quickMenuList">
+                    <button onClick={() => sendGeneralNotice('confirmation')}>Confirmação do torneio</button>
+                    <button onClick={() => sendGeneralNotice('cancellation')}>Cancelamento do torneio</button>
+                    <button onClick={() => sendGeneralNotice('reschedule')}>Alteração de data</button>
+                    <button onClick={() => sendGeneralNotice('refund')}>Reembolso da inscrição</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="overviewMiniGrid registrationsStatsGrid">
+            <div><span>Total inscritos</span><strong>{activeRegistrations.length}/{tournament?.playerCount || 0}</strong></div>
+            <div><span>Pagos</span><strong>{paidRegistrations.length}</strong></div>
+            <div><span>Pendente</span><strong>{pending.length}</strong></div>
+            <div><span>Lista de espera</span><strong>{waiting.length}</strong></div>
+            <div><span>Cancelados</span><strong>{removed.length}</strong></div>
+          </div>
+
+          <div className="registrationsFilters">
+            <input
+              value={registrationSearch}
+              onChange={e => setRegistrationSearch(e.target.value)}
+              placeholder="Buscar jogador"
+            />
+            <select value={registrationStatusFilter} onChange={e => setRegistrationStatusFilter(e.target.value)}>
+              <option value="all">Todos os status</option>
+              <option value="confirmed">Confirmado</option>
+              <option value="pending">Pendente</option>
+              <option value="waiting">Lista de espera</option>
+              <option value="removed">Cancelado</option>
+            </select>
+            <select value={paymentStatusFilter} onChange={e => setPaymentStatusFilter(e.target.value)}>
+              <option value="all">Todos pagamentos</option>
+              <option value="paid">Pago</option>
+              <option value="pending">Aguardando</option>
+              <option value="refunded">Estorno</option>
+            </select>
+            <select value={paymentMethodFilter} onChange={e => setPaymentMethodFilter(e.target.value)}>
+              <option value="all">Todas formas</option>
+              <option value="pix">Pix</option>
+              <option value="card">Cartão</option>
+              <option value="cash">Dinheiro</option>
+            </select>
+          </div>
+
+          <div className="registrationsTableWrap">
+            <table className="registrationsTable">
+              <thead>
+                <tr>
+                  <th>
+                    <input
+                      type="checkbox"
+                      checked={allRowsSelected}
+                      onChange={e => toggleAllOverviewRegistrations(e.target.checked)}
+                      aria-label="Selecionar todos"
+                    />
+                  </th>
+                  <th>Posição ranking</th>
+                  <th>Jogador</th>
+                  <th>Status do torneio</th>
+                  <th>Pagamento</th>
+                  <th>Forma de pagamento</th>
+                  <th>Data inscrição</th>
+                  <th>Ações rápidas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRegistrationRows.map((registration: any) => (
+                  <tr key={registration.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedRegistrationIds.includes(registration.id)}
+                        onChange={e => toggleOverviewRegistrationSelection(registration.id, e.target.checked)}
+                        aria-label={`Selecionar ${registration.name}`}
+                      />
+                    </td>
+                    <td>
+                      <strong>{registration.status === 'confirmed' && registration.sortOrder ? `#${registration.sortOrder}` : '-'}</strong>
+                    </td>
+                    <td>
+                      <div className="registrationPlayerCell">
+                        <strong>{registration.name}</strong>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`registrationStatusPill ${registration.status || 'pending'}`}>
+                        {registrationStatusLabel(registration.status)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="registrationPaymentCell">
+                        <span className={`paymentIcon ${paymentStatusClass(registration)}`}>
+                          {paymentStatusClass(registration) === 'paid' ? '$' : paymentStatusClass(registration) === 'refunded' ? '↩' : '⏳'}
+                        </span>
+                        <strong>{paymentStatusLabel(registration)}</strong>
+                      </div>
+                    </td>
+                    <td>{paymentMethodLabel(paymentMethodValue(registration))}</td>
+                    <td>{formatDateTime(registration.createdAt)}</td>
+                    <td>
+                      <div className="registrationTableActions">
+                        <button className="iconActionButton" title="Visualizar dados do jogador" onClick={() => showRegistrationContact(registration)}>👁</button>
+
+                        <div className="rowActionMenu">
+                          <button
+                            className="iconActionButton"
+                            title="Editar status do torneio"
+                            onClick={() => {
+                              setOpenPaymentMenuId(null)
+                              setOpenStatusMenuId(current => current === registration.id ? null : registration.id)
+                            }}
+                          >
+                            ✎
+                          </button>
+                          {openStatusMenuId === registration.id && (
+                            <div className="rowActionMenuList">
+                              <strong>Status do torneio</strong>
+                              <button onClick={() => updateOverviewRegistrationStatus(registration, 'confirmed')}>Confirmado</button>
+                              <button onClick={() => updateOverviewRegistrationStatus(registration, 'pending')}>Pendente</button>
+                              <button onClick={() => updateOverviewRegistrationStatus(registration, 'removed')}>Cancelado</button>
+                              <button onClick={() => updateOverviewRegistrationStatus(registration, 'waiting')}>Lista espera</button>
+                            </div>
+                          )}
+                        </div>
+
+                        <button className="iconActionButton" title="Enviar mensagem" onClick={() => sendOverviewRegistrationMessage(registration)}>✉</button>
+
+                        <div className="rowActionMenu">
+                          <button
+                            className="iconActionButton"
+                            title="Pagamento e forma de pagamento"
+                            onClick={() => {
+                              setOpenStatusMenuId(null)
+                              setOpenPaymentMenuId(current => current === registration.id ? null : registration.id)
+                            }}
+                          >
+                            ⋯
+                          </button>
+                          {openPaymentMenuId === registration.id && (
+                            <div className="rowActionMenuList paymentMenuList">
+                              <strong>Pagamento</strong>
+                              <button onClick={() => updateOverviewRegistrationPayment(registration, 'paid')}>Pago</button>
+                              <button onClick={() => updateOverviewRegistrationPayment(registration, 'pending')}>Aguardando</button>
+                              <button onClick={() => updateOverviewRegistrationPayment(registration, 'refunded')}>Estorno</button>
+
+                              <strong>Pago através</strong>
+                              <button onClick={() => updateOverviewRegistrationPayment(registration, 'paid', 'pix')}>Pix</button>
+                              <button onClick={() => updateOverviewRegistrationPayment(registration, 'paid', 'card')}>Cartão</button>
+                              <button onClick={() => updateOverviewRegistrationPayment(registration, 'paid', 'cash')}>Dinheiro</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filteredRegistrationRows.length === 0 && (
+                  <tr>
+                    <td colSpan={8}>Nenhuma inscrição registrada ainda.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {showAddRegistration && (
+            <div className="qrModal" onClick={() => setShowAddRegistration(false)}>
+              <div className="detailsContent addRegistrationModal" onClick={e => e.stopPropagation()}>
+                <div className="detailsHeader">
+                  <div>
+                    <span>Novo jogador</span>
+                    <h3>Nova inscrição</h3>
+                    <p>O jogador receberá um link de confirmação por e-mail e WhatsApp.</p>
+                  </div>
+                  <button className="modalCloseButton" onClick={() => setShowAddRegistration(false)}>Fechar</button>
+                </div>
+
+                <div className="addRegistrationGrid">
+                  <div>
+                    <label>Nome</label>
+                    <input
+                      value={addRegistrationForm.name}
+                      onChange={e => updateAddRegistrationField('name', e.target.value)}
+                      disabled={addRegistrationLoading}
+                    />
+                  </div>
+
+                  <div>
+                    <label>RG</label>
+                    <input
+                      value={addRegistrationForm.rg}
+                      onChange={e => updateAddRegistrationField('rg', formatRg(e.target.value))}
+                      disabled={addRegistrationLoading}
+                    />
+                  </div>
+
+                  <div>
+                    <label>E-mail</label>
+                    <input
+                      type="email"
+                      value={addRegistrationForm.email}
+                      onChange={e => updateAddRegistrationField('email', e.target.value)}
+                      disabled={addRegistrationLoading}
+                    />
+                  </div>
+
+                  <div>
+                    <label>WhatsApp</label>
+                    <input
+                      value={addRegistrationForm.phone}
+                      onChange={e => updateAddRegistrationField('phone', formatBrazilCellphone(e.target.value))}
+                      placeholder="(11) 99009-8000"
+                      inputMode="numeric"
+                      disabled={addRegistrationLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="adminModalActions">
+                  <button onClick={() => setShowAddRegistration(false)} disabled={addRegistrationLoading}>
+                    Cancelar
+                  </button>
+                  <button className="primaryButton" onClick={addOverviewRegistrationFromOrganizer} disabled={addRegistrationLoading}>
+                    {addRegistrationLoading ? 'Enviando...' : 'Adicionar e enviar confirmação'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )
+    }
+
+    if (panel === 'financeiro') {
+      return (
+        <section className="panel">
+          <h2>Financeiro do Torneio</h2>
+          <div className="overviewMiniGrid">
+            <div><span>Valor inscrição</span><strong>R$ {Number(tournament?.registrationFee || 0).toFixed(2).replace('.', ',')}</strong></div>
+            <div><span>Confirmados</span><strong>{confirmed.length}</strong></div>
+            <div><span>Receita prevista</span><strong>R$ {expectedRevenue.toFixed(2).replace('.', ',')}</strong></div>
+          </div>
+        </section>
+      )
+    }
+
+    if (panel === 'arbitro') {
+      return (
+        <section className="panel">
+          <div className="sectionTitleRow">
+            <div>
+              <h2>Painel Modo Árbitro</h2>
+              <p>Resumo das mesas, jogos em andamento e acesso rápido ao controle de partidas.</p>
+            </div>
+            <button className="primaryButton" onClick={() => navigate(`/arbitro/${id}`)}>
+              Abrir controle completo
+            </button>
+          </div>
+
+          <div className="overviewMiniGrid">
+            <div><span>Mesas configuradas</span><strong>{tournamentTableCount}</strong></div>
+            <div><span>Partidas ativas</span><strong>{playingMatches.length + pendingMatches.length}</strong></div>
+            <div><span>Aguardando chamada</span><strong>{pendingMatches.length}</strong></div>
+          </div>
+
+          <div className="tournamentRefereeGrid">
+            <div>
+              <h3>Controle das mesas</h3>
+              <div className="tournamentRefereeTables">
+                {tournamentTables.map(table => {
+                  const tableMatches = matchesForTournamentTable(table)
+                  const match = primaryMatchForTournamentTable(table)
+                  const tablePlayingMatches = tableMatches.filter((item: any) => item.status === 'playing')
+                  const tablePendingMatches = tableMatches.filter((item: any) => item.status === 'pending')
+
+                  return (
+                    <button key={table} className={`tournamentRefereeTableCard ${match?.status || 'empty'}`} onClick={() => navigate(`/arbitro/${id}?mesa=${table}`)}>
+                      <span>Mesa {table}</span>
+                      <strong>{tablePlayingMatches.length > 0 ? 'Jogos em andamento' : tablePendingMatches.length > 0 ? 'Aguardando chamada' : 'Livre'}</strong>
+
+                      <div className="tournamentRefereeTableMatches">
+                        <div className="tableMatchesBlock playingBlock">
+                          <div className="tableMatchesBlockHeader">
+                            <strong>Jogos em andamento</strong>
+                            <span>{tablePlayingMatches.length}</span>
+                          </div>
+                          {tablePlayingMatches.length === 0 && <small>Nenhum jogo em andamento nesta mesa</small>}
+                          {tablePlayingMatches.map((item: any) => (
+                            <div key={item.id} className={`tableMatchLine ${item.status}`}>
+                              <small>Jogo #{item.matchNumber} · Rodada {item.round}</small>
+                              <b>{item.playerA || 'BYE'} x {item.playerB || 'BYE'}</b>
+                              <em>{overviewMatchStatusLabel(item.status)} · {Number(item.scoreA || 0)} x {Number(item.scoreB || 0)}</em>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="tableMatchesBlock">
+                          <div className="tableMatchesBlockHeader">
+                            <strong>Próximos da mesa</strong>
+                            <span>{tablePendingMatches.length}</span>
+                          </div>
+                          {tablePendingMatches.length === 0 && <small>Nenhum jogo aguardando chamada</small>}
+                          {tablePendingMatches.slice(0, 2).map((item: any) => (
+                            <div key={item.id} className={`tableMatchLine ${item.status}`}>
+                              <small>Jogo #{item.matchNumber} · Rodada {item.round}</small>
+                              <b>{item.playerA || 'BYE'} x {item.playerB || 'BYE'}</b>
+                              <em>{overviewMatchStatusLabel(item.status)} · {Number(item.scoreA || 0)} x {Number(item.scoreB || 0)}</em>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <em>{tablePlayingMatches.length} em andamento · {tablePendingMatches.length} aguardando</em>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    if (panel === 'patrocinadores') {
+      return (
+        <section className="panel">
+          <h2>Patrocinadores</h2>
+          <p>Área preparada para cadastrar marcas, cotas, exposição no telão e página pública.</p>
+        </section>
+      )
+    }
+
+    if (panel === 'publico') {
+      return (
+        <section className="panel publicPanel">
+          <h2>Página pública</h2>
+          {publicUrl ? (
+            <>
+              <QRCodeCanvas value={publicUrl} size={180} />
+              <p>{publicUrl}</p>
+              <button onClick={() => window.open(publicUrl, '_blank')}>Abrir página pública</button>
+            </>
+          ) : (
+            <p>Este torneio ainda não possui link público.</p>
+          )}
+        </section>
+      )
+    }
+
+    return (
+      <section className="panel">
+        <h2>Dashboard do torneio</h2>
+        <div className="overviewStatsGrid">
+          <div><span>Status</span><strong>{tournament?.status || '-'}</strong></div>
+          <div><span>Inscritos</span><strong>{confirmed.length}/{tournament?.playerCount || 0}</strong></div>
+          <div><span>Jogos</span><strong>{matches.length}</strong></div>
+          <div><span>Em andamento</span><strong>{playingMatches.length}</strong></div>
+          <div><span>Finalizados</span><strong>{finishedMatches.length}</strong></div>
+          <div><span>Data</span><strong>{tournament?.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : '-'}</strong></div>
+        </div>
+
+        <div className="overviewRankingCard">
+          <div>
+            <h3>Ranking do torneio</h3>
+            <p>Acompanhamento por vitórias, derrotas e aproveitamento.</p>
+          </div>
+
+          <div className="overviewRankingList">
+            {ranking.slice(0, 5).map((item: any, index: number) => (
+              <div key={item.playerId || item.name} className="overviewRankingRow">
+                <strong>{index + 1}. {item.name}</strong>
+                <span>{item.wins}V / {item.losses}D</span>
+                <em>{item.winRate}%</em>
+              </div>
+            ))}
+
+            {ranking.length === 0 && (
+              <p className="helperText">O ranking aparece assim que houver jogadores e resultados.</p>
+            )}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (!tournament) {
+    return <div className="app">Carregando torneio...</div>
+  }
+
+  return (
+    <div className="tournamentPageLayout">
+      <aside className="tournamentMainSidebar">
+        <div className="sidebarBrand">🎱 ProMaster</div>
+        <button className="backDashboardButton" onClick={() => navigate('/app')}>
+          Voltar ao painel principal
+        </button>
+
+        <div className="tournamentSidebarInfo">
+          <span>Torneio</span>
+          <strong>{tournament.name}</strong>
+          <small>{tournament.status}</small>
+        </div>
+
+        <button className={panel === 'overview' ? 'active' : ''} onClick={() => setPanel('overview')}>Dashboard</button>
+        <button onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
+        <button className={panel === 'inscritos' ? 'active' : ''} onClick={() => setPanel('inscritos')}>Inscritos</button>
+        <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
+        <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
+        <button className={panel === 'financeiro' ? 'active' : ''} onClick={() => setPanel('financeiro')}>Financeiro</button>
+        <button className={panel === 'patrocinadores' ? 'active' : ''} onClick={() => setPanel('patrocinadores')}>Patrocinadores</button>
+        <button className={panel === 'publico' ? 'active' : ''} onClick={() => setPanel('publico')}>QR Code público</button>
+      </aside>
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">Painel do Torneio</div>
+          <h1>{tournament.name}</h1>
+          <p>{tournament.location || 'Local não informado'}{tournament.eventDate ? ` • ${new Date(tournament.eventDate).toLocaleDateString()}` : ''}</p>
+        </header>
+
+        <div className="tournamentWorkspace">
+          <div className="tournamentPanelContent">
+            {renderPanel()}
+          </div>
+        </div>
       </main>
     </div>
   )
@@ -1151,50 +2766,156 @@ function Upgrade() {
 function TournamentSettings() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [playersText, setPlayersText] = useState('')
+  const [tournament, setTournament] = useState<any>(null)
+  const [registrations, setRegistrations] = useState<any[]>([])
+  const [playerLimit, setPlayerLimit] = useState(0)
+  const [phaseRules, setPhaseRules] = useState<any[]>([])
+  const [scheduleRows, setScheduleRows] = useState<any[]>([])
+  const [scheduleDayCount, setScheduleDayCount] = useState(1)
   const [form, setForm] = useState<any>({
     name: '',
     location: '',
+    venueAddress: '',
     eventDate: '',
     eventTime: '',
     prize: '',
     rules: '',
+    playerCount: '',
+    format: 'knockout',
+    tableCount: '',
+    broadcastType: 'none',
     youtubeUrl: '',
+    obsStreamUrl: '',
+    liveStarted: false,
+    registrationOpen: true,
+    registrationFee: '',
+    paymentCollectionMode: 'manual',
+    paymentLink: '',
+    matchQuantity: '',
+    matchQuantityMode: '',
+    scheduleMode: 'single_day',
+    phaseSchedule: '',
+    phaseMatchRules: '',
   })
 
-  useEffect(() => {
+  function loadTournamentSettings(refreshForm = false) {
     fetch(`${API}/tournaments/${id}`, { headers: authHeaders() })
       .then(res => res.json())
       .then(data => {
-        setForm({
-          name: data.name || '',
-          location: data.location || '',
-          eventDate: data.eventDate ? data.eventDate.slice(0, 10) : '',
-          eventTime: data.eventTime || '',
-          prize: data.prize || '',
-          rules: data.rules || '',
-          youtubeUrl: data.youtubeUrl || '',
-        })
-        setPlayersText(Array.isArray(data.players)
-          ? data.players.map((player: any) => player.name).join('\n')
-          : '')
+        setTournament(data)
+        if (refreshForm) {
+          setForm({
+            name: data.name || '',
+            location: data.location || '',
+            venueAddress: data.venueAddress || '',
+            eventDate: data.eventDate ? data.eventDate.slice(0, 10) : '',
+            eventTime: data.eventTime || '',
+            prize: data.prize || '',
+            rules: data.rules || '',
+            playerCount: data.playerCount || '',
+            format: data.format || 'knockout',
+            tableCount: data.tableCount || '',
+            broadcastType: data.broadcastType || (data.youtubeUrl ? 'youtube' : 'none'),
+            youtubeUrl: data.youtubeUrl || '',
+            obsStreamUrl: data.obsStreamUrl || '',
+            liveStarted: Boolean(data.liveStarted),
+            registrationOpen: data.registrationOpen !== false,
+            registrationFee: data.registrationFee || '',
+            paymentCollectionMode: data.paymentCollectionMode || 'manual',
+            paymentLink: data.paymentLink || '',
+            matchQuantity: data.matchQuantity || '',
+            matchQuantityMode: data.matchQuantityMode || '',
+            scheduleMode: data.scheduleMode || 'single_day',
+            phaseSchedule: data.phaseSchedule || '',
+            phaseMatchRules: data.phaseMatchRules || '',
+          })
+          setPhaseRules(safeJsonArray(data.phaseMatchRules))
+          const loadedScheduleRows = safeJsonArray(data.phaseSchedule)
+          setScheduleRows(loadedScheduleRows)
+          setScheduleDayCount(Math.max(1, loadedScheduleRows.length || 1))
+        }
+        setPlayerLimit(Number(data.playerCount || 0))
+        const loadedRegistrations = Array.isArray(data.registrations) ? data.registrations : []
+        setRegistrations(loadedRegistrations)
       })
+  }
+
+  useEffect(() => {
+    loadTournamentSettings(true)
+    const interval = setInterval(() => loadTournamentSettings(false), 10000)
+    return () => clearInterval(interval)
   }, [id])
 
-  function updateField(field: string, value: string) {
+  function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
   }
 
+  const effectivePlayerLimit = Number(form.playerCount || playerLimit || 0)
+  const tournamentPhases = buildTournamentPhases(effectivePlayerLimit)
+
+  function updatePhaseRule(phase: number, field: string, value: string) {
+    setPhaseRules(current => {
+      const existing = current.find(item => Number(item.phase) === phase) || { phase, matchQuantity: '', appliesTo: 'phase' }
+      const next = { ...existing, [field]: value }
+      return [...current.filter(item => Number(item.phase) !== phase), next]
+        .sort((a, b) => Number(a.phase) - Number(b.phase))
+    })
+  }
+
+  function getPhaseRule(phase: number) {
+    return phaseRules.find(item => Number(item.phase) === phase) || { phase, matchQuantity: '', appliesTo: 'phase' }
+  }
+
+  function visibleRulePhases() {
+    const stopRule = phaseRules
+      .filter(rule => rule.appliesTo === 'until_final')
+      .sort((a, b) => Number(a.phase) - Number(b.phase))[0]
+
+    return stopRule
+      ? tournamentPhases.filter(phase => phase.phase <= Number(stopRule.phase))
+      : tournamentPhases
+  }
+
+  function updateScheduleDayCount(value: string) {
+    const count = Math.max(1, Number(value) || 1)
+    setScheduleDayCount(count)
+    setScheduleRows(current => Array.from({ length: count }, (_, index) => (
+      current.find(item => Number(item.day) === index + 1) || { day: index + 1, description: '', date: '', time: '' }
+    )))
+  }
+
+  function updateScheduleRow(day: number, field: string, value: string) {
+    setScheduleRows(current => {
+      const existing = current.find(item => Number(item.day) === day) || { day, description: '', date: '', time: '' }
+      const next = { ...existing, [field]: value }
+      return [...current.filter(item => Number(item.day) !== day), next]
+        .sort((a, b) => Number(a.day) - Number(b.day))
+    })
+  }
+
+  function getScheduleRow(day: number) {
+    return scheduleRows.find(item => Number(item.day) === day) || { day, description: '', date: '', time: '' }
+  }
+
   function saveSettings() {
-    const players = playersText
-      .split('\n')
-      .map(player => player.trim())
-      .filter(Boolean)
+    const selectedBroadcast = ['youtube', 'obs'].includes(form.broadcastType) ? form.broadcastType : 'none'
+    const payload = {
+      ...form,
+      broadcastType: selectedBroadcast,
+      youtubeUrl: selectedBroadcast === 'youtube' ? form.youtubeUrl : '',
+      obsStreamUrl: selectedBroadcast === 'obs' ? form.obsStreamUrl : '',
+      phaseSchedule: form.scheduleMode === 'multi_day'
+        ? JSON.stringify(scheduleRows.filter(row => row.description || row.date || row.time))
+        : '',
+      phaseMatchRules: form.matchQuantityMode === 'by_phase'
+        ? JSON.stringify(phaseRules.filter(rule => rule.matchQuantity))
+        : '',
+    }
 
     fetch(`${API}/tournaments/${id}/settings`, {
       method: 'PUT',
       headers: authHeaders(),
-      body: JSON.stringify({ ...form, players }),
+      body: JSON.stringify(payload),
     })
       .then(res => res.json())
       .then(data => {
@@ -1208,23 +2929,134 @@ function TournamentSettings() {
       })
   }
 
+  function generateBracket(mode: 'automatic' | 'manual') {
+    if (mode === 'manual') {
+      const order = mainRegistrations.map((registration, index) => `${index + 1}. ${registration.name}`).join('\n')
+      if (!confirm(`Gerar chave manual usando esta ordem da lista principal?\n\n${order || 'Nenhum jogador na lista principal.'}`)) {
+        return
+      }
+    }
+
+    const closeRegistrations = confirm('Deseja encerrar as inscrições públicas ao gerar a chave?')
+
+    fetch(`${API}/tournaments/${id}/generate-bracket`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ mode, closeRegistrations }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        alert(`Chave gerada com ${data.matchesCreated} jogo(s).`)
+        navigate(`/tournament/${id}`)
+      })
+  }
+
+  const mainRegistrations = registrations
+    .filter(registration => registration.status === 'confirmed')
+    .sort((a, b) => Number(a.sortOrder || 9999) - Number(b.sortOrder || 9999))
+
   return (
-    <div className="saasLayout">
-      <ClientSidebar />
+    <div className="tournamentPageLayout">
+      <aside className="tournamentMainSidebar">
+        <div className="sidebarBrand">🎱 ProMaster</div>
+        <button className="backDashboardButton" onClick={() => navigate('/app')}>
+          Voltar ao painel principal
+        </button>
+
+        <div className="tournamentSidebarInfo">
+          <span>Torneio</span>
+          <strong>{tournament?.name || form.name || 'Carregando...'}</strong>
+          <small>{tournament?.status || '-'}</small>
+        </div>
+
+        <button onClick={() => navigate(`/tournament/${id}/painel`)}>Dashboard</button>
+        <button onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=inscritos`)}>Inscritos</button>
+        <button className="active" onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
+        <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=financeiro`)}>Financeiro</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=patrocinadores`)}>Patrocinadores</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=publico`)}>QR Code público</button>
+      </aside>
 
       <main className="saasMain">
         <header className="hero">
           <div className="badge">✏️ Editar torneio</div>
           <h1>Editar torneio</h1>
-          <p>Atualize dados públicos, jogadores, regras, premiação e transmissão ao vivo.</p>
+          <p>Atualize dados públicos, regras, premiação e transmissão ao vivo.</p>
         </header>
 
         <div className="panel settingsPanel">
+          <div className="settingsInfoGrid">
+            <div>
+              <span>Tipo de torneio</span>
+              <strong>{tournamentFormatLabel(form.format || tournament?.format)}</strong>
+            </div>
+            <div>
+              <span>Jogadores definidos</span>
+              <strong>{effectivePlayerLimit || '-'}</strong>
+            </div>
+            <div>
+              <span>Mesas</span>
+              <strong>{form.tableCount || tournament?.tableCount || '-'}</strong>
+            </div>
+            <div>
+              <span>Status</span>
+              <strong>{tournament?.status || '-'}</strong>
+            </div>
+          </div>
+
           <label>Nome do torneio</label>
           <input value={form.name} onChange={e => updateField('name', e.target.value)} />
 
+          <label>Quantidade de inscritos</label>
+          <input
+            type="number"
+            min="2"
+            value={form.playerCount}
+            onChange={e => updateField('playerCount', e.target.value)}
+          />
+
+          <label>Modelo do torneio</label>
+          <select
+            value={form.format}
+            onChange={e => updateField('format', e.target.value)}
+          >
+            {TOURNAMENT_FORMAT_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {form.format === 'round_robin' && (
+            <p className="helperText">
+              Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou campeonatos com várias etapas/dias e ranking acumulado, use o plano Master.
+            </p>
+          )}
+          <p className="helperText">Quantidade e modelo só podem ser alterados antes de gerar a chave.</p>
+
+          <label>Número de mesas</label>
+          <input
+            type="number"
+            min="1"
+            value={form.tableCount}
+            onChange={e => updateField('tableCount', e.target.value)}
+          />
+
           <label>Local</label>
           <input value={form.location} onChange={e => updateField('location', e.target.value)} />
+
+          <label>Endereço do local</label>
+          <input
+            value={form.venueAddress}
+            onChange={e => updateField('venueAddress', e.target.value)}
+            placeholder="Rua, número, bairro e cidade"
+          />
 
           <div className="settingsGrid">
             <div>
@@ -1241,29 +3073,213 @@ function TournamentSettings() {
           <label>Premiação</label>
           <input value={form.prize} onChange={e => updateField('prize', e.target.value)} />
 
-          <label>Link da transmissão YouTube</label>
-          <input
-            value={form.youtubeUrl}
-            onChange={e => updateField('youtubeUrl', e.target.value)}
-            placeholder="https://www.youtube.com/watch?v=..."
-          />
+          <label>Transmissão</label>
+          <select
+            value={form.broadcastType}
+            onChange={e => updateField('broadcastType', e.target.value)}
+          >
+            <option value="none">Sem transmissão</option>
+            <option value="youtube">YouTube</option>
+            <option value="obs">OBS</option>
+          </select>
+
+          {form.broadcastType === 'youtube' && (
+            <>
+              <label>Link da transmissão</label>
+              <input
+                value={form.youtubeUrl}
+                onChange={e => updateField('youtubeUrl', e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+            </>
+          )}
+
+          {form.broadcastType === 'obs' && (
+            <>
+              <label>URL OBS / RTMP</label>
+              <input
+                value={form.obsStreamUrl}
+                onChange={e => updateField('obsStreamUrl', e.target.value)}
+                placeholder="rtmp://... ou link da transmissão OBS"
+              />
+            </>
+          )}
+
+          <label className="checkboxLine">
+            <input
+              type="checkbox"
+              checked={form.liveStarted}
+              onChange={e => updateField('liveStarted', e.target.checked)}
+            />
+            {form.liveStarted ? 'Transmissão ao vivo iniciada' : 'Transmissão ao vivo encerrada'}
+          </label>
+
+          <label className="checkboxLine">
+            <input
+              type="checkbox"
+              checked={form.registrationOpen}
+              onChange={e => updateField('registrationOpen', e.target.checked)}
+            />
+            {form.registrationOpen ? 'Inscrições públicas abertas' : 'Inscrições públicas encerradas'}
+          </label>
+
+          <label>Tipo de cobrança da inscrição</label>
+          <select value={form.paymentCollectionMode} onChange={e => updateField('paymentCollectionMode', e.target.value)}>
+            <option value="manual">Cobrança manual pelo organizador</option>
+            <option value="platform">Pagamento automático pela plataforma</option>
+            <option value="both">Manual e automático</option>
+          </select>
+
+          <div className="settingsGrid">
+            <div>
+              <label>Valor da inscrição</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.registrationFee}
+                onChange={e => updateField('registrationFee', e.target.value)}
+                placeholder="Ex: 30.00"
+              />
+            </div>
+
+            <div>
+              <label>Link de pagamento manual</label>
+              <input
+                value={form.paymentLink}
+                onChange={e => updateField('paymentLink', e.target.value)}
+                placeholder="Pix, Mercado Pago ou checkout"
+              />
+            </div>
+          </div>
 
           <label>Regras</label>
           <textarea value={form.rules} onChange={e => updateField('rules', e.target.value)} />
 
-          <label>Jogadores</label>
-          <textarea
-            className="playersTextarea"
-            value={playersText}
-            onChange={e => setPlayersText(e.target.value)}
-            spellCheck={false}
-            placeholder="Um jogador por linha"
-          />
-          <p className="helperText">
-            Para manter a chave segura, edite os nomes mantendo a mesma quantidade de jogadores.
-          </p>
+          <label>Regras das partidas</label>
+          <select
+            value={form.matchQuantityMode}
+            onChange={e => updateField('matchQuantityMode', e.target.value)}
+          >
+            <option value="">Definir depois</option>
+            <option value="all">Mesmo padrão até o final</option>
+            <option value="by_phase">Alterar partidas por fase</option>
+          </select>
+
+          {form.matchQuantityMode === 'all' && (
+            <div className="settingsGrid">
+              <div>
+                <label>Número de partidas</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.matchQuantity}
+                  onChange={e => updateField('matchQuantity', e.target.value)}
+                  placeholder="Ex: 3"
+                />
+              </div>
+
+              <div>
+                <label>Regra aplicada</label>
+                <input
+                  value="Até o final"
+                  readOnly
+                />
+              </div>
+            </div>
+          )}
+
+          {form.matchQuantityMode === 'by_phase' && (
+            <div className="phaseConfigList">
+              <div className="phaseConfigHeader">
+                <span>Fase</span>
+                <span>Número de partidas</span>
+                <span>Regra aplicada</span>
+              </div>
+              {visibleRulePhases().map(phase => {
+                const rule = getPhaseRule(phase.phase)
+                return (
+                  <div key={phase.phase} className="phaseConfigRow">
+                    <strong>{phase.label}</strong>
+                    <input
+                      type="number"
+                      min="1"
+                      value={rule.matchQuantity}
+                      onChange={e => updatePhaseRule(phase.phase, 'matchQuantity', e.target.value)}
+                      placeholder="Partidas"
+                    />
+                    <select
+                      value={rule.appliesTo}
+                      onChange={e => updatePhaseRule(phase.phase, 'appliesTo', e.target.value)}
+                    >
+                      <option value="phase">Somente esta fase</option>
+                      <option value="until_final">Desta fase até o final</option>
+                    </select>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          <label>Programação</label>
+          <select
+            value={form.scheduleMode}
+            onChange={e => updateField('scheduleMode', e.target.value)}
+          >
+            <option value="single_day">Data única</option>
+            <option value="multi_day">Vários dias e horários</option>
+          </select>
+
+          {form.scheduleMode === 'multi_day' && (
+            <div className="phaseConfigList">
+              <div className="phaseConfigRow">
+                <strong>Quantidade de dias</strong>
+                <input
+                  type="number"
+                  min="1"
+                  value={scheduleDayCount}
+                  onChange={e => updateScheduleDayCount(e.target.value)}
+                />
+                <span className="helperText">Gera uma linha para cada dia.</span>
+              </div>
+
+              {Array.from({ length: scheduleDayCount }, (_, index) => {
+                const day = index + 1
+                const row = getScheduleRow(day)
+                return (
+                  <div key={day} className="phaseConfigRow scheduleDayRow">
+                    <strong>Dia {day}</strong>
+                    <input
+                      value={row.description}
+                      onChange={e => updateScheduleRow(day, 'description', e.target.value)}
+                      placeholder="Descrição: fase inicial, final..."
+                    />
+                    <input
+                      type="date"
+                      value={row.date}
+                      onChange={e => updateScheduleRow(day, 'date', e.target.value)}
+                    />
+                    <input
+                      type="time"
+                      value={row.time}
+                      onChange={e => updateScheduleRow(day, 'time', e.target.value)}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          )}
 
           <button className="primaryButton" onClick={saveSettings}>Salvar edição</button>
+
+          <div className="drawActions">
+            <button className="primaryButton" onClick={() => generateBracket('automatic')}>
+              Gerar sorteio automático
+            </button>
+            <button className="secondaryButton" onClick={() => generateBracket('manual')}>
+              Gerar chave manual pela ordem da lista
+            </button>
+          </div>
         </div>
       </main>
     </div>
@@ -1384,9 +3400,14 @@ function Landing() {
 
         <div className="landingActions">
           <a href="/login">Entrar</a>
-          <a className="landingButton" href="/register">Começar grátis</a>
+          <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
         </div>
       </header>
+
+      <div className="landingNotice">
+        <strong>Aviso provisório</strong>
+        <span>Esta página está em modo teste. Alguns recursos e informações podem ser ajustados durante a validação da plataforma.</span>
+      </div>
 
       <section className="landingHero">
         <div>
@@ -1400,7 +3421,7 @@ function Landing() {
           </p>
 
           <div className="landingCtas">
-            <a className="landingButton" href="/register">Testar grátis por 7 dias</a>
+            <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
             <a className="landingSecondary" href="/planos">Ver planos</a>
           </div>
         </div>
@@ -1426,8 +3447,13 @@ function Landing() {
         </div>
 
         <div>
-          <h2>Pix integrado</h2>
-          <p>Venda planos, torneios avulsos e acompanhe o financeiro.</p>
+          <h2>Cobranças automáticas</h2>
+          <p>Selecione o melhor plano, ative cobranças automáticas por torneio e acompanhe tudo no painel financeiro.</p>
+        </div>
+
+        <div>
+          <h2>Jogadores</h2>
+          <p>Estatísticas em tempo real, ranking, histórico dos torneios e mais.</p>
         </div>
       </section>
 
@@ -1473,7 +3499,7 @@ function PlansComparison() {
       description: 'Para testar a plataforma com acesso aos principais recursos.',
       featured: false,
       cta: 'Começar grátis',
-      href: '/register',
+      href: '/inscreva-se',
       features: ['1 torneio', 'Até 16 jogadores', 'Chave e painel do torneio', 'Página pública', 'Login após expirar'],
     },
     {
@@ -1483,7 +3509,7 @@ function PlansComparison() {
       description: 'Para arenas e organizadores com torneios recorrentes.',
       featured: true,
       cta: 'Escolher Pro',
-      href: '/register',
+      href: '/inscreva-se',
       features: ['Torneios ilimitados', 'Até 64 jogadores', 'Telão e página pública', 'Ranking e histórico', 'Recursos principais'],
     },
     {
@@ -1493,7 +3519,7 @@ function PlansComparison() {
       description: 'Para operações maiores, equipe e torneios acima de 64 jogadores.',
       featured: false,
       cta: 'Escolher Master',
-      href: '/register',
+      href: '/inscreva-se',
       features: ['Torneios acima de 64 jogadores', 'Usuários/equipe', 'Recursos avançados', 'Gestão ampliada', 'Acesso completo'],
     },
     {
@@ -1503,7 +3529,7 @@ function PlansComparison() {
       description: 'Para quem precisa organizar apenas um evento pontual.',
       featured: false,
       cta: 'Comprar avulso',
-      href: '/register',
+      href: '/inscreva-se',
       features: ['Crédito de 1 torneio', 'Ideal para evento único', 'Chave e painel do torneio', 'Página pública', 'Sem mensalidade'],
     },
   ]
@@ -1524,7 +3550,7 @@ function PlansComparison() {
         <a href="/" className="landingLogo">🎱 ProMaster Arena</a>
         <div className="landingActions">
           <a href="/login">Entrar</a>
-          <a className="landingButton" href="/register">Começar grátis</a>
+          <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
         </div>
       </header>
 
@@ -1592,13 +3618,23 @@ function PublicTournament() {
   const { slug } = useParams()
   const [data, setData] = useState<any>(null)
   const [error, setError] = useState('')
+  const [registrationForm, setRegistrationForm] = useState<any>({
+    name: '',
+    rg: '',
+    email: '',
+    phone: '',
+    representsOrganization: false,
+    representedOrganizationName: '',
+    representedOrganizationType: '',
+    representedOrganizationDocument: '',
+  })
+  const [registrationLoading, setRegistrationLoading] = useState(false)
+  const [registrationPayment, setRegistrationPayment] = useState<any>(null)
   const [bingoBuyer, setBingoBuyer] = useState({ name: '', email: '', whatsapp: '', quantity: 1 })
   const [bingoMessage, setBingoMessage] = useState('')
 
-  useEffect(() => {
-    setError('')
-    setData(null)
-    fetch(`${API}/public/${slug}`)
+  function loadPublicTournament() {
+    fetch(`${API}/public/${slug}`, { cache: 'no-store' })
       .then(async res => {
         const result = await res.json().catch(() => null)
         if (!res.ok) {
@@ -1606,9 +3642,37 @@ function PublicTournament() {
         }
         return result
       })
-      .then(setData)
+      .then(result => {
+        setError('')
+        setData(result)
+      })
       .catch(err => setError(err.message || 'Erro ao carregar pagina publica'))
+  }
+
+  useEffect(() => {
+    setError('')
+    setData(null)
+    loadPublicTournament()
+    const interval = setInterval(loadPublicTournament, 15000)
+    return () => clearInterval(interval)
   }, [slug])
+
+  useEffect(() => {
+    if (!registrationPayment?.registrationId || !registrationPayment?.paymentId) return
+
+    const interval = setInterval(() => {
+      fetch(`${API}/public/registrations/${registrationPayment.registrationId}/payment-status`, { cache: 'no-store' })
+        .then(res => res.json())
+        .then(result => {
+          if (result.paymentStatus === 'paid') {
+            setRegistrationPayment((current: any) => ({ ...current, status: 'approved', paymentStatus: 'paid' }))
+            loadPublicTournament()
+          }
+        })
+    }, 8000)
+
+    return () => clearInterval(interval)
+  }, [registrationPayment?.registrationId, registrationPayment?.paymentId])
 
   if (error) {
     return (
@@ -1629,28 +3693,82 @@ function PublicTournament() {
     return <div className="publicPage">Carregando torneio...</div>
   }
 
-  const { tournament, rounds, bingo } = data
+  const { tournament, rounds, registrations = [], bingo } = data
+  const embedUrl = youtubeEmbedUrl(tournament.youtubeUrl)
   const isBingo = tournament.format === 'bingo' || tournament.sport?.slug === 'bingo'
   const bingoNumbers = bingo?.drawnNumbers || []
   const bingoWinners = bingo?.winners || []
   const bingoCards = bingo?.cards || []
   const canBuyBingoCards = isBingo && ['virtual', 'mixed'].includes(tournament.bingoCardMode || 'physical')
   const bingoCardLimit = Math.max(Number(tournament.bingoCardsPerParticipant || 1), 1)
-  const matches = (rounds || []).flatMap((round: any) =>
-    (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
-  )
-  const pending = matches.filter((match: any) => match.status === 'pending')
-  const playing = matches.filter((match: any) => match.status === 'playing')
-  const finished = matches.filter((match: any) => match.status === 'finished')
   const finalRound = rounds?.[rounds.length - 1]
   const champion = finalRound?.matches?.[0]?.winner
-  const embedUrl = youtubeEmbedUrl(tournament.youtubeUrl)
   const prizeLines = tournament.prize
     ? String(tournament.prize).split(/\n|,/).map((line: string) => line.trim()).filter(Boolean)
     : []
   const ruleLines = tournament.rules
     ? String(tournament.rules).split(/\n|,/).map((line: string) => line.trim()).filter(Boolean)
     : []
+  const confirmedRegistrations = registrations.filter((registration: any) => registration.status === 'confirmed')
+  const waitingRegistrations = registrations.filter((registration: any) => registration.status === 'waiting')
+
+  function updateRegistrationField(field: string, value: string | boolean) {
+    setRegistrationForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function registerPlayer() {
+    if (!registrationForm.name || !registrationForm.rg || !registrationForm.email || !registrationForm.phone) {
+      alert('Preencha nome, RG, e-mail e WhatsApp.')
+      return
+    }
+
+    if (!isValidRg(registrationForm.rg)) {
+      alert('Informe um RG válido. Use apenas números/letras, com 5 a 12 caracteres.')
+      return
+    }
+
+    if (!isValidBrazilCellphone(registrationForm.phone)) {
+      alert('Informe um celular válido com DDD. Exemplo: (11) 99009-8000.')
+      return
+    }
+
+    setRegistrationLoading(true)
+    fetch(`${API}/public/${slug}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...registrationForm,
+        rg: formatRg(registrationForm.rg),
+        phone: normalizeBrazilPhone(registrationForm.phone),
+      }),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          alert(result.error)
+          return
+        }
+
+        setRegistrationForm({
+          name: '',
+          rg: '',
+          email: '',
+          phone: '',
+          representsOrganization: false,
+          representedOrganizationName: '',
+          representedOrganizationType: '',
+          representedOrganizationDocument: '',
+        })
+        setRegistrationPayment(result.payment ? {
+          ...result.payment,
+          registrationId: result.registration?.id,
+          paymentStatus: result.registration?.paymentStatus,
+        } : null)
+        loadPublicTournament()
+        alert(result.payment ? 'Inscrição recebida. Gere o pagamento Pix e confirme sua participação pelo link enviado.' : 'Inscrição recebida. Enviamos um link por e-mail e WhatsApp para confirmar sua participação.')
+      })
+      .finally(() => setRegistrationLoading(false))
+  }
 
   function reserveBingoCard() {
     setBingoMessage('')
@@ -1674,7 +3792,7 @@ function PublicTournament() {
   return (
     <div className="publicPage">
       <header className="publicHero">
-        <span>AO VIVO • ProMaster Arena</span>
+        <span>{tournament.liveStarted ? 'AO VIVO • ProMaster Arena' : 'ProMaster Arena'}</span>
       </header>
 
       <main>
@@ -1683,16 +3801,23 @@ function PublicTournament() {
             <span className="publicCardLabel">Torneio</span>
             <h1>{tournament.name}</h1>
             {champion && <div className="publicChampion">🏆 Campeão: {champion}</div>}
+            {tournament.liveStarted && (
+              <a className="publicLiveButton" href={`/telao/${tournament.id}`}>
+                AO VIVO - Acompanhar Telão
+              </a>
+            )}
           </div>
 
           <div className="publicCard publicMiniInfoCard">
             <span className="publicCardLabel">Status</span>
             <strong>{tournament.status}</strong>
             <p>{tournament.location || 'Local não informado'}</p>
+            {tournament.venueAddress && <p>{tournament.venueAddress}</p>}
             <p>
               {tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString() : 'Data não informada'}
               {tournament.eventTime ? ` • ${tournament.eventTime}` : ''}
             </p>
+            <p>{tournament.registrationOpen ? 'Inscrições abertas' : 'Inscrições encerradas'}</p>
           </div>
 
           <div className="publicCard publicMiniInfoCard">
@@ -1804,50 +3929,131 @@ function PublicTournament() {
         )}
 
         {!isBingo && (
-        <section className="publicMatchColumns">
-          <div className="publicCard publicMatchColumn next">
-            <span className="publicCardLabel">Agenda</span>
-            <h2>Próximos jogos</h2>
-            {pending.length === 0 && <p>Nenhum próximo jogo.</p>}
-            {pending.slice(0, 8).map((match: any) => (
-              <div key={match.id} className="publicMatchCard">
-                <strong>Jogo #{match.matchNumber || match.id}</strong>
-                <span>{match.playerA} x {match.playerB}</span>
-                <small>Mesa {match.table}</small>
-              </div>
-            ))}
-          </div>
+          <section className="publicRegistrationGrid">
+            <div className="publicCard publicRegistrationForm">
+              <span className="publicCardLabel">Inscrição</span>
+              {!tournament.registrationOpen ? (
+                <div className="publicClosedBox">
+                  <strong>Inscrições encerradas</strong>
+                </div>
+              ) : (
+                <>
+                  <h2>Inscrever-se no torneio</h2>
+                  <p>Preencha seus dados para participar.</p>
+                  <input
+                    value={registrationForm.name}
+                    onChange={e => updateRegistrationField('name', e.target.value)}
+                    placeholder="Nome completo"
+                    disabled={registrationLoading}
+                  />
+                  <input
+                    value={registrationForm.rg}
+                    onChange={e => updateRegistrationField('rg', formatRg(e.target.value))}
+                    placeholder="RG"
+                    disabled={registrationLoading}
+                  />
+                  <input
+                    type="email"
+                    value={registrationForm.email}
+                    onChange={e => updateRegistrationField('email', e.target.value)}
+                    placeholder="E-mail"
+                    disabled={registrationLoading}
+                  />
+                  <input
+                    value={registrationForm.phone}
+                    onChange={e => updateRegistrationField('phone', formatBrazilCellphone(e.target.value))}
+                    placeholder="WhatsApp com DDD. Ex: (11) 99009-8000"
+                    inputMode="numeric"
+                    disabled={registrationLoading}
+                  />
 
-          <div className="publicCard publicMatchColumn live">
-            <span className="publicCardLabel">Agora</span>
-            <h2>Em andamento</h2>
-            {playing.length === 0 && <p>Nenhum jogo em andamento.</p>}
-            {playing.map((match: any) => (
-              <div key={match.id} className="publicMatchCard live">
-                <strong>Jogo #{match.matchNumber || match.id}</strong>
-                <span>{match.playerA} x {match.playerB}</span>
-                <small>Mesa {match.table}</small>
-              </div>
-            ))}
-          </div>
+                  <label className="publicCheckboxLine">
+                    <input
+                      type="checkbox"
+                      checked={registrationForm.representsOrganization}
+                      onChange={e => updateRegistrationField('representsOrganization', e.target.checked)}
+                      disabled={registrationLoading}
+                    />
+                    Represento clube, salão, arena ou organização
+                  </label>
 
-          <div className="publicCard publicMatchColumn done">
-            <span className="publicCardLabel">Placar</span>
-            <h2>Resultados</h2>
-            {finished.length === 0 && <p>Nenhum resultado registrado.</p>}
-            {finished.slice(-5).reverse().map((match: any) => (
-              <div key={match.id} className="publicMatchCard done">
-                <strong>Jogo #{match.matchNumber || match.id}</strong>
-                <span>
-                  {match.winner === match.playerA ? `🏆 ${match.playerA}` : match.playerA}
-                  {' x '}
-                  {match.winner === match.playerB ? `🏆 ${match.playerB}` : match.playerB}
-                </span>
-                <small>Vencedor: {match.winner}</small>
-              </div>
-            ))}
-          </div>
-        </section>
+                  {registrationForm.representsOrganization && (
+                    <div className="publicOrgFields">
+                      <input
+                        value={registrationForm.representedOrganizationName}
+                        onChange={e => updateRegistrationField('representedOrganizationName', e.target.value)}
+                        placeholder="Nome da organização representada"
+                        disabled={registrationLoading}
+                      />
+                      <select
+                        value={registrationForm.representedOrganizationType}
+                        onChange={e => updateRegistrationField('representedOrganizationType', e.target.value)}
+                        disabled={registrationLoading}
+                      >
+                        <option value="">Tipo</option>
+                        <option value="clube">Clube</option>
+                        <option value="salao">Salão</option>
+                        <option value="arena">Arena</option>
+                        <option value="associacao">Associação</option>
+                        <option value="outro">Outro</option>
+                      </select>
+                      <input
+                        value={registrationForm.representedOrganizationDocument}
+                        onChange={e => updateRegistrationField('representedOrganizationDocument', e.target.value)}
+                        placeholder="Documento da organização, se houver"
+                        disabled={registrationLoading}
+                      />
+                    </div>
+                  )}
+
+                  <button onClick={registerPlayer} disabled={registrationLoading}>
+                    {registrationLoading ? 'Enviando...' : 'Confirmar inscrição'}
+                  </button>
+
+                  {tournament.paymentCollectionMode !== 'manual' && Number(tournament.registrationFee || 0) > 0 && (
+                    <p className="publicPaymentHint">
+                      Pagamento automático via Pix: R$ {Number(tournament.registrationFee).toFixed(2).replace('.', ',')}
+                    </p>
+                  )}
+
+                  {registrationPayment && (
+                    <div className="publicPaymentBox">
+                      <strong>Pagamento da inscrição</strong>
+                      <span>Status: {registrationPayment.paymentStatus === 'paid' || registrationPayment.status === 'approved' ? 'pago' : 'aguardando Pix'}</span>
+                      {registrationPayment.qrCodeBase64 && (
+                        <img
+                          src={`data:image/png;base64,${registrationPayment.qrCodeBase64}`}
+                          alt="QR Code Pix da inscrição"
+                        />
+                      )}
+                      {registrationPayment.qrCode && (
+                        <button type="button" onClick={() => navigator.clipboard.writeText(registrationPayment.qrCode)}>
+                          Copiar código Pix
+                        </button>
+                      )}
+                      {registrationPayment.ticketUrl && (
+                        <button type="button" onClick={() => window.open(registrationPayment.ticketUrl, '_blank')}>
+                          Abrir pagamento
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="publicCard publicParticipantsCard">
+              <span className="publicCardLabel">Participantes</span>
+              <h2>{confirmedRegistrations.length}/{tournament.playerCount}</h2>
+              <p>Jogadores inscritos na lista principal.</p>
+            </div>
+
+            <div className="publicCard publicParticipantsCard">
+              <span className="publicCardLabel">Lista de espera</span>
+              <h2>{waitingRegistrations.length}</h2>
+              <p>Jogadores aguardando vaga.</p>
+            </div>
+          </section>
         )}
       </main>
     </div>
@@ -2113,6 +4319,8 @@ function CreateTournament({ user }: any) {
   const [templates, setTemplates] = useState<any[]>([])
   const [seasons, setSeasons] = useState<any[]>([])
   const [name, setName] = useState('Novo Torneio')
+  const [playerCount, setPlayerCount] = useState(16)
+  const [tournamentFormat, setTournamentFormat] = useState('knockout')
   const [templateId, setTemplateId] = useState(1)
   const [sportSlug, setSportSlug] = useState('sinuca')
   const [sportSelectionDone, setSportSelectionDone] = useState(false)
@@ -2120,13 +4328,25 @@ function CreateTournament({ user }: any) {
   const [tableCount, setTableCount] = useState(4)
 
   const [location, setLocation] = useState('')
+  const [venueAddress, setVenueAddress] = useState('')
   const [eventDate, setEventDate] = useState('')
   const [eventTime, setEventTime] = useState('')
   const [prize, setPrize] = useState('')
   const [rules, setRules] = useState('')
-  const [hasYoutube, setHasYoutube] = useState(false)
+  const [broadcastType, setBroadcastType] = useState('none')
   const [youtubeUrl, setYoutubeUrl] = useState('')
-  const [playersText, setPlayersText] = useState('')
+  const [obsStreamUrl, setObsStreamUrl] = useState('')
+  const [registrationOpen, setRegistrationOpen] = useState(true)
+  const [registrationFee, setRegistrationFee] = useState('')
+  const [paymentCollectionMode, setPaymentCollectionMode] = useState('manual')
+  const [paymentLink, setPaymentLink] = useState('')
+  const [matchQuantity, setMatchQuantity] = useState('')
+  const [matchQuantityMode, setMatchQuantityMode] = useState('')
+  const [scheduleMode, setScheduleMode] = useState('single_day')
+  const [phaseRules, setPhaseRules] = useState<any[]>([])
+  const [scheduleRows, setScheduleRows] = useState<any[]>([])
+  const [scheduleDayCount, setScheduleDayCount] = useState(1)
+  const tournamentPhases = buildTournamentPhases(Number(playerCount || 2))
   const [bingoMode, setBingoMode] = useState('physical')
   const [bingoDrawMode, setBingoDrawMode] = useState('physical')
   const [bingoCardMode, setBingoCardMode] = useState('physical')
@@ -2152,8 +4372,52 @@ function CreateTournament({ user }: any) {
     template.sport?.slug ? template.sport.slug === sportSlug : true
   ))
   const selectedTemplate = templates.find(template => Number(template.id) === Number(templateId))
-  const isBingo = selectedTemplate?.format === 'bingo' || selectedTemplate?.sport?.slug === 'bingo'
+  const isBingo = tournamentFormat === 'bingo' || selectedTemplate?.format === 'bingo' || selectedTemplate?.sport?.slug === 'bingo'
   const selectedSport = sports.find((sport: any) => sport.slug === sportSlug)
+
+  function updatePhaseRule(phase: number, field: string, value: string) {
+    setPhaseRules(current => {
+      const existing = current.find(item => Number(item.phase) === phase) || { phase, matchQuantity: '', appliesTo: 'phase' }
+      const next = { ...existing, [field]: value }
+      return [...current.filter(item => Number(item.phase) !== phase), next]
+        .sort((a, b) => Number(a.phase) - Number(b.phase))
+    })
+  }
+
+  function getPhaseRule(phase: number) {
+    return phaseRules.find(item => Number(item.phase) === phase) || { phase, matchQuantity: '', appliesTo: 'phase' }
+  }
+
+  function visibleRulePhases() {
+    const stopRule = phaseRules
+      .filter(rule => rule.appliesTo === 'until_final')
+      .sort((a, b) => Number(a.phase) - Number(b.phase))[0]
+
+    return stopRule
+      ? tournamentPhases.filter(phase => phase.phase <= Number(stopRule.phase))
+      : tournamentPhases
+  }
+
+  function updateScheduleDayCount(value: string) {
+    const count = Math.max(1, Number(value) || 1)
+    setScheduleDayCount(count)
+    setScheduleRows(current => Array.from({ length: count }, (_, index) => (
+      current.find(item => Number(item.day) === index + 1) || { day: index + 1, description: '', date: '', time: '' }
+    )))
+  }
+
+  function updateScheduleRow(day: number, field: string, value: string) {
+    setScheduleRows(current => {
+      const existing = current.find(item => Number(item.day) === day) || { day, description: '', date: '', time: '' }
+      const next = { ...existing, [field]: value }
+      return [...current.filter(item => Number(item.day) !== day), next]
+        .sort((a, b) => Number(a.day) - Number(b.day))
+    })
+  }
+
+  function getScheduleRow(day: number) {
+    return scheduleRows.find(item => Number(item.day) === day) || { day, description: '', date: '', time: '' }
+  }
 
   useEffect(() => {
     fetch(`${API}/templates`)
@@ -2170,6 +4434,8 @@ function CreateTournament({ user }: any) {
 
         if (defaultTemplate) {
           setTemplateId(defaultTemplate.id)
+          setTournamentFormat(defaultTemplate.format || (defaultTemplate.sport?.slug === 'bingo' ? 'bingo' : 'knockout'))
+          if (defaultTemplate.playerCount) setPlayerCount(Number(defaultTemplate.playerCount))
         }
       })
 
@@ -2196,6 +4462,10 @@ function CreateTournament({ user }: any) {
 
     if (nextTemplate) {
       setTemplateId(nextTemplate.id)
+      setTournamentFormat(nextTemplate.format || (nextSport === 'bingo' ? 'bingo' : 'knockout'))
+      if (nextTemplate.playerCount) setPlayerCount(Number(nextTemplate.playerCount))
+    } else {
+      setTournamentFormat(nextSport === 'bingo' ? 'bingo' : 'knockout')
     }
 
     setSportSelectionDone(true)
@@ -2214,43 +4484,48 @@ function CreateTournament({ user }: any) {
     return
   }
 
-  if (!isBingo && !playersText.trim()) {
-    alert('Adicione jogadores')
-    return
-  }
+  const scheduleDetails = scheduleMode === 'multi_day'
+    ? JSON.stringify(scheduleRows.filter(row => row.description || row.date || row.time))
+    : ''
+  const phaseRuleDetails = matchQuantityMode === 'by_phase'
+    ? JSON.stringify(phaseRules.filter(rule => rule.matchQuantity))
+    : ''
+  const selectedBroadcast = ['youtube', 'obs'].includes(broadcastType) ? broadcastType : 'none'
 
-  const players = playersText
-    .split('\n')
-    .map(p => p.trim())
-    .filter(Boolean)
-
-  if (!isBingo && players.length < 2) {
-    alert('Mínimo 2 jogadores')
-    return
-  }
-
-  // 🔥 AQUI FICA O FETCH
   fetch(`${API}/organizations/${organizationId}/tournaments/create`, {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify({
       name,
       templateId,
+      playerCount,
+      format: tournamentFormat,
       tableCount: isBingo ? 1 : tableCount,
       location,
+      venueAddress,
       eventDate,
       eventTime,
       prize,
       rules,
-      youtubeUrl: hasYoutube ? youtubeUrl : '',
+      broadcastType: selectedBroadcast,
+      youtubeUrl: selectedBroadcast === 'youtube' ? youtubeUrl : '',
+      obsStreamUrl: selectedBroadcast === 'obs' ? obsStreamUrl : '',
       seasonId: seasonId || null,
+      registrationOpen,
+      registrationFee,
+      paymentCollectionMode,
+      paymentLink,
+      matchQuantity,
+      matchQuantityMode,
+      scheduleMode,
+      phaseSchedule: scheduleDetails,
+      phaseMatchRules: phaseRuleDetails,
       bingoMode,
       bingoDrawMode,
       bingoCardMode,
       bingoMaxNumber,
       bingoCardPrice,
       bingoCardsPerParticipant,
-      players,
     }),
   })
     .then(res => res.json())
@@ -2260,8 +4535,8 @@ function CreateTournament({ user }: any) {
         return
       }
 
-      // 🚀 REDIRECIONAMENTO PROFISSIONAL
-      navigate(`/tournament/${data.tournament.id}`)
+      alert('Torneio criado. A página pública já está disponível. Gere a chave após inscrições/check-in.')
+      navigate(`/tournament/${data.tournament.id}/settings`)
     })
 }
 
@@ -2321,7 +4596,7 @@ function CreateTournament({ user }: any) {
         <header className="hero">
           <div className="badge">🏆 Novo Torneio</div>
           <h1>Criar Torneio</h1>
-          <p>Configure o evento e informe os participantes do torneio.</p>
+          <p>Configure o evento, publique as inscrições e gere a chave somente quando estiver pronto.</p>
         </header>
 
         <div className="createGrid">
@@ -2360,13 +4635,51 @@ function CreateTournament({ user }: any) {
                 </div>
               </>
             ) : (
-              <select value={templateId} onChange={e => setTemplateId(Number(e.target.value))}>
+              <select
+                value={templateId}
+                onChange={e => {
+                  const nextTemplateId = Number(e.target.value)
+                  const nextTemplate = templates.find(template => Number(template.id) === nextTemplateId)
+                  setTemplateId(nextTemplateId)
+                  if (nextTemplate) {
+                    setSportSlug(nextTemplate.sport?.slug || sportSlug)
+                    setTournamentFormat(nextTemplate.format || (nextTemplate.sport?.slug === 'bingo' ? 'bingo' : 'knockout'))
+                    if (nextTemplate.playerCount) setPlayerCount(Number(nextTemplate.playerCount))
+                  }
+                }}
+              >
                 {filteredTemplates.map(t => (
                   <option key={t.id} value={t.id}>
                     {t.name}
                   </option>
                 ))}
               </select>
+            )}
+
+            {!isBingo && (
+              <>
+                <label>Quantidade de inscritos</label>
+                <input
+                  type="number"
+                  min="2"
+                  value={playerCount}
+                  onChange={e => setPlayerCount(Math.max(2, Number(e.target.value) || 2))}
+                />
+
+                <label>Formato do torneio</label>
+                <select value={tournamentFormat} onChange={e => setTournamentFormat(e.target.value)}>
+                  {TOURNAMENT_FORMAT_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+            {tournamentFormat === 'round_robin' && (
+              <p className="helperText">
+                Todos contra todos: plano Pro permite até 64 jogadores. Plano Master permite torneios acima de 64 e também campeonatos em várias etapas/dias com ranking acumulado.
+              </p>
             )}
 
             {isBingo && (
@@ -2471,6 +4784,13 @@ function CreateTournament({ user }: any) {
               placeholder="Ex: Bar do João, Mesa 1..."
             />
 
+            <label>Endereço do local</label>
+            <input
+              value={venueAddress}
+              onChange={e => setVenueAddress(e.target.value)}
+              placeholder="Rua, número, bairro e cidade"
+            />
+
             <label>Data</label>
             <input
               type="date"
@@ -2499,16 +4819,119 @@ function CreateTournament({ user }: any) {
               placeholder="Ex: Melhor de 3, atraso máximo 10 minutos..."
             />
 
-            <label className="checkboxLine">
-              <input
-                type="checkbox"
-                checked={hasYoutube}
-                onChange={e => setHasYoutube(e.target.checked)}
-              />
-              Transmissão YouTube
-            </label>
+            <label>Regras das partidas</label>
+            <select value={matchQuantityMode} onChange={e => setMatchQuantityMode(e.target.value)}>
+              <option value="">Definir depois</option>
+              <option value="all">Até o final do torneio</option>
+              <option value="by_phase">Alterar por fase</option>
+            </select>
 
-            {hasYoutube && (
+            {matchQuantityMode === 'all' && (
+              <div className="settingsGrid">
+                <div>
+                  <label>Número de partidas</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={matchQuantity}
+                    onChange={e => setMatchQuantity(e.target.value)}
+                    placeholder="Ex: 3"
+                  />
+                </div>
+
+                <div>
+                  <label>Regra aplicada</label>
+                  <input value="Até o final" readOnly />
+                </div>
+              </div>
+            )}
+
+            {matchQuantityMode === 'by_phase' && (
+              <div className="phaseConfigList">
+                <div className="phaseConfigHeader">
+                  <span>Fase</span>
+                  <span>Número de partidas</span>
+                  <span>Regra aplicada</span>
+                </div>
+                {visibleRulePhases().map(phase => {
+                  const rule = getPhaseRule(phase.phase)
+                  return (
+                    <div key={phase.phase} className="phaseConfigRow">
+                      <strong>{phase.label}</strong>
+                      <input
+                        type="number"
+                        min="1"
+                        value={rule.matchQuantity}
+                        onChange={e => updatePhaseRule(phase.phase, 'matchQuantity', e.target.value)}
+                        placeholder="Partidas"
+                      />
+                      <select
+                        value={rule.appliesTo}
+                        onChange={e => updatePhaseRule(phase.phase, 'appliesTo', e.target.value)}
+                      >
+                        <option value="phase">Somente esta fase</option>
+                        <option value="until_final">Desta fase até o final</option>
+                      </select>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <label>Programação</label>
+            <select value={scheduleMode} onChange={e => setScheduleMode(e.target.value)}>
+              <option value="single_day">Data única</option>
+              <option value="multi_day">Vários dias e horários</option>
+            </select>
+
+            {scheduleMode === 'multi_day' && (
+              <div className="phaseConfigList">
+                <div className="phaseConfigRow">
+                  <strong>Quantidade de dias</strong>
+                  <input
+                    type="number"
+                    min="1"
+                    value={scheduleDayCount}
+                    onChange={e => updateScheduleDayCount(e.target.value)}
+                  />
+                  <span className="helperText">Gera uma linha para cada dia.</span>
+                </div>
+
+                {Array.from({ length: scheduleDayCount }, (_, index) => {
+                  const day = index + 1
+                  const row = getScheduleRow(day)
+                  return (
+                    <div key={day} className="phaseConfigRow scheduleDayRow">
+                      <strong>Dia {day}</strong>
+                      <input
+                        value={row.description}
+                        onChange={e => updateScheduleRow(day, 'description', e.target.value)}
+                        placeholder="Descrição: fase inicial, final..."
+                      />
+                      <input
+                        type="date"
+                        value={row.date}
+                        onChange={e => updateScheduleRow(day, 'date', e.target.value)}
+                      />
+                      <input
+                        type="time"
+                        value={row.time}
+                        onChange={e => updateScheduleRow(day, 'time', e.target.value)}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <label>Transmissão</label>
+            <select value={broadcastType} onChange={e => setBroadcastType(e.target.value)}>
+              <option value="none">Sem transmissão</option>
+              <option value="youtube">YouTube</option>
+              <option value="obs">OBS</option>
+            </select>
+
+            {broadcastType === 'youtube' && (
               <>
                 <label>Link da transmissão</label>
                 <input
@@ -2518,39 +4941,71 @@ function CreateTournament({ user }: any) {
                 />
               </>
             )}
+
+            {broadcastType === 'obs' && (
+              <>
+                <label>URL OBS / RTMP</label>
+                <input
+                  value={obsStreamUrl}
+                  onChange={e => setObsStreamUrl(e.target.value)}
+                  placeholder="rtmp://... ou link da transmissão OBS"
+                />
+              </>
+            )}
+
+            <label className="checkboxLine">
+              <input
+                type="checkbox"
+                checked={registrationOpen}
+                onChange={e => setRegistrationOpen(e.target.checked)}
+              />
+              Abrir inscrições públicas
+            </label>
+
+            <label>Tipo de cobrança da inscrição</label>
+            <select value={paymentCollectionMode} onChange={e => setPaymentCollectionMode(e.target.value)}>
+              <option value="manual">Cobrança manual pelo organizador</option>
+              <option value="platform">Pagamento automático pela plataforma</option>
+              <option value="both">Manual e automático</option>
+            </select>
+
+            <label>Valor da inscrição</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={registrationFee}
+              onChange={e => setRegistrationFee(e.target.value)}
+              placeholder="Ex: 30.00"
+            />
+
+            <label>Link de pagamento manual</label>
+            <input
+              value={paymentLink}
+              onChange={e => setPaymentLink(e.target.value)}
+              placeholder="Pix, Mercado Pago ou checkout"
+            />
           </div>
 
           {!isBingo && (
           <div className="panel">
-            <h2>Jogadores</h2>
+            <h2>Resumo</h2>
 
-            <p>Digite ou cole um jogador por linha. A ordem será embaralhada ao gerar a chave.</p>
-
-            <textarea
-              className="playersTextarea"
-              value={playersText}
-              onChange={e => setPlayersText(e.target.value)}
-              spellCheck={false}
-              placeholder={`João Silva\nCarlos "Cacá"\nMarcos de Santos\nPedro Bola 8`}
-            />
-
-            <p style={{ marginTop: 10, color: '#94a3b8' }}>
-               Jogadores: {playersText.split('\n').filter(p => p.trim()).length}
-          </p>
-
-           <div className="previewCard">
-  <h3>Resumo</h3>
-  <p><strong>{name}</strong></p>
-  <p>{playersText.split('\n').filter(p => p.trim()).length} jogadores</p>
-  {location && <p>📍 {location}</p>}
-  {eventDate && <p>📅 {eventDate}</p>}
-  {eventTime && <p>⏰ {eventTime}</p>}
-  {hasYoutube && youtubeUrl && <p>Transmissão YouTube configurada</p>}
-  {seasonId && <p>Vinculado ao campeonato</p>}
-</div>
+            <div className="previewCard">
+              <h3>{name}</h3>
+              <p>{playerCount} inscritos • {tournamentFormatLabel(tournamentFormat)}</p>
+              {location && <p>Local: {location}</p>}
+              {venueAddress && <p>Endereço: {venueAddress}</p>}
+              {eventDate && <p>Data: {eventDate}</p>}
+              {eventTime && <p>Horário: {eventTime}</p>}
+              {broadcastType === 'youtube' && youtubeUrl && <p>Transmissão: YouTube</p>}
+              {broadcastType === 'obs' && <p>Transmissão: OBS</p>}
+              <p>Cobrança: {paymentCollectionMode === 'platform' ? 'Automática pela plataforma' : paymentCollectionMode === 'both' ? 'Manual e automática' : 'Manual pelo organizador'}</p>
+              {seasonId && <p>Vinculado ao campeonato</p>}
+            </div>
 
             <button className="primaryButton" onClick={createTournament}>
-              Criar torneio e gerar chave
+              Criar torneio e página pública
             </button>
           </div>
           )}
@@ -2585,14 +5040,15 @@ function CreateTournament({ user }: any) {
 
 function TournamentBracket() {
   const { id } = useParams()
+  const navigate = useNavigate()
 
   const [rounds, setRounds] = useState<any[]>([])
   const [tournament, setTournament] = useState<any>(null)
+  const [panelMode] = useState<'board' | 'bracket'>('bracket')
   const [bingoState, setBingoState] = useState<any>(null)
   const [physicalNumber, setPhysicalNumber] = useState('')
   const [winnerName, setWinnerName] = useState('')
   const [winnerPrize, setWinnerPrize] = useState('')
-  const [panelMode, setPanelMode] = useState<'board' | 'bracket'>('board')
   const matches = rounds.flatMap(round =>
     (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
   )
@@ -2601,6 +5057,8 @@ function TournamentBracket() {
   const pendingMatches = matches.filter((match: any) => match.status === 'pending')
   const playingMatches = matches.filter((match: any) => match.status === 'playing')
   const finishedMatches = matches.filter((match: any) => match.status === 'finished')
+  const hasGeneratedBracket = rounds.some(round => (round.matches || []).length > 0)
+  const bracketRounds = hasGeneratedBracket ? rounds : buildBracketSkeletonRounds(Number(tournament?.playerCount || 0))
   const isBingo = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo'
   const bingoNumbers = bingoState?.drawnNumbers || []
   const latestBingoNumber = bingoNumbers[bingoNumbers.length - 1]
@@ -2615,7 +5073,7 @@ function TournamentBracket() {
       .then(data => setRounds(data.rounds || []))
   }
 
-  function loadTournament() {
+  function loadTournamentPanel() {
     fetch(`${API}/tournaments/${id}`, {
       headers: authHeaders(),
     })
@@ -2701,11 +5159,12 @@ function TournamentBracket() {
 
   useEffect(() => {
     loadBracket()
-    loadTournament()
+    loadTournamentPanel()
     loadBingo()
 
     const interval = setInterval(() => {
       loadBracket()
+      loadTournamentPanel()
       loadBingo()
     }, 5000)
     return () => clearInterval(interval)
@@ -2768,16 +5227,30 @@ function TournamentBracket() {
       <div key={match.id} className={`proMatch ${match.status} ${match.winner ? 'hasWinner' : ''}`}>
         <div className="matchMeta">
           <span>Jogo #{match.matchNumber || match.id}</span>
-          <span>Mesa {match.table}</span>
+          <span>{match.skeleton ? 'Aguardando sorteio' : `Mesa ${match.table}`}</span>
         </div>
 
-        <div className={match.winner === match.playerA ? 'proPlayer winner' : 'proPlayer'}>
-          <span>{match.playerA}</span>
-        </div>
+        {match.skeleton ? (
+          <>
+            <div className="proPlayer skeletonPlayer">
+              <span className="bracketPlaceholder" />
+            </div>
 
-        <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
-          <span>{match.playerB}</span>
-        </div>
+            <div className="proPlayer skeletonPlayer">
+              <span className="bracketPlaceholder" />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={match.winner === match.playerA ? 'proPlayer winner' : 'proPlayer'}>
+              <span>{match.playerA}</span>
+            </div>
+
+            <div className={match.winner === match.playerB ? 'proPlayer winner' : 'proPlayer'}>
+              <span>{match.playerB}</span>
+            </div>
+          </>
+        )}
 
         {match.winner && (
           <div className={isFinalRound ? 'advanceLine championLine' : 'advanceLine'}>
@@ -2789,8 +5262,28 @@ function TournamentBracket() {
   }
 
   return (
-    <div className="saasLayout">
-      <ClientSidebar />
+    <div className="tournamentPageLayout">
+      <aside className="tournamentMainSidebar">
+        <div className="sidebarBrand">🎱 ProMaster</div>
+        <button className="backDashboardButton" onClick={() => navigate('/app')}>
+          Voltar ao painel principal
+        </button>
+
+        <div className="tournamentSidebarInfo">
+          <span>Torneio</span>
+          <strong>{tournament?.name || 'Carregando...'}</strong>
+          <small>{tournament?.status || '-'}</small>
+        </div>
+
+        <button onClick={() => navigate(`/tournament/${id}/painel`)}>Dashboard</button>
+        <button className="active" onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=inscritos`)}>Inscritos</button>
+        <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
+        <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=financeiro`)}>Financeiro</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=patrocinadores`)}>Patrocinadores</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=publico`)}>QR Code público</button>
+      </aside>
 
       <main className="saasMain">
        <header className="hero">
@@ -2800,7 +5293,7 @@ function TournamentBracket() {
   <p>
     {isBingo
       ? 'Controle números sorteados, cartelas e ganhadores das rodadas.'
-      : 'Controle os jogos por status: aguardando, jogando e finalizados.'}
+      : 'Visualização em forma de bracket, atualizada com os jogos do torneio.'}
   </p>
 
   {champion && (
@@ -2809,17 +5302,6 @@ function TournamentBracket() {
     </div>
   )}
 
-  <div className="tournamentTopActions">
-    <button onClick={() => window.open(`/telao/${id}`, '_blank')}>
-      Abrir Telão
-    </button>
-
-    {!isBingo && (
-      <button onClick={() => setPanelMode(panelMode === 'board' ? 'bracket' : 'board')}>
-        {panelMode === 'board' ? 'Chaveamento' : 'Painel'}
-      </button>
-    )}
-  </div>
 </header>
 
         {isBingo && (
@@ -2919,18 +5401,18 @@ function TournamentBracket() {
         </div>
         ) : !isBingo ? (
           <div className="proBracket">
-            {rounds.map((round, roundIndex) => (
+            {bracketRounds.map((round, roundIndex) => (
               <div key={round.round} className="proRound">
                 <h2>
-                  {roundIndex === rounds.length - 1
+                  {roundIndex === bracketRounds.length - 1
                     ? 'Final'
-                    : roundIndex === rounds.length - 2
+                    : roundIndex === bracketRounds.length - 2
                       ? 'Semifinal'
                       : `Rodada ${round.round}`}
                 </h2>
 
                 <div className="roundMatches">
-                  {round.matches.map((match: any) => renderBracketCard(match, roundIndex === rounds.length - 1))}
+                  {round.matches.map((match: any) => renderBracketCard(match, roundIndex === bracketRounds.length - 1))}
                 </div>
               </div>
             ))}
@@ -2941,10 +5423,511 @@ function TournamentBracket() {
   )
 }
 
+function RefereeMode() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const initialTable = Number(new URLSearchParams(window.location.search).get('mesa') || 0)
+  const [tournament, setTournament] = useState<any>(null)
+  const [matches, setMatches] = useState<any[]>([])
+  const [selectedTable, setSelectedTable] = useState<number | null>(initialTable || null)
+  const [now, setNow] = useState(Date.now())
+
+  const tableCount = Math.max(1, Number(tournament?.tableCount || 1))
+  const tables = Array.from({ length: tableCount }, (_, index) => index + 1)
+  const currentTable = selectedTable || tables[0] || 1
+  const playingMatches = matches.filter(match => match.status === 'playing')
+  const refereePublicUrl = tournament?.publicSlug ? `/public/${tournament.publicSlug}` : ''
+
+  function loadReferee() {
+    fetch(`${API}/tournaments/${id}/referee`, { headers: authHeaders(), cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        setTournament(data.tournament || null)
+        setMatches(Array.isArray(data.matches) ? data.matches : [])
+      })
+  }
+
+  useEffect(() => {
+    loadReferee()
+    const interval = setInterval(loadReferee, 5000)
+    return () => clearInterval(interval)
+  }, [id])
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    if (!tournament) return
+
+    if (!selectedTable || selectedTable > tableCount) {
+      if (initialTable && initialTable <= tableCount) {
+        setSelectedTable(initialTable)
+        return
+      }
+
+      const preferredMatch = matches.find(match => match.status === 'playing') ||
+        matches.find(match => match.status === 'pending')
+      setSelectedTable(Number(preferredMatch?.table || 1))
+    }
+  }, [tournament, matches.length, selectedTable, tableCount])
+
+  function playerName(player: any) {
+    return player?.name || 'BYE'
+  }
+
+  function statusLabel(status: string) {
+    if (status === 'playing') return 'Jogando'
+    if (status === 'finished') return 'Finalizado'
+    return 'Aguardando'
+  }
+
+  function currentMatchQuantity(match: any) {
+    const defaultQuantity = Number(tournament?.matchQuantity || 0)
+    if (tournament?.matchQuantityMode !== 'by_phase') return defaultQuantity
+
+    const rules = safeJsonArray(tournament?.phaseMatchRules)
+    const exactRule = rules.find(rule => Number(rule.phase) === Number(match?.round))
+    const inheritedRule = rules
+      .filter(rule => rule.appliesTo === 'until_final' && Number(rule.phase) <= Number(match?.round))
+      .sort((a, b) => Number(b.phase) - Number(a.phase))[0]
+    return Number(exactRule?.matchQuantity || inheritedRule?.matchQuantity || defaultQuantity)
+  }
+
+  function targetWins(match: any) {
+    const quantity = Number(currentMatchQuantity(match) || 0)
+    return quantity > 0 ? Math.floor(quantity / 2) + 1 : 0
+  }
+
+  function matchFormatLabel(match: any) {
+    const quantity = Number(currentMatchQuantity(match) || 0)
+    if (!quantity) return 'Partida simples'
+    return `Melhor de ${quantity} - vence com ${targetWins(match)}`
+  }
+
+  function formatElapsed(ms: number) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = totalSeconds % 60
+    const minuteLabel = String(minutes).padStart(2, '0')
+    const secondLabel = String(seconds).padStart(2, '0')
+    return hours > 0
+      ? `${hours}:${minuteLabel}:${secondLabel}`
+      : `${minuteLabel}:${secondLabel}`
+  }
+
+  function matchElapsedLabel(match: any) {
+    if (!match || match.status !== 'playing') return '00:00'
+    const startedAt = match.startedAt || match.calledAt
+    if (!startedAt) return '00:00'
+    return formatElapsed(now - new Date(startedAt).getTime())
+  }
+
+  function matchesForTable(table: number) {
+    return matches
+      .filter(match => Number(match.table || 0) === Number(table))
+      .sort((a, b) => {
+        const statusOrder: Record<string, number> = { playing: 1, pending: 2, finished: 3 }
+        const statusDiff = (statusOrder[a.status] || 9) - (statusOrder[b.status] || 9)
+        if (statusDiff !== 0) return statusDiff
+        return Number(a.round || 0) - Number(b.round || 0) || Number(a.id || 0) - Number(b.id || 0)
+      })
+  }
+
+  function currentMatchForTable(table: number) {
+    const tableMatches = matchesForTable(table)
+    return tableMatches.find(match => match.status === 'playing') ||
+      tableMatches.find(match => match.status === 'pending') ||
+      tableMatches.find(match => match.status === 'finished') ||
+      null
+  }
+
+  function nextPendingForTable(table: number, currentMatchId?: number) {
+    return matches
+      .filter(match => (
+        Number(match.table || 0) === Number(table) &&
+        match.status === 'pending' &&
+        match.id !== currentMatchId
+      ))
+      .sort((a, b) => Number(a.round || 0) - Number(b.round || 0) || Number(a.id || 0) - Number(b.id || 0))[0]
+  }
+
+  function otherTablesPendingMatches(table: number) {
+    return matches
+      .filter(match => Number(match.table || 0) !== Number(table) && match.status === 'pending')
+      .sort((a, b) => Number(a.table || 0) - Number(b.table || 0) || Number(a.round || 0) - Number(b.round || 0))
+      .slice(0, 8)
+  }
+
+  function canDeclareWinner(match: any, side: 'A' | 'B') {
+    const target = targetWins(match)
+    if (!target) return true
+    return Number(side === 'A' ? match.scoreA : match.scoreB) >= target
+  }
+
+  function callMatch(matchId: number) {
+    fetch(`${API}/matches/${matchId}/call`, {
+      method: 'POST',
+      headers: authHeaders(),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) alert(data.error)
+        loadReferee()
+      })
+  }
+
+  function toggleRefereeLive() {
+    if (!tournament) return
+
+    fetch(`${API}/tournaments/${id}/live`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ liveStarted: !tournament.liveStarted }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setTournament((current: any) => ({
+          ...current,
+          liveStarted: data.tournament?.liveStarted ?? !current?.liveStarted,
+        }))
+      })
+  }
+
+  function startMatch(matchId: number) {
+    fetch(`${API}/matches/${matchId}/start`, {
+      method: 'POST',
+      headers: authHeaders(),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) alert(data.error)
+        loadReferee()
+      })
+  }
+
+  function updateScore(match: any, side: 'A' | 'B', delta: number) {
+    const scoreA = Math.max(0, Number(match.scoreA || 0) + (side === 'A' ? delta : 0))
+    const scoreB = Math.max(0, Number(match.scoreB || 0) + (side === 'B' ? delta : 0))
+
+    setMatches(current => current.map(item =>
+      item.id === match.id ? { ...item, scoreA, scoreB } : item
+    ))
+
+    fetch(`${API}/matches/${match.id}/score`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ scoreA, scoreB }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        if (data.autoFinished) {
+          loadReferee()
+        }
+      })
+  }
+
+  function setScoreManually(match: any) {
+    const value = prompt(
+      'Informe o placar da partida no formato A-B',
+      `${Number(match.scoreA || 0)}-${Number(match.scoreB || 0)}`
+    )
+    if (!value) return
+
+    const [scoreA, scoreB] = value.split(/[-xX]/).map(item => Number(item.trim()))
+    if (!Number.isFinite(scoreA) || !Number.isFinite(scoreB)) {
+      alert('Formato inválido. Exemplo: 2-1')
+      return
+    }
+
+    fetch(`${API}/matches/${match.id}/score`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ scoreA, scoreB }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+        loadReferee()
+      })
+  }
+
+  function finishMatch(match: any, winnerId: number, resultType = 'normal') {
+    if (resultType !== 'wo') {
+      const winnerSide = winnerId === match.playerAId ? 'A' : 'B'
+      if (!canDeclareWinner(match, winnerSide)) {
+        const confirmEarly = confirm(`O placar ainda não atingiu o mínimo configurado (${matchFormatLabel(match)}). Confirmar vencedor mesmo assim?`)
+        if (!confirmEarly) return
+      }
+    }
+
+    const url = resultType === 'wo'
+      ? `${API}/matches/${match.id}/wo`
+      : `${API}/matches/${match.id}/result`
+
+    fetch(url, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        winnerId,
+        scoreA: match.scoreA || 0,
+        scoreB: match.scoreB || 0,
+        resultType,
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) alert(data.error)
+        loadReferee()
+      })
+  }
+
+  function renderMiniMatch(match: any, title: string) {
+    if (!match) {
+      return (
+        <div className="refereeSideCard empty">
+          <strong>{title}</strong>
+          <span>Nenhuma partida aguardando.</span>
+        </div>
+      )
+    }
+
+    return (
+      <div className={`refereeSideCard ${match.status}`}>
+        <strong>{title}</strong>
+        <span>Jogo #{match.matchNumber} · Mesa {match.table || '-'} · Rodada {match.round}</span>
+        <p>{playerName(match.playerA)} x {playerName(match.playerB)}</p>
+        <button onClick={() => callMatch(match.id)}>Chamar jogadores</button>
+      </div>
+    )
+  }
+
+  function renderPlayerControl(match: any, side: 'A' | 'B') {
+    const player = side === 'A' ? match.playerA : match.playerB
+    const playerId = side === 'A' ? match.playerAId : match.playerBId
+    const score = side === 'A' ? match.scoreA : match.scoreB
+    const opponentName = side === 'A' ? playerName(match.playerB) : playerName(match.playerA)
+
+    return (
+      <div className="refereePlayerControl">
+        <div>
+          <span>{side === 'A' ? 'Jogador A' : 'Jogador B'}</span>
+          <strong>{playerName(player)}</strong>
+        </div>
+        <div className="refereeLiveScore">
+          <span>Placar</span>
+          <strong>{score || 0}</strong>
+        </div>
+        <div className="refereePlayerButtons">
+          <button disabled={!playerId} onClick={() => finishMatch(match, playerId, 'normal')}>Vitória</button>
+          <button disabled={!playerId} onClick={() => finishMatch(match, playerId, 'wo')}>WO</button>
+          <button disabled={!playerId} onClick={() => finishMatch(match, playerId, 'desistencia')} title={`${opponentName} desistiu`}>
+            Desistência
+          </button>
+          <button disabled={!playerId} onClick={() => finishMatch(match, playerId, 'desclassificacao')} title={`${opponentName} foi desclassificado`}>
+            Desclass.
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  function renderTableCard(table: number) {
+    const tableMatch = currentMatchForTable(table)
+    const activeCount = matches.filter(match => Number(match.table || 0) === table && match.status !== 'finished').length
+
+    return (
+      <button
+        key={table}
+        className={`refereeTableCard ${currentTable === table ? 'active' : ''} ${tableMatch?.status || 'empty'}`}
+        onClick={() => setSelectedTable(table)}
+      >
+        <span>Mesa {table}</span>
+        <strong>{tableMatch ? statusLabel(tableMatch.status) : 'Livre'}</strong>
+        <small>{tableMatch ? `${playerName(tableMatch.playerA)} x ${playerName(tableMatch.playerB)}` : 'Sem partida agora'}</small>
+        <em>{activeCount} jogo(s) pendente(s)</em>
+      </button>
+    )
+  }
+
+  const selectedMatch = currentMatchForTable(currentTable)
+  const nextSameTable = nextPendingForTable(currentTable, selectedMatch?.id)
+  const otherNextMatches = otherTablesPendingMatches(currentTable)
+
+  return (
+    <div className="tournamentPageLayout">
+      <aside className="tournamentMainSidebar">
+        <div className="sidebarBrand">🎱 ProMaster</div>
+        <button className="backDashboardButton" onClick={() => navigate('/app')}>
+          Voltar ao painel principal
+        </button>
+
+        <div className="tournamentSidebarInfo">
+          <span>Torneio</span>
+          <strong>{tournament?.name || 'Carregando...'}</strong>
+          <small>{tournament?.status || '-'}</small>
+        </div>
+
+        <button onClick={() => navigate(`/tournament/${id}/painel`)}>Dashboard</button>
+        <button onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=inscritos`)}>Inscritos</button>
+        <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
+        <button className="active" onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=financeiro`)}>Financeiro</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=patrocinadores`)}>Patrocinadores</button>
+        <button onClick={() => navigate(`/tournament/${id}/painel?painel=publico`)}>QR Code público</button>
+      </aside>
+
+      <main className="saasMain refereeMain">
+        <header className="hero">
+          <div className="badge">Modo Árbitro</div>
+          <h1>{tournament?.name || 'Painel do Árbitro'}</h1>
+          <p>Controle mesas, chamada de jogadores, placar, WO, desistência e desclassificação pelo celular.</p>
+          <div className="heroActions">
+            <button disabled={!refereePublicUrl} onClick={() => refereePublicUrl && window.open(refereePublicUrl, '_blank')}>
+              Público
+            </button>
+            <button onClick={() => window.open(`/telao/${id}`, '_blank')}>Telão</button>
+            <button className={tournament?.liveStarted ? 'dangerButton' : ''} onClick={toggleRefereeLive}>
+              {tournament?.liveStarted ? 'Encerrar transmissão' : 'Iniciar transmissão'}
+            </button>
+          </div>
+        </header>
+
+        <section className="refereeTablesPanel">
+          <div>
+            <h2>Mesas do torneio</h2>
+            <p>{tableCount} mesa(s) configurada(s)</p>
+          </div>
+          <div className="refereeTablesGrid">
+            {tables.map(renderTableCard)}
+          </div>
+        </section>
+
+        <section className="refereeDashboardGrid">
+          <div className="refereeMatchPanel">
+            <div className="refereeSelectedHeader">
+              <div>
+                <span>Mesa {currentTable}</span>
+                <h2>{selectedMatch ? `Jogo #${selectedMatch.matchNumber}` : 'Mesa sem partida'}</h2>
+              </div>
+              <div className="refereeTimerCard">
+                <span>Tempo da partida</span>
+                <strong>{matchElapsedLabel(selectedMatch)}</strong>
+              </div>
+            </div>
+
+            {!selectedMatch && (
+              <div className="refereeEmptyState">
+                <strong>Nenhuma partida vinculada a esta mesa agora.</strong>
+                <span>Selecione outra mesa ou gere a chave do torneio.</span>
+              </div>
+            )}
+
+            {selectedMatch && (
+              <>
+                <div className="refereeMatchMeta">
+                  <span>{statusLabel(selectedMatch.status)}</span>
+                  <span>Rodada {selectedMatch.round}</span>
+                  <span>{matchFormatLabel(selectedMatch)}</span>
+                  <span>Total: {currentMatchQuantity(selectedMatch) || 1} partida(s)</span>
+                </div>
+
+                <div className="refereeScoreboard">
+                  <div>
+                    <span>{playerName(selectedMatch.playerA)}</span>
+                    <strong>{selectedMatch.scoreA || 0}</strong>
+                  </div>
+                  <small>x</small>
+                  <div>
+                    <span>{playerName(selectedMatch.playerB)}</span>
+                    <strong>{selectedMatch.scoreB || 0}</strong>
+                  </div>
+                </div>
+
+                <div className="refereeScoreControls">
+                  <button onClick={() => updateScore(selectedMatch, 'A', -1)}>- A</button>
+                  <button onClick={() => updateScore(selectedMatch, 'A', 1)}>+ A</button>
+                  <button onClick={() => updateScore(selectedMatch, 'B', -1)}>- B</button>
+                  <button onClick={() => updateScore(selectedMatch, 'B', 1)}>+ B</button>
+                  <button onClick={() => setScoreManually(selectedMatch)}>Inserir pontuação</button>
+                </div>
+
+                <div className="refereePlayersControlGrid">
+                  {renderPlayerControl(selectedMatch, 'A')}
+                  {renderPlayerControl(selectedMatch, 'B')}
+                </div>
+
+                <div className="refereePrimaryActions">
+                  <button onClick={() => callMatch(selectedMatch.id)}>Chamar jogadores</button>
+                  {selectedMatch.status === 'pending' && (
+                    <button onClick={() => startMatch(selectedMatch.id)}>Iniciar partida</button>
+                  )}
+                  {selectedMatch.calledAt && (
+                    <span>Chamada enviada {selectedMatch.callCount || 1} vez(es)</span>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="refereeSidePanel">
+            {renderMiniMatch(nextSameTable, 'Próximo jogo desta mesa')}
+
+            <div className="refereeSideCard">
+              <strong>Próximas partidas das outras mesas</strong>
+              {otherNextMatches.length === 0 && <span>Nenhuma outra mesa aguardando.</span>}
+              <div className="refereeOtherMatches">
+                {otherNextMatches.map(match => (
+                  <button key={match.id} onClick={() => setSelectedTable(Number(match.table || 1))}>
+                    <span>Mesa {match.table || '-'}</span>
+                    <strong>{playerName(match.playerA)} x {playerName(match.playerB)}</strong>
+                    <small>Jogo #{match.matchNumber}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="refereeSideCard">
+              <strong>Jogos em andamento</strong>
+              {playingMatches.length === 0 && <span>Nenhum jogo em andamento agora.</span>}
+              <div className="refereeOtherMatches">
+                {playingMatches.map(match => (
+                  <button key={match.id} onClick={() => setSelectedTable(Number(match.table || 1))}>
+                    <span>Mesa {match.table || '-'}</span>
+                    <strong>{playerName(match.playerA)} x {playerName(match.playerB)}</strong>
+                    <small>Jogo #{match.matchNumber} · {Number(match.scoreA || 0)} x {Number(match.scoreB || 0)}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  )
+}
+
 function TelaoTV() {
   const { id } = useParams()
   const [rounds, setRounds] = useState<any[]>([])
   const [tournament, setTournament] = useState<any>(null)
+  const [ranking, setRanking] = useState<any[]>([])
   const [bingoState, setBingoState] = useState<any>(null)
   const [view, setView] = useState(0)
 
@@ -2969,6 +5952,10 @@ function TelaoTV() {
     fetch(`${API}/tournaments/${id}/bracket`)
       .then(res => res.json())
       .then(data => setRounds(data.rounds || []))
+
+    fetch(`${API}/tournaments/${id}/ranking`)
+      .then(res => res.json())
+      .then(data => setRanking(Array.isArray(data) ? data : []))
   }
 
   function loadBingo() {
@@ -3171,6 +6158,17 @@ function TelaoTV() {
                   <strong>Finalizado</strong>
                 </div>
               ))}
+            </div>
+
+            <div className="tvPanel tvRankingPanel">
+              <h3>Ranking</h3>
+              {ranking.slice(0, 8).map((item: any, index: number) => (
+                <div key={item.playerId || item.name} className="tvRow ranking">
+                  <span>{index + 1}. {item.name}</span>
+                  <strong>{item.wins}V / {item.losses}D</strong>
+                </div>
+              ))}
+              {ranking.length === 0 && <p>Ranking aguardando resultados</p>}
             </div>
           </div>
         </>
