@@ -3628,7 +3628,7 @@ button:hover {
 
 .bingoRoundSummary {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 12px 0;
 }
@@ -3656,7 +3656,7 @@ button:hover {
 
 .bingoRoundFields {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 12px 0 16px;
 }
@@ -3733,7 +3733,7 @@ button:hover {
 }
 
 .bingoControlButtons {
-  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  grid-template-columns: repeat(6, minmax(115px, 1fr));
   align-items: stretch;
 }
 
@@ -3764,20 +3764,21 @@ button:hover {
 }
 
 .bingoNumbers span {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   border-radius: 999px;
   background: #2563eb;
   color: white;
   font-weight: 900;
+  font-size: 14px;
 }
 
 .bingoNumbersFeatured {
   align-content: flex-start;
-  max-height: 220px;
-  overflow: auto;
+  min-height: 150px;
+  overflow: visible;
   padding: 12px;
   border: 1px solid rgba(96, 165, 250, .2);
   border-radius: 16px;
@@ -3816,7 +3817,7 @@ button:hover {
 .bingoRoundsTable {
   width: 100%;
   border-collapse: collapse;
-  min-width: 720px;
+  min-width: 880px;
 }
 
 .bingoRoundsTable th,
@@ -4608,9 +4609,9 @@ button:hover {
 }
 
 .bingoTvRoundMeta {
-  width: min(100%, 980px);
+  width: min(100%, 1180px);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   margin-bottom: 12px;
 }

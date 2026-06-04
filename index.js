@@ -2111,6 +2111,7 @@ app.get('/tournaments/:id/bingo', async (req, res) => {
         number: currentRoundNumber,
         name: currentRoundName,
         prize: tournament.bingoRoundPrize || currentDraws[currentDraws.length - 1]?.prize || null,
+        rule: tournament.bingoRoundRule || currentDraws[currentDraws.length - 1]?.rule || null,
         status: tournament.bingoRoundStatus || 'open',
       },
       currentDraws,
@@ -2141,6 +2142,7 @@ app.post('/tournaments/:id/bingo/draw', auth, requireRole('admin', 'operator'), 
     const currentRoundNumber = Number(tournament.bingoCurrentRound || 1)
     const currentRoundName = req.body.roundName || `Rodada ${currentRoundNumber}`
     const currentRoundPrize = req.body.prize || tournament.bingoRoundPrize || null
+    const currentRoundRule = req.body.rule || tournament.bingoRoundRule || null
     const source = tournament.bingoDrawMode === 'physical' && req.body.source === 'physical'
       ? 'physical'
       : 'virtual'
@@ -2180,6 +2182,7 @@ app.post('/tournaments/:id/bingo/draw', auth, requireRole('admin', 'operator'), 
         source,
         roundName: currentRoundName,
         prize: currentRoundPrize,
+        rule: currentRoundRule,
       },
     })
 
@@ -2205,6 +2208,7 @@ app.post('/tournaments/:id/bingo/rounds', auth, requireRole('admin', 'operator')
       data: {
         bingoCurrentRound: roundNumber,
         bingoRoundPrize: req.body.prize || null,
+        bingoRoundRule: req.body.rule || null,
         bingoRoundStatus: 'open',
       },
     })
@@ -2215,12 +2219,47 @@ app.post('/tournaments/:id/bingo/rounds', auth, requireRole('admin', 'operator')
         number: updated.bingoCurrentRound,
         name: `Rodada ${updated.bingoCurrentRound}`,
         prize: updated.bingoRoundPrize,
+        rule: updated.bingoRoundRule,
         status: updated.bingoRoundStatus,
       },
     })
   } catch (error) {
     console.error(error)
     res.status(error.status || 500).json({ error: error.message || 'Erro ao abrir nova rodada' })
+  }
+})
+
+app.post('/tournaments/:id/bingo/rounds/prize', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const tournamentId = Number(req.params.id)
+    const tournament = await requireOwnedTournament(tournamentId, req.user.organizationId)
+
+    if (tournament.format !== 'bingo' && tournament.sport?.slug !== 'bingo') {
+      return res.status(400).json({ error: 'Este evento não é Bingo' })
+    }
+
+    const updated = await prisma.tournament.update({
+      where: { id: tournamentId },
+      data: {
+        bingoRoundPrize: req.body.prize || null,
+        bingoRoundRule: req.body.rule || null,
+        bingoRoundStatus: 'open',
+      },
+    })
+
+    res.json({
+      ok: true,
+      currentRound: {
+        number: updated.bingoCurrentRound || 1,
+        name: `Rodada ${updated.bingoCurrentRound || 1}`,
+        prize: updated.bingoRoundPrize,
+        rule: updated.bingoRoundRule,
+        status: updated.bingoRoundStatus,
+      },
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(error.status || 500).json({ error: error.message || 'Erro ao atualizar premio da rodada' })
   }
 })
 
@@ -2244,6 +2283,7 @@ app.post('/tournaments/:id/bingo/rounds/close', auth, requireRole('admin', 'oper
         number: updated.bingoCurrentRound,
         name: `Rodada ${updated.bingoCurrentRound || 1}`,
         prize: updated.bingoRoundPrize,
+        rule: updated.bingoRoundRule,
         status: updated.bingoRoundStatus,
       },
     })
@@ -2299,6 +2339,7 @@ app.post('/tournaments/:id/bingo/winners', auth, requireRole('admin', 'operator'
         roundName: req.body.roundName || 'Rodada principal',
         winnerName,
         prize: req.body.prize || null,
+        rule: req.body.rule || tournament.bingoRoundRule || null,
       },
     })
 

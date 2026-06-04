@@ -59,6 +59,7 @@ bingoDrawnNumbers String?
 bingoWinners String?
 bingoCurrentRound Int @default(1)
 bingoRoundPrize String?
+bingoRoundRule String?
 bingoRoundStatus String @default("open")
 bingoLastClaimAt DateTime?
 bingoLastClaimName String?
@@ -204,6 +205,7 @@ model BingoDraw {
   tournamentId Int
   roundName    String?
   prize        String?
+  rule         String?
   number       Int
   source       String   @default("virtual")
   createdAt    DateTime @default(now())
@@ -218,6 +220,7 @@ model BingoWinner {
   roundName    String?
   winnerName   String
   prize        String?
+  rule         String?
   createdAt    DateTime @default(now())
 
   tournament Tournament @relation(fields: [tournamentId], references: [id])

@@ -5326,10 +5326,15 @@ function TournamentBracket() {
   const [bingoState, setBingoState] = useState<any>(null)
   const [bingoRoundName, setBingoRoundName] = useState('Rodada 1')
   const [bingoRoundPrize, setBingoRoundPrize] = useState('')
+  const [bingoRoundRule, setBingoRoundRule] = useState('')
   const [showNewBingoRound, setShowNewBingoRound] = useState(false)
+  const [showNewBingoPrize, setShowNewBingoPrize] = useState(false)
   const [showPhysicalNumberModal, setShowPhysicalNumberModal] = useState(false)
   const [newBingoRoundNumber, setNewBingoRoundNumber] = useState(2)
   const [newBingoRoundPrize, setNewBingoRoundPrize] = useState('')
+  const [newBingoRoundRule, setNewBingoRoundRule] = useState('')
+  const [newBingoPrizeValue, setNewBingoPrizeValue] = useState('')
+  const [newBingoPrizeRule, setNewBingoPrizeRule] = useState('')
   const [physicalNumberInput, setPhysicalNumberInput] = useState('')
   const [panelQrUrl, setPanelQrUrl] = useState<string | null>(null)
   const [winnerName, setWinnerName] = useState('')
@@ -5355,39 +5360,51 @@ function TournamentBracket() {
   const currentBingoRoundNumber = Number(currentRoundData?.number || 1)
   const currentBingoRound = currentRoundData?.name || bingoRoundName || `Rodada ${currentBingoRoundNumber}`
   const currentBingoPrize = currentRoundData?.prize || bingoRoundPrize || tournament?.prize || '-'
+  const currentBingoRule = currentRoundData?.rule || bingoRoundRule || '-'
   const bingoRoundClosed = currentRoundData?.status === 'closed'
   const bingoRoundRows = (() => {
-    const rows = new Map<string, any>()
-    const ensureRow = (roundName: string, fallbackPrize = '') => {
-      const label = roundName || `Rodada ${currentBingoRoundNumber}`
-      if (!rows.has(label)) {
-        const match = String(label).match(/\d+/)
-        rows.set(label, {
-          roundNumber: match ? Number(match[0]) : rows.size + 1,
-          roundName: label,
-          numbers: [] as number[],
-          winners: [] as string[],
-          prize: fallbackPrize || '',
-        })
-      }
-      return rows.get(label)
-    }
+    const drawsByRound = new Map<string, any[]>()
 
     bingoDraws.forEach((draw: any) => {
-      const row = ensureRow(draw.roundName || currentBingoRound, draw.prize || currentBingoPrize)
-      if (draw.number && !row.numbers.includes(draw.number)) row.numbers.push(draw.number)
-      if (draw.prize && !row.prize) row.prize = draw.prize
+      const label = draw.roundName || currentBingoRound
+      drawsByRound.set(label, [...(drawsByRound.get(label) || []), draw])
     })
+
+    const rows: any[] = []
+    const buildBaseRow = (roundName: string, prize = '', rule = '') => {
+      const label = roundName || `Rodada ${currentBingoRoundNumber}`
+      const match = String(label).match(/\d+/)
+      const relatedDraws = (drawsByRound.get(label) || [])
+        .filter((draw: any) => {
+          const samePrize = !prize || !draw.prize || draw.prize === prize
+          const sameRule = !rule || !draw.rule || draw.rule === rule
+          return samePrize && sameRule
+        })
+
+      return {
+        roundNumber: match ? Number(match[0]) : rows.length + 1,
+        roundName: label,
+        numbers: relatedDraws.map((draw: any) => draw.number),
+        winner: '',
+        prize,
+        rule,
+        createdAt: '',
+      }
+    }
 
     bingoWinners.forEach((winner: any) => {
-      const row = ensureRow(winner.roundName || currentBingoRound, winner.prize || currentBingoPrize)
-      if (winner.winnerName && !row.winners.includes(winner.winnerName)) row.winners.push(winner.winnerName)
-      if (winner.prize && !row.prize) row.prize = winner.prize
+      rows.push({
+        ...buildBaseRow(winner.roundName || currentBingoRound, winner.prize || '', winner.rule || ''),
+        winner: winner.winnerName || '',
+        createdAt: winner.createdAt || '',
+      })
     })
 
-    if (rows.size === 0) ensureRow(currentBingoRound, currentBingoPrize)
+    if (rows.length === 0) {
+      rows.push(buildBaseRow(currentBingoRound, currentBingoPrize, currentBingoRule))
+    }
 
-    return Array.from(rows.values()).sort((a, b) => a.roundNumber - b.roundNumber)
+    return rows.sort((a, b) => a.roundNumber - b.roundNumber || String(a.createdAt).localeCompare(String(b.createdAt)))
   })()
 
   function loadBracket() {
@@ -5479,6 +5496,7 @@ function TournamentBracket() {
   function openNewBingoRoundModal() {
     setNewBingoRoundNumber(currentBingoRoundNumber + 1)
     setNewBingoRoundPrize('')
+    setNewBingoRoundRule('')
     setShowNewBingoRound(true)
   }
 
@@ -5486,7 +5504,7 @@ function TournamentBracket() {
     fetch(`${API}/tournaments/${id}/bingo/rounds`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ roundNumber: newBingoRoundNumber, prize: newBingoRoundPrize }),
+      body: JSON.stringify({ roundNumber: newBingoRoundNumber, prize: newBingoRoundPrize, rule: newBingoRoundRule }),
     })
       .then(res => res.json())
       .then(data => {
@@ -5497,7 +5515,35 @@ function TournamentBracket() {
 
         setBingoRoundName(`Rodada ${data.currentRound?.number || newBingoRoundNumber}`)
         setBingoRoundPrize(data.currentRound?.prize || '')
+        setBingoRoundRule(data.currentRound?.rule || '')
         setShowNewBingoRound(false)
+        loadTournamentPanel()
+        loadBingo()
+      })
+  }
+
+  function openNewBingoPrizeModal() {
+    setNewBingoPrizeValue('')
+    setNewBingoPrizeRule('')
+    setShowNewBingoPrize(true)
+  }
+
+  function updateBingoRoundPrize() {
+    fetch(`${API}/tournaments/${id}/bingo/rounds/prize`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ prize: newBingoPrizeValue, rule: newBingoPrizeRule }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setBingoRoundPrize(data.currentRound?.prize || '')
+        setBingoRoundRule(data.currentRound?.rule || '')
+        setShowNewBingoPrize(false)
         loadTournamentPanel()
         loadBingo()
       })
@@ -5543,7 +5589,7 @@ function TournamentBracket() {
     fetch(`${API}/tournaments/${id}/bingo/winners`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ winnerName, roundName: currentBingoRound, prize: currentBingoPrize }),
+      body: JSON.stringify({ winnerName, roundName: currentBingoRound, prize: currentBingoPrize, rule: currentBingoRule }),
     })
       .then(res => res.json())
       .then(data => {
@@ -5719,6 +5765,7 @@ function TournamentBracket() {
               <div className="bingoRoundSummary">
                 <div><span>Rodada atual</span><strong>{currentBingoRound}</strong></div>
                 <div><span>Premiação da rodada</span><strong>{currentBingoPrize}</strong></div>
+                <div><span>Regra da rodada</span><strong>{currentBingoRule}</strong></div>
               </div>
               {bingoRoundClosed && <p className="helperText">Rodada encerrada. Abra uma nova rodada para continuar sorteando.</p>}
 
@@ -5743,6 +5790,7 @@ function TournamentBracket() {
                 <button onClick={drawVirtualNumber} disabled={bingoRoundClosed}>Sortear virtual</button>
                 <button onClick={registerPhysicalNumber} disabled={bingoRoundClosed}>Registrar bolinha</button>
                 <button onClick={openNewBingoRoundModal}>Nova rodada</button>
+                <button onClick={openNewBingoPrizeModal}>Novo prêmio</button>
                 <button className="secondaryButton" onClick={closeBingoRound} disabled={bingoRoundClosed}>Encerrar rodada</button>
                 <button className="bingoClaimButton bingoClaimButtonLarge" onClick={triggerBingoClaim}>BINGO!</button>
               </div>
@@ -5758,6 +5806,10 @@ function TournamentBracket() {
                 <div>
                   <span>Premiação</span>
                   <strong>{currentBingoPrize}</strong>
+                </div>
+                <div>
+                  <span>Regra</span>
+                  <strong>{currentBingoRule}</strong>
                 </div>
               </div>
               <div className="bingoActionRow">
@@ -5792,17 +5844,19 @@ function TournamentBracket() {
                   <thead>
                     <tr>
                       <th>Rodada</th>
+                      <th>Regra</th>
                       <th>Números sorteados</th>
                       <th>Vencedor</th>
                       <th>Premiação</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {bingoRoundRows.map((row: any) => (
-                      <tr key={row.roundName}>
+                    {bingoRoundRows.map((row: any, index: number) => (
+                      <tr key={`${row.roundName}-${row.winner || 'aberta'}-${index}`}>
                         <td>{row.roundNumber}</td>
+                        <td>{row.rule || '-'}</td>
                         <td>{row.numbers.length ? row.numbers.join(', ') : '-'}</td>
-                        <td>{row.winners.length ? row.winners.join(', ') : '-'}</td>
+                        <td>{row.winner || '-'}</td>
                         <td>{row.prize || '-'}</td>
                       </tr>
                     ))}
@@ -5854,6 +5908,40 @@ function TournamentBracket() {
           </div>
         )}
 
+        {showNewBingoPrize && (
+          <div className="qrModal" onClick={() => setShowNewBingoPrize(false)}>
+            <div className="detailsContent bingoRoundModal" onClick={event => event.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Novo prêmio</span>
+                  <h3>Continuar {currentBingoRound}</h3>
+                  <p>Atualiza a premiação e a regra sem abrir outra rodada.</p>
+                </div>
+                <button className="modalCloseButton" onClick={() => setShowNewBingoPrize(false)}>Fechar</button>
+              </div>
+
+              <label>Premiação da rodada</label>
+              <input
+                value={newBingoPrizeValue}
+                onChange={e => setNewBingoPrizeValue(e.target.value)}
+                placeholder="Ex: R$ 300,00"
+              />
+
+              <label>Regra da rodada</label>
+              <input
+                value={newBingoPrizeRule}
+                onChange={e => setNewBingoPrizeRule(e.target.value)}
+                placeholder="Ex: Cartela cheia"
+              />
+
+              <div className="adminModalActions">
+                <button onClick={() => setShowNewBingoPrize(false)}>Cancelar</button>
+                <button className="primaryButton" onClick={updateBingoRoundPrize}>Atualizar prêmio</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showNewBingoRound && (
           <div className="qrModal" onClick={() => setShowNewBingoRound(false)}>
             <div className="detailsContent bingoRoundModal" onClick={event => event.stopPropagation()}>
@@ -5879,6 +5967,13 @@ function TournamentBracket() {
                 value={newBingoRoundPrize}
                 onChange={e => setNewBingoRoundPrize(e.target.value)}
                 placeholder="Ex: R$ 500,00"
+              />
+
+              <label>Regra da rodada</label>
+              <input
+                value={newBingoRoundRule}
+                onChange={e => setNewBingoRoundRule(e.target.value)}
+                placeholder="Ex: Linha e coluna"
               />
 
               <div className="adminModalActions">
@@ -6465,6 +6560,7 @@ function TelaoTV() {
   const currentRoundData = bingoState?.currentRound
   const currentBingoRound = currentRoundData?.name || bingoWinners[0]?.roundName || 'Rodada principal'
   const currentBingoPrize = currentRoundData?.prize || bingoWinners[0]?.prize || tournament?.prize || '-'
+  const currentBingoRule = currentRoundData?.rule || bingoWinners[0]?.rule || '-'
 
   const finalRound = rounds[rounds.length - 1]
   const champion = finalRound?.matches?.[0]?.winner
@@ -6602,6 +6698,10 @@ function TelaoTV() {
               <div>
                 <span>Premiação</span>
                 <strong>{currentBingoPrize}</strong>
+              </div>
+              <div>
+                <span>Regra</span>
+                <strong>{currentBingoRule}</strong>
               </div>
             </div>
             <span>Número sorteado</span>
