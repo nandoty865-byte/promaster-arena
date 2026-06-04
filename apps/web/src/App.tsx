@@ -701,7 +701,8 @@ function OrganizerSignup() {
 }
 
 function PlayerSignup() {
-  const navigate = useNavigate()
+  const [step, setStep] = useState(1)
+  const [createdPlayer, setCreatedPlayer] = useState<any>(null)
   const [form, setForm] = useState<any>({
     name: '',
     nickname: '',
@@ -711,9 +712,12 @@ function PlayerSignup() {
     city: '',
     state: '',
     country: 'Brasil',
+    password: '',
+    confirmPassword: '',
     termsAccepted: false,
+    noticesAccepted: false,
   })
-  const [sports, setSports] = useState<string[]>(['Sinuca'])
+  const [sports, setSports] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
   function updateField(field: string, value: string | boolean) {
@@ -728,14 +732,42 @@ function PlayerSignup() {
     ))
   }
 
-  function registerPlayerAccount() {
-    if (!form.name || !form.email || !form.phone) {
+  function nextPlayerStep() {
+    if (step === 1 && sports.length === 0) {
+      alert('Selecione pelo menos um esporte.')
+      return
+    }
+
+    if (step === 2 && (!form.name || !form.email || !form.phone)) {
       alert('Preencha nome, e-mail e WhatsApp.')
       return
     }
 
+    setStep(current => Math.min(current + 1, 3))
+  }
+
+  function previousPlayerStep() {
+    setStep(current => Math.max(current - 1, 1))
+  }
+
+  function registerPlayerAccount() {
+    if (!form.password) {
+      alert('Informe uma senha.')
+      return
+    }
+
+    if (form.password !== form.confirmPassword) {
+      alert('As senhas não conferem.')
+      return
+    }
+
     if (!form.termsAccepted) {
-      alert('Aceite os termos para criar o perfil.')
+      alert('Aceite os termos de uso para criar o perfil.')
+      return
+    }
+
+    if (!form.noticesAccepted) {
+      alert('Aceite os avisos por e-mail e WhatsApp para continuar.')
       return
     }
 
@@ -756,9 +788,27 @@ function PlayerSignup() {
           return
         }
 
-        navigate(`/jogador/${data.player.id}`)
+        setCreatedPlayer(data.player)
       })
       .finally(() => setLoading(false))
+  }
+
+  if (createdPlayer) {
+    return (
+      <div className="onboardingPage">
+        <section className="onboardingHero playerHero">
+          <span>Validação pendente</span>
+          <h1>Confirme seu cadastro de jogador.</h1>
+          <p>Enviamos um link de validação para o e-mail e WhatsApp informados. Depois de validar, seu perfil ficará ativo.</p>
+        </section>
+
+        <section className="onboardingCard">
+          <h2>{createdPlayer.name}</h2>
+          <p>Confira sua caixa de entrada e suas mensagens do WhatsApp.</p>
+          <a href="/login">Ir para login</a>
+        </section>
+      </div>
+    )
   }
 
   return (
@@ -774,64 +824,109 @@ function PlayerSignup() {
       </section>
 
       <section className="onboardingCard">
-        <h2>Dados do jogador</h2>
-        <div className="onboardingGrid">
-          <div>
-            <label>Nome completo *</label>
-            <input value={form.name} onChange={e => updateField('name', e.target.value)} />
-          </div>
-          <div>
-            <label>Apelido</label>
-            <input value={form.nickname} onChange={e => updateField('nickname', e.target.value)} />
-          </div>
-          <div>
-            <label>E-mail *</label>
-            <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
-          </div>
-          <div>
-            <label>WhatsApp *</label>
-            <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
-          </div>
-          <div>
-            <label>RG</label>
-            <input value={form.rg} onChange={e => updateField('rg', formatRg(e.target.value))} />
-          </div>
-          <div>
-            <label>Cidade</label>
-            <input value={form.city} onChange={e => updateField('city', e.target.value)} />
-          </div>
-          <div>
-            <label>Estado</label>
-            <input value={form.state} onChange={e => updateField('state', e.target.value)} />
-          </div>
-          <div>
-            <label>País</label>
-            <input value={form.country} onChange={e => updateField('country', e.target.value)} />
-          </div>
-        </div>
-
-        <h2>Esportes</h2>
-        <div className="sportsPicker">
-          {SPORT_OPTIONS.map(sport => (
-            <label key={sport}>
-              <input type="checkbox" checked={sports.includes(sport)} onChange={() => toggleSport(sport)} />
-              {sport}
-            </label>
+        <div className="onboardingSteps">
+          {[1, 2, 3].map(item => (
+            <span key={item} className={step === item ? 'active' : step > item ? 'done' : ''}>{item}</span>
           ))}
         </div>
 
-        <label className="termsLine">
-          <input
-            type="checkbox"
-            checked={form.termsAccepted}
-            onChange={e => updateField('termsAccepted', e.target.checked)}
-          />
-          Aceito receber avisos de torneios, chamadas de partidas e atualizações do meu ranking.
-        </label>
+        {step === 1 && (
+          <>
+            <h2>Qual seu esporte?</h2>
+            <div className="sportsPicker">
+              {SPORT_OPTIONS.map(sport => (
+                <label key={sport}>
+                  <input type="checkbox" checked={sports.includes(sport)} onChange={() => toggleSport(sport)} />
+                  {sport}
+                </label>
+              ))}
+            </div>
+          </>
+        )}
 
-        <button className="primaryButton" onClick={registerPlayerAccount} disabled={loading}>
-          {loading ? 'Criando...' : 'Criar perfil de jogador'}
-        </button>
+        {step === 2 && (
+          <>
+            <h2>Dados do jogador</h2>
+            <div className="onboardingGrid">
+              <div>
+                <label>Nome completo *</label>
+                <input value={form.name} onChange={e => updateField('name', e.target.value)} />
+              </div>
+              <div>
+                <label>Apelido</label>
+                <input value={form.nickname} onChange={e => updateField('nickname', e.target.value)} />
+              </div>
+              <div>
+                <label>E-mail *</label>
+                <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+              </div>
+              <div>
+                <label>WhatsApp *</label>
+                <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+              </div>
+              <div>
+                <label>RG</label>
+                <input value={form.rg} onChange={e => updateField('rg', formatRg(e.target.value))} />
+              </div>
+              <div>
+                <label>Cidade</label>
+                <input value={form.city} onChange={e => updateField('city', e.target.value)} />
+              </div>
+              <div>
+                <label>Estado</label>
+                <input value={form.state} onChange={e => updateField('state', e.target.value)} />
+              </div>
+              <div>
+                <label>País</label>
+                <input value={form.country} onChange={e => updateField('country', e.target.value)} />
+              </div>
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <h2>Criação de senha</h2>
+            <div className="onboardingGrid">
+              <div>
+                <label>Senha *</label>
+                <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} />
+              </div>
+              <div>
+                <label>Confirmar senha *</label>
+                <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} />
+              </div>
+            </div>
+
+            <label className="termsLine">
+              <input
+                type="checkbox"
+                checked={form.termsAccepted}
+                onChange={e => updateField('termsAccepted', e.target.checked)}
+              />
+              Aceito os termos de uso da plataforma.
+            </label>
+
+            <label className="termsLine">
+              <input
+                type="checkbox"
+                checked={form.noticesAccepted}
+                onChange={e => updateField('noticesAccepted', e.target.checked)}
+              />
+              Aceito receber avisos via e-mail e WhatsApp.
+            </label>
+          </>
+        )}
+
+        <div className="onboardingActions">
+          {step > 1 && <button type="button" onClick={previousPlayerStep}>Voltar</button>}
+          {step < 3 && <button type="button" className="primaryButton" onClick={nextPlayerStep}>Próximo</button>}
+          {step === 3 && (
+            <button className="primaryButton" onClick={registerPlayerAccount} disabled={loading}>
+              {loading ? 'Criando...' : 'Criar perfil de jogador'}
+            </button>
+          )}
+        </div>
       </section>
     </div>
   )
