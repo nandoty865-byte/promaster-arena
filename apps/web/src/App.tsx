@@ -5327,8 +5327,11 @@ function TournamentBracket() {
   const [bingoRoundName, setBingoRoundName] = useState('Rodada 1')
   const [bingoRoundPrize, setBingoRoundPrize] = useState('')
   const [showNewBingoRound, setShowNewBingoRound] = useState(false)
+  const [showPhysicalNumberModal, setShowPhysicalNumberModal] = useState(false)
   const [newBingoRoundNumber, setNewBingoRoundNumber] = useState(2)
   const [newBingoRoundPrize, setNewBingoRoundPrize] = useState('')
+  const [physicalNumberInput, setPhysicalNumberInput] = useState('')
+  const [panelQrUrl, setPanelQrUrl] = useState<string | null>(null)
   const [winnerName, setWinnerName] = useState('')
   const [winnerPrize, setWinnerPrize] = useState('')
   const matches = rounds.flatMap(round =>
@@ -5342,7 +5345,10 @@ function TournamentBracket() {
   const hasGeneratedBracket = rounds.some(round => (round.matches || []).length > 0)
   const bracketRounds = hasGeneratedBracket ? rounds : buildBracketSkeletonRounds(Number(tournament?.playerCount || 0))
   const isBingo = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo'
+  const publicUrl = tournament?.publicSlug ? publicTournamentUrl(tournament.publicSlug) : ''
+  const bingoMaxNumber = Number(tournament?.bingoMaxNumber || 75)
   const bingoNumbers = bingoState?.drawnNumbers || []
+  const bingoDraws = bingoState?.draws || []
   const latestBingoNumber = bingoNumbers[bingoNumbers.length - 1]
   const bingoWinners = bingoState?.winners || []
   const bingoCards = bingoState?.cards || []
@@ -5351,6 +5357,39 @@ function TournamentBracket() {
   const currentBingoRound = currentRoundData?.name || bingoRoundName || `Rodada ${currentBingoRoundNumber}`
   const currentBingoPrize = currentRoundData?.prize || bingoRoundPrize || tournament?.prize || '-'
   const bingoRoundClosed = currentRoundData?.status === 'closed'
+  const bingoRoundRows = (() => {
+    const rows = new Map<string, any>()
+    const ensureRow = (roundName: string, fallbackPrize = '') => {
+      const label = roundName || `Rodada ${currentBingoRoundNumber}`
+      if (!rows.has(label)) {
+        const match = String(label).match(/\d+/)
+        rows.set(label, {
+          roundNumber: match ? Number(match[0]) : rows.size + 1,
+          roundName: label,
+          numbers: [] as number[],
+          winners: [] as string[],
+          prize: fallbackPrize || '',
+        })
+      }
+      return rows.get(label)
+    }
+
+    bingoDraws.forEach((draw: any) => {
+      const row = ensureRow(draw.roundName || currentBingoRound, draw.prize || currentBingoPrize)
+      if (draw.number && !row.numbers.includes(draw.number)) row.numbers.push(draw.number)
+      if (draw.prize && !row.prize) row.prize = draw.prize
+    })
+
+    bingoWinners.forEach((winner: any) => {
+      const row = ensureRow(winner.roundName || currentBingoRound, winner.prize || currentBingoPrize)
+      if (winner.winnerName && !row.winners.includes(winner.winnerName)) row.winners.push(winner.winnerName)
+      if (winner.prize && !row.prize) row.prize = winner.prize
+    })
+
+    if (rows.size === 0) ensureRow(currentBingoRound, currentBingoPrize)
+
+    return Array.from(rows.values()).sort((a, b) => a.roundNumber - b.roundNumber)
+  })()
 
   function loadBracket() {
     fetch(`${API}/tournaments/${id}/bracket`, {
@@ -5410,10 +5449,21 @@ function TournamentBracket() {
   }
 
   function registerPhysicalNumber() {
+    setPhysicalNumberInput('')
+    setShowPhysicalNumberModal(true)
+  }
+
+  function submitPhysicalNumber() {
+    const number = Number(physicalNumberInput)
+    if (!Number.isInteger(number) || number < 1 || number > bingoMaxNumber) {
+      alert(`Informe um número entre 1 e ${bingoMaxNumber}.`)
+      return
+    }
+
     fetch(`${API}/tournaments/${id}/bingo/draw`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ source: 'physical' }),
+      body: JSON.stringify({ source: 'physical', number }),
     })
       .then(res => res.json())
       .then(data => {
@@ -5465,6 +5515,8 @@ function TournamentBracket() {
           alert(data.error)
           return
         }
+        setShowPhysicalNumberModal(false)
+        setPhysicalNumberInput('')
         loadBingo()
       })
   }
@@ -5635,55 +5687,65 @@ function TournamentBracket() {
       </aside>
 
       <main className="saasMain">
-       <header className="hero">
-  <div className="badge">🏆 Painel do Torneio</div>
+        <header className="hero">
+          <div className="badge">🏆 Painel do Torneio</div>
 
-  <h1>{isBingo ? 'Painel Bingo' : 'Painel Torneio'}</h1>
-  <p>
-    {isBingo
-      ? 'Controle números sorteados, cartelas e ganhadores das rodadas.'
-      : 'Visualização em forma de bracket, atualizada com os jogos do torneio.'}
-  </p>
+          <h1>{isBingo ? 'Painel Bingo' : 'Painel Torneio'}</h1>
+          <p>
+            {isBingo
+              ? 'Controle números sorteados, cartelas e ganhadores das rodadas.'
+              : 'Visualização em forma de bracket, atualizada com os jogos do torneio.'}
+          </p>
 
-  {champion && (
-    <div className="championBanner">
-      🏆 Campeão: {champion}
-    </div>
-  )}
+          {isBingo && (
+            <div className="heroActions bingoHeaderActions">
+              <button onClick={() => window.open(`/telao/${id}`, '_blank')}>Telão</button>
+              <button disabled={!publicUrl} onClick={() => publicUrl && window.open(publicUrl, '_blank')}>Público</button>
+              <button disabled={!publicUrl} onClick={() => publicUrl && navigator.clipboard?.writeText(publicUrl)}>Compartilhar link</button>
+              <button disabled={!publicUrl} onClick={() => publicUrl && setPanelQrUrl(publicUrl)}>QR Code</button>
+            </div>
+          )}
 
-</header>
+          {champion && (
+            <div className="championBanner">
+              🏆 Campeão: {champion}
+            </div>
+          )}
+
+        </header>
 
         {isBingo && (
           <div className="bingoControlGrid">
-            <section className="panel bingoControlPanel">
+            <section className="panel bingoControlPanel bingoControlPanelFeatured">
               <h2>Controle do Bingo</h2>
               <div className="bingoRoundSummary">
                 <div><span>Rodada atual</span><strong>{currentBingoRound}</strong></div>
                 <div><span>Premiação da rodada</span><strong>{currentBingoPrize}</strong></div>
               </div>
-              <div className="bingoRoundActions">
-                <button onClick={openNewBingoRoundModal}>Nova rodada</button>
-                <button className="secondaryButton" onClick={closeBingoRound} disabled={bingoRoundClosed}>
-                  Encerrar rodada
-                </button>
-              </div>
               {bingoRoundClosed && <p className="helperText">Rodada encerrada. Abra uma nova rodada para continuar sorteando.</p>}
-              <div className="bingoCurrentNumber">
-                <span>Último número</span>
-                <strong>{latestBingoNumber || '--'}</strong>
-              </div>
 
-              <div className="bingoActionRow">
-                <button onClick={drawVirtualNumber} disabled={bingoRoundClosed}>Sortear virtual</button>
-                <button onClick={registerPhysicalNumber} disabled={bingoRoundClosed}>Registrar bolinha</button>
-                <button className="bingoClaimButton" onClick={triggerBingoClaim}>BINGO!</button>
-              </div>
+              <div className="bingoFeaturedControl">
+                <div className="bingoCurrentNumber">
+                  <span>Último número</span>
+                  <strong>{latestBingoNumber || '--'}</strong>
+                </div>
 
-              <div className="bingoNumbers">
-                {bingoNumbers.length === 0 && <p>Nenhum número sorteado.</p>}
-                {bingoNumbers.map((number: number) => (
-                  <span key={number}>{number}</span>
-                ))}
+                <div>
+                  <div className="bingoActionRow bingoControlButtons">
+                    <button onClick={drawVirtualNumber} disabled={bingoRoundClosed}>Sortear virtual</button>
+                    <button onClick={registerPhysicalNumber} disabled={bingoRoundClosed}>Registrar bolinha</button>
+                    <button onClick={openNewBingoRoundModal}>Nova rodada</button>
+                    <button className="secondaryButton" onClick={closeBingoRound} disabled={bingoRoundClosed}>Encerrar rodada</button>
+                    <button className="bingoClaimButton bingoClaimButtonLarge" onClick={triggerBingoClaim}>BINGO!</button>
+                  </div>
+
+                  <div className="bingoNumbers bingoNumbersFeatured">
+                    {bingoNumbers.length === 0 && <p>Nenhum número sorteado.</p>}
+                    {bingoNumbers.map((number: number) => (
+                      <span key={number}>{number}</span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -5701,7 +5763,6 @@ function TournamentBracket() {
                   placeholder="Prêmio do ganhador"
                 />
                 <button onClick={registerBingoWinner}>Registrar ganhador</button>
-                <button className="bingoClaimButton" onClick={triggerBingoClaim}>BINGO!</button>
               </div>
 
               {bingoWinners.length === 0 && <p>Nenhum ganhador registrado.</p>}
@@ -5727,6 +5788,73 @@ function TournamentBracket() {
                     : 'Cartelas físicas.'}
               </p>
             </section>
+
+            <section className="panel bingoControlPanel bingoRoundsPanel">
+              <h2>Rodadas</h2>
+              <div className="bingoRoundsTableWrap">
+                <table className="bingoRoundsTable">
+                  <thead>
+                    <tr>
+                      <th>Rodada</th>
+                      <th>Números sorteados</th>
+                      <th>Vencedor</th>
+                      <th>Premiação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bingoRoundRows.map((row: any) => (
+                      <tr key={row.roundName}>
+                        <td>{row.roundNumber}</td>
+                        <td>{row.numbers.length ? row.numbers.join(', ') : '-'}</td>
+                        <td>{row.winners.length ? row.winners.join(', ') : '-'}</td>
+                        <td>{row.prize || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {panelQrUrl && (
+          <div className="qrModal" onClick={() => setPanelQrUrl(null)}>
+            <div className="qrContent" onClick={event => event.stopPropagation()}>
+              <h3>QR Code do Torneio</h3>
+              <QRCodeCanvas value={panelQrUrl} size={220} />
+              <p>{panelQrUrl}</p>
+              <button onClick={() => setPanelQrUrl(null)}>Fechar</button>
+            </div>
+          </div>
+        )}
+
+        {showPhysicalNumberModal && (
+          <div className="qrModal" onClick={() => setShowPhysicalNumberModal(false)}>
+            <div className="detailsContent bingoRoundModal" onClick={event => event.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Registrar bolinha</span>
+                  <h3>Número sorteado manualmente</h3>
+                  <p>Informe o número retirado no sorteio físico.</p>
+                </div>
+                <button className="modalCloseButton" onClick={() => setShowPhysicalNumberModal(false)}>Fechar</button>
+              </div>
+
+              <label>Número da bolinha</label>
+              <input
+                type="number"
+                min={1}
+                max={bingoMaxNumber}
+                value={physicalNumberInput}
+                onChange={event => setPhysicalNumberInput(event.target.value)}
+                placeholder={`1 a ${bingoMaxNumber}`}
+              />
+
+              <div className="adminModalActions">
+                <button onClick={() => setShowPhysicalNumberModal(false)}>Cancelar</button>
+                <button className="primaryButton" onClick={submitPhysicalNumber}>Registrar número</button>
+              </div>
+            </div>
           </div>
         )}
 
