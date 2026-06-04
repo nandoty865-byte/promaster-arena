@@ -5333,7 +5333,6 @@ function TournamentBracket() {
   const [physicalNumberInput, setPhysicalNumberInput] = useState('')
   const [panelQrUrl, setPanelQrUrl] = useState<string | null>(null)
   const [winnerName, setWinnerName] = useState('')
-  const [winnerPrize, setWinnerPrize] = useState('')
   const matches = rounds.flatMap(round =>
     (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
   )
@@ -5444,6 +5443,8 @@ function TournamentBracket() {
           alert(data.error)
           return
         }
+        setShowPhysicalNumberModal(false)
+        setPhysicalNumberInput('')
         loadBingo()
       })
   }
@@ -5515,8 +5516,6 @@ function TournamentBracket() {
           alert(data.error)
           return
         }
-        setShowPhysicalNumberModal(false)
-        setPhysicalNumberInput('')
         loadBingo()
       })
   }
@@ -5544,7 +5543,7 @@ function TournamentBracket() {
     fetch(`${API}/tournaments/${id}/bingo/winners`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ winnerName, roundName: currentBingoRound, prize: winnerPrize || currentBingoPrize }),
+      body: JSON.stringify({ winnerName, roundName: currentBingoRound, prize: currentBingoPrize }),
     })
       .then(res => res.json())
       .then(data => {
@@ -5553,7 +5552,6 @@ function TournamentBracket() {
           return
         }
         setWinnerName('')
-        setWinnerPrize('')
         loadBingo()
       })
   }
@@ -5730,15 +5728,8 @@ function TournamentBracket() {
                   <strong>{latestBingoNumber || '--'}</strong>
                 </div>
 
-                <div>
-                  <div className="bingoActionRow bingoControlButtons">
-                    <button onClick={drawVirtualNumber} disabled={bingoRoundClosed}>Sortear virtual</button>
-                    <button onClick={registerPhysicalNumber} disabled={bingoRoundClosed}>Registrar bolinha</button>
-                    <button onClick={openNewBingoRoundModal}>Nova rodada</button>
-                    <button className="secondaryButton" onClick={closeBingoRound} disabled={bingoRoundClosed}>Encerrar rodada</button>
-                    <button className="bingoClaimButton bingoClaimButtonLarge" onClick={triggerBingoClaim}>BINGO!</button>
-                  </div>
-
+                <div className="bingoNumbersBlock">
+                  <span>Números sorteados</span>
                   <div className="bingoNumbers bingoNumbersFeatured">
                     {bingoNumbers.length === 0 && <p>Nenhum número sorteado.</p>}
                     {bingoNumbers.map((number: number) => (
@@ -5747,31 +5738,36 @@ function TournamentBracket() {
                   </div>
                 </div>
               </div>
+
+              <div className="bingoActionRow bingoControlButtons">
+                <button onClick={drawVirtualNumber} disabled={bingoRoundClosed}>Sortear virtual</button>
+                <button onClick={registerPhysicalNumber} disabled={bingoRoundClosed}>Registrar bolinha</button>
+                <button onClick={openNewBingoRoundModal}>Nova rodada</button>
+                <button className="secondaryButton" onClick={closeBingoRound} disabled={bingoRoundClosed}>Encerrar rodada</button>
+                <button className="bingoClaimButton bingoClaimButtonLarge" onClick={triggerBingoClaim}>BINGO!</button>
+              </div>
             </section>
 
             <section className="panel bingoControlPanel">
-              <h2>Ganhadores</h2>
+              <h2>Rodada</h2>
+              <div className="bingoRoundFields">
+                <div>
+                  <span>Número da rodada</span>
+                  <strong>{currentBingoRoundNumber}</strong>
+                </div>
+                <div>
+                  <span>Premiação</span>
+                  <strong>{currentBingoPrize}</strong>
+                </div>
+              </div>
               <div className="bingoActionRow">
                 <input
                   value={winnerName}
                   onChange={e => setWinnerName(e.target.value)}
                   placeholder="Nome do ganhador"
                 />
-                <input
-                  value={winnerPrize}
-                  onChange={e => setWinnerPrize(e.target.value)}
-                  placeholder="Prêmio do ganhador"
-                />
                 <button onClick={registerBingoWinner}>Registrar ganhador</button>
               </div>
-
-              {bingoWinners.length === 0 && <p>Nenhum ganhador registrado.</p>}
-              {bingoWinners.map((winner: any) => (
-                <div key={winner.id} className="bingoWinnerRow">
-                  <strong>{winner.winnerName}</strong>
-                  <span>{winner.prize || winner.roundName || 'Rodada'}</span>
-                </div>
-              ))}
             </section>
 
             <section className="panel bingoControlPanel">
@@ -5790,7 +5786,7 @@ function TournamentBracket() {
             </section>
 
             <section className="panel bingoControlPanel bingoRoundsPanel">
-              <h2>Rodadas</h2>
+              <h2>Histórico</h2>
               <div className="bingoRoundsTableWrap">
                 <table className="bingoRoundsTable">
                   <thead>

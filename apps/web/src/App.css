@@ -3654,6 +3654,37 @@ button:hover {
   overflow-wrap: anywhere;
 }
 
+.bingoRoundFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+
+.bingoRoundFields div {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(96, 165, 250, .28);
+  background: #020617;
+}
+
+.bingoRoundFields span,
+.bingoNumbersBlock > span {
+  display: block;
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bingoRoundFields strong {
+  display: block;
+  margin-top: 8px;
+  color: #f8fafc;
+  font-size: 24px;
+  overflow-wrap: anywhere;
+}
+
 .bingoRoundActions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3723,6 +3754,12 @@ button:hover {
 .bingoNumbers {
   display: flex;
   flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bingoNumbersBlock {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
