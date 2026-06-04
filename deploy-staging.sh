@@ -7,6 +7,7 @@ PUBLIC_DIR="/var/www/promaster-homolog"
 BRANCH="homologacao"
 PM2_APP="promaster-api-homolog"
 API_PORT="3001"
+BACKUP_SCRIPT="$APP_DIR/scripts/backup-vps-state.sh"
 API_HEALTH_URL="http://localhost:${API_PORT}/"
 API_HEALTH_ATTEMPTS=20
 
@@ -28,6 +29,12 @@ if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   echo "Deploy bloqueado: existem alteracoes locais rastreadas na homologacao."
   git status --short
   exit 1
+fi
+
+if [ -f "$BACKUP_SCRIPT" ]; then
+  bash "$BACKUP_SCRIPT" homologacao
+else
+  echo "Aviso: backup automatico indisponivel nesta versao do codigo."
 fi
 
 git fetch origin "$BRANCH"

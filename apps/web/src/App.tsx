@@ -63,6 +63,35 @@ function publicTournamentUrl(slug?: string) {
   return `${window.location.origin}/public/${slug}`
 }
 
+function tournamentStatusLabel(status?: string) {
+  const normalized = String(status || '').toLowerCase()
+  const labels: Record<string, string> = {
+    draft: 'Rascunho',
+    rascunho: 'Rascunho',
+    rescheduled: 'Reagendado',
+    reagendado: 'Reagendado',
+    running: 'Em andamento',
+    playing: 'Em andamento',
+    started: 'Em andamento',
+    in_progress: 'Em andamento',
+    finished: 'Encerrado',
+    ended: 'Encerrado',
+    closed: 'Encerrado',
+    encerrado: 'Encerrado',
+    canceled: 'Cancelado',
+    cancelled: 'Cancelado',
+    cancelado: 'Cancelado',
+  }
+
+  return labels[normalized] || status || '-'
+}
+
+function appUrlWithFreshVersion(path: string) {
+  const url = new URL(path, window.location.origin)
+  url.searchParams.set('v', Date.now().toString())
+  return `${url.pathname}${url.search}${url.hash}`
+}
+
 function isPublicPath(path: string) {
   return (
     path === '/' ||
@@ -232,16 +261,21 @@ export default function App() {
       <Route path="/campeonatos" element={<SeasonsPage user={user} />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
       <Route path="/tournament/:id/painel" element={<TournamentOverview />} />
+      <Route path="/tournament/:id" element={<TournamentOverview />} />
+      <Route path="/tournament/:id/inscritos" element={<TournamentOverview defaultPanel="inscritos" />} />
+      <Route path="/tournament/:id/financeiro" element={<TournamentOverview defaultPanel="financeiro" />} />
+      <Route path="/tournament/:id/patrocinadores" element={<TournamentOverview defaultPanel="patrocinadores" />} />
+      <Route path="/tournament/:id/publico" element={<TournamentOverview defaultPanel="publico" />} />
+      <Route path="/tournament/:id/chaveamento" element={<TournamentBracket />} />
       <Route path="/tournament/:id/settings" element={<TournamentSettings />} />
       <Route path="/public/:slug" element={<PublicTournament />} />
+      <Route path="/arbitro/:id" element={<RefereeMode />} />
+      <Route path="/telao/:id" element={<TelaoTV />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/admin/financeiro" element={<Financeiro />} />
       <Route path="/admin/clientes" element={<AdminClientes />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="*" element={<Navigate to="/" />} />
-<Route path="/tournament/:id" element={<TournamentBracket />} />
-<Route path="/arbitro/:id" element={<RefereeMode />} />
-<Route path="/telao/:id" element={<TelaoTV />} />
-<Route path="/register" element={<Register />} />
 
     </Routes>
   )
@@ -672,6 +706,11 @@ function PlayerDashboard() {
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const redirectParam = new URLSearchParams(window.location.search).get('redirect')
+  const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//') && redirectParam !== '/login'
+    ? redirectParam
+    : ''
+  const signupHref = `/inscreva-se${safeRedirect ? `?redirect=${encodeURIComponent(safeRedirect)}` : ''}`
 
   function login() {
     fetch(`${API}/auth/login`, {
@@ -687,14 +726,13 @@ function Login() {
   }
 
   localStorage.setItem('token', data.token)
-  const redirect = new URLSearchParams(window.location.search).get('redirect')
 
   if (data.user?.role === 'superadmin') {
-    window.location.href = '/admin'
-  } else if (redirect && redirect !== '/login') {
-    window.location.href = redirect
+    window.location.href = appUrlWithFreshVersion('/admin')
+  } else if (safeRedirect) {
+    window.location.href = appUrlWithFreshVersion(safeRedirect)
   } else {
-    window.location.href = '/app'
+    window.location.href = appUrlWithFreshVersion('/app')
   }
 })
   }
@@ -705,7 +743,7 @@ function Login() {
         <h1>Login</h1>
         <p>ProMaster Arena</p>
 
-        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" />
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Usuário ou e-mail" />
         <input
           value={password}
           onChange={e => setPassword(e.target.value)}
@@ -716,7 +754,7 @@ function Login() {
         <button className="primaryButton" onClick={login}>Entrar</button>
         <div className="loginLinks">
           <a href="/forgot-password">Esqueci minha senha</a>
-          <a href="/cadastro-organizador">Criar nova conta</a>
+          <a href={signupHref}>Não sou cadastrado</a>
         </div>
       </div>
     </div>
@@ -1481,6 +1519,7 @@ function Dashboard({ user }: any) {
   const [tournaments, setTournaments] = useState<any[]>([])
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [detailsTournament, setDetailsTournament] = useState<any>(null)
+  const [openTournamentMenuId, setOpenTournamentMenuId] = useState<number | null>(null)
   const plan = user?.organization?.plan || 'trial'
   const isMasterPlan = plan === 'master' || plan === 'free'
   const finishedCount = tournaments.filter(t => t.status === 'finished').length
@@ -1582,23 +1621,49 @@ function Dashboard({ user }: any) {
                     return (
                       <tr key={t.id}>
                         <td>
-                          <button className="tableLinkButton" onClick={() => navigate(`/tournament/${t.id}/painel`)}>
+                          <button className="tableLinkButton" onClick={() => navigate(`/tournament/${t.id}`)}>
                             {t.name}
                           </button>
                         </td>
                         <td>{t.location || 'Local não informado'}</td>
                         <td>{t.eventDate ? new Date(t.eventDate).toLocaleDateString() : '-'}</td>
-                        <td><span className={`statusBadge ${t.status}`}>{t.status}</span></td>
+                        <td><span className={`statusBadge ${t.status}`}>{tournamentStatusLabel(t.status)}</span></td>
                         <td>
                           <div className="tableActions">
-                            <button onClick={() => setDetailsTournament(t)}>Detalhes</button>
-                            {t.publicSlug && (
-                              <>
-                                <button onClick={() => navigator.clipboard.writeText(publicUrl)}>Copiar link</button>
-                                <button onClick={() => window.open(publicUrl, '_blank')}>Público</button>
-                                <button onClick={() => setQrUrl(publicUrl)}>QR Code</button>
-                              </>
-                            )}
+                            <button className="tableActionIconButton" title="Painel" onClick={() => navigate(`/tournament/${t.id}`)}>▣</button>
+                            <button className="tableActionIconButton" title="Detalhes" onClick={() => setDetailsTournament(t)}>i</button>
+                            <button className="tableActionIconButton" title="Financeiro" onClick={() => navigate(`/tournament/${t.id}/financeiro`)}>$</button>
+                            <div className="tableActionMenu">
+                              <button
+                                className="tableActionIconButton"
+                                title="Mais ações"
+                                onClick={() => setOpenTournamentMenuId(current => current === t.id ? null : t.id)}
+                              >
+                                ⋯
+                              </button>
+                              {openTournamentMenuId === t.id && (
+                                <div className="tableActionMenuList">
+                                  <button
+                                    disabled={!t.publicSlug}
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(publicUrl)
+                                      setOpenTournamentMenuId(null)
+                                    }}
+                                  >
+                                    Copiar link
+                                  </button>
+                                  <button
+                                    disabled={!t.publicSlug}
+                                    onClick={() => {
+                                      setQrUrl(publicUrl)
+                                      setOpenTournamentMenuId(null)
+                                    }}
+                                  >
+                                    QR Code
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -1635,7 +1700,7 @@ function Dashboard({ user }: any) {
               <div className="detailsList">
                 <div>
                   <span>Status</span>
-                  <strong>{detailsTournament.status}</strong>
+                  <strong>{tournamentStatusLabel(detailsTournament.status)}</strong>
                 </div>
                 <div>
                   <span>Jogadores</span>
@@ -1702,13 +1767,13 @@ function Dashboard({ user }: any) {
   )
 }
 
-function TournamentOverview() {
+function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: string } = {}) {
   const { id } = useParams()
   const navigate = useNavigate()
   const [tournament, setTournament] = useState<any>(null)
   const [rounds, setRounds] = useState<any[]>([])
   const [ranking, setRanking] = useState<any[]>([])
-  const initialPanel = new URLSearchParams(window.location.search).get('painel') || 'overview'
+  const initialPanel = new URLSearchParams(window.location.search).get('painel') || defaultPanel
   const [panel, setPanel] = useState(initialPanel)
   const [selectedRegistrationIds, setSelectedRegistrationIds] = useState<number[]>([])
   const [registrationSearch, setRegistrationSearch] = useState('')
@@ -1720,6 +1785,8 @@ function TournamentOverview() {
   const [showGeneralMessageMenu, setShowGeneralMessageMenu] = useState(false)
   const [openStatusMenuId, setOpenStatusMenuId] = useState<number | null>(null)
   const [openPaymentMenuId, setOpenPaymentMenuId] = useState<number | null>(null)
+  const [overviewQrUrl, setOverviewQrUrl] = useState<string | null>(null)
+  const [bingoState, setBingoState] = useState<any>(null)
   const [addRegistrationForm, setAddRegistrationForm] = useState({
     name: '',
     rg: '',
@@ -1743,6 +1810,16 @@ function TournamentOverview() {
   const publicUrl = tournament?.publicSlug
     ? publicTournamentUrl(tournament.publicSlug)
     : ''
+  const isBingoTournament = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo'
+  const bingoCards = bingoState?.cards || []
+  const bingoDraws = bingoState?.draws || []
+  const bingoWinners = bingoState?.winners || []
+  const bingoSoldCards = bingoCards.filter((card: any) => card.source === 'online' || ['sold', 'paid', 'confirmed'].includes(card.status)).length
+  const bingoRoundNames = Array.from(new Set([
+    ...bingoDraws.map((draw: any) => draw.roundName).filter(Boolean),
+    ...bingoWinners.map((winner: any) => winner.roundName).filter(Boolean),
+  ]))
+  const bingoRoundCount = bingoRoundNames.length || (bingoDraws.length > 0 ? 1 : 0)
   const expectedRevenue = Number(tournament?.registrationFee || 0) * confirmed.length
   const statusPriority: Record<string, number> = { confirmed: 1, pending: 2, waiting: 3, removed: 4 }
   const registrationRows = [...registrations].sort((a: any, b: any) => {
@@ -1772,7 +1849,12 @@ function TournamentOverview() {
   function loadTournamentOverview() {
     fetch(`${API}/tournaments/${id}`, { headers: authHeaders(), cache: 'no-store' })
       .then(res => res.json())
-      .then(data => setTournament(data))
+      .then(data => {
+        setTournament(data)
+        if (data?.format === 'bingo' || data?.sport?.slug === 'bingo') {
+          loadBingoOverview()
+        }
+      })
 
     fetch(`${API}/tournaments/${id}/bracket`, { cache: 'no-store' })
       .then(res => res.json())
@@ -1783,9 +1865,22 @@ function TournamentOverview() {
       .then(data => setRanking(Array.isArray(data) ? data : []))
   }
 
+  function loadBingoOverview() {
+    fetch(`${API}/tournaments/${id}/bingo`, { headers: authHeaders(), cache: 'no-store' })
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (data) setBingoState(data)
+      })
+  }
+
   useEffect(() => {
     loadTournamentOverview()
   }, [id])
+
+  useEffect(() => {
+    const queryPanel = new URLSearchParams(window.location.search).get('painel')
+    setPanel(queryPanel || defaultPanel)
+  }, [defaultPanel, id])
 
   function formatDateTime(value: string) {
     if (!value) return '-'
@@ -2376,11 +2471,39 @@ function TournamentOverview() {
       )
     }
 
+    if (isBingoTournament) {
+      return (
+        <section className="panel">
+          <h2>Dashboard do Bingo</h2>
+          <div className="overviewStatsGrid bingoDashboardGrid">
+            <div><span>Cartelas totais</span><strong>{bingoCards.length}</strong></div>
+            <div><span>Cartelas vendidas</span><strong>{bingoSoldCards}</strong></div>
+            <div><span>Rodadas</span><strong>{bingoRoundCount}</strong></div>
+            <div><span>Premiação total</span><strong>{tournament?.prize || '-'}</strong></div>
+          </div>
+
+          <div className="overviewRankingCard">
+            <div>
+              <h3>Últimos números sorteados</h3>
+              <p>Acompanhamento rápido do sorteio em tempo real.</p>
+            </div>
+
+            <div className="bingoNumbers">
+              {bingoDraws.length === 0 && <p className="helperText">Nenhum número sorteado ainda.</p>}
+              {bingoDraws.slice(-20).map((draw: any) => (
+                <span key={draw.id}>{draw.number}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
     return (
       <section className="panel">
         <h2>Dashboard do torneio</h2>
         <div className="overviewStatsGrid">
-          <div><span>Status</span><strong>{tournament?.status || '-'}</strong></div>
+          <div><span>Status</span><strong>{tournamentStatusLabel(tournament?.status)}</strong></div>
           <div><span>Inscritos</span><strong>{confirmed.length}/{tournament?.playerCount || 0}</strong></div>
           <div><span>Jogos</span><strong>{matches.length}</strong></div>
           <div><span>Em andamento</span><strong>{playingMatches.length}</strong></div>
@@ -2427,17 +2550,17 @@ function TournamentOverview() {
         <div className="tournamentSidebarInfo">
           <span>Torneio</span>
           <strong>{tournament.name}</strong>
-          <small>{tournament.status}</small>
+          <small>{tournamentStatusLabel(tournament.status)}</small>
         </div>
 
-        <button className={panel === 'overview' ? 'active' : ''} onClick={() => setPanel('overview')}>Dashboard</button>
-        <button onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
-        <button className={panel === 'inscritos' ? 'active' : ''} onClick={() => setPanel('inscritos')}>Inscritos</button>
+        <button className={panel === 'overview' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
+        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingoTournament ? 'AO VIVO' : 'Chaveamento'}</button>
+        <button className={panel === 'inscritos' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
-        <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
-        <button className={panel === 'financeiro' ? 'active' : ''} onClick={() => setPanel('financeiro')}>Financeiro</button>
-        <button className={panel === 'patrocinadores' ? 'active' : ''} onClick={() => setPanel('patrocinadores')}>Patrocinadores</button>
-        <button className={panel === 'publico' ? 'active' : ''} onClick={() => setPanel('publico')}>QR Code público</button>
+        {!isBingoTournament && <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>}
+        <button className={panel === 'financeiro' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
+        <button className={panel === 'patrocinadores' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
+        {!isBingoTournament && <button className={panel === 'publico' ? 'active' : ''} onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>}
       </aside>
 
       <main className="saasMain">
@@ -2445,6 +2568,12 @@ function TournamentOverview() {
           <div className="badge">Painel do Torneio</div>
           <h1>{tournament.name}</h1>
           <p>{tournament.location || 'Local não informado'}{tournament.eventDate ? ` • ${new Date(tournament.eventDate).toLocaleDateString()}` : ''}</p>
+          <div className="heroActions tournamentHeroActions">
+            <button onClick={() => window.open(`/telao/${id}`, '_blank')}>Telão</button>
+            <button disabled={!publicUrl} onClick={() => publicUrl && window.open(publicUrl, '_blank')}>Público</button>
+            <button disabled={!publicUrl} onClick={() => publicUrl && navigator.clipboard.writeText(publicUrl)}>Compartilhar link</button>
+            <button disabled={!publicUrl} onClick={() => publicUrl && setOverviewQrUrl(publicUrl)}>QR Code</button>
+          </div>
         </header>
 
         <div className="tournamentWorkspace">
@@ -2452,6 +2581,17 @@ function TournamentOverview() {
             {renderPanel()}
           </div>
         </div>
+
+        {overviewQrUrl && (
+          <div className="qrModal" onClick={() => setOverviewQrUrl(null)}>
+            <div className="qrContent" onClick={event => event.stopPropagation()}>
+              <h3>QR Code do Torneio</h3>
+              <QRCodeCanvas value={overviewQrUrl} size={220} />
+              <p>{overviewQrUrl}</p>
+              <button onClick={() => setOverviewQrUrl(null)}>Fechar</button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
@@ -2796,6 +2936,12 @@ function TournamentSettings() {
     scheduleMode: 'single_day',
     phaseSchedule: '',
     phaseMatchRules: '',
+    bingoMode: 'physical',
+    bingoDrawMode: 'physical',
+    bingoCardMode: 'physical',
+    bingoMaxNumber: 75,
+    bingoCardPrice: '',
+    bingoCardsPerParticipant: 1,
   })
 
   function loadTournamentSettings(refreshForm = false) {
@@ -2828,6 +2974,12 @@ function TournamentSettings() {
             scheduleMode: data.scheduleMode || 'single_day',
             phaseSchedule: data.phaseSchedule || '',
             phaseMatchRules: data.phaseMatchRules || '',
+            bingoMode: data.bingoMode || 'physical',
+            bingoDrawMode: data.bingoDrawMode || 'physical',
+            bingoCardMode: data.bingoCardMode || 'physical',
+            bingoMaxNumber: data.bingoMaxNumber || 75,
+            bingoCardPrice: data.bingoCardPrice || '',
+            bingoCardsPerParticipant: data.bingoCardsPerParticipant || 1,
           })
           setPhaseRules(safeJsonArray(data.phaseMatchRules))
           const loadedScheduleRows = safeJsonArray(data.phaseSchedule)
@@ -2848,6 +3000,20 @@ function TournamentSettings() {
 
   function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function updateBingoMode(value: string) {
+    setForm((current: any) => {
+      if (value === 'physical') {
+        return { ...current, bingoMode: value, bingoCardMode: 'physical', bingoDrawMode: 'physical' }
+      }
+
+      if (value === 'virtual') {
+        return { ...current, bingoMode: value, bingoCardMode: 'virtual', bingoDrawMode: 'virtual' }
+      }
+
+      return { ...current, bingoMode: value, bingoCardMode: 'mixed', bingoDrawMode: 'virtual' }
+    })
   }
 
   const effectivePlayerLimit = Number(form.playerCount || playerLimit || 0)
@@ -2952,13 +3118,14 @@ function TournamentSettings() {
         }
 
         alert(`Chave gerada com ${data.matchesCreated} jogo(s).`)
-        navigate(`/tournament/${id}`)
+        navigate(`/tournament/${id}/chaveamento`)
       })
   }
 
   const mainRegistrations = registrations
     .filter(registration => registration.status === 'confirmed')
     .sort((a, b) => Number(a.sortOrder || 9999) - Number(b.sortOrder || 9999))
+  const isBingoSettings = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo' || form.format === 'bingo'
 
   return (
     <div className="tournamentPageLayout">
@@ -2971,17 +3138,17 @@ function TournamentSettings() {
         <div className="tournamentSidebarInfo">
           <span>Torneio</span>
           <strong>{tournament?.name || form.name || 'Carregando...'}</strong>
-          <small>{tournament?.status || '-'}</small>
+          <small>{tournamentStatusLabel(tournament?.status)}</small>
         </div>
 
-        <button onClick={() => navigate(`/tournament/${id}/painel`)}>Dashboard</button>
-        <button onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=inscritos`)}>Inscritos</button>
+        <button onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
+        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingoSettings ? 'AO VIVO' : 'Chaveamento'}</button>
+        <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button className="active" onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
-        <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=financeiro`)}>Financeiro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=patrocinadores`)}>Patrocinadores</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=publico`)}>QR Code público</button>
+        {!isBingoSettings && <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>}
+        <button onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
+        <button onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
+        {!isBingoSettings && <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>}
       </aside>
 
       <main className="saasMain">
@@ -2994,59 +3161,134 @@ function TournamentSettings() {
         <div className="panel settingsPanel">
           <div className="settingsInfoGrid">
             <div>
-              <span>Tipo de torneio</span>
-              <strong>{tournamentFormatLabel(form.format || tournament?.format)}</strong>
+              <span>{isBingoSettings ? 'Tipo de evento' : 'Tipo de torneio'}</span>
+              <strong>{isBingoSettings ? 'Bingo' : tournamentFormatLabel(form.format || tournament?.format)}</strong>
             </div>
             <div>
-              <span>Jogadores definidos</span>
-              <strong>{effectivePlayerLimit || '-'}</strong>
+              <span>{isBingoSettings ? 'Modelo' : 'Jogadores definidos'}</span>
+              <strong>{isBingoSettings ? `${form.bingoMaxNumber || 75} bolas` : effectivePlayerLimit || '-'}</strong>
             </div>
             <div>
-              <span>Mesas</span>
-              <strong>{form.tableCount || tournament?.tableCount || '-'}</strong>
+              <span>{isBingoSettings ? 'Sorteio' : 'Mesas'}</span>
+              <strong>{isBingoSettings ? (form.bingoDrawMode === 'virtual' ? 'Virtual' : 'Físico') : form.tableCount || tournament?.tableCount || '-'}</strong>
             </div>
             <div>
               <span>Status</span>
-              <strong>{tournament?.status || '-'}</strong>
+              <strong>{tournamentStatusLabel(tournament?.status)}</strong>
             </div>
           </div>
 
           <label>Nome do torneio</label>
           <input value={form.name} onChange={e => updateField('name', e.target.value)} />
 
-          <label>Quantidade de inscritos</label>
-          <input
-            type="number"
-            min="2"
-            value={form.playerCount}
-            onChange={e => updateField('playerCount', e.target.value)}
-          />
+          {isBingoSettings ? (
+            <>
+              <label>Modelo</label>
+              <select
+                value={form.bingoMaxNumber}
+                onChange={e => updateField('bingoMaxNumber', e.target.value)}
+              >
+                <option value={75}>Bingo 75 bolas — cartela 5 x 5 com coringa no centro</option>
+                <option value={90}>Bingo 90 bolas — cartela tradicional 3 linhas x 5 colunas</option>
+              </select>
 
-          <label>Modelo do torneio</label>
-          <select
-            value={form.format}
-            onChange={e => updateField('format', e.target.value)}
-          >
-            {TOURNAMENT_FORMAT_OPTIONS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {form.format === 'round_robin' && (
-            <p className="helperText">
-              Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou campeonatos com várias etapas/dias e ranking acumulado, use o plano Master.
-            </p>
+              <div className="bingoFormatHint">
+                {Number(form.bingoMaxNumber) === 75
+                  ? '75 bolas: cartela 5 x 5 com letras BINGO e número grátis no centro.'
+                  : '90 bolas: cartela tradicional com 3 linhas e 5 números por linha.'}
+              </div>
+
+              <div className="bingoConfigBox">
+                <h3>Bingo</h3>
+                <p>Configure se o evento será presencial, virtual ou misto.</p>
+
+                <label>Formato do Bingo</label>
+                <select
+                  value={form.bingoMode}
+                  onChange={e => updateBingoMode(e.target.value)}
+                >
+                  <option value="physical">Presencial com estrutura física</option>
+                  <option value="virtual">Totalmente virtual</option>
+                  <option value="mixed">Misto</option>
+                </select>
+
+                <label>Sorteio dos números</label>
+                {form.bingoMode === 'mixed' ? (
+                  <select value={form.bingoDrawMode} onChange={e => updateField('bingoDrawMode', e.target.value)}>
+                    <option value="virtual">Virtual pela plataforma</option>
+                    <option value="physical">Físico pelas bolinhas</option>
+                  </select>
+                ) : (
+                  <div className="readonlyField">
+                    {form.bingoDrawMode === 'virtual'
+                      ? 'Virtual pela plataforma'
+                      : 'Físico pelas bolinhas'}
+                  </div>
+                )}
+
+                <label>Cartelas</label>
+                <div className="readonlyField">
+                  {form.bingoCardMode === 'virtual'
+                    ? 'Cartela virtual'
+                    : form.bingoCardMode === 'mixed'
+                      ? 'Cartela física e virtual'
+                      : 'Cartela física'}
+                </div>
+
+                <label>Valor da cartela online</label>
+                <input
+                  value={form.bingoCardPrice}
+                  onChange={e => updateField('bingoCardPrice', e.target.value)}
+                  placeholder="Ex: 10,00"
+                />
+
+                <label>Limite de cartelas online por participante</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={form.bingoCardsPerParticipant}
+                  onChange={e => updateField('bingoCardsPerParticipant', e.target.value)}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <label>Quantidade de inscritos</label>
+              <input
+                type="number"
+                min="2"
+                value={form.playerCount}
+                onChange={e => updateField('playerCount', e.target.value)}
+              />
+
+              <label>Modelo do torneio</label>
+              <select
+                value={form.format}
+                onChange={e => updateField('format', e.target.value)}
+              >
+                {TOURNAMENT_FORMAT_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {form.format === 'round_robin' && (
+                <p className="helperText">
+                  Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou campeonatos com várias etapas/dias e ranking acumulado, use o plano Master.
+                </p>
+              )}
+              <p className="helperText">Quantidade e modelo só podem ser alterados antes de gerar a chave.</p>
+
+              <label>Número de mesas</label>
+              <input
+                type="number"
+                min="1"
+                value={form.tableCount}
+                onChange={e => updateField('tableCount', e.target.value)}
+              />
+            </>
           )}
-          <p className="helperText">Quantidade e modelo só podem ser alterados antes de gerar a chave.</p>
-
-          <label>Número de mesas</label>
-          <input
-            type="number"
-            min="1"
-            value={form.tableCount}
-            onChange={e => updateField('tableCount', e.target.value)}
-          />
 
           <label>Local</label>
           <input value={form.location} onChange={e => updateField('location', e.target.value)} />
@@ -3156,130 +3398,136 @@ function TournamentSettings() {
           <label>Regras</label>
           <textarea value={form.rules} onChange={e => updateField('rules', e.target.value)} />
 
-          <label>Regras das partidas</label>
-          <select
-            value={form.matchQuantityMode}
-            onChange={e => updateField('matchQuantityMode', e.target.value)}
-          >
-            <option value="">Definir depois</option>
-            <option value="all">Mesmo padrão até o final</option>
-            <option value="by_phase">Alterar partidas por fase</option>
-          </select>
+          {!isBingoSettings && (
+            <>
+              <label>Regras das partidas</label>
+              <select
+                value={form.matchQuantityMode}
+                onChange={e => updateField('matchQuantityMode', e.target.value)}
+              >
+                <option value="">Definir depois</option>
+                <option value="all">Mesmo padrão até o final</option>
+                <option value="by_phase">Alterar partidas por fase</option>
+              </select>
 
-          {form.matchQuantityMode === 'all' && (
-            <div className="settingsGrid">
-              <div>
-                <label>Número de partidas</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={form.matchQuantity}
-                  onChange={e => updateField('matchQuantity', e.target.value)}
-                  placeholder="Ex: 3"
-                />
-              </div>
-
-              <div>
-                <label>Regra aplicada</label>
-                <input
-                  value="Até o final"
-                  readOnly
-                />
-              </div>
-            </div>
-          )}
-
-          {form.matchQuantityMode === 'by_phase' && (
-            <div className="phaseConfigList">
-              <div className="phaseConfigHeader">
-                <span>Fase</span>
-                <span>Número de partidas</span>
-                <span>Regra aplicada</span>
-              </div>
-              {visibleRulePhases().map(phase => {
-                const rule = getPhaseRule(phase.phase)
-                return (
-                  <div key={phase.phase} className="phaseConfigRow">
-                    <strong>{phase.label}</strong>
+              {form.matchQuantityMode === 'all' && (
+                <div className="settingsGrid">
+                  <div>
+                    <label>Número de partidas</label>
                     <input
                       type="number"
                       min="1"
-                      value={rule.matchQuantity}
-                      onChange={e => updatePhaseRule(phase.phase, 'matchQuantity', e.target.value)}
-                      placeholder="Partidas"
-                    />
-                    <select
-                      value={rule.appliesTo}
-                      onChange={e => updatePhaseRule(phase.phase, 'appliesTo', e.target.value)}
-                    >
-                      <option value="phase">Somente esta fase</option>
-                      <option value="until_final">Desta fase até o final</option>
-                    </select>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          <label>Programação</label>
-          <select
-            value={form.scheduleMode}
-            onChange={e => updateField('scheduleMode', e.target.value)}
-          >
-            <option value="single_day">Data única</option>
-            <option value="multi_day">Vários dias e horários</option>
-          </select>
-
-          {form.scheduleMode === 'multi_day' && (
-            <div className="phaseConfigList">
-              <div className="phaseConfigRow">
-                <strong>Quantidade de dias</strong>
-                <input
-                  type="number"
-                  min="1"
-                  value={scheduleDayCount}
-                  onChange={e => updateScheduleDayCount(e.target.value)}
-                />
-                <span className="helperText">Gera uma linha para cada dia.</span>
-              </div>
-
-              {Array.from({ length: scheduleDayCount }, (_, index) => {
-                const day = index + 1
-                const row = getScheduleRow(day)
-                return (
-                  <div key={day} className="phaseConfigRow scheduleDayRow">
-                    <strong>Dia {day}</strong>
-                    <input
-                      value={row.description}
-                      onChange={e => updateScheduleRow(day, 'description', e.target.value)}
-                      placeholder="Descrição: fase inicial, final..."
-                    />
-                    <input
-                      type="date"
-                      value={row.date}
-                      onChange={e => updateScheduleRow(day, 'date', e.target.value)}
-                    />
-                    <input
-                      type="time"
-                      value={row.time}
-                      onChange={e => updateScheduleRow(day, 'time', e.target.value)}
+                      value={form.matchQuantity}
+                      onChange={e => updateField('matchQuantity', e.target.value)}
+                      placeholder="Ex: 3"
                     />
                   </div>
-                )
-              })}
-            </div>
+
+                  <div>
+                    <label>Regra aplicada</label>
+                    <input
+                      value="Até o final"
+                      readOnly
+                    />
+                  </div>
+                </div>
+              )}
+
+              {form.matchQuantityMode === 'by_phase' && (
+                <div className="phaseConfigList">
+                  <div className="phaseConfigHeader">
+                    <span>Fase</span>
+                    <span>Número de partidas</span>
+                    <span>Regra aplicada</span>
+                  </div>
+                  {visibleRulePhases().map(phase => {
+                    const rule = getPhaseRule(phase.phase)
+                    return (
+                      <div key={phase.phase} className="phaseConfigRow">
+                        <strong>{phase.label}</strong>
+                        <input
+                          type="number"
+                          min="1"
+                          value={rule.matchQuantity}
+                          onChange={e => updatePhaseRule(phase.phase, 'matchQuantity', e.target.value)}
+                          placeholder="Partidas"
+                        />
+                        <select
+                          value={rule.appliesTo}
+                          onChange={e => updatePhaseRule(phase.phase, 'appliesTo', e.target.value)}
+                        >
+                          <option value="phase">Somente esta fase</option>
+                          <option value="until_final">Desta fase até o final</option>
+                        </select>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              <label>Programação</label>
+              <select
+                value={form.scheduleMode}
+                onChange={e => updateField('scheduleMode', e.target.value)}
+              >
+                <option value="single_day">Data única</option>
+                <option value="multi_day">Vários dias e horários</option>
+              </select>
+
+              {form.scheduleMode === 'multi_day' && (
+                <div className="phaseConfigList">
+                  <div className="phaseConfigRow">
+                    <strong>Quantidade de dias</strong>
+                    <input
+                      type="number"
+                      min="1"
+                      value={scheduleDayCount}
+                      onChange={e => updateScheduleDayCount(e.target.value)}
+                    />
+                    <span className="helperText">Gera uma linha para cada dia.</span>
+                  </div>
+
+                  {Array.from({ length: scheduleDayCount }, (_, index) => {
+                    const day = index + 1
+                    const row = getScheduleRow(day)
+                    return (
+                      <div key={day} className="phaseConfigRow scheduleDayRow">
+                        <strong>Dia {day}</strong>
+                        <input
+                          value={row.description}
+                          onChange={e => updateScheduleRow(day, 'description', e.target.value)}
+                          placeholder="Descrição: fase inicial, final..."
+                        />
+                        <input
+                          type="date"
+                          value={row.date}
+                          onChange={e => updateScheduleRow(day, 'date', e.target.value)}
+                        />
+                        <input
+                          type="time"
+                          value={row.time}
+                          onChange={e => updateScheduleRow(day, 'time', e.target.value)}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </>
           )}
 
           <button className="primaryButton" onClick={saveSettings}>Salvar edição</button>
 
-          <div className="drawActions">
-            <button className="primaryButton" onClick={() => generateBracket('automatic')}>
-              Gerar sorteio automático
-            </button>
-            <button className="secondaryButton" onClick={() => generateBracket('manual')}>
-              Gerar chave manual pela ordem da lista
-            </button>
-          </div>
+          {!isBingoSettings && (
+            <div className="drawActions">
+              <button className="primaryButton" onClick={() => generateBracket('automatic')}>
+                Gerar sorteio automático
+              </button>
+              <button className="secondaryButton" onClick={() => generateBracket('manual')}>
+                Gerar chave manual pela ordem da lista
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </div>
@@ -3618,18 +3866,6 @@ function PublicTournament() {
   const { slug } = useParams()
   const [data, setData] = useState<any>(null)
   const [error, setError] = useState('')
-  const [registrationForm, setRegistrationForm] = useState<any>({
-    name: '',
-    rg: '',
-    email: '',
-    phone: '',
-    representsOrganization: false,
-    representedOrganizationName: '',
-    representedOrganizationType: '',
-    representedOrganizationDocument: '',
-  })
-  const [registrationLoading, setRegistrationLoading] = useState(false)
-  const [registrationPayment, setRegistrationPayment] = useState<any>(null)
   const [bingoBuyer, setBingoBuyer] = useState({ name: '', email: '', whatsapp: '', quantity: 1 })
   const [bingoMessage, setBingoMessage] = useState('')
 
@@ -3657,23 +3893,6 @@ function PublicTournament() {
     return () => clearInterval(interval)
   }, [slug])
 
-  useEffect(() => {
-    if (!registrationPayment?.registrationId || !registrationPayment?.paymentId) return
-
-    const interval = setInterval(() => {
-      fetch(`${API}/public/registrations/${registrationPayment.registrationId}/payment-status`, { cache: 'no-store' })
-        .then(res => res.json())
-        .then(result => {
-          if (result.paymentStatus === 'paid') {
-            setRegistrationPayment((current: any) => ({ ...current, status: 'approved', paymentStatus: 'paid' }))
-            loadPublicTournament()
-          }
-        })
-    }, 8000)
-
-    return () => clearInterval(interval)
-  }, [registrationPayment?.registrationId, registrationPayment?.paymentId])
-
   if (error) {
     return (
       <div className="publicPage">
@@ -3699,6 +3918,7 @@ function PublicTournament() {
   const bingoNumbers = bingo?.drawnNumbers || []
   const bingoWinners = bingo?.winners || []
   const bingoCards = bingo?.cards || []
+  const bingoCurrentRound = bingo?.currentRound
   const canBuyBingoCards = isBingo && ['virtual', 'mixed'].includes(tournament.bingoCardMode || 'physical')
   const bingoCardLimit = Math.max(Number(tournament.bingoCardsPerParticipant || 1), 1)
   const finalRound = rounds?.[rounds.length - 1]
@@ -3711,64 +3931,9 @@ function PublicTournament() {
     : []
   const confirmedRegistrations = registrations.filter((registration: any) => registration.status === 'confirmed')
   const waitingRegistrations = registrations.filter((registration: any) => registration.status === 'waiting')
-
-  function updateRegistrationField(field: string, value: string | boolean) {
-    setRegistrationForm((current: any) => ({ ...current, [field]: value }))
-  }
-
-  function registerPlayer() {
-    if (!registrationForm.name || !registrationForm.rg || !registrationForm.email || !registrationForm.phone) {
-      alert('Preencha nome, RG, e-mail e WhatsApp.')
-      return
-    }
-
-    if (!isValidRg(registrationForm.rg)) {
-      alert('Informe um RG válido. Use apenas números/letras, com 5 a 12 caracteres.')
-      return
-    }
-
-    if (!isValidBrazilCellphone(registrationForm.phone)) {
-      alert('Informe um celular válido com DDD. Exemplo: (11) 99009-8000.')
-      return
-    }
-
-    setRegistrationLoading(true)
-    fetch(`${API}/public/${slug}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...registrationForm,
-        rg: formatRg(registrationForm.rg),
-        phone: normalizeBrazilPhone(registrationForm.phone),
-      }),
-    })
-      .then(res => res.json())
-      .then(result => {
-        if (result.error) {
-          alert(result.error)
-          return
-        }
-
-        setRegistrationForm({
-          name: '',
-          rg: '',
-          email: '',
-          phone: '',
-          representsOrganization: false,
-          representedOrganizationName: '',
-          representedOrganizationType: '',
-          representedOrganizationDocument: '',
-        })
-        setRegistrationPayment(result.payment ? {
-          ...result.payment,
-          registrationId: result.registration?.id,
-          paymentStatus: result.registration?.paymentStatus,
-        } : null)
-        loadPublicTournament()
-        alert(result.payment ? 'Inscrição recebida. Gere o pagamento Pix e confirme sua participação pelo link enviado.' : 'Inscrição recebida. Enviamos um link por e-mail e WhatsApp para confirmar sua participação.')
-      })
-      .finally(() => setRegistrationLoading(false))
-  }
+  const publicSignupPath = `/public/${slug}`
+  const publicSignupLoginUrl = `/login?redirect=${encodeURIComponent(publicSignupPath)}`
+  const publicSignupRegisterUrl = `/inscreva-se?redirect=${encodeURIComponent(publicSignupPath)}`
 
   function reserveBingoCard() {
     setBingoMessage('')
@@ -3786,6 +3951,32 @@ function PublicTournament() {
 
         setBingoMessage('Cartela reservada. Aguarde a confirmação do pagamento pelo organizador.')
         setBingoBuyer(current => ({ ...current, name: '', email: '', whatsapp: '' }))
+      })
+  }
+
+  function claimPublicBingo() {
+    setBingoMessage('')
+    const claimName = bingoBuyer.name || prompt('Informe seu nome para avisar BINGO', '') || ''
+
+    if (!claimName.trim()) {
+      setBingoMessage('Informe seu nome para avisar BINGO.')
+      return
+    }
+
+    fetch(`${API}/public/${slug}/bingo/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: claimName }),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          setBingoMessage(result.error)
+          return
+        }
+
+        setBingoMessage('BINGO enviado para o telão e organização.')
+        loadPublicTournament()
       })
   }
 
@@ -3810,7 +4001,7 @@ function PublicTournament() {
 
           <div className="publicCard publicMiniInfoCard">
             <span className="publicCardLabel">Status</span>
-            <strong>{tournament.status}</strong>
+            <strong>{tournamentStatusLabel(tournament.status)}</strong>
             <p>{tournament.location || 'Local não informado'}</p>
             {tournament.venueAddress && <p>{tournament.venueAddress}</p>}
             <p>
@@ -3864,6 +4055,12 @@ function PublicTournament() {
             <div className="publicCard publicMatchColumn live">
               <span className="publicCardLabel">Bingo</span>
               <h2>Números sorteados</h2>
+              {bingoCurrentRound && (
+                <div className="publicBingoRoundBox">
+                  <strong>{bingoCurrentRound.name}</strong>
+                  <span>{bingoCurrentRound.prize || 'Premiação da rodada não informada'}</span>
+                </div>
+              )}
               <div className="bingoNumbers">
                 {bingoNumbers.length === 0 && <p>Nenhum número sorteado.</p>}
                 {bingoNumbers.map((number: number) => (
@@ -3921,6 +4118,7 @@ function PublicTournament() {
                   />
                   <p>Limite: {bingoCardLimit} cartela(s) por participante.</p>
                   <button onClick={reserveBingoCard}>Reservar cartela</button>
+                  <button className="publicBingoButton" onClick={claimPublicBingo}>BINGO!</button>
                   {bingoMessage && <p>{bingoMessage}</p>}
                 </div>
               )}
@@ -3930,115 +4128,24 @@ function PublicTournament() {
 
         {!isBingo && (
           <section className="publicRegistrationGrid">
-            <div className="publicCard publicRegistrationForm">
+            <div className="publicCard publicSignupCard">
               <span className="publicCardLabel">Inscrição</span>
               {!tournament.registrationOpen ? (
                 <div className="publicClosedBox">
                   <strong>Inscrições encerradas</strong>
                 </div>
               ) : (
-                <>
-                  <h2>Inscrever-se no torneio</h2>
-                  <p>Preencha seus dados para participar.</p>
-                  <input
-                    value={registrationForm.name}
-                    onChange={e => updateRegistrationField('name', e.target.value)}
-                    placeholder="Nome completo"
-                    disabled={registrationLoading}
-                  />
-                  <input
-                    value={registrationForm.rg}
-                    onChange={e => updateRegistrationField('rg', formatRg(e.target.value))}
-                    placeholder="RG"
-                    disabled={registrationLoading}
-                  />
-                  <input
-                    type="email"
-                    value={registrationForm.email}
-                    onChange={e => updateRegistrationField('email', e.target.value)}
-                    placeholder="E-mail"
-                    disabled={registrationLoading}
-                  />
-                  <input
-                    value={registrationForm.phone}
-                    onChange={e => updateRegistrationField('phone', formatBrazilCellphone(e.target.value))}
-                    placeholder="WhatsApp com DDD. Ex: (11) 99009-8000"
-                    inputMode="numeric"
-                    disabled={registrationLoading}
-                  />
-
-                  <label className="publicCheckboxLine">
-                    <input
-                      type="checkbox"
-                      checked={registrationForm.representsOrganization}
-                      onChange={e => updateRegistrationField('representsOrganization', e.target.checked)}
-                      disabled={registrationLoading}
-                    />
-                    Represento clube, salão, arena ou organização
-                  </label>
-
-                  {registrationForm.representsOrganization && (
-                    <div className="publicOrgFields">
-                      <input
-                        value={registrationForm.representedOrganizationName}
-                        onChange={e => updateRegistrationField('representedOrganizationName', e.target.value)}
-                        placeholder="Nome da organização representada"
-                        disabled={registrationLoading}
-                      />
-                      <select
-                        value={registrationForm.representedOrganizationType}
-                        onChange={e => updateRegistrationField('representedOrganizationType', e.target.value)}
-                        disabled={registrationLoading}
-                      >
-                        <option value="">Tipo</option>
-                        <option value="clube">Clube</option>
-                        <option value="salao">Salão</option>
-                        <option value="arena">Arena</option>
-                        <option value="associacao">Associação</option>
-                        <option value="outro">Outro</option>
-                      </select>
-                      <input
-                        value={registrationForm.representedOrganizationDocument}
-                        onChange={e => updateRegistrationField('representedOrganizationDocument', e.target.value)}
-                        placeholder="Documento da organização, se houver"
-                        disabled={registrationLoading}
-                      />
-                    </div>
-                  )}
-
-                  <button onClick={registerPlayer} disabled={registrationLoading}>
-                    {registrationLoading ? 'Enviando...' : 'Confirmar inscrição'}
-                  </button>
-
-                  {tournament.paymentCollectionMode !== 'manual' && Number(tournament.registrationFee || 0) > 0 && (
-                    <p className="publicPaymentHint">
-                      Pagamento automático via Pix: R$ {Number(tournament.registrationFee).toFixed(2).replace('.', ',')}
-                    </p>
-                  )}
-
-                  {registrationPayment && (
-                    <div className="publicPaymentBox">
-                      <strong>Pagamento da inscrição</strong>
-                      <span>Status: {registrationPayment.paymentStatus === 'paid' || registrationPayment.status === 'approved' ? 'pago' : 'aguardando Pix'}</span>
-                      {registrationPayment.qrCodeBase64 && (
-                        <img
-                          src={`data:image/png;base64,${registrationPayment.qrCodeBase64}`}
-                          alt="QR Code Pix da inscrição"
-                        />
-                      )}
-                      {registrationPayment.qrCode && (
-                        <button type="button" onClick={() => navigator.clipboard.writeText(registrationPayment.qrCode)}>
-                          Copiar código Pix
-                        </button>
-                      )}
-                      {registrationPayment.ticketUrl && (
-                        <button type="button" onClick={() => window.open(registrationPayment.ticketUrl, '_blank')}>
-                          Abrir pagamento
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </>
+                <div className="publicSignupCta">
+                  <span className="publicSignupBurst">Vagas abertas</span>
+                  <h2>Participe deste torneio</h2>
+                  <p>Entre na sua conta para iniciar a inscrição.</p>
+                  <a className="publicSignupButton" href={publicSignupLoginUrl}>
+                    Inscreva-se
+                  </a>
+                  <a className="publicSignupSecondary" href={publicSignupRegisterUrl}>
+                    Não sou cadastrado
+                  </a>
+                </div>
               )}
             </div>
 
@@ -4278,7 +4385,7 @@ function SeasonsPage({ user }: any) {
                 <div key={tournament.id} className="clientTournamentRow">
                   <div>
                     <strong>{tournament.name}</strong>
-                    <span>{tournament.status} • {tournament.playerCount} jogadores</span>
+                  <span>{tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores</span>
                   </div>
                   <button onClick={() => navigate(`/tournament/${tournament.id}`)}>Painel</button>
                 </div>
@@ -4368,9 +4475,6 @@ function CreateTournament({ user }: any) {
     const templateSport = templateSports.find((sport: any) => sport.slug === baseSport.slug)
     return templateSport || baseSport
   })
-  const filteredTemplates = templates.filter(template => (
-    template.sport?.slug ? template.sport.slug === sportSlug : true
-  ))
   const selectedTemplate = templates.find(template => Number(template.id) === Number(templateId))
   const isBingo = tournamentFormat === 'bingo' || selectedTemplate?.format === 'bingo' || selectedTemplate?.sport?.slug === 'bingo'
   const selectedSport = sports.find((sport: any) => sport.slug === sportSlug)
@@ -4617,7 +4721,7 @@ function CreateTournament({ user }: any) {
               </button>
             </div>
 
-            <label>Modelo</label>
+            <label>{isBingo ? 'Modelo' : 'Formato do torneio'}</label>
             {isBingo ? (
               <>
                 <select
@@ -4635,25 +4739,19 @@ function CreateTournament({ user }: any) {
                 </div>
               </>
             ) : (
-              <select
-                value={templateId}
-                onChange={e => {
-                  const nextTemplateId = Number(e.target.value)
-                  const nextTemplate = templates.find(template => Number(template.id) === nextTemplateId)
-                  setTemplateId(nextTemplateId)
-                  if (nextTemplate) {
-                    setSportSlug(nextTemplate.sport?.slug || sportSlug)
-                    setTournamentFormat(nextTemplate.format || (nextTemplate.sport?.slug === 'bingo' ? 'bingo' : 'knockout'))
-                    if (nextTemplate.playerCount) setPlayerCount(Number(nextTemplate.playerCount))
-                  }
-                }}
-              >
-                {filteredTemplates.map(t => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+              <>
+                <select value={tournamentFormat} onChange={e => setTournamentFormat(e.target.value)}>
+                  {TOURNAMENT_FORMAT_OPTIONS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <p className="helperText">
+                  O chaveamento será gerado conforme o formato escolhido e a quantidade de inscritos.
+                </p>
+              </>
             )}
 
             {!isBingo && (
@@ -4665,15 +4763,6 @@ function CreateTournament({ user }: any) {
                   value={playerCount}
                   onChange={e => setPlayerCount(Math.max(2, Number(e.target.value) || 2))}
                 />
-
-                <label>Formato do torneio</label>
-                <select value={tournamentFormat} onChange={e => setTournamentFormat(e.target.value)}>
-                  {TOURNAMENT_FORMAT_OPTIONS.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
               </>
             )}
             {tournamentFormat === 'round_robin' && (
@@ -5046,9 +5135,20 @@ function TournamentBracket() {
   const [tournament, setTournament] = useState<any>(null)
   const [panelMode] = useState<'board' | 'bracket'>('bracket')
   const [bingoState, setBingoState] = useState<any>(null)
-  const [physicalNumber, setPhysicalNumber] = useState('')
+  const [bingoRoundName, setBingoRoundName] = useState('Rodada 1')
+  const [bingoRoundPrize, setBingoRoundPrize] = useState('')
+  const [bingoRoundRule, setBingoRoundRule] = useState('')
+  const [showNewBingoRound, setShowNewBingoRound] = useState(false)
+  const [showNewBingoPrize, setShowNewBingoPrize] = useState(false)
+  const [showPhysicalNumberModal, setShowPhysicalNumberModal] = useState(false)
+  const [newBingoRoundNumber, setNewBingoRoundNumber] = useState(2)
+  const [newBingoRoundPrize, setNewBingoRoundPrize] = useState('')
+  const [newBingoRoundRule, setNewBingoRoundRule] = useState('')
+  const [newBingoPrizeValue, setNewBingoPrizeValue] = useState('')
+  const [newBingoPrizeRule, setNewBingoPrizeRule] = useState('')
+  const [physicalNumberInput, setPhysicalNumberInput] = useState('')
+  const [panelQrUrl, setPanelQrUrl] = useState<string | null>(null)
   const [winnerName, setWinnerName] = useState('')
-  const [winnerPrize, setWinnerPrize] = useState('')
   const matches = rounds.flatMap(round =>
     (round.matches || []).map((match: any) => ({ ...match, round: round.round }))
   )
@@ -5060,10 +5160,63 @@ function TournamentBracket() {
   const hasGeneratedBracket = rounds.some(round => (round.matches || []).length > 0)
   const bracketRounds = hasGeneratedBracket ? rounds : buildBracketSkeletonRounds(Number(tournament?.playerCount || 0))
   const isBingo = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo'
+  const publicUrl = tournament?.publicSlug ? publicTournamentUrl(tournament.publicSlug) : ''
+  const bingoMaxNumber = Number(tournament?.bingoMaxNumber || 75)
   const bingoNumbers = bingoState?.drawnNumbers || []
+  const bingoDraws = bingoState?.draws || []
   const latestBingoNumber = bingoNumbers[bingoNumbers.length - 1]
   const bingoWinners = bingoState?.winners || []
   const bingoCards = bingoState?.cards || []
+  const currentRoundData = bingoState?.currentRound
+  const currentBingoRoundNumber = Number(currentRoundData?.number || 1)
+  const currentBingoRound = currentRoundData?.name || bingoRoundName || `Rodada ${currentBingoRoundNumber}`
+  const currentBingoPrize = currentRoundData?.prize || bingoRoundPrize || tournament?.prize || '-'
+  const currentBingoRule = currentRoundData?.rule || bingoRoundRule || '-'
+  const bingoRoundClosed = currentRoundData?.status === 'closed'
+  const bingoRoundRows = (() => {
+    const drawsByRound = new Map<string, any[]>()
+
+    bingoDraws.forEach((draw: any) => {
+      const label = draw.roundName || currentBingoRound
+      drawsByRound.set(label, [...(drawsByRound.get(label) || []), draw])
+    })
+
+    const rows: any[] = []
+    const buildBaseRow = (roundName: string, prize = '', rule = '') => {
+      const label = roundName || `Rodada ${currentBingoRoundNumber}`
+      const match = String(label).match(/\d+/)
+      const relatedDraws = (drawsByRound.get(label) || [])
+        .filter((draw: any) => {
+          const samePrize = !prize || !draw.prize || draw.prize === prize
+          const sameRule = !rule || !draw.rule || draw.rule === rule
+          return samePrize && sameRule
+        })
+
+      return {
+        roundNumber: match ? Number(match[0]) : rows.length + 1,
+        roundName: label,
+        numbers: relatedDraws.map((draw: any) => draw.number),
+        winner: '',
+        prize,
+        rule,
+        createdAt: '',
+      }
+    }
+
+    bingoWinners.forEach((winner: any) => {
+      rows.push({
+        ...buildBaseRow(winner.roundName || currentBingoRound, winner.prize || '', winner.rule || ''),
+        winner: winner.winnerName || '',
+        createdAt: winner.createdAt || '',
+      })
+    })
+
+    if (rows.length === 0) {
+      rows.push(buildBaseRow(currentBingoRound, currentBingoPrize, currentBingoRule))
+    }
+
+    return rows.sort((a, b) => a.roundNumber - b.roundNumber || String(a.createdAt).localeCompare(String(b.createdAt)))
+  })()
 
   function loadBracket() {
     fetch(`${API}/tournaments/${id}/bracket`, {
@@ -5118,15 +5271,28 @@ function TournamentBracket() {
           alert(data.error)
           return
         }
+        setShowPhysicalNumberModal(false)
+        setPhysicalNumberInput('')
         loadBingo()
       })
   }
 
   function registerPhysicalNumber() {
+    setPhysicalNumberInput('')
+    setShowPhysicalNumberModal(true)
+  }
+
+  function submitPhysicalNumber() {
+    const number = Number(physicalNumberInput)
+    if (!Number.isInteger(number) || number < 1 || number > bingoMaxNumber) {
+      alert(`Informe um número entre 1 e ${bingoMaxNumber}.`)
+      return
+    }
+
     fetch(`${API}/tournaments/${id}/bingo/draw`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ source: 'physical', number: Number(physicalNumber) }),
+      body: JSON.stringify({ source: 'physical', number }),
     })
       .then(res => res.json())
       .then(data => {
@@ -5134,7 +5300,98 @@ function TournamentBracket() {
           alert(data.error)
           return
         }
-        setPhysicalNumber('')
+        loadBingo()
+      })
+  }
+
+  function openNewBingoRoundModal() {
+    setNewBingoRoundNumber(currentBingoRoundNumber + 1)
+    setNewBingoRoundPrize('')
+    setNewBingoRoundRule('')
+    setShowNewBingoRound(true)
+  }
+
+  function createNewBingoRound() {
+    fetch(`${API}/tournaments/${id}/bingo/rounds`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ roundNumber: newBingoRoundNumber, prize: newBingoRoundPrize, rule: newBingoRoundRule }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setBingoRoundName(`Rodada ${data.currentRound?.number || newBingoRoundNumber}`)
+        setBingoRoundPrize(data.currentRound?.prize || '')
+        setBingoRoundRule(data.currentRound?.rule || '')
+        setShowNewBingoRound(false)
+        loadTournamentPanel()
+        loadBingo()
+      })
+  }
+
+  function openNewBingoPrizeModal() {
+    setNewBingoPrizeValue('')
+    setNewBingoPrizeRule('')
+    setShowNewBingoPrize(true)
+  }
+
+  function updateBingoRoundPrize() {
+    fetch(`${API}/tournaments/${id}/bingo/rounds/prize`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ prize: newBingoPrizeValue, rule: newBingoPrizeRule }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setBingoRoundPrize(data.currentRound?.prize || '')
+        setBingoRoundRule(data.currentRound?.rule || '')
+        setShowNewBingoPrize(false)
+        loadTournamentPanel()
+        loadBingo()
+      })
+  }
+
+  function closeBingoRound() {
+    if (!confirm(`Encerrar ${currentBingoRound}?`)) return
+
+    fetch(`${API}/tournaments/${id}/bingo/rounds/close`, {
+      method: 'POST',
+      headers: authHeaders(),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+        loadBingo()
+      })
+  }
+
+  function triggerBingoClaim() {
+    const claimedName = winnerName || prompt('Quem gritou BINGO?', '') || 'BINGO'
+
+    fetch(`${API}/tournaments/${id}/bingo/claim`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ winnerName: claimedName }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+        loadTournamentPanel()
         loadBingo()
       })
   }
@@ -5143,7 +5400,7 @@ function TournamentBracket() {
     fetch(`${API}/tournaments/${id}/bingo/winners`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ winnerName, prize: winnerPrize }),
+      body: JSON.stringify({ winnerName, roundName: currentBingoRound, prize: currentBingoPrize, rule: currentBingoRule }),
     })
       .then(res => res.json())
       .then(data => {
@@ -5152,7 +5409,6 @@ function TournamentBracket() {
           return
         }
         setWinnerName('')
-        setWinnerPrize('')
         loadBingo()
       })
   }
@@ -5272,88 +5528,109 @@ function TournamentBracket() {
         <div className="tournamentSidebarInfo">
           <span>Torneio</span>
           <strong>{tournament?.name || 'Carregando...'}</strong>
-          <small>{tournament?.status || '-'}</small>
+          <small>{tournamentStatusLabel(tournament?.status)}</small>
         </div>
 
-        <button onClick={() => navigate(`/tournament/${id}/painel`)}>Dashboard</button>
-        <button className="active" onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=inscritos`)}>Inscritos</button>
+        <button onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
+        <button className="active" onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingo ? 'AO VIVO' : 'Chaveamento'}</button>
+        <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
-        <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=financeiro`)}>Financeiro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=patrocinadores`)}>Patrocinadores</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=publico`)}>QR Code público</button>
+        {!isBingo && <button onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>}
+        <button onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
+        <button onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
+        {!isBingo && <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>}
       </aside>
 
       <main className="saasMain">
-       <header className="hero">
-  <div className="badge">🏆 Painel do Torneio</div>
+        <header className="hero">
+          <div className="badge">🏆 Painel do Torneio</div>
 
-  <h1>{isBingo ? 'Painel Bingo' : 'Painel Torneio'}</h1>
-  <p>
-    {isBingo
-      ? 'Controle números sorteados, cartelas e ganhadores das rodadas.'
-      : 'Visualização em forma de bracket, atualizada com os jogos do torneio.'}
-  </p>
+          <h1>{isBingo ? 'Painel Bingo' : 'Painel Torneio'}</h1>
+          <p>
+            {isBingo
+              ? 'Controle números sorteados, cartelas e ganhadores das rodadas.'
+              : 'Visualização em forma de bracket, atualizada com os jogos do torneio.'}
+          </p>
 
-  {champion && (
-    <div className="championBanner">
-      🏆 Campeão: {champion}
-    </div>
-  )}
+          {isBingo && (
+            <div className="heroActions bingoHeaderActions">
+              <button onClick={() => window.open(`/telao/${id}`, '_blank')}>Telão</button>
+              <button disabled={!publicUrl} onClick={() => publicUrl && window.open(publicUrl, '_blank')}>Público</button>
+              <button disabled={!publicUrl} onClick={() => publicUrl && navigator.clipboard?.writeText(publicUrl)}>Compartilhar link</button>
+              <button disabled={!publicUrl} onClick={() => publicUrl && setPanelQrUrl(publicUrl)}>QR Code</button>
+            </div>
+          )}
 
-</header>
+          {champion && (
+            <div className="championBanner">
+              🏆 Campeão: {champion}
+            </div>
+          )}
+
+        </header>
 
         {isBingo && (
           <div className="bingoControlGrid">
-            <section className="panel bingoControlPanel">
+            <section className="panel bingoControlPanel bingoControlPanelFeatured">
               <h2>Controle do Bingo</h2>
-              <div className="bingoCurrentNumber">
-                <span>Último número</span>
-                <strong>{latestBingoNumber || '--'}</strong>
+              <div className="bingoRoundSummary">
+                <div><span>Rodada atual</span><strong>{currentBingoRound}</strong></div>
+                <div><span>Premiação da rodada</span><strong>{currentBingoPrize}</strong></div>
+                <div><span>Regra da rodada</span><strong>{currentBingoRule}</strong></div>
+              </div>
+              {bingoRoundClosed && <p className="helperText">Rodada encerrada. Abra uma nova rodada para continuar sorteando.</p>}
+
+              <div className="bingoFeaturedControl">
+                <div className="bingoCurrentNumber">
+                  <span>Último número</span>
+                  <strong>{latestBingoNumber || '--'}</strong>
+                </div>
+
+                <div className="bingoNumbersBlock">
+                  <span>Números sorteados</span>
+                  <div className="bingoNumbers bingoNumbersFeatured">
+                    {bingoNumbers.length === 0 && <p>Nenhum número sorteado.</p>}
+                    {bingoNumbers.map((number: number) => (
+                      <span key={number}>{number}</span>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              <div className="bingoActionRow">
-                <button onClick={drawVirtualNumber}>Sortear virtual</button>
-                <input
-                  value={physicalNumber}
-                  onChange={e => setPhysicalNumber(e.target.value)}
-                  placeholder="Número físico"
-                />
-                <button onClick={registerPhysicalNumber}>Registrar bolinha</button>
-              </div>
-
-              <div className="bingoNumbers">
-                {bingoNumbers.length === 0 && <p>Nenhum número sorteado.</p>}
-                {bingoNumbers.map((number: number) => (
-                  <span key={number}>{number}</span>
-                ))}
+              <div className="bingoActionRow bingoControlButtons">
+                <button onClick={drawVirtualNumber} disabled={bingoRoundClosed}>Sortear virtual</button>
+                <button onClick={registerPhysicalNumber} disabled={bingoRoundClosed}>Registrar bolinha</button>
+                <button onClick={openNewBingoRoundModal}>Nova rodada</button>
+                <button onClick={openNewBingoPrizeModal}>Novo prêmio</button>
+                <button className="secondaryButton" onClick={closeBingoRound} disabled={bingoRoundClosed}>Encerrar rodada</button>
+                <button className="bingoClaimButton bingoClaimButtonLarge" onClick={triggerBingoClaim}>BINGO!</button>
               </div>
             </section>
 
             <section className="panel bingoControlPanel">
-              <h2>Ganhadores</h2>
+              <h2>Rodada</h2>
+              <div className="bingoRoundFields">
+                <div>
+                  <span>Número da rodada</span>
+                  <strong>{currentBingoRoundNumber}</strong>
+                </div>
+                <div>
+                  <span>Premiação</span>
+                  <strong>{currentBingoPrize}</strong>
+                </div>
+                <div>
+                  <span>Regra</span>
+                  <strong>{currentBingoRule}</strong>
+                </div>
+              </div>
               <div className="bingoActionRow">
                 <input
                   value={winnerName}
                   onChange={e => setWinnerName(e.target.value)}
                   placeholder="Nome do ganhador"
                 />
-                <input
-                  value={winnerPrize}
-                  onChange={e => setWinnerPrize(e.target.value)}
-                  placeholder="Rodada/prêmio"
-                />
                 <button onClick={registerBingoWinner}>Registrar ganhador</button>
               </div>
-
-              {bingoWinners.length === 0 && <p>Nenhum ganhador registrado.</p>}
-              {bingoWinners.map((winner: any) => (
-                <div key={winner.id} className="bingoWinnerRow">
-                  <strong>{winner.winnerName}</strong>
-                  <span>{winner.prize || winner.roundName || 'Rodada'}</span>
-                </div>
-              ))}
             </section>
 
             <section className="panel bingoControlPanel">
@@ -5370,6 +5647,151 @@ function TournamentBracket() {
                     : 'Cartelas físicas.'}
               </p>
             </section>
+
+            <section className="panel bingoControlPanel bingoRoundsPanel">
+              <h2>Histórico</h2>
+              <div className="bingoRoundsTableWrap">
+                <table className="bingoRoundsTable">
+                  <thead>
+                    <tr>
+                      <th>Rodada</th>
+                      <th>Regra</th>
+                      <th>Números sorteados</th>
+                      <th>Vencedor</th>
+                      <th>Premiação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bingoRoundRows.map((row: any, index: number) => (
+                      <tr key={`${row.roundName}-${row.winner || 'aberta'}-${index}`}>
+                        <td>{row.roundNumber}</td>
+                        <td>{row.rule || '-'}</td>
+                        <td>{row.numbers.length ? row.numbers.join(', ') : '-'}</td>
+                        <td>{row.winner || '-'}</td>
+                        <td>{row.prize || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {panelQrUrl && (
+          <div className="qrModal" onClick={() => setPanelQrUrl(null)}>
+            <div className="qrContent" onClick={event => event.stopPropagation()}>
+              <h3>QR Code do Torneio</h3>
+              <QRCodeCanvas value={panelQrUrl} size={220} />
+              <p>{panelQrUrl}</p>
+              <button onClick={() => setPanelQrUrl(null)}>Fechar</button>
+            </div>
+          </div>
+        )}
+
+        {showPhysicalNumberModal && (
+          <div className="qrModal" onClick={() => setShowPhysicalNumberModal(false)}>
+            <div className="detailsContent bingoRoundModal" onClick={event => event.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Registrar bolinha</span>
+                  <h3>Número sorteado manualmente</h3>
+                  <p>Informe o número retirado no sorteio físico.</p>
+                </div>
+                <button className="modalCloseButton" onClick={() => setShowPhysicalNumberModal(false)}>Fechar</button>
+              </div>
+
+              <label>Número da bolinha</label>
+              <input
+                type="number"
+                min={1}
+                max={bingoMaxNumber}
+                value={physicalNumberInput}
+                onChange={event => setPhysicalNumberInput(event.target.value)}
+                placeholder={`1 a ${bingoMaxNumber}`}
+              />
+
+              <div className="adminModalActions">
+                <button onClick={() => setShowPhysicalNumberModal(false)}>Cancelar</button>
+                <button className="primaryButton" onClick={submitPhysicalNumber}>Registrar número</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showNewBingoPrize && (
+          <div className="qrModal" onClick={() => setShowNewBingoPrize(false)}>
+            <div className="detailsContent bingoRoundModal" onClick={event => event.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Novo prêmio</span>
+                  <h3>Continuar {currentBingoRound}</h3>
+                  <p>Atualiza a premiação e a regra sem abrir outra rodada.</p>
+                </div>
+                <button className="modalCloseButton" onClick={() => setShowNewBingoPrize(false)}>Fechar</button>
+              </div>
+
+              <label>Premiação da rodada</label>
+              <input
+                value={newBingoPrizeValue}
+                onChange={e => setNewBingoPrizeValue(e.target.value)}
+                placeholder="Ex: R$ 300,00"
+              />
+
+              <label>Regra da rodada</label>
+              <input
+                value={newBingoPrizeRule}
+                onChange={e => setNewBingoPrizeRule(e.target.value)}
+                placeholder="Ex: Cartela cheia"
+              />
+
+              <div className="adminModalActions">
+                <button onClick={() => setShowNewBingoPrize(false)}>Cancelar</button>
+                <button className="primaryButton" onClick={updateBingoRoundPrize}>Atualizar prêmio</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showNewBingoRound && (
+          <div className="qrModal" onClick={() => setShowNewBingoRound(false)}>
+            <div className="detailsContent bingoRoundModal" onClick={event => event.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <span>Nova rodada</span>
+                  <h3>Abrir próxima rodada</h3>
+                  <p>Esses dados aparecem no painel AO VIVO e no telão.</p>
+                </div>
+                <button className="modalCloseButton" onClick={() => setShowNewBingoRound(false)}>Fechar</button>
+              </div>
+
+              <label>Número da rodada</label>
+              <input
+                type="number"
+                min={1}
+                value={newBingoRoundNumber}
+                onChange={e => setNewBingoRoundNumber(Math.max(1, Number(e.target.value) || 1))}
+              />
+
+              <label>Premiação da rodada</label>
+              <input
+                value={newBingoRoundPrize}
+                onChange={e => setNewBingoRoundPrize(e.target.value)}
+                placeholder="Ex: R$ 500,00"
+              />
+
+              <label>Regra da rodada</label>
+              <input
+                value={newBingoRoundRule}
+                onChange={e => setNewBingoRoundRule(e.target.value)}
+                placeholder="Ex: Linha e coluna"
+              />
+
+              <div className="adminModalActions">
+                <button onClick={() => setShowNewBingoRound(false)}>Cancelar</button>
+                <button className="primaryButton" onClick={createNewBingoRound}>Abrir rodada</button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -5768,6 +6190,7 @@ function RefereeMode() {
   const selectedMatch = currentMatchForTable(currentTable)
   const nextSameTable = nextPendingForTable(currentTable, selectedMatch?.id)
   const otherNextMatches = otherTablesPendingMatches(currentTable)
+  const isBingoReferee = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo'
 
   return (
     <div className="tournamentPageLayout">
@@ -5780,17 +6203,17 @@ function RefereeMode() {
         <div className="tournamentSidebarInfo">
           <span>Torneio</span>
           <strong>{tournament?.name || 'Carregando...'}</strong>
-          <small>{tournament?.status || '-'}</small>
+          <small>{tournamentStatusLabel(tournament?.status)}</small>
         </div>
 
-        <button onClick={() => navigate(`/tournament/${id}/painel`)}>Dashboard</button>
-        <button onClick={() => navigate(`/tournament/${id}`)}>Bracket do torneio</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=inscritos`)}>Inscritos</button>
+        <button onClick={() => navigate(`/tournament/${id}`)}>Dashboard</button>
+        <button onClick={() => navigate(`/tournament/${id}/chaveamento`)}>{isBingoReferee ? 'AO VIVO' : 'Chaveamento'}</button>
+        <button onClick={() => navigate(`/tournament/${id}/inscritos`)}>Inscritos</button>
         <button onClick={() => navigate(`/tournament/${id}/settings`)}>Configurações / edição</button>
-        <button className="active" onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=financeiro`)}>Financeiro</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=patrocinadores`)}>Patrocinadores</button>
-        <button onClick={() => navigate(`/tournament/${id}/painel?painel=publico`)}>QR Code público</button>
+        {!isBingoReferee && <button className="active" onClick={() => navigate(`/arbitro/${id}`)}>Modo árbitro</button>}
+        <button onClick={() => navigate(`/tournament/${id}/financeiro`)}>Financeiro</button>
+        <button onClick={() => navigate(`/tournament/${id}/patrocinadores`)}>Patrocinadores</button>
+        {!isBingoReferee && <button onClick={() => navigate(`/tournament/${id}/publico`)}>QR Code público</button>}
       </aside>
 
       <main className="saasMain refereeMain">
@@ -5929,6 +6352,7 @@ function TelaoTV() {
   const [tournament, setTournament] = useState<any>(null)
   const [ranking, setRanking] = useState<any[]>([])
   const [bingoState, setBingoState] = useState<any>(null)
+  const [bingoClaim, setBingoClaim] = useState<any>(null)
   const [view, setView] = useState(0)
 
   const publicUrl = tournament?.publicSlug
@@ -5944,6 +6368,10 @@ function TelaoTV() {
   const latestBingoNumber = drawnNumbers[drawnNumbers.length - 1]
   const bingoWinners = bingoState?.winners || []
   const bingoCards = bingoState?.cards || []
+  const currentRoundData = bingoState?.currentRound
+  const currentBingoRound = currentRoundData?.name || bingoWinners[0]?.roundName || 'Rodada principal'
+  const currentBingoPrize = currentRoundData?.prize || bingoWinners[0]?.prize || tournament?.prize || '-'
+  const currentBingoRule = currentRoundData?.rule || bingoWinners[0]?.rule || '-'
 
   const finalRound = rounds[rounds.length - 1]
   const champion = finalRound?.matches?.[0]?.winner
@@ -5962,7 +6390,10 @@ function TelaoTV() {
     fetch(`${API}/tournaments/${id}/bingo`)
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
-        if (data) setBingoState(data)
+        if (data) {
+          setBingoState(data)
+          if (data.tournament) setTournament(data.tournament)
+        }
       })
   }
 
@@ -5994,6 +6425,18 @@ function TelaoTV() {
       clearInterval(rotateInterval)
     }
   }, [id, champion])
+
+  useEffect(() => {
+    if (!tournament?.bingoLastClaimAt) return
+
+    setBingoClaim({
+      at: tournament.bingoLastClaimAt,
+      name: tournament.bingoLastClaimName || 'BINGO',
+    })
+
+    const timer = setTimeout(() => setBingoClaim(null), 9000)
+    return () => clearTimeout(timer)
+  }, [tournament?.bingoLastClaimAt])
 
   const bracketCardHeight = 132
   const bracketBaseGap = 18
@@ -6050,7 +6493,28 @@ function TelaoTV() {
 
       {isBingo && (
         <div className="bingoTv">
+          {bingoClaim && (
+            <div className="bingoTvClaim">
+              <span>BINGO!</span>
+              <strong>{bingoClaim.name}</strong>
+            </div>
+          )}
+
           <section className="bingoTvFeatured">
+            <div className="bingoTvRoundMeta">
+              <div>
+                <span>Rodada</span>
+                <strong>{currentBingoRound}</strong>
+              </div>
+              <div>
+                <span>Premiação</span>
+                <strong>{currentBingoPrize}</strong>
+              </div>
+              <div>
+                <span>Regra</span>
+                <strong>{currentBingoRule}</strong>
+              </div>
+            </div>
             <span>Número sorteado</span>
             <strong>{latestBingoNumber || '--'}</strong>
             <p>
@@ -6514,7 +6978,7 @@ function AdminClientes() {
                   <div key={tournament.id} className="clientTournamentRow">
                     <div>
                       <strong>{tournament.name}</strong>
-                      <span>{tournament.status} • {tournament.playerCount} jogadores</span>
+                      <span>{tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores</span>
                     </div>
                     <button onClick={() => navigate(`/tournament/${tournament.id}`)}>
                       Abrir

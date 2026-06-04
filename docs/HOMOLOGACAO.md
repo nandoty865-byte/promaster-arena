@@ -125,6 +125,12 @@ chmod +x deploy-staging.sh
 pm2 save
 ```
 
+Antes de atualizar a homologacao, o deploy cria backup automatico em:
+
+```text
+/opt/promaster-backups/homologacao/
+```
+
 Validacao:
 
 ```bash

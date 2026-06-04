@@ -1071,6 +1071,56 @@ body {
   color: #86efac;
 }
 
+.tableActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tableActionIconButton {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 10px;
+  font-weight: 900;
+}
+
+.tableActionMenu {
+  position: relative;
+}
+
+.tableActionMenuList {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  min-width: 150px;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #020617;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+}
+
+.tableActionMenuList button {
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 8px;
+}
+
+.tableActionMenuList button:disabled,
+.tournamentHeroActions button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
 .tournamentWorkspace {
   display: block;
 }
@@ -2236,6 +2286,112 @@ button:hover {
 .publicRegistrationForm button:disabled {
   opacity: .55;
   cursor: not-allowed;
+}
+
+.publicSignupCard {
+  position: relative;
+  overflow: hidden;
+  min-height: 320px;
+}
+
+.publicSignupCard::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto auto;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(56, 189, 248, .24), transparent 65%);
+  pointer-events: none;
+}
+
+.publicSignupCta {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 14px;
+  min-height: 250px;
+  text-align: center;
+}
+
+.publicSignupCta h2 {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 42px);
+}
+
+.publicSignupCta p {
+  margin: 0;
+  color: #bfdbfe;
+  font-weight: 800;
+}
+
+.publicSignupBurst {
+  display: grid;
+  place-items: center;
+  width: 118px;
+  height: 118px;
+  padding: 18px;
+  color: #03111f;
+  background: linear-gradient(135deg, #facc15, #38bdf8 55%, #22c55e);
+  clip-path: polygon(50% 0%, 59% 22%, 82% 11%, 78% 36%, 100% 50%, 78% 64%, 82% 89%, 59% 78%, 50% 100%, 41% 78%, 18% 89%, 22% 64%, 0% 50%, 22% 36%, 18% 11%, 41% 22%);
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.1;
+  text-transform: uppercase;
+  transform: rotate(-7deg);
+  filter: drop-shadow(0 16px 26px rgba(56, 189, 248, .25));
+}
+
+.publicSignupButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 360px);
+  min-height: 64px;
+  padding: 16px 24px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+  color: #fff;
+  font-size: clamp(22px, 2.6vw, 34px);
+  font-weight: 950;
+  text-decoration: none;
+  box-shadow: 0 18px 42px rgba(37, 99, 235, .32);
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.publicSignupButton::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -40%;
+  width: 40%;
+  height: 200%;
+  background: rgba(255, 255, 255, .28);
+  transform: rotate(18deg);
+  transition: left .35s ease;
+}
+
+.publicSignupButton:hover {
+  transform: translateY(-3px) scale(1.02);
+  filter: saturate(1.12);
+  box-shadow: 0 24px 58px rgba(34, 197, 94, .32);
+}
+
+.publicSignupButton:hover::after {
+  left: 115%;
+}
+
+.publicSignupSecondary {
+  color: #93c5fd;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.publicSignupSecondary:hover {
+  color: #fff;
+  text-decoration: underline;
 }
 
 .publicPaymentButton {
@@ -3512,13 +3668,146 @@ button:hover {
 
 .bingoControlGrid {
   display: grid;
-  grid-template-columns: 1.2fr 1fr .8fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
 
 .bingoControlPanel {
   min-height: 260px;
+}
+
+.bingoHeaderActions button,
+.bingoControlButtons button {
+  border: 0;
+  border-radius: 12px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 12px 14px;
+}
+
+.bingoHeaderActions button:disabled,
+.bingoControlButtons button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.bingoControlPanelFeatured,
+.bingoRoundsPanel {
+  grid-column: 1 / -1;
+}
+
+.bingoControlPanelFeatured {
+  border-color: rgba(34, 197, 94, .6);
+  background:
+    linear-gradient(135deg, rgba(20, 83, 45, .26), rgba(15, 23, 42, .98)),
+    #0f172a;
+  box-shadow: 0 18px 70px rgba(0, 0, 0, .22);
+}
+
+.bingoFeaturedControl {
+  display: grid;
+  grid-template-columns: minmax(240px, .75fr) minmax(0, 1.25fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.bingoDashboardGrid div strong {
+  overflow-wrap: anywhere;
+}
+
+.bingoRoundControls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.bingoRoundControls label {
+  display: block;
+  margin-bottom: 6px;
+  color: #93c5fd;
+  font-weight: 900;
+}
+
+.bingoRoundSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.bingoRoundSummary div {
+  padding: 12px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #020617;
+}
+
+.bingoRoundSummary span {
+  display: block;
+  color: #94a3b8;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.bingoRoundSummary strong {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+.bingoRoundFields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+
+.bingoRoundFields div {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(96, 165, 250, .28);
+  background: #020617;
+}
+
+.bingoRoundFields span,
+.bingoNumbersBlock > span {
+  display: block;
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bingoRoundFields strong {
+  display: block;
+  margin-top: 8px;
+  color: #f8fafc;
+  font-size: 24px;
+  overflow-wrap: anywhere;
+}
+
+.bingoRoundActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.bingoClaimButton,
+.publicBingoButton {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  border-color: rgba(134, 239, 172, .55);
+  color: white;
+  font-weight: 1000;
+}
+
+.bingoRoundModal {
+  max-width: 520px;
 }
 
 .bingoCurrentNumber {
@@ -3544,9 +3833,24 @@ button:hover {
 
 .bingoActionRow {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
   margin: 14px 0;
+}
+
+.bingoControlButtons {
+  grid-template-columns: repeat(6, minmax(115px, 1fr));
+  align-items: stretch;
+}
+
+.bingoControlButtons .secondaryButton {
+  margin-top: 0;
+}
+
+.bingoClaimButtonLarge {
+  font-size: 20px;
+  min-height: 58px;
+  transform: scale(1.03);
 }
 
 .bingoActionRow input {
@@ -3559,15 +3863,32 @@ button:hover {
   gap: 8px;
 }
 
+.bingoNumbersBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .bingoNumbers span {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   border-radius: 999px;
   background: #2563eb;
   color: white;
   font-weight: 900;
+  font-size: 14px;
+}
+
+.bingoNumbersFeatured {
+  align-content: flex-start;
+  min-height: 150px;
+  overflow: visible;
+  padding: 12px;
+  border: 1px solid rgba(96, 165, 250, .2);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, .42);
 }
 
 .bingoWinnerRow {
@@ -3592,6 +3913,36 @@ button:hover {
   color: #86efac;
   line-height: 1;
   margin-bottom: 8px;
+}
+
+.bingoRoundsTableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.bingoRoundsTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 880px;
+}
+
+.bingoRoundsTable th,
+.bingoRoundsTable td {
+  padding: 13px 12px;
+  text-align: left;
+  border-bottom: 1px solid #1e293b;
+}
+
+.bingoRoundsTable th {
+  color: #93c5fd;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.bingoRoundsTable td {
+  color: #e2e8f0;
+  font-weight: 800;
+  vertical-align: top;
 }
 
 .landingFeatures,
@@ -4022,6 +4373,11 @@ button:hover {
   .bingoActionRow {
     grid-template-columns: 1fr;
   }
+
+  .bingoFeaturedControl,
+  .bingoControlButtons {
+    grid-template-columns: 1fr;
+  }
 }
 
 @keyframes fadeUp {
@@ -4358,6 +4714,69 @@ button:hover {
   font-weight: 800;
 }
 
+.bingoTvRoundMeta {
+  width: min(100%, 1180px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.bingoTvRoundMeta div {
+  padding: 16px;
+  border: 1px solid rgba(96, 165, 250, .35);
+  border-radius: 18px;
+  background: rgba(2, 6, 23, .72);
+}
+
+.bingoTvRoundMeta span {
+  display: block;
+  color: #93c5fd;
+  font-size: 18px;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.bingoTvRoundMeta strong {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(24px, 3vw, 44px);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.bingoTvClaim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(250, 204, 21, .28), transparent 22%),
+    radial-gradient(circle at 70% 30%, rgba(34, 197, 94, .28), transparent 24%),
+    rgba(2, 6, 23, .78);
+  animation: bingoClaimFade 9s ease both;
+}
+
+.bingoTvClaim span {
+  display: block;
+  color: #facc15;
+  font-size: clamp(82px, 13vw, 190px);
+  font-weight: 1000;
+  line-height: .9;
+  text-shadow: 0 0 34px rgba(250, 204, 21, .7);
+  animation: bingoClaimPop .9s ease both;
+}
+
+.bingoTvClaim strong {
+  display: block;
+  margin-top: 18px;
+  color: white;
+  font-size: clamp(32px, 5vw, 72px);
+  text-shadow: 0 0 24px rgba(37, 99, 235, .7);
+}
+
 .bingoTvGrid {
   margin-top: 26px;
   display: grid;
@@ -4381,6 +4800,49 @@ button:hover {
 
   .tvVersus strong {
     font-size: 36px;
+  }
+}
+
+.publicBingoRoundBox {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  margin: 10px 0 14px;
+  border: 1px solid rgba(96, 165, 250, .35);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, .72);
+}
+
+.publicBingoRoundBox strong {
+  color: #93c5fd;
+}
+
+.publicBingoRoundBox span {
+  color: #cbd5e1;
+  font-weight: 800;
+}
+
+@keyframes bingoClaimPop {
+  from {
+    opacity: 0;
+    transform: scale(.72) rotate(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes bingoClaimFade {
+  0% {
+    opacity: 0;
+  }
+  12%,
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 

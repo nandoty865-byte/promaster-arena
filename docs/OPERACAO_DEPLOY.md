@@ -21,6 +21,19 @@ cd /opt/promaster-arena
 ./deploy.sh
 ```
 
+Antes de atualizar o codigo, o deploy cria backup automatico em:
+
+```text
+/opt/promaster-backups/producao/
+```
+
+O backup inclui:
+
+- dump do PostgreSQL;
+- pasta `uploads`;
+- `.env` local protegido no diretorio de backup;
+- manifest com branch, commit e status do Git.
+
 O script bloqueia o deploy se:
 
 - a VPS nao estiver no branch `main`;
@@ -54,6 +67,21 @@ Depois da emergencia:
 
 - abrir PR do branch `emergencia-vps-*` para `main`, ou
 - reaplicar a correcao em um branch normal e integrar ao `main`.
+
+## Backup manual
+
+Quando quiser salvar o estado da VPS sem publicar nada:
+
+```bash
+cd /opt/promaster-arena
+bash ./scripts/backup-vps-state.sh producao
+```
+
+Por padrao, backups com mais de 14 dias sao removidos. Para alterar:
+
+```bash
+KEEP_DAYS=30 bash ./scripts/backup-vps-state.sh producao
+```
 
 ## Checklist antes de publicar
 

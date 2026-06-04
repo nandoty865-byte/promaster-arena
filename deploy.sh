@@ -5,6 +5,7 @@ APP_DIR="/opt/promaster-arena"
 WEB_DIR="$APP_DIR/apps/web"
 PUBLIC_DIR="/var/www/promaster"
 BRANCH="main"
+BACKUP_SCRIPT="$APP_DIR/scripts/backup-vps-state.sh"
 API_HEALTH_URL="http://localhost:3000/"
 API_HEALTH_ATTEMPTS=20
 
@@ -22,6 +23,12 @@ if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
   echo "Salve em um branch de emergencia antes: ./scripts/save-emergency-state.sh"
   git status --short
   exit 1
+fi
+
+if [ -f "$BACKUP_SCRIPT" ]; then
+  bash "$BACKUP_SCRIPT" producao
+else
+  echo "Aviso: backup automatico indisponivel nesta versao do codigo."
 fi
 
 git fetch origin "$BRANCH"
