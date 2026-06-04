@@ -1302,10 +1302,82 @@ app.get('/admin/organizations',
       include: {
         users: true,
         tournaments: true
-      }
+      },
+      orderBy: { createdAt: 'desc' },
     })
 
     res.json(orgs)
+})
+
+async function buildAdminOrganizationDetails(organizationId) {
+  const organization = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    include: {
+      users: { orderBy: { id: 'asc' } },
+      tournaments: {
+        include: {
+          players: true,
+          registrations: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  })
+
+  if (!organization) {
+    return null
+  }
+
+  const payments = await prisma.payment.findMany({
+    where: { organizationId },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const tournamentCount = organization.tournaments.length
+  const participantsCount = organization.tournaments.reduce((sum, tournament) => (
+    sum + Math.max(tournament.players?.length || 0, tournament.registrations?.length || 0)
+  ), 0)
+  const registrationRevenue = organization.tournaments.reduce((sum, tournament) => {
+    const fee = Number(tournament.registrationFee || 0)
+    if (!fee) return sum
+
+    const paidRegistrations = (tournament.registrations || []).filter(registration => (
+      ['paid', 'approved'].includes(registration.paymentStatus)
+    ))
+
+    return sum + (paidRegistrations.length * fee)
+  }, 0)
+  const planRevenue = payments
+    .filter(payment => payment.status === 'approved')
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+
+  return {
+    organization,
+    payments,
+    summary: {
+      tournamentCount,
+      participantsCount,
+      usersCount: organization.users.length,
+      revenue: registrationRevenue + planRevenue,
+      pendingPayments: payments.filter(payment => payment.status === 'pending').length,
+      approvedPayments: payments.filter(payment => payment.status === 'approved').length,
+    },
+  }
+}
+
+app.get('/admin/organization/:id', auth, requireRole('superadmin'), async (req, res) => {
+  try {
+    const data = await buildAdminOrganizationDetails(Number(req.params.id))
+
+    if (!data) {
+      return res.status(404).json({ error: 'Cliente não encontrado' })
+    }
+
+    res.json(data)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar cliente' })
+  }
 })
 
 app.post('/admin/organization/:id/plan', auth, requireRole('superadmin'), async (req, res) => {
@@ -1334,6 +1406,27 @@ app.post('/admin/organization/:id/plan', auth, requireRole('superadmin'), async 
   res.json({ ok: true, org })
 })
 
+app.patch('/admin/organization/:id/status', auth, requireRole('superadmin'), async (req, res) => {
+  try {
+    const { status } = req.body
+    const allowedStatuses = ['active', 'blocked']
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Status inválido' })
+    }
+
+    const org = await prisma.organization.update({
+      where: { id: Number(req.params.id) },
+      data: { status },
+    })
+
+    res.json({ ok: true, org })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao atualizar status do cliente' })
+  }
+})
+
 app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), async (req, res) => {
   try {
     const organizationId = Number(req.params.id)
@@ -1341,6 +1434,7 @@ app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), asyn
       name,
       email,
       phone,
+      password,
       organizationName,
       street,
       number,
@@ -1373,13 +1467,19 @@ app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), asyn
     }
 
     if (adminUser) {
+      const userData = {
+        name: name || adminUser.name,
+        email: email || adminUser.email,
+        phone: phone || null,
+      }
+
+      if (password) {
+        userData.password = await bcrypt.hash(password, 10)
+      }
+
       await prisma.user.update({
         where: { id: adminUser.id },
-        data: {
-          name: name || adminUser.name,
-          email: email || adminUser.email,
-          phone: phone || null,
-        },
+        data: userData,
       })
     }
 
@@ -1398,6 +1498,9 @@ app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), asyn
         country: country || null,
         state: state || null,
         city: city || null,
+        documentType: documentType || null,
+        documentNumber: documentNumber || null,
+        supportedSports: supportedSports || null,
       },
     })
 
@@ -3982,6 +4085,10 @@ app.post('/auth/login', async (req, res) => {
 
     if (!validPassword) {
       return res.status(401).json({ error: 'Usuário ou senha inválidos' })
+    }
+
+    if (user.role !== 'superadmin' && ['blocked', 'deleted'].includes(user.organization?.status)) {
+      return res.status(403).json({ error: 'Acesso bloqueado. Entre em contato com o suporte ProMaster Arena.' })
     }
 
     const token = jwt.sign(

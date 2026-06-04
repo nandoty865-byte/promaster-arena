@@ -264,6 +264,7 @@ termsAcceptedAt DateTime?
 paymentCollectionMode String @default("manual")
 supportedSports String?
 plan        String    @default("trial")
+status String @default("active")
 trialEndsAt DateTime?
 planExpiresAt DateTime?
 maxUsers Int @default(1)
