@@ -4741,7 +4741,9 @@ function SeasonsPage({ user }: any) {
   const [seasons, setSeasons] = useState<any[]>([])
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null)
   const [seasonDetails, setSeasonDetails] = useState<any>(null)
+  const [seasonOverview, setSeasonOverview] = useState<any>(null)
   const [rankingCategory, setRankingCategory] = useState('Geral')
+  const [seasonRankingCategory, setSeasonRankingCategory] = useState('Geral')
   const [form, setForm] = useState<any>({
     name: 'Circuito ProMaster São Paulo 2027',
     tournamentCount: 8,
@@ -4776,6 +4778,13 @@ function SeasonsPage({ user }: any) {
       .then(data => setSeasonDetails(data.error ? null : data))
   }
 
+  function loadSeasonOverview() {
+    fetch(`${API}/seasons/overview`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setSeasonOverview(data.error ? null : data))
+      .catch(() => setSeasonOverview(null))
+  }
+
   function createSeason() {
     if (!isMasterPlan) {
       alert('Circuito ProMaster disponível apenas no plano Master.')
@@ -4796,6 +4805,7 @@ function SeasonsPage({ user }: any) {
 
         setSelectedSeasonId(data.season.id)
         loadSeasons()
+        loadSeasonOverview()
       })
   }
 
@@ -4816,11 +4826,13 @@ function SeasonsPage({ user }: any) {
         alert(`Líder final do circuito: ${data.champion.name}`)
         loadSeasonDetails(selectedSeasonId)
         loadSeasons()
+        loadSeasonOverview()
       })
   }
 
   useEffect(() => {
     loadSeasons()
+    loadSeasonOverview()
   }, [])
 
   useEffect(() => {
@@ -4844,6 +4856,34 @@ function SeasonsPage({ user }: any) {
   const categoryRanking = rankingCategory === 'Geral' ? topRanking : []
   const pointsTable = defaultCircuitPoints()
   const circuitMapStages = stagePlan.slice(0, Math.max(1, Math.min(stagePlan.length, 6)))
+  const executiveKpis = seasonOverview?.kpis || {}
+  const executiveRanking = seasonRankingCategory === 'Geral' ? (seasonOverview?.ranking || []) : []
+  const executiveCalendar = seasonOverview?.calendar || []
+  const executiveCircuits = seasonOverview?.circuits || []
+  const executiveRace = seasonOverview?.raceToMasters || { classified: [], bubble: [], outsideCount: 0 }
+  const executiveFinance = seasonOverview?.finance || {}
+  const executiveOperational = seasonOverview?.operational || {}
+  const executiveArenas = seasonOverview?.arenas || []
+  const executiveSeasonYear = selectedSeason?.startDate
+    ? new Date(selectedSeason.startDate).getFullYear()
+    : new Date().getFullYear() + 1
+  const executiveTopScore = Math.max(1, ...((seasonOverview?.ranking || []).slice(0, 10).map((item: any) => Number(item.points || 0))))
+  const executiveOrganizerEvents = executiveCalendar.length
+
+  function executiveMonthLabel(date?: string) {
+    if (!date) return 'A definir'
+    return new Date(date).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase()
+  }
+
+  function circuitVisualStatusLabel(status?: string) {
+    const labels: Record<string, string> = {
+      running: 'Em andamento',
+      next: 'Próxima etapa',
+      finished: 'Encerrado',
+    }
+
+    return labels[String(status || '')] || 'Próxima etapa'
+  }
 
   return (
     <div className="saasLayout">
@@ -4863,6 +4903,188 @@ function SeasonsPage({ user }: any) {
             <button onClick={() => navigate('/upgrade')}>Ver planos</button>
           </div>
         )}
+
+        <section className="panel seasonExecutivePanel">
+          <div className="seasonExecutiveHeader">
+            <div>
+              <span>Dashboard Executivo da Temporada</span>
+              <h2>Temporada {executiveSeasonYear}</h2>
+              <p>Visão de liga com circuitos, etapas, ranking acumulado, Race to Masters, financeiro e operação.</p>
+            </div>
+            <strong>{executiveKpis.stagesDone || 0} / {executiveKpis.stagesTotal || 0} etapas realizadas</strong>
+          </div>
+
+          <div className="seasonKpiGrid">
+            <div><span>Jogadores</span><strong>{executiveKpis.players || 0}</strong></div>
+            <div><span>Circuitos</span><strong>{executiveKpis.circuits || seasons.length}</strong></div>
+            <div><span>Etapas</span><strong>{executiveKpis.stagesDone || 0}/{executiveKpis.stagesTotal || 0}</strong></div>
+            <div><span>Premiação Total</span><strong>{executiveKpis.prizeTotal || 'R$ 0,00'}</strong></div>
+            <div><span>Partidas</span><strong>{executiveKpis.matches || 0}</strong></div>
+            <div><span>Arenas</span><strong>{executiveKpis.arenas || 0}</strong></div>
+          </div>
+
+          <div className="seasonExecutiveGrid">
+            <div className="seasonExecutiveCard seasonExecutiveRanking">
+              <div className="seasonCardHeader">
+                <div>
+                  <h3>Top 20 Temporada</h3>
+                  <p>Ranking geral acumulado por etapa.</p>
+                </div>
+                <div className="rankingTabs">
+                  {['Geral', 'Feminino', 'Master', 'Equipes', 'Estado'].map(category => (
+                    <button
+                      key={category}
+                      className={seasonRankingCategory === category ? 'active' : ''}
+                      onClick={() => setSeasonRankingCategory(category)}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="seasonRankingTable executive">
+                <div className="seasonRankingHead">
+                  <span>Pos</span>
+                  <span>Jogador</span>
+                  <span>Pontos</span>
+                  <span>Vitórias</span>
+                </div>
+                {executiveRanking.length === 0 && <p>Ranking aguardando resultados para este filtro.</p>}
+                {executiveRanking.slice(0, 20).map((item: any, index: number) => (
+                  <div key={`${item.name}-${index}`} className="seasonRankingRow">
+                    <span>{index + 1}</span>
+                    <strong>{item.name}</strong>
+                    <span>{item.points}</span>
+                    <span>{item.wins}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="seasonExecutiveCard">
+              <h3>Calendário da Temporada</h3>
+              <div className="seasonCalendarList">
+                {executiveCalendar.length === 0 && <p>Nenhuma etapa programada ainda.</p>}
+                {executiveCalendar.map((stage: any) => (
+                  <div key={stage.id}>
+                    <span>{executiveMonthLabel(stage.eventDate)}</span>
+                    <strong>{stage.name}</strong>
+                    <small>{stage.location || 'Arena a definir'} • {tournamentStatusLabel(stage.status)}</small>
+                    <em>{stage.registrationOpen ? 'Inscrições abertas' : 'Inscrições fechadas'}{stage.liveStarted ? ' • Transmissão ao vivo' : ''}</em>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="seasonExecutiveCard seasonEvolutionCard">
+            <div className="seasonCardHeader">
+              <div>
+                <h3>Evolução do Ranking</h3>
+                <p>Leitura visual da pontuação acumulada dos líderes da temporada.</p>
+              </div>
+              <span>Top 10 jogadores</span>
+            </div>
+            <div className="seasonEvolutionChart">
+              {(seasonOverview?.ranking || []).slice(0, 10).map((item: any, index: number) => (
+                <div key={`${item.name}-evolution`}>
+                  <span>{index + 1}. {item.name}</span>
+                  <div><strong style={{ width: `${Math.max(8, Math.min(100, Number(item.points || 0) / executiveTopScore * 100))}%` }} /></div>
+                  <em>{item.points} pts</em>
+                </div>
+              ))}
+              {(!seasonOverview?.ranking || seasonOverview.ranking.length === 0) && <p>O gráfico será preenchido após as primeiras etapas concluídas.</p>}
+            </div>
+          </div>
+
+          <div className="seasonExecutiveGrid three">
+            <div className="seasonExecutiveCard">
+              <h3>Situação dos Circuitos</h3>
+              <div className="seasonCircuitStatusGrid">
+                {executiveCircuits.length === 0 && <p>Nenhum circuito criado.</p>}
+                {executiveCircuits.map((circuit: any) => (
+                  <div key={circuit.id} className={`status-${circuit.visualStatus}`}>
+                    <span>{circuitVisualStatusLabel(circuit.visualStatus)}</span>
+                    <strong>{circuit.name}</strong>
+                    <small>{circuit.stagesDone || 0}/{circuit.stagesTotal || 0} etapas • Próxima: {circuit.nextStage || 'A definir'}</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="seasonExecutiveCard">
+              <h3>Race to Masters</h3>
+              <div className="raceMastersBox">
+                <strong>Top 16 classificados</strong>
+                {executiveRace.classified?.slice(0, 6).map((item: any, index: number) => (
+                  <span key={`${item.name}-classified`}>🟢 {index + 1}. {item.name} <b>{item.points}</b></span>
+                ))}
+                <strong>Zona de disputa</strong>
+                {executiveRace.bubble?.slice(0, 4).map((item: any, index: number) => (
+                  <span key={`${item.name}-bubble`}>🟡 {index + 17}. {item.name} <b>{item.points}</b></span>
+                ))}
+                <small>{executiveRace.outsideCount || 0} jogadores fora da zona de classificação.</small>
+              </div>
+            </div>
+
+            <div className="seasonExecutiveCard">
+              <h3>Perfil da Temporada</h3>
+              <div className="seasonInsightList">
+                <span>Quem lidera <strong>{(seasonOverview?.ranking || [])[0]?.name || 'A definir'}</strong></span>
+                <span>Etapa com mais inscritos <strong>{executiveCalendar[0]?.name || 'A definir'}</strong></span>
+                <span>Arena mais ativa <strong>{executiveArenas[0]?.arena || 'A definir'}</strong></span>
+                <span>Circuito mais forte <strong>{executiveCircuits[0]?.name || 'A definir'}</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div className="seasonExecutiveGrid lower">
+            <div className="seasonExecutiveCard">
+              <h3>Painel Financeiro</h3>
+              <div className="seasonFinanceGrid">
+                <div><span>Receita</span><strong>{executiveFinance.revenue || 'R$ 0,00'}</strong></div>
+                <div><span>Confirmado</span><strong>{executiveFinance.paidRevenue || 'R$ 0,00'}</strong></div>
+                <div><span>Pendente</span><strong>{executiveFinance.pendingRevenue || 'R$ 0,00'}</strong></div>
+                <div><span>Premiações</span><strong>{executiveFinance.prizeTotal || 'R$ 0,00'}</strong></div>
+                <div><span>Resultado</span><strong>{executiveFinance.estimatedResult || 'R$ 0,00'}</strong></div>
+              </div>
+            </div>
+
+            <div className="seasonExecutiveCard">
+              <h3>Operacional</h3>
+              <div className="seasonOperationalGrid">
+                <span>Etapas abertas <strong>{executiveOperational.stagesOpen || 0}</strong></span>
+                <span>Em andamento <strong>{executiveOperational.stagesRunning || 0}</strong></span>
+                <span>Encerradas <strong>{executiveOperational.stagesClosed || 0}</strong></span>
+                <span>Pagamentos confirmados <strong>{executiveOperational.paymentsConfirmed || 0}</strong></span>
+                <span>Pagamentos pendentes <strong>{executiveOperational.paymentsPending || 0}</strong></span>
+                <span>Transmissões <strong>{executiveOperational.transmissions || 0}</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div className="seasonExecutiveGrid lower">
+            <div className="seasonExecutiveCard">
+              <h3>Ranking das Arenas</h3>
+              <div className="seasonSimpleTable">
+                <div><span>Arena</span><span>Eventos</span><span>Jogadores</span></div>
+                {executiveArenas.length === 0 && <p>Aguardando arenas com etapas.</p>}
+                {executiveArenas.map((arena: any) => (
+                  <div key={arena.arena}><strong>{arena.arena}</strong><span>{arena.events}</span><span>{arena.players}</span></div>
+                ))}
+              </div>
+            </div>
+
+            <div className="seasonExecutiveCard">
+              <h3>Ranking dos Organizadores</h3>
+              <div className="seasonSimpleTable organizer">
+                <div><span>Organizador</span><span>Eventos</span></div>
+                <div><strong>{user?.organization?.name || 'ProMaster Arena'}</strong><span>{executiveOrganizerEvents}</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div className="seasonLayout">
           <section className="panel">

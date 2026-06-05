@@ -2721,6 +2721,241 @@ async function buildSeasonRanking(seasonId, organizationId) {
   }
 }
 
+function parseCurrencyAmount(value) {
+  const normalized = String(value || '')
+    .replace(/[^\d,.-]/g, '')
+    .replace(/\.(?=\d{3})/g, '')
+    .replace(',', '.')
+  const amount = Number(normalized)
+  return Number.isFinite(amount) ? amount : 0
+}
+
+function formatCurrencyAmount(value) {
+  return Number(value || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
+}
+
+function aggregateRankings(rankings) {
+  const map = new Map()
+
+  rankings.flat().forEach(item => {
+    const key = String(item.name || '').trim().toLowerCase()
+    if (!key) return
+
+    if (!map.has(key)) {
+      map.set(key, {
+        name: item.name,
+        points: 0,
+        wins: 0,
+        losses: 0,
+        played: 0,
+        tournaments: 0,
+      })
+    }
+
+    const current = map.get(key)
+    current.points += Number(item.points || 0)
+    current.wins += Number(item.wins || 0)
+    current.losses += Number(item.losses || 0)
+    current.played += Number(item.played || 0)
+    current.tournaments += Number(item.tournaments || 0)
+  })
+
+  return Array.from(map.values())
+    .map(item => ({
+      ...item,
+      winRate: item.played > 0 ? Math.round((item.wins / item.played) * 100) : 0,
+    }))
+    .sort((a, b) =>
+      b.points - a.points ||
+      b.wins - a.wins ||
+      b.winRate - a.winRate ||
+      a.name.localeCompare(b.name)
+    )
+}
+
+async function buildSeasonExecutiveDashboard(organizationId) {
+  const seasons = await prisma.season.findMany({
+    where: { organizationId },
+    include: {
+      tournaments: {
+        include: {
+          players: true,
+          matches: true,
+          registrations: true,
+        },
+        orderBy: { eventDate: 'asc' },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const rankings = []
+  for (const season of seasons) {
+    const seasonRanking = await buildSeasonRanking(season.id, organizationId)
+    rankings.push(seasonRanking.ranking)
+  }
+
+  const allTournaments = seasons.flatMap(season => season.tournaments)
+  const playerNames = new Set()
+  const arenas = new Map()
+  let prizeTotal = 0
+  let revenue = 0
+  let paidRevenue = 0
+  let pendingRevenue = 0
+  let confirmedPayments = 0
+  let pendingPayments = 0
+  let approvedRegistrations = 0
+  let waitingRegistrations = 0
+
+  seasons.forEach(season => {
+    prizeTotal += parseCurrencyAmount(season.prize)
+  })
+
+  allTournaments.forEach(tournament => {
+    prizeTotal += parseCurrencyAmount(tournament.prize)
+
+    tournament.players.forEach(player => {
+      if (player.name) playerNames.add(player.name.trim().toLowerCase())
+    })
+
+    tournament.registrations.forEach(registration => {
+      if (registration.name) playerNames.add(registration.name.trim().toLowerCase())
+      const amount = Number(tournament.registrationFee || 0)
+      revenue += amount
+
+      if (['paid', 'pago', 'confirmed'].includes(String(registration.paymentStatus || '').toLowerCase())) {
+        paidRevenue += amount
+        confirmedPayments += 1
+      } else {
+        pendingRevenue += amount
+        pendingPayments += 1
+      }
+
+      if (['confirmed', 'confirmado'].includes(String(registration.status || '').toLowerCase())) {
+        approvedRegistrations += 1
+      } else {
+        waitingRegistrations += 1
+      }
+    })
+
+    const arenaName = tournament.location || 'Arena a definir'
+    if (!arenas.has(arenaName)) {
+      arenas.set(arenaName, {
+        arena: arenaName,
+        events: 0,
+        players: new Set(),
+      })
+    }
+
+    const arena = arenas.get(arenaName)
+    arena.events += 1
+    tournament.players.forEach(player => {
+      if (player.name) arena.players.add(player.name.trim().toLowerCase())
+    })
+    tournament.registrations.forEach(registration => {
+      if (registration.name) arena.players.add(registration.name.trim().toLowerCase())
+    })
+  })
+
+  const stagesDone = allTournaments.filter(tournament =>
+    ['finished', 'closed', 'ended'].includes(String(tournament.status || '').toLowerCase())
+  ).length
+  const stagesOpen = allTournaments.filter(tournament => tournament.registrationOpen).length
+  const stagesRunning = allTournaments.filter(tournament =>
+    ['running', 'in_progress', 'playing'].includes(String(tournament.status || '').toLowerCase())
+  ).length
+  const stagesClosed = allTournaments.filter(tournament =>
+    ['finished', 'closed', 'ended'].includes(String(tournament.status || '').toLowerCase())
+  ).length
+  const stagesTotal = seasons.reduce((sum, season) => sum + Number(season.tournamentCount || 0), 0) || allTournaments.length
+  const allMatches = allTournaments.flatMap(tournament => tournament.matches)
+  const ranking = aggregateRankings(rankings)
+
+  const calendar = allTournaments
+    .slice()
+    .sort((a, b) => new Date(a.eventDate || a.createdAt).getTime() - new Date(b.eventDate || b.createdAt).getTime())
+    .slice(0, 12)
+    .map(tournament => ({
+      id: tournament.id,
+      name: tournament.name,
+      location: tournament.location,
+      eventDate: tournament.eventDate,
+      status: tournament.status,
+      registrationOpen: tournament.registrationOpen,
+      liveStarted: tournament.liveStarted,
+    }))
+
+  const circuits = seasons.map(season => {
+    const tournaments = season.tournaments || []
+    const finished = tournaments.filter(tournament =>
+      ['finished', 'closed', 'ended'].includes(String(tournament.status || '').toLowerCase())
+    ).length
+    const hasLive = tournaments.some(tournament =>
+      ['running', 'in_progress', 'playing'].includes(String(tournament.status || '').toLowerCase()) || tournament.liveStarted
+    )
+
+    return {
+      id: season.id,
+      name: season.name,
+      status: season.status,
+      stagesDone: finished,
+      stagesTotal: season.tournamentCount,
+      nextStage: tournaments.find(tournament =>
+        !['finished', 'closed', 'ended', 'canceled', 'cancelled'].includes(String(tournament.status || '').toLowerCase())
+      )?.name || null,
+      visualStatus: hasLive ? 'running' : finished >= Number(season.tournamentCount || 0) ? 'finished' : 'next',
+    }
+  })
+
+  return {
+    kpis: {
+      players: playerNames.size,
+      circuits: seasons.length,
+      stagesDone,
+      stagesTotal,
+      prizeTotal: formatCurrencyAmount(prizeTotal),
+      matches: allMatches.length,
+      arenas: arenas.size,
+    },
+    ranking: ranking.slice(0, 20),
+    raceToMasters: {
+      classified: ranking.slice(0, 16),
+      bubble: ranking.slice(16, 25),
+      outsideCount: Math.max(0, ranking.length - 25),
+    },
+    calendar,
+    circuits,
+    finance: {
+      revenue: formatCurrencyAmount(revenue),
+      paidRevenue: formatCurrencyAmount(paidRevenue),
+      pendingRevenue: formatCurrencyAmount(pendingRevenue),
+      prizeTotal: formatCurrencyAmount(prizeTotal),
+      estimatedResult: formatCurrencyAmount(revenue - prizeTotal),
+    },
+    operational: {
+      stagesOpen,
+      stagesRunning,
+      stagesClosed,
+      paymentsConfirmed: confirmedPayments,
+      paymentsPending: pendingPayments,
+      registrationsApproved: approvedRegistrations,
+      registrationsWaiting: waitingRegistrations,
+      transmissions: allTournaments.filter(tournament => tournament.liveStarted).length,
+    },
+    arenas: Array.from(arenas.values())
+      .map(item => ({
+        arena: item.arena,
+        events: item.events,
+        players: item.players.size,
+      }))
+      .sort((a, b) => b.events - a.events || b.players - a.players)
+      .slice(0, 8),
+  }
+}
+
 app.get('/seasons', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
   try {
     const seasons = await prisma.season.findMany({
@@ -2779,6 +3014,16 @@ app.post('/seasons', auth, requireRole('admin'), async (req, res) => {
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Erro ao criar circuito' })
+  }
+})
+
+app.get('/seasons/overview', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
+  try {
+    const dashboard = await buildSeasonExecutiveDashboard(req.user.organizationId)
+    res.json(dashboard)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar dashboard da temporada' })
   }
 })
 
