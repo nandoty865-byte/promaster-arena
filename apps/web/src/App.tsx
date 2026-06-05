@@ -360,6 +360,12 @@ export default function App() {
       <Route path="/organizador" element={<PersonaLanding type="organizador" />} />
       <Route path="/jogador" element={<PersonaLanding type="jogador" />} />
       <Route path="/arena" element={<PersonaLanding type="arena" />} />
+      <Route path="/sobre" element={<StaticPublicPage type="sobre" />} />
+      <Route path="/contato" element={<StaticPublicPage type="contato" />} />
+      <Route path="/blog" element={<StaticPublicPage type="blog" />} />
+      <Route path="/termos" element={<StaticPublicPage type="termos" />} />
+      <Route path="/privacidade" element={<StaticPublicPage type="privacidade" />} />
+      <Route path="/lgpd" element={<StaticPublicPage type="lgpd" />} />
       <Route path="/jogador/:id" element={<PlayerDashboard />} />
       <Route path="/" element={<Landing />} />
       <Route path="/planos" element={<PlansComparison />} />
@@ -4522,30 +4528,184 @@ const personaLandingContent: Record<PersonaLandingType, {
 
 function LandingHeader() {
   return (
-    <header className="landingHeader">
-      <a href="/" className="landingLogo">
-        <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
-        <span>ProMaster Arena</span>
-      </a>
+    <>
+      <a className="skipLink" href="#conteudo-principal">Pular para o conteúdo</a>
+      <header className="landingHeader">
+        <a href="/" className="landingLogo">
+          <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
+          <span>ProMaster Arena</span>
+        </a>
 
-      <nav className="landingNav">
-        <div className="landingNavDropdown">
-          <button type="button">Experiência</button>
-          <div className="landingNavMenu">
-            <a href="/organizador">Organizador</a>
-            <a href="/jogador">Jogador</a>
-            <a href="/arena">Arena</a>
-          </div>
+        <nav className="landingNav" aria-label="Navegação principal">
+          <details className="landingNavDropdown">
+            <summary>Experiência</summary>
+            <div className="landingNavMenu">
+              <a href="/organizador">Organizador</a>
+              <a href="/jogador">Jogador</a>
+              <a href="/arena">Arena</a>
+            </div>
+          </details>
+          <a href="/#recursos">Recursos</a>
+          <a href="/planos">Planos</a>
+        </nav>
+
+        <div className="landingActions">
+          <a href="/login">Entrar</a>
+          <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
         </div>
-        <a href="/#recursos">Recursos</a>
-        <a href="/planos">Planos</a>
-      </nav>
+      </header>
+    </>
+  )
+}
 
-      <div className="landingActions">
-        <a href="/login">Entrar</a>
-        <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
+type StaticPublicPageType = 'sobre' | 'contato' | 'blog' | 'termos' | 'privacidade' | 'lgpd'
+
+const staticPublicPages: Record<StaticPublicPageType, {
+  eyebrow: string
+  title: string
+  description: string
+  blocks: Array<[string, string]>
+}> = {
+  sobre: {
+    eyebrow: 'Sobre a plataforma',
+    title: 'O ProMaster Arena transforma torneios em experiências profissionais.',
+    description: 'Criamos uma estrutura para organizadores, arenas e jogadores acompanharem eventos, rankings, pagamentos, telão e comunicação em tempo real.',
+    blocks: [
+      ['Missão', 'Profissionalizar torneios e circuitos esportivos com tecnologia acessível, visual premium e operação simples.'],
+      ['Experiência', 'A plataforma conecta página pública, painel do organizador, modo árbitro, telão e avisos para jogadores.'],
+      ['Comunidade', 'Jogadores, arenas, clubes e organizadores ganham histórico, ranking, calendário e novas oportunidades de receita.'],
+    ],
+  },
+  contato: {
+    eyebrow: 'Contato',
+    title: 'Fale com o ProMaster Arena.',
+    description: 'Use este canal para dúvidas comerciais, suporte, parcerias, demonstrações e implantação da plataforma na sua arena.',
+    blocks: [
+      ['Comercial', 'Solicite demonstração para arenas, clubes, bares, salões e organizadores de eventos esportivos.'],
+      ['Suporte', 'Atendimento para configuração de torneios, páginas públicas, inscrições, pagamentos e transmissões.'],
+      ['Parcerias', 'Espaço para patrocinadores, ligas, circuitos e projetos especiais.'],
+    ],
+  },
+  blog: {
+    eyebrow: 'Blog',
+    title: 'Conteúdo para organizadores, jogadores e arenas.',
+    description: 'Em breve, artigos sobre gestão de torneios, rankings, circuitos, transmissões, pagamentos e crescimento de comunidades esportivas.',
+    blocks: [
+      ['Gestão de torneios', 'Boas práticas para inscrições, regulamentos, sorteios, check-in e operação no dia do evento.'],
+      ['Ranking e circuitos', 'Como criar recorrência, categorias, pontuação e temporadas com mais engajamento.'],
+      ['Broadcast e telão', 'Ideias para transformar eventos locais em experiências com aparência profissional.'],
+    ],
+  },
+  termos: {
+    eyebrow: 'Termos de uso',
+    title: 'Regras gerais de uso da plataforma.',
+    description: 'Esta página resume as bases de uso do ProMaster Arena. A versão jurídica final deve ser revisada antes da operação comercial plena.',
+    blocks: [
+      ['Uso responsável', 'Organizadores e usuários devem manter dados corretos, respeitar regras dos eventos e atuar com boa-fé.'],
+      ['Eventos e pagamentos', 'Cada organizador é responsável por regras, premiações, inscrições, cancelamentos e comunicação com participantes.'],
+      ['Disponibilidade', 'A plataforma pode receber melhorias, manutenções e ajustes durante o período de testes.'],
+    ],
+  },
+  privacidade: {
+    eyebrow: 'Privacidade',
+    title: 'Proteção dos dados dos usuários.',
+    description: 'O ProMaster Arena deve tratar dados pessoais com transparência, segurança e finalidade clara para operação de eventos e comunicação.',
+    blocks: [
+      ['Dados coletados', 'Podem ser usados dados de cadastro, contato, inscrições, pagamentos, rankings e participação em torneios.'],
+      ['Finalidade', 'Os dados apoiam login, inscrições, avisos, rankings, suporte, segurança e operação dos eventos.'],
+      ['Segurança', 'A plataforma deve adotar boas práticas de acesso, armazenamento e controle administrativo.'],
+    ],
+  },
+  lgpd: {
+    eyebrow: 'LGPD',
+    title: 'Compromisso com transparência e controle de dados.',
+    description: 'A estrutura da plataforma deve apoiar direitos dos titulares, gestão segura das informações e processos claros para organizadores.',
+    blocks: [
+      ['Direitos do titular', 'Usuários devem poder solicitar acesso, correção, atualização ou exclusão conforme as regras aplicáveis.'],
+      ['Base operacional', 'Dados são tratados para execução de cadastro, participação em eventos, comunicação e segurança da plataforma.'],
+      ['Governança', 'A evolução da plataforma deve incluir políticas, registros e controles para operação em escala.'],
+    ],
+  },
+}
+
+function LandingFooter() {
+  return (
+    <footer className="landingFooter">
+      <div className="landingFooterInner">
+        <div className="footerBrand">
+          <a href="/" className="landingLogo">
+            <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
+            <span>ProMaster Arena</span>
+          </a>
+          <p>Torneios, rankings, inscrições, pagamentos e telão em uma experiência esportiva em tempo real.</p>
+        </div>
+
+        <nav className="footerLinks" aria-label="Mapa do site">
+          <strong>Mapa do site</strong>
+          <a href="/sobre">Sobre</a>
+          <a href="/planos">Preços</a>
+          <a href="/contato">Contato</a>
+          <a href="/blog">Blog</a>
+        </nav>
+
+        <nav className="footerLinks" aria-label="Experiências">
+          <strong>Experiência</strong>
+          <a href="/organizador">Organizador</a>
+          <a href="/jogador">Jogador</a>
+          <a href="/arena">Arena</a>
+          <a href="/inscreva-se">Inscreva-se</a>
+        </nav>
+
+        <nav className="footerLinks" aria-label="Links legais">
+          <strong>Legal</strong>
+          <a href="/privacidade">Política de Privacidade</a>
+          <a href="/termos">Termos de Uso</a>
+          <a href="/lgpd">LGPD</a>
+        </nav>
+
+        <nav className="footerLinks footerSocials" aria-label="Redes sociais">
+          <strong>Redes sociais</strong>
+          <div>
+            <a href="/contato" aria-label="Instagram da ProMaster Arena">IG</a>
+            <a href="/contato" aria-label="YouTube da ProMaster Arena">YT</a>
+            <a href="/contato" aria-label="WhatsApp da ProMaster Arena">WA</a>
+            <a href="/contato" aria-label="LinkedIn da ProMaster Arena">IN</a>
+          </div>
+        </nav>
       </div>
-    </header>
+
+      <div className="landingFooterBottom">
+        <span>© 2026 ProMaster Arena. Todos os direitos reservados.</span>
+        <span>Plataforma em modo teste.</span>
+      </div>
+    </footer>
+  )
+}
+
+function StaticPublicPage({ type }: { type: StaticPublicPageType }) {
+  const page = staticPublicPages[type]
+
+  return (
+    <div className="landing staticPublicPage">
+      <LandingHeader />
+
+      <main id="conteudo-principal" className="staticPublicMain">
+        <span className="landingBadge">{page.eyebrow}</span>
+        <h1>{page.title}</h1>
+        <p>{page.description}</p>
+
+        <div className="staticPublicGrid">
+          {page.blocks.map(([title, text]) => (
+            <article key={title}>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </main>
+
+      <LandingFooter />
+    </div>
   )
 }
 
@@ -4556,7 +4716,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
     <div className={`landing personaLanding personaLanding-${type}`}>
       <LandingHeader />
 
-      <section className="personaHero">
+      <section id="conteudo-principal" className="personaHero">
         <div className="personaHeroCopy">
           <span className="landingBadge">{page.badge}</span>
           <h1>{page.title}</h1>
@@ -4615,6 +4775,8 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
         </div>
         <img src={page.image} alt={page.showcaseTitle} />
       </section>
+
+      <LandingFooter />
     </div>
   )
 }
@@ -4629,7 +4791,7 @@ function Landing() {
         <span>Esta página está em modo teste. Alguns recursos e informações podem ser ajustados durante a validação da plataforma.</span>
       </div>
 
-      <section className="landingHero">
+      <section id="conteudo-principal" className="landingHero">
         <div className="landingHeroContent">
           <span className="landingBadge">Torneios em tempo real</span>
 
@@ -4802,6 +4964,8 @@ function Landing() {
           </div>
         </div>
       </section>
+
+      <LandingFooter />
     </div>
   )
 }
@@ -4863,14 +5027,17 @@ function PlansComparison() {
   return (
     <div className="plansPage">
       <header className="plansPageHeader">
-        <a href="/" className="landingLogo">🎱 ProMaster Arena</a>
+        <a href="/" className="landingLogo">
+          <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
+          <span>ProMaster Arena</span>
+        </a>
         <div className="landingActions">
           <a href="/login">Entrar</a>
           <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
         </div>
       </header>
 
-      <main className="plansPageMain">
+      <main id="conteudo-principal" className="plansPageMain">
         <section className="plansHero">
           <span>Comparativo de planos</span>
           <h1>Escolha o plano certo para sua arena</h1>
@@ -4926,6 +5093,8 @@ function PlansComparison() {
           </div>
         </section>
       </main>
+
+      <LandingFooter />
     </div>
   )
 }
