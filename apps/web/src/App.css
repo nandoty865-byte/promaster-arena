@@ -3587,11 +3587,70 @@ button:hover {
   align-items: center;
 }
 
-.landingNav a {
+.landingNav a,
+.landingNavDropdown button {
   color: #cbd5e1;
   font-size: 14px;
   font-weight: 900;
   text-decoration: none;
+}
+
+.landingNavDropdown {
+  position: relative;
+}
+
+.landingNavDropdown button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.landingNavDropdown button::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 7px;
+  border-right: 2px solid #86efac;
+  border-bottom: 2px solid #86efac;
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.landingNavMenu {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 14px);
+  min-width: 210px;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, .24);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, .94);
+  box-shadow: 0 26px 80px rgba(0, 0, 0, .42);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -8px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.landingNavDropdown:hover .landingNavMenu,
+.landingNavDropdown:focus-within .landingNavMenu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.landingNavMenu a {
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: #e2e8f0;
+}
+
+.landingNavMenu a:hover {
+  background: rgba(190, 242, 100, .12);
+  color: #bef264;
 }
 
 .landingActions {
@@ -4006,6 +4065,205 @@ button:hover {
   border: 1px solid rgba(148, 163, 184, .22);
   border-radius: 26px;
   box-shadow: 0 24px 90px rgba(0, 0, 0, .36);
+}
+
+.personaLanding {
+  background:
+    radial-gradient(circle at 78% 4%, rgba(190, 242, 100, .12), transparent 26%),
+    radial-gradient(circle at 14% 18%, rgba(59, 130, 246, .12), transparent 28%),
+    #020617;
+}
+
+.personaHero {
+  max-width: 1180px;
+  min-height: 620px;
+  margin: 26px auto 0;
+  display: grid;
+  grid-template-columns: 1fr .86fr;
+  gap: 34px;
+  align-items: center;
+  padding: clamp(28px, 5vw, 56px);
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 34px;
+  background:
+    linear-gradient(90deg, rgba(2, 6, 23, .94), rgba(2, 6, 23, .62)),
+    url('/promaster-hero-broadcast.png') center / cover no-repeat;
+  box-shadow: 0 34px 120px rgba(0, 0, 0, .42);
+}
+
+.personaLanding-jogador .personaHero {
+  background:
+    linear-gradient(90deg, rgba(2, 6, 23, .95), rgba(15, 23, 42, .58)),
+    radial-gradient(circle at 80% 42%, rgba(37, 99, 235, .42), transparent 28%),
+    url('/promaster-hero-broadcast.png') center / cover no-repeat;
+}
+
+.personaLanding-arena .personaHero {
+  background:
+    linear-gradient(90deg, rgba(2, 6, 23, .94), rgba(2, 6, 23, .58)),
+    radial-gradient(circle at 82% 35%, rgba(245, 158, 11, .28), transparent 28%),
+    url('/promaster-hero-broadcast.png') center / cover no-repeat;
+}
+
+.personaHeroCopy,
+.personaPanel,
+.personaBenefits,
+.personaFlow,
+.personaShowcase {
+  border: 1px solid rgba(148, 163, 184, .18);
+  background: rgba(2, 6, 23, .74);
+  backdrop-filter: blur(14px);
+  border-radius: 26px;
+}
+
+.personaHeroCopy {
+  padding: 30px;
+}
+
+.personaHeroCopy h1 {
+  margin: 0 0 18px;
+  font-size: clamp(42px, 6vw, 72px);
+  line-height: .94;
+}
+
+.personaHeroCopy p {
+  max-width: 680px;
+  color: #cbd5e1;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.personaPanel {
+  padding: 24px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .34);
+}
+
+.personaPanel > span {
+  color: #bef264;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.personaPanel h2 {
+  margin: 12px 0 24px;
+  font-size: 30px;
+}
+
+.personaMetrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.personaMetrics div {
+  min-height: 112px;
+  padding: 18px;
+  border: 1px solid rgba(190, 242, 100, .18);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, .82);
+}
+
+.personaMetrics strong,
+.personaMetrics small {
+  display: block;
+}
+
+.personaMetrics strong {
+  color: #bef264;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.personaMetrics small {
+  color: #cbd5e1;
+  margin-top: 8px;
+  font-weight: 800;
+}
+
+.personaBenefits,
+.personaFlow,
+.personaShowcase {
+  max-width: 1180px;
+  margin: 34px auto 0;
+  padding: 26px;
+}
+
+.personaBenefits h2,
+.personaFlow h2 {
+  margin: 0 0 20px;
+  text-align: center;
+  font-size: 34px;
+}
+
+.personaBenefits > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.personaBenefits article,
+.personaFlow article {
+  padding: 20px;
+  border: 1px solid rgba(148, 163, 184, .16);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, .8);
+}
+
+.personaBenefits strong,
+.personaFlow strong {
+  display: block;
+  color: #bef264;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.personaBenefits p,
+.personaFlow p,
+.personaShowcase p {
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.personaFlow > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.personaFlow article span {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, .55);
+  color: #facc15;
+  font-weight: 900;
+}
+
+.personaShowcase {
+  display: grid;
+  grid-template-columns: .8fr 1.2fr;
+  gap: 22px;
+  align-items: center;
+  margin-bottom: 70px;
+}
+
+.personaShowcase h2 {
+  margin: 12px 0 16px;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.02;
+}
+
+.personaShowcase img {
+  width: 100%;
+  min-height: 360px;
+  object-fit: cover;
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 22px;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .34);
 }
 
 .playersTextarea {
@@ -4638,6 +4896,10 @@ button:hover {
   .landingStory,
   .landingShowcase,
   .landingBroadcastSection,
+  .personaHero,
+  .personaBenefits > div,
+  .personaFlow > div,
+  .personaShowcase,
   .showcaseGrid,
   .plansGrid,
   .signupChoiceGrid,
@@ -4737,6 +4999,44 @@ button:hover {
 
   .landingNav {
     flex-wrap: wrap;
+  }
+
+  .landingNavDropdown {
+    width: 100%;
+    text-align: center;
+  }
+
+  .landingNavMenu {
+    left: 0;
+    right: 0;
+    top: calc(100% + 10px);
+    transform: translateY(-8px);
+  }
+
+  .landingNavDropdown:hover .landingNavMenu,
+  .landingNavDropdown:focus-within .landingNavMenu {
+    transform: translateY(0);
+  }
+
+  .personaHero {
+    min-height: auto;
+    padding: 24px;
+  }
+
+  .personaHeroCopy,
+  .personaPanel,
+  .personaBenefits,
+  .personaFlow,
+  .personaShowcase {
+    padding: 22px;
+  }
+
+  .personaMetrics {
+    grid-template-columns: 1fr;
+  }
+
+  .personaShowcase img {
+    min-height: 250px;
   }
 
   .landingNotice {
