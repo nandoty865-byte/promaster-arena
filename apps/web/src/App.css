@@ -3514,7 +3514,10 @@ button:hover {
 
 .landing {
   min-height: 100vh;
-  background: radial-gradient(circle at top, rgba(34,197,94,.16), transparent 35%), #020617;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(163, 230, 53, .16), transparent 24%),
+    radial-gradient(circle at 85% 5%, rgba(56, 189, 248, .12), transparent 28%),
+    linear-gradient(180deg, #020617 0%, #050816 48%, #020617 100%);
   color: white;
   padding: 28px;
 }
@@ -3525,17 +3528,27 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 22px;
+  position: sticky;
+  top: 18px;
+  z-index: 20;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 20px;
+  background: rgba(2, 6, 23, .76);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, .28);
 }
 
 .landingNotice {
   max-width: 1180px;
-  margin: 0 auto 46px;
+  margin: 0 auto 24px;
   display: flex;
   gap: 12px;
   align-items: center;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border: 1px solid rgba(250, 204, 21, .42);
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(250, 204, 21, .1);
   color: #fef3c7;
 }
@@ -3551,9 +3564,34 @@ button:hover {
 }
 
 .landingLogo {
-  font-size: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
   font-weight: 900;
   color: #86efac;
+  text-decoration: none;
+}
+
+.landingLogo img {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(134, 239, 172, .28);
+}
+
+.landingNav {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+}
+
+.landingNav a {
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
 }
 
 .landingActions {
@@ -3570,28 +3608,52 @@ button:hover {
 
 .landingButton {
   display: inline-block;
-  background: #22c55e;
+  background: linear-gradient(135deg, #bef264, #22c55e);
   color: #052e16 !important;
   padding: 12px 18px;
   border-radius: 14px;
   font-weight: 900;
   text-decoration: none;
+  box-shadow: 0 16px 36px rgba(34, 197, 94, .28);
 }
 
 .landingHero {
   max-width: 1180px;
+  min-height: 680px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1.2fr .8fr;
-  gap: 42px;
+  position: relative;
+  display: flex;
   align-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 34px;
+  padding: clamp(28px, 6vw, 64px);
+  background:
+    linear-gradient(90deg, rgba(2, 6, 23, .96) 0%, rgba(2, 6, 23, .72) 42%, rgba(2, 6, 23, .36) 100%),
+    url('/promaster-logo.jpeg') center / cover no-repeat;
+  box-shadow: 0 34px 120px rgba(0, 0, 0, .46);
+}
+
+.landingHero::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 140px;
+  background: linear-gradient(180deg, transparent, rgba(2, 6, 23, .92));
+  pointer-events: none;
+}
+
+.landingHeroContent {
+  width: min(680px, 100%);
+  position: relative;
+  z-index: 2;
 }
 
 .landingBadge {
   display: inline-block;
-  background: rgba(34,197,94,.14);
-  border: 1px solid rgba(34,197,94,.35);
-  color: #86efac;
+  background: rgba(190, 242, 100, .13);
+  border: 1px solid rgba(190, 242, 100, .34);
+  color: #d9f99d;
   padding: 8px 14px;
   border-radius: 999px;
   font-weight: 900;
@@ -3599,15 +3661,17 @@ button:hover {
 }
 
 .landingHero h1 {
-  font-size: 58px;
-  line-height: 1;
+  font-size: clamp(42px, 7vw, 82px);
+  line-height: .94;
   margin: 0 0 20px;
+  max-width: 800px;
 }
 
 .landingHero p {
-  font-size: 20px;
+  font-size: clamp(18px, 2vw, 23px);
   color: #cbd5e1;
   max-width: 680px;
+  line-height: 1.45;
 }
 
 .landingCtas {
@@ -3618,38 +3682,228 @@ button:hover {
 
 .landingSecondary {
   color: white;
-  border: 1px solid #334155;
+  border: 1px solid rgba(226, 232, 240, .28);
   padding: 12px 18px;
   border-radius: 14px;
   text-decoration: none;
   font-weight: 900;
+  background: rgba(15, 23, 42, .54);
 }
 
-.landingPreview {
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 28px;
-  padding: 26px;
-  box-shadow: 0 24px 80px rgba(0,0,0,.35);
+.landingStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 30px;
 }
 
-.previewMatch {
-  background: #020617;
-  padding: 20px;
+.landingStats div,
+.landingLiveDeck {
+  border: 1px solid rgba(148, 163, 184, .18);
+  background: rgba(2, 6, 23, .72);
+  backdrop-filter: blur(14px);
   border-radius: 18px;
-  margin-bottom: 14px;
+}
+
+.landingStats div {
+  padding: 14px;
+}
+
+.landingStats strong,
+.landingStats span {
+  display: block;
+}
+
+.landingStats strong {
+  color: #bef264;
+  font-size: 19px;
+}
+
+.landingStats span {
+  color: #cbd5e1;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.landingLiveDeck {
+  width: min(430px, calc(100% - 48px));
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  z-index: 3;
+  padding: 18px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .42);
+}
+
+.liveDeckHeader,
+.liveScore {
   display: flex;
   justify-content: space-between;
-  font-size: 20px;
+  align-items: center;
+  gap: 12px;
 }
 
-.previewCard {
-  background: rgba(34,197,94,.12);
-  border: 1px solid rgba(34,197,94,.25);
-  padding: 14px;
+.liveDeckHeader span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #dc2626;
+  color: white;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.liveDeckHeader strong {
+  color: #e2e8f0;
+}
+
+.liveScore {
+  margin: 16px 0;
+  padding: 18px;
+  border-radius: 16px;
+  background: #020617;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.liveScore strong {
+  color: #bef264;
+  font-size: 28px;
+}
+
+.liveGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.liveGrid div {
+  padding: 12px;
   border-radius: 14px;
-  margin-top: 10px;
-  font-weight: 800;
+  background: rgba(34, 197, 94, .1);
+  border: 1px solid rgba(34, 197, 94, .22);
+}
+
+.liveGrid span,
+.liveGrid strong {
+  display: block;
+}
+
+.liveGrid span {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.liveGrid strong {
+  color: white;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.landingStory {
+  max-width: 1180px;
+  margin: 34px auto 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.landingStory div {
+  min-height: 230px;
+  padding: 22px;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, .9), rgba(2, 6, 23, .92));
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .24);
+}
+
+.landingStory span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(190, 242, 100, .12);
+  border: 1px solid rgba(190, 242, 100, .3);
+  color: #bef264;
+  font-weight: 900;
+}
+
+.landingStory h2 {
+  margin: 30px 0 10px;
+  font-size: 28px;
+}
+
+.landingStory p {
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.landingShowcase {
+  max-width: 1180px;
+  margin: 82px auto 0;
+  display: grid;
+  grid-template-columns: .95fr 1.05fr;
+  gap: 26px;
+  align-items: stretch;
+}
+
+.showcaseText,
+.showcaseGrid div {
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 24px;
+  background: #0f172a;
+}
+
+.showcaseText {
+  padding: 30px;
+  background:
+    radial-gradient(circle at top left, rgba(190, 242, 100, .14), transparent 34%),
+    #0f172a;
+}
+
+.showcaseText h2 {
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.02;
+  margin: 12px 0 18px;
+}
+
+.showcaseText p {
+  color: #cbd5e1;
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.showcaseGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.showcaseGrid div {
+  padding: 24px;
+  min-height: 190px;
+}
+
+.showcaseGrid strong,
+.showcaseGrid span {
+  display: block;
+}
+
+.showcaseGrid strong {
+  color: #bef264;
+  font-size: 24px;
+  margin-bottom: 14px;
+}
+
+.showcaseGrid span {
+  color: #cbd5e1;
+  line-height: 1.5;
 }
 
 .playersTextarea {
@@ -4279,6 +4533,9 @@ button:hover {
 @media (max-width: 900px) {
   .landingHero,
   .landingFeatures,
+  .landingStory,
+  .landingShowcase,
+  .showcaseGrid,
   .plansGrid,
   .signupChoiceGrid,
   .plansCompareGrid,
@@ -4320,9 +4577,50 @@ button:hover {
     font-size: 40px;
   }
 
+  .landingHero {
+    min-height: auto;
+    align-items: flex-start;
+    padding: 28px;
+    background:
+      linear-gradient(180deg, rgba(2, 6, 23, .94) 0%, rgba(2, 6, 23, .78) 100%),
+      url('/promaster-logo.jpeg') center / cover no-repeat;
+  }
+
+  .landingHeroContent {
+    width: 100%;
+  }
+
+  .landingLiveDeck {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    margin-top: 28px;
+  }
+
+  .landingStats {
+    grid-template-columns: 1fr;
+  }
+
+  .liveGrid {
+    grid-template-columns: 1fr;
+  }
+
   .landingHeader {
     flex-direction: column;
     gap: 18px;
+    position: static;
+    align-items: stretch;
+  }
+
+  .landingLogo,
+  .landingActions,
+  .landingNav {
+    justify-content: center;
+  }
+
+  .landingNav {
+    flex-wrap: wrap;
   }
 
   .landingNotice {
