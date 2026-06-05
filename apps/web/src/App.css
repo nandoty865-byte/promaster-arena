@@ -3323,6 +3323,47 @@ button:hover {
   margin-bottom: 14px;
 }
 
+.sidebarGroup summary {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #0f172a;
+  color: white;
+  cursor: pointer;
+  font-weight: 800;
+  text-align: left;
+  list-style: none;
+  transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+
+.sidebarGroup summary::-webkit-details-marker {
+  display: none;
+}
+
+.sidebarGroup summary::after {
+  content: 'Abrir';
+  float: right;
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.sidebarGroup[open] summary::after {
+  content: 'Fechar';
+}
+
+.sidebarGroup summary:hover {
+  background: #60a5fa;
+  color: #020617;
+  transform: translateX(2px);
+}
+
+.sidebarGroup summary:hover::after {
+  color: #020617;
+}
+
 .sidebarGroup button {
   margin-bottom: 8px;
 }

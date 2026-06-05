@@ -1443,15 +1443,6 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
       .catch(() => setCurrentPlan(''))
   }, [isMasterPlan])
 
-  function goToTournaments() {
-    if (window.location.pathname === '/app') {
-      document.getElementById('meus-torneios')?.scrollIntoView({ behavior: 'smooth' })
-      return
-    }
-
-    navigate('/app')
-  }
-
   function goToTournamentFilter(filter: string) {
     navigate(`/app?torneios=${filter}`)
     setTimeout(() => document.getElementById('meus-torneios')?.scrollIntoView({ behavior: 'smooth' }), 80)
@@ -1469,20 +1460,20 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
 
   return (
     <aside className="sidebar">
-      <div className="sidebarLogo">🎱 ProMaster</div>
-      <button onClick={() => navigate('/app')}>🏠 Dashboard</button>
+      <div className="sidebarLogo">ProMaster</div>
+      <button onClick={() => navigate('/app')}>Dashboard</button>
 
-      <div className="sidebarGroup">
-        <button onClick={goToTournaments}>🏆 Meus Torneios</button>
+      <details className="sidebarGroup">
+        <summary>Meus Torneios</summary>
         <button className="sidebarSubButton" onClick={() => goToTournamentFilter('todos')}>Todos os Torneios</button>
         <button className="sidebarSubButton" onClick={() => goToTournamentFilter('andamento')}>Em Andamento</button>
         <button className="sidebarSubButton" onClick={() => goToTournamentFilter('inscricoes')}>Inscrições Abertas</button>
         <button className="sidebarSubButton" onClick={() => goToTournamentFilter('encerrados')}>Encerrados</button>
         <button className="sidebarSubButton" onClick={() => goToTournamentFilter('arquivados')}>Arquivados</button>
-      </div>
+      </details>
 
-      <div className="sidebarGroup">
-        <button onClick={() => navigate('/upgrade')}>💰 Financeiro</button>
+      <details className="sidebarGroup">
+        <summary>Financeiro</summary>
         <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Dashboard Financeiro</button>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Receitas</button>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições Recebidas</button>
@@ -1490,58 +1481,58 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Premiações</button>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Saques</button>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Relatórios</button>
-      </div>
+      </details>
 
-      <div className="sidebarGroup">
-        <button onClick={() => navigate('/campeonatos/arenas')}>📋 Cadastros</button>
-        <span className="sidebarGroupLabel">🏟 Arenas</span>
+      <details className="sidebarGroup">
+        <summary>Cadastros</summary>
+        <span className="sidebarGroupLabel">Arenas</span>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Lista de Arenas</button>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Nova Arena</button>
-        <span className="sidebarGroupLabel">👤 Jogadores</span>
+        <span className="sidebarGroupLabel">Jogadores</span>
         <button className="sidebarSubButton" onClick={() => navigate('/cadastro-jogador')}>Cadastro</button>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking</button>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Estatísticas</button>
-        <span className="sidebarGroupLabel">👥 Usuários</span>
+        <span className="sidebarGroupLabel">Usuários</span>
         <button className="sidebarSubButton" onClick={() => navigate('/app/usuarios')}>Usuários</button>
-      </div>
+      </details>
 
-      <div className="sidebarGroup">
-        <button onClick={() => navigate('/campeonatos')}>📊 Rankings</button>
+      <details className="sidebarGroup">
+        <summary>Rankings</summary>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking Geral</button>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Ranking por Circuito</button>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking por Categoria</button>
         <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Race to Master</button>
-      </div>
+      </details>
 
       {showMasterLinks && (
-        <div className="sidebarGroup">
-          <button onClick={() => navigate('/campeonatos')}>Circuito ProMaster</button>
+        <details className="sidebarGroup">
+          <summary>Circuito ProMaster</summary>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Dashboard Geral</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Circuito</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/etapas')}>Etapas</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Pagamentos</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Cadastro de Arenas</button>
-        </div>
+        </details>
       )}
 
-      <div className="sidebarGroup">
-        <button onClick={() => navigate('/app/perfil')}>⚙️ Configurações</button>
+      <details className="sidebarGroup">
+        <summary>Configurações</summary>
         <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Organização</button>
         <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Integrações</button>
         <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Pagamentos</button>
         <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>WhatsApp</button>
         <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Notificações</button>
         <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Termos e Políticas</button>
-      </div>
+      </details>
 
-      <div className="sidebarGroup">
-        <button onClick={() => navigate('/app/perfil')}>👤 Perfil</button>
+      <details className="sidebarGroup">
+        <summary>Perfil</summary>
         <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Meu Perfil</button>
         <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Minha Arena</button>
         <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Segurança</button>
         <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Assinatura</button>
-      </div>
+      </details>
       <button className="sidebarFooterButton" onClick={logout}>Sair</button>
     </aside>
   )
