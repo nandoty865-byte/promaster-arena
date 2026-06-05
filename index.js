@@ -1155,7 +1155,7 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
 
       if (nextFormat === 'round_robin' && organization?.plan === 'pro' && nextPlayerCount > 64) {
         return res.status(403).json({
-          error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou campeonato em etapas, use o plano Master.'
+          error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou Circuito ProMaster em etapas, use o plano Master.'
         })
       }
     }
@@ -1699,7 +1699,7 @@ app.post('/tournaments/create-from-template', async (req, res) => {
         playerCount: template.playerCount,
         format: template.format,
         tableCount: Number(tableCount),
-        status: 'draft',
+        status: 'running',
         location,
         venueAddress: venueAddress || null,
         eventDate: eventDate ? new Date(eventDate) : null,
@@ -2637,6 +2637,7 @@ async function buildSeasonRanking(seasonId, organizationId) {
 
   for (const tournament of tournaments) {
     const playerMap = {}
+    const tournamentScoreMap = new Map()
 
     tournament.players.forEach(player => {
       playerMap[player.id] = player
@@ -2656,6 +2657,12 @@ async function buildSeasonRanking(seasonId, organizationId) {
       }
 
       rankingMap.get(key).tournaments.add(tournament.id)
+      tournamentScoreMap.set(key, {
+        key,
+        name: player.name,
+        wins: 0,
+        losses: 0,
+      })
     })
 
     tournament.matches.forEach(match => {
@@ -2667,7 +2674,8 @@ async function buildSeasonRanking(seasonId, organizationId) {
         const item = rankingMap.get(key)
         item.wins += 1
         item.played += 1
-        item.points += 3
+        const tournamentScore = tournamentScoreMap.get(key)
+        if (tournamentScore) tournamentScore.wins += 1
       }
 
       if (loser) {
@@ -2675,8 +2683,22 @@ async function buildSeasonRanking(seasonId, organizationId) {
         const item = rankingMap.get(key)
         item.losses += 1
         item.played += 1
+        const tournamentScore = tournamentScoreMap.get(key)
+        if (tournamentScore) tournamentScore.losses += 1
       }
     })
+
+    const stagePoints = [100, 80, 60]
+    Array.from(tournamentScoreMap.values())
+      .filter(item => item.wins > 0 || item.losses > 0)
+      .sort((a, b) => b.wins - a.wins || a.losses - b.losses || a.name.localeCompare(b.name))
+      .forEach((item, index) => {
+        const rankingItem = rankingMap.get(item.key)
+        if (!rankingItem) return
+
+        const points = stagePoints[index] || (index < 8 ? 40 : index < 16 ? 20 : 5)
+        rankingItem.points += points
+      })
   }
 
   const ranking = Array.from(rankingMap.values())
@@ -2714,7 +2736,7 @@ app.get('/seasons', auth, requireRole('admin', 'operator', 'viewer'), async (req
     res.json(seasons)
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Erro ao carregar campeonatos' })
+    res.status(500).json({ error: 'Erro ao carregar circuitos' })
   }
 })
 
@@ -2729,13 +2751,13 @@ app.post('/seasons', auth, requireRole('admin'), async (req, res) => {
     }
 
     if (org.plan !== 'master' && org.plan !== 'free') {
-      return res.status(403).json({ error: 'Modo campeonato disponível apenas no plano Master' })
+      return res.status(403).json({ error: 'Circuito ProMaster disponível apenas no plano Master' })
     }
 
     const { name, tournamentCount, playerCount, startDate, endDate, locations, rules, prize } = req.body
 
     if (!name || !tournamentCount || !playerCount) {
-      return res.status(400).json({ error: 'Informe nome, número de torneios e número de jogadores' })
+      return res.status(400).json({ error: 'Informe nome, número de etapas e número de jogadores' })
     }
 
     const season = await prisma.season.create({
@@ -2756,7 +2778,7 @@ app.post('/seasons', auth, requireRole('admin'), async (req, res) => {
     res.json({ ok: true, season })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Erro ao criar campeonato' })
+    res.status(500).json({ error: 'Erro ao criar circuito' })
   }
 })
 
@@ -2771,7 +2793,7 @@ app.get('/seasons/:id', auth, requireRole('admin', 'operator', 'viewer'), async 
     })
 
     if (!season) {
-      return res.status(404).json({ error: 'Campeonato não encontrado' })
+      return res.status(404).json({ error: 'Circuito não encontrado' })
     }
 
     const data = await buildSeasonRanking(seasonId, req.user.organizationId)
@@ -2786,7 +2808,7 @@ app.get('/seasons/:id', auth, requireRole('admin', 'operator', 'viewer'), async 
     })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Erro ao carregar campeonato' })
+    res.status(500).json({ error: 'Erro ao carregar circuito' })
   }
 })
 
@@ -2801,7 +2823,7 @@ app.post('/seasons/:id/finish', auth, requireRole('admin'), async (req, res) => 
     })
 
     if (!season) {
-      return res.status(404).json({ error: 'Campeonato não encontrado' })
+      return res.status(404).json({ error: 'Circuito não encontrado' })
     }
 
     const data = await buildSeasonRanking(seasonId, req.user.organizationId)
@@ -2822,7 +2844,7 @@ app.post('/seasons/:id/finish', auth, requireRole('admin'), async (req, res) => 
     res.json({ ok: true, season: updated, champion: data.champion })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Erro ao finalizar campeonato' })
+    res.status(500).json({ error: 'Erro ao finalizar circuito' })
   }
 })
 
@@ -2949,7 +2971,7 @@ if (requestedPlayerCount > effectiveLimits.maxPlayers) {
 
 if (requestedFormat === 'round_robin' && currentPlan === 'pro' && requestedPlayerCount > 64) {
   return res.status(403).json({
-    error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou campeonato em etapas, use o plano Master.'
+    error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou Circuito ProMaster em etapas, use o plano Master.'
   })
 }
 
@@ -2976,11 +2998,11 @@ if (seasonId) {
   })
 
   if (!season) {
-    return res.status(404).json({ error: 'Campeonato não encontrado' })
+    return res.status(404).json({ error: 'Circuito não encontrado' })
   }
 
   if (org.plan !== 'master' && org.plan !== 'free') {
-    return res.status(403).json({ error: 'Modo campeonato disponível apenas no plano Master' })
+    return res.status(403).json({ error: 'Circuito ProMaster disponível apenas no plano Master' })
   }
 
   const seasonTournamentsCount = await prisma.tournament.count({
@@ -2988,11 +3010,11 @@ if (seasonId) {
   })
 
   if (seasonTournamentsCount >= season.tournamentCount) {
-    return res.status(403).json({ error: 'Este campeonato já atingiu o número configurado de torneios' })
+    return res.status(403).json({ error: 'Este circuito já atingiu o número configurado de etapas' })
   }
 
   if (requestedPlayerCount > season.playerCount) {
-    return res.status(403).json({ error: `A temporada foi configurada para até ${season.playerCount} jogadores.` })
+    return res.status(403).json({ error: `O circuito foi configurado para até ${season.playerCount} jogadores.` })
   }
 }
 

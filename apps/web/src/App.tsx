@@ -1452,7 +1452,7 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
       <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
       {showMasterLinks && (
         <>
-          <button onClick={() => navigate('/campeonatos')}>Campeonatos</button>
+          <button onClick={() => navigate('/campeonatos')}>Circuito ProMaster</button>
           <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
         </>
       )}
@@ -3798,7 +3798,7 @@ function TournamentSettings() {
               </select>
               {form.format === 'round_robin' && (
                 <p className="helperText">
-                  Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou campeonatos com várias etapas/dias e ranking acumulado, use o plano Master.
+                  Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou Circuito ProMaster com várias etapas/dias e ranking acumulado, use o plano Master.
                 </p>
               )}
               <p className="helperText">Quantidade e modelo só podem ser alterados antes de gerar a chave.</p>
@@ -4690,21 +4690,67 @@ function PublicTournament() {
   )
 }
 
+function circuitStatusLabel(status?: string) {
+  const labels: Record<string, string> = {
+    draft: 'Rascunho',
+    running: 'Em andamento',
+    in_progress: 'Em andamento',
+    finished: 'Encerrado',
+    closed: 'Encerrado',
+    canceled: 'Cancelado',
+  }
+
+  return labels[String(status || '').toLowerCase()] || status || 'Rascunho'
+}
+
+function splitCircuitLines(value?: string) {
+  return String(value || '')
+    .split(/\n|;/)
+    .map(item => item.trim())
+    .filter(Boolean)
+}
+
+function formatCircuitDate(date?: string) {
+  if (!date) return '-'
+  return new Date(date).toLocaleDateString()
+}
+
+function parseCircuitStageLine(line: string, index: number) {
+  const parts = line.split('|').map(item => item.trim()).filter(Boolean)
+  return {
+    name: parts[0] || `Etapa ${index + 1}`,
+    city: parts[1] || parts[0] || 'Cidade a definir',
+    date: parts[2] || 'Data a definir',
+    arena: parts[3] || 'Arena a definir',
+  }
+}
+
+function defaultCircuitPoints() {
+  return [
+    { place: '1º', points: 100 },
+    { place: '2º', points: 80 },
+    { place: '3º', points: 60 },
+    { place: '5º ao 8º', points: 40 },
+    { place: '9º ao 16º', points: 20 },
+  ]
+}
+
 function SeasonsPage({ user }: any) {
   const navigate = useNavigate()
   const isMasterPlan = user?.organization?.plan === 'master' || user?.organization?.plan === 'free'
   const [seasons, setSeasons] = useState<any[]>([])
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null)
   const [seasonDetails, setSeasonDetails] = useState<any>(null)
+  const [rankingCategory, setRankingCategory] = useState('Geral')
   const [form, setForm] = useState<any>({
-    name: 'Campeonato da Temporada',
-    tournamentCount: 4,
-    playerCount: 32,
+    name: 'Circuito ProMaster São Paulo 2027',
+    tournamentCount: 8,
+    playerCount: 128,
     startDate: '',
     endDate: '',
-    locations: '',
-    rules: '',
-    prize: '',
+    locations: 'Etapa 1 | São Paulo | Março | Arena principal\nEtapa 2 | Santos | Abril | Arena a definir\nEtapa 3 | Campinas | Maio | Arena a definir\nMasters Final | São Paulo | Novembro | Arena principal',
+    rules: '1º lugar: 100 pontos\n2º lugar: 80 pontos\n3º lugar: 60 pontos\n5º ao 8º: 40 pontos\n9º ao 16º: 20 pontos\nRace to Masters: os 16 melhores classificam para a final',
+    prize: 'R$ 120.000',
   })
 
   function updateSeasonField(field: string, value: string | number) {
@@ -4732,7 +4778,7 @@ function SeasonsPage({ user }: any) {
 
   function createSeason() {
     if (!isMasterPlan) {
-      alert('Modo campeonato disponível apenas no plano Master.')
+      alert('Circuito ProMaster disponível apenas no plano Master.')
       return
     }
 
@@ -4767,7 +4813,7 @@ function SeasonsPage({ user }: any) {
           return
         }
 
-        alert(`Campeão da temporada: ${data.champion.name}`)
+        alert(`Líder final do circuito: ${data.champion.name}`)
         loadSeasonDetails(selectedSeasonId)
         loadSeasons()
       })
@@ -4783,40 +4829,56 @@ function SeasonsPage({ user }: any) {
     }
   }, [selectedSeasonId])
 
+  const selectedSeason = seasonDetails?.season
+  const circuitTournaments = seasonDetails?.tournaments || []
+  const circuitRanking = seasonDetails?.ranking || []
+  const stagePlan = splitCircuitLines(selectedSeason?.locations || form.locations).map(parseCircuitStageLine)
+  const stageTotal = selectedSeason?.tournamentCount || form.tournamentCount || stagePlan.length || circuitTournaments.length
+  const finishedStages = circuitTournaments.filter((tournament: any) => ['finished', 'closed', 'ended'].includes(String(tournament.status || '').toLowerCase())).length
+  const activeStage = circuitTournaments.find((tournament: any) => ['running', 'in_progress', 'playing'].includes(String(tournament.status || '').toLowerCase()))
+  const nextStage = circuitTournaments.find((tournament: any) => !['finished', 'closed', 'ended', 'canceled', 'cancelled'].includes(String(tournament.status || '').toLowerCase()))
+  const totalMatches = circuitTournaments.reduce((sum: number, tournament: any) => sum + (Array.isArray(tournament.matches) ? tournament.matches.length : 0), 0)
+  const topRanking = circuitRanking.slice(0, 8)
+  const raceToMasters = circuitRanking.slice(0, 16)
+  const rankingCategories = ['Geral', 'Master', 'Feminino', 'Iniciante', 'Equipes']
+  const categoryRanking = rankingCategory === 'Geral' ? topRanking : []
+  const pointsTable = defaultCircuitPoints()
+  const circuitMapStages = stagePlan.slice(0, Math.max(1, Math.min(stagePlan.length, 6)))
+
   return (
     <div className="saasLayout">
       <ClientSidebar isMasterPlan={isMasterPlan} />
 
       <main className="saasMain">
         <header className="hero">
-          <div className="badge">🏁 Modo Campeonato</div>
-          <h1>Campeonatos</h1>
-          <p>Configure temporadas com vários torneios e ranking por vitórias e derrotas.</p>
+          <div className="badge">🏆 Circuito ProMaster</div>
+          <h1>Circuitos</h1>
+          <p>Crie temporadas em etapas, ranking acumulado, Race to Masters, calendário, premiação e mini-sites para cada etapa.</p>
         </header>
 
         {!isMasterPlan && (
           <div className="panel cancelPanel">
             <h2>Recurso Master</h2>
-            <p>O modo campeonato está disponível para o plano Master.</p>
+            <p>O Circuito ProMaster está disponível para o plano Master.</p>
             <button onClick={() => navigate('/upgrade')}>Ver planos</button>
           </div>
         )}
 
         <div className="seasonLayout">
           <section className="panel">
-            <h2>Novo campeonato</h2>
+            <h2>Novo Circuito ProMaster</h2>
 
-            <label>Nome da temporada</label>
+            <label>Nome do circuito</label>
             <input value={form.name} onChange={e => updateSeasonField('name', e.target.value)} />
 
             <div className="seasonFormGrid">
               <div>
-                <label>Nº de torneios</label>
+                <label>Nº de etapas</label>
                 <input type="number" value={form.tournamentCount} onChange={e => updateSeasonField('tournamentCount', Number(e.target.value))} />
               </div>
 
               <div>
-                <label>Jogadores na temporada</label>
+                <label>Jogadores no circuito</label>
                 <input type="number" value={form.playerCount} onChange={e => updateSeasonField('playerCount', Number(e.target.value))} />
               </div>
 
@@ -4831,24 +4893,24 @@ function SeasonsPage({ user }: any) {
               </div>
             </div>
 
-            <label>Locais</label>
-            <textarea value={form.locations} onChange={e => updateSeasonField('locations', e.target.value)} placeholder="Um local por linha ou lista de sedes" />
+            <label>Calendário e sedes</label>
+            <textarea value={form.locations} onChange={e => updateSeasonField('locations', e.target.value)} placeholder="Etapa 1 | São Paulo | Março | Arena principal" />
 
-            <label>Regras da temporada</label>
-            <textarea value={form.rules} onChange={e => updateSeasonField('rules', e.target.value)} placeholder="Critérios, desempate, presença, pontuação..." />
+            <label>Pontuação e regras do circuito</label>
+            <textarea value={form.rules} onChange={e => updateSeasonField('rules', e.target.value)} placeholder="1º lugar: 100 pontos; Race to Masters: top 16..." />
 
-            <label>Premiação</label>
-            <textarea value={form.prize} onChange={e => updateSeasonField('prize', e.target.value)} placeholder="Premiação final da temporada" />
+            <label>Premiação total</label>
+            <textarea value={form.prize} onChange={e => updateSeasonField('prize', e.target.value)} placeholder="Premiação total do circuito" />
 
             <button className="primaryButton" onClick={createSeason}>
-              Criar campeonato
+              Criar circuito
             </button>
           </section>
 
           <section className="panel">
-            <h2>Temporadas</h2>
+            <h2>Circuitos ativos</h2>
 
-            {seasons.length === 0 && <p>Nenhum campeonato criado.</p>}
+            {seasons.length === 0 && <p>Nenhum circuito criado.</p>}
 
             <div className="seasonList">
               {seasons.map(season => (
@@ -4858,8 +4920,8 @@ function SeasonsPage({ user }: any) {
                   onClick={() => setSelectedSeasonId(season.id)}
                 >
                   <strong>{season.name}</strong>
-                  <span>{season.tournaments?.length || 0}/{season.tournamentCount} torneios</span>
-                  {season.championName && <small>Campeão: {season.championName}</small>}
+                  <span>{season.tournaments?.length || 0}/{season.tournamentCount} etapas</span>
+                  {season.championName && <small>Líder final: {season.championName}</small>}
                 </button>
               ))}
             </div>
@@ -4871,70 +4933,186 @@ function SeasonsPage({ user }: any) {
             <div className="seasonDetailsHeader">
               <div>
                 <h2>{seasonDetails.season.name}</h2>
-                <p>
-                  {seasonDetails.season.tournamentCount} torneios • {seasonDetails.season.playerCount} jogadores • status {seasonDetails.season.status}
-                </p>
+                <p>Ranking acumulado em etapas, mini-sites por etapa e classificação Race to Masters.</p>
+                <div className="circuitStatusStrip">
+                  <span className="circuitLiveDot" /> {circuitStatusLabel(seasonDetails.season.status)}
+                  <strong>Etapa atual: {activeStage?.name || nextStage?.name || 'A definir'}</strong>
+                  <strong>Próxima etapa: {nextStage?.name || 'Calendário completo'}</strong>
+                </div>
               </div>
 
               <div className="tournamentActions">
                 <button onClick={() => navigate(`/criar-torneio?seasonId=${seasonDetails.season.id}`)}>
-                  Criar torneio da temporada
+                  Criar etapa
                 </button>
                 <button className="primaryButton" onClick={finishSeason}>
-                  Declarar campeão
+                  Encerrar circuito
                 </button>
               </div>
+            </div>
+
+            <div className="circuitMetricGrid">
+              <div><span>Jogadores</span><strong>{seasonDetails.season.playerCount}</strong><small>capacidade configurada</small></div>
+              <div><span>Etapas</span><strong>{finishedStages} / {stageTotal}</strong><small>realizadas</small></div>
+              <div><span>Premiação total</span><strong>{seasonDetails.season.prize || '-'}</strong><small>circuito completo</small></div>
+              <div><span>Partidas</span><strong>{totalMatches}</strong><small>resultados computados</small></div>
             </div>
 
             {seasonDetails.champion && (
               <div className="seasonChampion">
-                <span>Campeão parcial/final</span>
+                <span>Líder do circuito</span>
                 <strong>🏆 {seasonDetails.champion.name}</strong>
-                <p>{seasonDetails.champion.points} pontos</p>
+                <p>{seasonDetails.champion.points} pontos acumulados</p>
               </div>
             )}
 
-            <div className="seasonInfoGrid">
-              <div><span>Datas</span><strong>{seasonDetails.season.startDate ? new Date(seasonDetails.season.startDate).toLocaleDateString() : '-'} até {seasonDetails.season.endDate ? new Date(seasonDetails.season.endDate).toLocaleDateString() : '-'}</strong></div>
-              <div><span>Locais</span><strong>{seasonDetails.season.locations || '-'}</strong></div>
-              <div><span>Regras</span><strong>{seasonDetails.season.rules || '-'}</strong></div>
-              <div><span>Premiação</span><strong>{seasonDetails.season.prize || '-'}</strong></div>
+            <div className="circuitDashboardGrid">
+              <div className="circuitMainCard">
+                <div className="seasonDetailsHeader compact">
+                  <div>
+                    <h3>Ranking Circuito</h3>
+                    <p>Classificação geral acumulada por vitórias nas etapas.</p>
+                  </div>
+                  <span>Top 16 classificam ao Masters</span>
+                </div>
+
+                <div className="seasonRankingTable">
+                  <div className="seasonRankingHead">
+                    <span>Pos</span>
+                    <span>Jogador</span>
+                    <span>Pontos</span>
+                    <span>V</span>
+                    <span>D</span>
+                    <span>Aprov.</span>
+                  </div>
+                  {topRanking.length === 0 && <p>Nenhum resultado computado ainda.</p>}
+                  {topRanking.map((item: any, index: number) => (
+                    <div key={item.name} className="seasonRankingRow">
+                      <span>{index + 1}</span>
+                      <strong>{item.name}</strong>
+                      <span>{item.points}</span>
+                      <span>{item.wins}</span>
+                      <span>{item.losses}</span>
+                      <span>{item.winRate}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="circuitSideStack">
+                <div className="circuitPanelCard">
+                  <h3>Race to Masters</h3>
+                  <p>Os 16 melhores do ano classificam para o Masters ProMaster.</p>
+                  <div className="raceList">
+                    {raceToMasters.slice(0, 6).map((item: any, index: number) => (
+                      <span key={item.name}>{index + 1}. {item.name} <strong>{item.points}</strong></span>
+                    ))}
+                    {raceToMasters.length === 0 && <small>Aguardando etapas finalizadas.</small>}
+                  </div>
+                </div>
+
+                <div className="circuitPanelCard">
+                  <h3>Pontuação</h3>
+                  {pointsTable.map(row => (
+                    <div key={row.place} className="pointsRuleRow">
+                      <span>{row.place}</span>
+                      <strong>{row.points} pts</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <h3>Torneios da temporada</h3>
+            <div className="circuitDashboardGrid lower">
+              <div className="circuitPanelCard">
+                <h3>Evolução Ranking</h3>
+                <div className="rankingEvolutionBars">
+                  {topRanking.slice(0, 6).map((item: any, index: number) => (
+                    <div key={item.name}>
+                      <span>{item.name}</span>
+                      <div><strong style={{ width: `${Math.max(12, Math.min(100, item.points / Math.max(1, topRanking[0]?.points || 1) * 100))}%` }} /></div>
+                      <em>{index < 2 ? 'subida' : index < 4 ? 'estável' : 'disputa'}</em>
+                    </div>
+                  ))}
+                  {topRanking.length === 0 && <p>O gráfico será gerado após os primeiros resultados.</p>}
+                </div>
+              </div>
+
+              <div className="circuitPanelCard">
+                <h3>Ranking por Categoria</h3>
+                <div className="rankingTabs">
+                  {rankingCategories.map(category => (
+                    <button key={category} className={rankingCategory === category ? 'active' : ''} onClick={() => setRankingCategory(category)}>
+                      {category}
+                    </button>
+                  ))}
+                </div>
+                <div className="categoryRankingList">
+                  {categoryRanking.map((item: any, index: number) => (
+                    <span key={item.name}>{index + 1}. {item.name} <strong>{item.points} pts</strong></span>
+                  ))}
+                  {categoryRanking.length === 0 && <p>Categoria aguardando jogadores classificados.</p>}
+                </div>
+              </div>
+            </div>
+
+            <h3>Calendário do Circuito</h3>
+            <div className="circuitTimeline">
+              {Array.from({ length: stageTotal }).map((_, index) => {
+                const tournament = circuitTournaments[index]
+                const plan = stagePlan[index]
+                const status = tournament
+                  ? tournamentStatusLabel(tournament.status)
+                  : index < finishedStages ? 'Realizado' : index === finishedStages ? 'Próximo' : 'Programado'
+                return (
+                  <div key={tournament?.id || index} className={tournament?.id === activeStage?.id ? 'live' : ''}>
+                    <span>{plan?.date || formatCircuitDate(tournament?.eventDate)}</span>
+                    <strong>{tournament?.name || plan?.name || `Etapa ${index + 1}`}</strong>
+                    <small>{tournament?.location || plan?.city || 'Cidade a definir'} • {status}</small>
+                  </div>
+                )
+              })}
+            </div>
+
+            <h3>Mapa das Etapas</h3>
+            <div className="circuitMapGrid">
+              {circuitMapStages.map((stage, index) => (
+                <div key={`${stage.city}-${index}`}>
+                  <span>{index + 1}</span>
+                  <strong>{stage.city}</strong>
+                  <small>{stage.arena}</small>
+                </div>
+              ))}
+              {circuitMapStages.length === 0 && <p>Cadastre cidades e arenas no calendário do circuito.</p>}
+            </div>
+
+            <h3>Painel de Etapas</h3>
             <div className="seasonTournamentList">
-              {seasonDetails.tournaments.length === 0 && <p>Nenhum torneio vinculado ainda.</p>}
+              {seasonDetails.tournaments.length === 0 && <p>Nenhuma etapa vinculada ainda.</p>}
               {seasonDetails.tournaments.map((tournament: any) => (
                 <div key={tournament.id} className="clientTournamentRow">
                   <div>
                     <strong>{tournament.name}</strong>
-                  <span>{tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores</span>
+                    <span>{tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores • {tournament.location || 'Local a definir'}</span>
                   </div>
-                  <button onClick={() => navigate(`/tournament/${tournament.id}`)}>Painel</button>
+                  <button onClick={() => navigate(`/tournament/${tournament.id}`)}>Mini-site da etapa</button>
                 </div>
               ))}
             </div>
 
-            <h3>Ranking da temporada</h3>
-            <div className="seasonRankingTable">
-              <div className="seasonRankingHead">
-                <span>#</span>
-                <span>Jogador</span>
-                <span>Pontos</span>
-                <span>V</span>
-                <span>D</span>
-                <span>Aprov.</span>
+            <div className="circuitAdminGrid">
+              <div>
+                <span>Controle financeiro</span>
+                <strong>Inscrições, arrecadação e premiações por etapa.</strong>
               </div>
-              {seasonDetails.ranking.map((item: any, index: number) => (
-                <div key={item.name} className="seasonRankingRow">
-                  <span>{index + 1}</span>
-                  <strong>{item.name}</strong>
-                  <span>{item.points}</span>
-                  <span>{item.wins}</span>
-                  <span>{item.losses}</span>
-                  <span>{item.winRate}%</span>
-                </div>
-              ))}
+              <div>
+                <span>Patrocinadores</span>
+                <strong>Master, Ouro, Prata e ativações no telão.</strong>
+              </div>
+              <div>
+                <span>Telão do circuito</span>
+                <strong>Ranking ao vivo, líder, próxima etapa e destaques.</strong>
+              </div>
             </div>
           </section>
         )}
@@ -5290,7 +5468,7 @@ function CreateTournament({ user }: any) {
             )}
             {tournamentFormat === 'round_robin' && (
               <p className="helperText">
-                Todos contra todos: plano Pro permite até 64 jogadores. Plano Master permite torneios acima de 64 e também campeonatos em várias etapas/dias com ranking acumulado.
+                Todos contra todos: plano Pro permite até 64 jogadores. Plano Master permite torneios acima de 64 e também Circuito ProMaster em várias etapas/dias com ranking acumulado.
               </p>
             )}
 
@@ -5366,9 +5544,9 @@ function CreateTournament({ user }: any) {
 
             {seasons.length > 0 && (
               <>
-                <label>Campeonato / temporada</label>
+                <label>Circuito ProMaster</label>
                 <select value={seasonId} onChange={e => setSeasonId(e.target.value)}>
-                  <option value="">Torneio avulso fora de campeonato</option>
+                  <option value="">Torneio avulso fora de circuito</option>
                   {seasons.map(season => (
                     <option key={season.id} value={season.id}>
                       {season.name}
@@ -5613,7 +5791,7 @@ function CreateTournament({ user }: any) {
               {broadcastType === 'youtube' && youtubeUrl && <p>Transmissão: YouTube</p>}
               {broadcastType === 'obs' && <p>Transmissão: OBS</p>}
               <p>Cobrança: {paymentCollectionMode === 'platform' ? 'Automática pela plataforma' : paymentCollectionMode === 'both' ? 'Manual e automática' : 'Manual pelo organizador'}</p>
-              {seasonId && <p>Vinculado ao campeonato</p>}
+              {seasonId && <p>Vinculado ao Circuito ProMaster</p>}
             </div>
 
             <button className="primaryButton" onClick={createTournament}>
