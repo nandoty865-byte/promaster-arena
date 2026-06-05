@@ -3630,8 +3630,18 @@ button:hover {
   padding: clamp(28px, 6vw, 64px);
   background:
     linear-gradient(90deg, rgba(2, 6, 23, .96) 0%, rgba(2, 6, 23, .72) 42%, rgba(2, 6, 23, .36) 100%),
-    url('/promaster-logo.jpeg') center / cover no-repeat;
+    url('/promaster-hero-broadcast.png') center / cover no-repeat;
   box-shadow: 0 34px 120px rgba(0, 0, 0, .46);
+}
+
+.landingHero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(2, 6, 23, .94), rgba(2, 6, 23, .44) 54%, rgba(2, 6, 23, .2)),
+    radial-gradient(circle at 50% 42%, rgba(190, 242, 100, .16), transparent 34%);
+  z-index: 1;
 }
 
 .landingHero::after {
@@ -3647,6 +3657,12 @@ button:hover {
   width: min(680px, 100%);
   position: relative;
   z-index: 2;
+  padding: 26px;
+  border: 1px solid rgba(190, 242, 100, .2);
+  border-radius: 26px;
+  background: rgba(2, 6, 23, .62);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 22px 80px rgba(0, 0, 0, .34);
 }
 
 .landingBadge {
@@ -3803,6 +3819,36 @@ button:hover {
   font-size: 14px;
 }
 
+.landingSportsStrip {
+  max-width: 1180px;
+  margin: 18px auto 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.landingSportsStrip span,
+.landingSportsStrip strong {
+  min-height: 76px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 12px;
+  border: 1px solid rgba(190, 242, 100, .28);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, .88), rgba(2, 6, 23, .94));
+  color: #e2e8f0;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 13px;
+  box-shadow: inset 0 0 30px rgba(190, 242, 100, .06);
+}
+
+.landingSportsStrip strong {
+  color: #bef264;
+}
+
 .landingStory {
   max-width: 1180px;
   margin: 34px auto 0;
@@ -3904,6 +3950,62 @@ button:hover {
 .showcaseGrid span {
   color: #cbd5e1;
   line-height: 1.5;
+}
+
+.landingBroadcastSection {
+  max-width: 1180px;
+  margin: 82px auto 0;
+  display: grid;
+  grid-template-columns: .72fr 1.28fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.broadcastCopy {
+  padding: 30px;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at top left, rgba(190, 242, 100, .15), transparent 34%),
+    #0f172a;
+}
+
+.broadcastCopy h2 {
+  margin: 12px 0 18px;
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.02;
+}
+
+.broadcastCopy p {
+  color: #cbd5e1;
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.broadcastBullets {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.broadcastBullets span {
+  padding: 12px 14px;
+  border: 1px solid rgba(190, 242, 100, .24);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, .7);
+  color: #d9f99d;
+  font-weight: 900;
+}
+
+.landingBroadcastSection img {
+  width: 100%;
+  height: 100%;
+  min-height: 430px;
+  object-fit: cover;
+  object-position: left center;
+  border: 1px solid rgba(148, 163, 184, .22);
+  border-radius: 26px;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .36);
 }
 
 .playersTextarea {
@@ -4535,6 +4637,7 @@ button:hover {
   .landingFeatures,
   .landingStory,
   .landingShowcase,
+  .landingBroadcastSection,
   .showcaseGrid,
   .plansGrid,
   .signupChoiceGrid,
@@ -4583,7 +4686,7 @@ button:hover {
     padding: 28px;
     background:
       linear-gradient(180deg, rgba(2, 6, 23, .94) 0%, rgba(2, 6, 23, .78) 100%),
-      url('/promaster-logo.jpeg') center / cover no-repeat;
+      url('/promaster-hero-broadcast.png') center / cover no-repeat;
   }
 
   .landingHeroContent {
@@ -4604,6 +4707,19 @@ button:hover {
 
   .liveGrid {
     grid-template-columns: 1fr;
+  }
+
+  .landingSportsStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .landingSportsStrip span,
+  .landingSportsStrip strong {
+    min-height: 58px;
+  }
+
+  .landingBroadcastSection img {
+    min-height: 260px;
   }
 
   .landingHeader {
