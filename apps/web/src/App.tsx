@@ -4502,10 +4502,20 @@ function Landing() {
             </div>
             <div>
               <span>Próxima</span>
-              <strong>Joao x Regis</strong>
+              <strong>João x Regis</strong>
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="landingSportsStrip" aria-label="Modalidades atendidas">
+        <span>E-sports</span>
+        <span>Futebol</span>
+        <span>Sinuca</span>
+        <span>Tênis de mesa</span>
+        <span>Basquete</span>
+        <span>Vôlei</span>
+        <strong>E muito mais</strong>
       </section>
 
       <section id="experiencia" className="landingStory">
@@ -4562,6 +4572,25 @@ function Landing() {
             <span>telão, placar, chamadas, ranking e conteúdo ao vivo</span>
           </div>
         </div>
+      </section>
+
+      <section className="landingBroadcastSection">
+        <div className="broadcastCopy">
+          <span className="landingBadge">Telão profissional</span>
+          <h2>Visual de arena, pronto para TV, streaming e evento presencial.</h2>
+          <p>
+            Exiba placar, próximos jogos, ranking, patrocinadores, QR Code e chamadas
+            de partidas com leitura rápida para público, jogadores e transmissão.
+          </p>
+          <div className="broadcastBullets">
+            <span>Placar ao vivo</span>
+            <span>Ranking em tempo real</span>
+            <span>Patrocinadores</span>
+            <span>Modo streaming</span>
+          </div>
+        </div>
+
+        <img src="/promaster-telao-reference.png" alt="Referência de telão profissional ProMaster Arena" />
       </section>
 
       <section id="planos" className="landingPlans">
