@@ -4427,7 +4427,16 @@ function Landing() {
   return (
     <div className="landing">
       <header className="landingHeader">
-        <div className="landingLogo">🎱 ProMaster Arena</div>
+        <a href="/" className="landingLogo">
+          <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
+          <span>ProMaster Arena</span>
+        </a>
+
+        <nav className="landingNav">
+          <a href="#experiencia">Experiência</a>
+          <a href="#recursos">Recursos</a>
+          <a href="#planos">Planos</a>
+        </nav>
 
         <div className="landingActions">
           <a href="/login">Entrar</a>
@@ -4441,50 +4450,117 @@ function Landing() {
       </div>
 
       <section className="landingHero">
-        <div>
-          <span className="landingBadge">Sistema SaaS para torneios</span>
+        <div className="landingHeroContent">
+          <span className="landingBadge">Torneios em tempo real</span>
 
-          <h1>Organize torneios profissionais com chave, telão, ranking e Pix.</h1>
+          <h1>Transforme torneios em eventos profissionais.</h1>
 
           <p>
-            Plataforma para clubes, bares, arenas e organizadores criarem torneios
-            de sinuca e esportes com visual profissional, QR Code público e gestão online.
+            Inscrições, pagamentos, chaveamento, rankings, telão e transmissão em uma
+            experiência feita para arenas, organizadores, jogadores e público.
           </p>
 
           <div className="landingCtas">
-            <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
+            <a className="landingButton" href="/inscreva-se">Criar torneio grátis</a>
             <a className="landingSecondary" href="/planos">Ver planos</a>
+          </div>
+
+          <div className="landingStats">
+            <div>
+              <strong>Ao vivo</strong>
+              <span>placar, ranking e chamadas</span>
+            </div>
+            <div>
+              <strong>Pix</strong>
+              <span>inscrições e financeiro</span>
+            </div>
+            <div>
+              <strong>Telão</strong>
+              <span>experiência broadcast</span>
+            </div>
           </div>
         </div>
 
-        <div className="landingPreview">
-          <h3>🏆 Torneio ao vivo</h3>
-          <div className="previewMatch">João <strong>VS</strong> Carlos</div>
-          <div className="previewCard">Ranking em tempo real</div>
-          <div className="previewCard">QR Code para público</div>
-          <div className="previewCard">Telão profissional</div>
+        <div className="landingLiveDeck">
+          <div className="liveDeckHeader">
+            <span>AO VIVO</span>
+            <strong>Campinas Open</strong>
+          </div>
+          <div className="liveScore">
+            <span>Fernando</span>
+            <strong>2 x 1</strong>
+            <span>Carlos</span>
+          </div>
+          <div className="liveGrid">
+            <div>
+              <span>Ranking</span>
+              <strong>1. Fernando</strong>
+            </div>
+            <div>
+              <span>Mesa</span>
+              <strong>03</strong>
+            </div>
+            <div>
+              <span>Próxima</span>
+              <strong>Joao x Regis</strong>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="landingFeatures">
+      <section id="experiencia" className="landingStory">
         <div>
-          <h2>Chave automática</h2>
-          <p>Crie torneios com jogadores reais e sorteio automático.</p>
+          <span>01</span>
+          <h2>Crie</h2>
+          <p>Configure esporte, formato, regras, inscrições, premiação e página pública em minutos.</p>
         </div>
 
         <div>
-          <h2>Telão público</h2>
-          <p>Exiba partidas, status e ranking em TV ou projetor.</p>
+          <span>02</span>
+          <h2>Divulgue</h2>
+          <p>Compartilhe link, QR Code e página pública com dados do torneio e inscrições online.</p>
         </div>
 
         <div>
-          <h2>Cobranças automáticas</h2>
-          <p>Selecione o melhor plano, ative cobranças automáticas por torneio e acompanhe tudo no painel financeiro.</p>
+          <span>03</span>
+          <h2>Gerencie</h2>
+          <p>Acompanhe jogadores, pagamentos, mesas, partidas, ranking e resultados em tempo real.</p>
         </div>
 
         <div>
-          <h2>Jogadores</h2>
-          <p>Estatísticas em tempo real, ranking, histórico dos torneios e mais.</p>
+          <span>04</span>
+          <h2>Transmita</h2>
+          <p>Leve o torneio para o telão, página pública e transmissão com visual de evento profissional.</p>
+        </div>
+      </section>
+
+      <section id="recursos" className="landingShowcase">
+        <div className="showcaseText">
+          <span className="landingBadge">Realtime first</span>
+          <h2>O diferencial não é só criar a chave. É transformar o evento em espetáculo.</h2>
+          <p>
+            O ProMaster conecta organizador, jogador, árbitro, público e transmissão.
+            Cada atualização pode aparecer no painel, no telão e na página pública.
+          </p>
+        </div>
+
+        <div className="showcaseGrid">
+          <div>
+            <strong>Organizador</strong>
+            <span>inscrições, pagamentos, mesas, torneios e circuitos</span>
+          </div>
+          <div>
+            <strong>Jogador</strong>
+            <span>perfil, ranking, histórico, estatísticas e avisos</span>
+          </div>
+          <div>
+            <strong>Arena</strong>
+            <span>gestão de eventos, financeiro, público e transmissão</span>
+          </div>
+          <div>
+            <strong>Broadcast</strong>
+            <span>telão, placar, chamadas, ranking e conteúdo ao vivo</span>
+          </div>
         </div>
       </section>
 
