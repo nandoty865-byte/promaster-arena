@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import {
   LineChart,
@@ -19,7 +19,96 @@ const TOURNAMENT_FORMAT_OPTIONS = [
   { value: 'round_robin', label: 'Todos contra todos' },
   { value: 'swiss', label: 'Modo suíço' },
 ]
-const SPORT_OPTIONS = ['Sinuca', 'Futebol', 'Vôlei de praia', 'Futebol society', 'Tênis de mesa']
+const SPORT_OPTIONS = ['Sinuca', 'Bingo', 'Futebol society', 'Futebol de campo', 'Tênis de mesa', 'Basquete', 'Vôlei']
+const COUNTRY_OPTIONS = [
+  'Brasil',
+  'Afeganistão',
+  'África do Sul',
+  'Albânia',
+  'Alemanha',
+  'Andorra',
+  'Angola',
+  'Arábia Saudita',
+  'Argélia',
+  'Argentina',
+  'Armênia',
+  'Austrália',
+  'Áustria',
+  'Bahamas',
+  'Bangladesh',
+  'Bélgica',
+  'Bolívia',
+  'Bósnia e Herzegovina',
+  'Bulgária',
+  'Cabo Verde',
+  'Camarões',
+  'Canadá',
+  'China',
+  'Chile',
+  'Colômbia',
+  'Coreia do Sul',
+  'Costa Rica',
+  'Croácia',
+  'Cuba',
+  'Dinamarca',
+  'Egito',
+  'El Salvador',
+  'Emirados Árabes Unidos',
+  'Equador',
+  'Espanha',
+  'Estados Unidos',
+  'Estônia',
+  'Etiópia',
+  'Filipinas',
+  'Finlândia',
+  'França',
+  'Gana',
+  'Grécia',
+  'Guatemala',
+  'Guiné-Bissau',
+  'Haiti',
+  'Holanda',
+  'Honduras',
+  'Hungria',
+  'Índia',
+  'Indonésia',
+  'Irlanda',
+  'Islândia',
+  'Israel',
+  'Itália',
+  'Japão',
+  'Letônia',
+  'Líbano',
+  'Lituânia',
+  'Luxemburgo',
+  'Marrocos',
+  'México',
+  'Moçambique',
+  'Nicarágua',
+  'Nigéria',
+  'Noruega',
+  'Nova Zelândia',
+  'Panamá',
+  'Paraguai',
+  'Peru',
+  'Polônia',
+  'Portugal',
+  'Reino Unido',
+  'República Dominicana',
+  'Romênia',
+  'Rússia',
+  'Senegal',
+  'Sérvia',
+  'Suécia',
+  'Suíça',
+  'Tailândia',
+  'Timor-Leste',
+  'Turquia',
+  'Ucrânia',
+  'Uruguai',
+  'Venezuela',
+  'Outro',
+]
 
 function youtubeEmbedUrl(url?: string) {
   if (!url) return ''
@@ -150,6 +239,23 @@ function isValidRg(value: string) {
   return clean.length >= 5 && clean.length <= 12
 }
 
+function formatCpf(value: string) {
+  const digits = onlyDigits(value).slice(0, 11)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+}
+
+function formatCep(value: string) {
+  const digits = onlyDigits(value).slice(0, 8)
+  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+}
+
+function isBrazilCountry(country: string) {
+  return String(country || '').toLowerCase() === 'brasil'
+}
+
 function buildTournamentPhases(playerCount: number) {
   const rounds = Math.max(1, Math.ceil(Math.log2(Math.max(2, Number(playerCount) || 2))))
   return Array.from({ length: rounds }, (_, index) => {
@@ -259,6 +365,12 @@ export default function App() {
       <Route path="/app/usuarios" element={<UsersPage />} />
       <Route path="/upgrade" element={<Upgrade />} />
       <Route path="/campeonatos" element={<SeasonsPage user={user} />} />
+      <Route path="/campeonatos/circuito" element={<SeasonsPage user={user} defaultPanel="circuito" />} />
+      <Route path="/campeonatos/circuito/:seasonId" element={<SeasonsPage user={user} defaultPanel="circuito-dashboard" />} />
+      <Route path="/campeonatos/etapas" element={<SeasonsPage user={user} defaultPanel="etapas" />} />
+      <Route path="/campeonatos/pagamentos" element={<SeasonsPage user={user} defaultPanel="pagamentos" />} />
+      <Route path="/campeonatos/inscricoes" element={<SeasonsPage user={user} defaultPanel="inscricoes" />} />
+      <Route path="/campeonatos/arenas" element={<SeasonsPage user={user} defaultPanel="arenas" />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
       <Route path="/tournament/:id/painel" element={<TournamentOverview />} />
       <Route path="/tournament/:id" element={<TournamentOverview />} />
@@ -274,6 +386,9 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/admin/financeiro" element={<Financeiro />} />
       <Route path="/admin/clientes" element={<AdminClientes />} />
+      <Route path="/admin/clientes/:id" element={<AdminClientPage defaultPanel="dashboard" />} />
+      <Route path="/admin/clientes/:id/financeiro" element={<AdminClientPage defaultPanel="financeiro" />} />
+      <Route path="/admin/clientes/:id/perfil" element={<AdminClientPage defaultPanel="perfil" />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="*" element={<Navigate to="/" />} />
 
@@ -314,24 +429,79 @@ function SignupChoice() {
 }
 
 function OrganizerSignup() {
+  const [step, setStep] = useState(1)
   const [form, setForm] = useState<any>({
+    organizerType: '',
     organizationName: '',
-    name: '',
+    organizationZipCode: '',
+    organizationStreet: '',
+    organizationNeighborhood: '',
+    organizationCity: '',
+    organizationState: '',
+    organizationCountry: 'Brasil',
+    organizationNumber: '',
+    organizationComplement: '',
+    organizationDocument: '',
     email: '',
     phone: '',
-    address: '',
+    responsibleName: '',
+    responsibleLastName: '',
+    responsibleCpf: '',
+    responsibleZipCode: '',
+    responsibleStreet: '',
+    responsibleNeighborhood: '',
+    responsibleCity: '',
+    responsibleState: '',
+    responsibleCountry: 'Brasil',
+    responsibleNumber: '',
+    responsibleComplement: '',
     password: '',
     confirmPassword: '',
-    documentType: 'CNPJ',
-    documentNumber: '',
     termsAccepted: false,
   })
-  const [sports, setSports] = useState<string[]>(['Sinuca'])
-  const [documentFile, setDocumentFile] = useState<File | null>(null)
+  const [sports, setSports] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const isIndividualOrganizer = form.organizerType === 'organizador'
+  const organizerTypes = [
+    { value: 'organizador', title: 'Organizador', text: 'Pessoa física que organiza torneios sem representar uma empresa.' },
+    { value: 'empresa', title: 'Empresa', text: 'Pessoa jurídica com CNPJ e operação própria.' },
+    { value: 'associacao', title: 'Associação', text: 'Associação, liga ou entidade organizadora.' },
+    { value: 'clube', title: 'Clube', text: 'Clube esportivo ou social.' },
+    { value: 'bar', title: 'Bar', text: 'Bar, pub ou local com eventos.' },
+    { value: 'salao', title: 'Salão', text: 'Salão, arena ou espaço de jogos.' },
+  ]
 
   function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function formatCep(value: string) {
+    const digits = onlyDigits(value).slice(0, 8)
+    return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+  }
+
+  async function lookupCep(value: string, target: 'organization' | 'responsible') {
+    const cep = onlyDigits(value)
+    const country = target === 'organization' ? form.organizationCountry : form.responsibleCountry
+    if (!isBrazilCountry(country)) return
+    if (cep.length !== 8) return
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      const data = await response.json()
+
+      if (data.erro) return
+
+      setForm((current: any) => ({
+        ...current,
+        [`${target}Street`]: data.logradouro || current[`${target}Street`],
+        [`${target}Neighborhood`]: data.bairro || current[`${target}Neighborhood`],
+        [`${target}City`]: data.localidade || current[`${target}City`],
+        [`${target}State`]: data.uf || current[`${target}State`],
+      }))
+    } catch {
+      // CEP continua editável manualmente se a consulta externa falhar.
+    }
   }
 
   function toggleSport(sport: string) {
@@ -342,14 +512,58 @@ function OrganizerSignup() {
     ))
   }
 
-  async function register() {
-    if (!form.organizationName || !form.email || !form.phone || !form.password) {
-      alert('Preencha organização, e-mail, telefone e senha.')
+  function nextStep() {
+    if (step === 1 && !form.organizerType) {
+      alert('Selecione o tipo de organizador.')
       return
     }
 
-    if (!form.documentNumber) {
-      alert('Informe o documento do organizador.')
+    if (step === 2 && sports.length === 0) {
+      alert('Selecione pelo menos um esporte.')
+      return
+    }
+
+    if (step === 3) {
+      if (!isIndividualOrganizer && (!form.organizationName || !form.organizationDocument || !form.email || !form.phone || !form.organizationCountry)) {
+        alert('Preencha os dados principais da organização.')
+        return
+      }
+
+      if (!isIndividualOrganizer && isBrazilCountry(form.organizationCountry)) {
+        if (!form.organizationZipCode || !form.organizationStreet || !form.organizationNumber || !form.organizationNeighborhood || !form.organizationCity || !form.organizationState) {
+          alert('Preencha CEP, logradouro, número, bairro, cidade e estado da organização.')
+          return
+        }
+      }
+
+      if (!form.responsibleName || !form.responsibleLastName || !form.responsibleCpf || !form.responsibleCountry) {
+        alert('Preencha os dados do responsável.')
+        return
+      }
+
+      if (isBrazilCountry(form.responsibleCountry)) {
+        if (!form.responsibleZipCode || !form.responsibleStreet || !form.responsibleNumber || !form.responsibleNeighborhood || !form.responsibleCity || !form.responsibleState) {
+          alert('Preencha CEP, logradouro, número, bairro, cidade e estado do responsável.')
+          return
+        }
+      }
+    }
+
+    setStep(current => Math.min(current + 1, 4))
+  }
+
+  function previousStep() {
+    setStep(current => Math.max(current - 1, 1))
+  }
+
+  async function register() {
+    if (!form.email || !form.phone || !form.password) {
+      alert('Preencha e-mail, WhatsApp e senha.')
+      return
+    }
+
+    if (!isIndividualOrganizer && (!form.organizationName || !form.organizationDocument)) {
+      alert('Preencha nome e CNPJ da organização.')
       return
     }
 
@@ -363,10 +577,21 @@ function OrganizerSignup() {
       return
     }
 
+    const organizationNameForPayload = isIndividualOrganizer ? `${form.responsibleName} ${form.responsibleLastName}`.trim() : form.organizationName
+    const responsibleNameForPayload = `${form.responsibleName} ${form.responsibleLastName}`.trim()
+    const addressForPayload = isIndividualOrganizer
+      ? [form.responsibleStreet, form.responsibleNumber, form.responsibleComplement, form.responsibleNeighborhood, form.responsibleCity, form.responsibleState, form.responsibleCountry].filter(Boolean).join(', ')
+      : [form.organizationStreet, form.organizationNumber, form.organizationComplement, form.organizationNeighborhood, form.organizationCity, form.organizationState, form.organizationCountry].filter(Boolean).join(', ')
     const payload = new FormData()
-    Object.entries(form).forEach(([key, value]) => payload.append(key, String(value)))
-    payload.append('supportedSports', sports.join(', '))
-    if (documentFile) payload.append('document', documentFile)
+    Object.entries({
+      ...form,
+      organizationName: organizationNameForPayload,
+      name: responsibleNameForPayload,
+      documentType: isIndividualOrganizer ? 'CPF' : 'CNPJ',
+      documentNumber: isIndividualOrganizer ? form.responsibleCpf : form.organizationDocument,
+      address: addressForPayload,
+      supportedSports: sports.join(', '),
+    }).forEach(([key, value]) => payload.append(key, String(value)))
 
     setLoading(true)
 
@@ -393,8 +618,8 @@ function OrganizerSignup() {
     <div className="onboardingPage">
       <section className="onboardingHero">
         <span>Cadastro de organizador</span>
-        <h1>Crie sua arena com validação e controle profissional.</h1>
-        <p>Organizadores podem operar torneios de vários esportes, aceitar inscrições públicas e definir a cobrança individualmente em cada torneio.</p>
+        <h1>Crie sua conta para organizar torneios.</h1>
+        <p>Informe seu perfil, modalidades, dados cadastrais e crie seu acesso ao ProMaster Arena.</p>
         <div className="onboardingSwitch">
           <a className="active" href="/cadastro-organizador">Sou organizador</a>
           <a href="/cadastro-jogador">Sou jogador</a>
@@ -402,107 +627,276 @@ function OrganizerSignup() {
       </section>
 
       <section className="onboardingCard">
-        <h2>Dados da organização</h2>
-        <div className="onboardingGrid">
-          <div>
-            <label>Nome da organização *</label>
-            <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
-          </div>
-          <div>
-            <label>Responsável</label>
-            <input value={form.name} onChange={e => updateField('name', e.target.value)} />
-          </div>
-          <div>
-            <label>E-mail *</label>
-            <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
-          </div>
-          <div>
-            <label>WhatsApp *</label>
-            <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
-          </div>
-          <div className="fullSpan">
-            <label>Endereço</label>
-            <input value={form.address} onChange={e => updateField('address', e.target.value)} />
-          </div>
-        </div>
-
-        <h2>Validação do organizador</h2>
-        <div className="onboardingGrid">
-          <div>
-            <label>Tipo de documento</label>
-            <select value={form.documentType} onChange={e => updateField('documentType', e.target.value)}>
-              <option value="CNPJ">CNPJ</option>
-              <option value="CPF">CPF</option>
-              <option value="RG">RG</option>
-            </select>
-          </div>
-          <div>
-            <label>Número do documento *</label>
-            <input value={form.documentNumber} onChange={e => updateField('documentNumber', e.target.value)} />
-          </div>
-          <div className="fullSpan">
-            <label>Documento para análise</label>
-            <input type="file" accept="image/*,.pdf" onChange={e => setDocumentFile(e.target.files?.[0] || null)} />
-          </div>
-        </div>
-
-        <h2>Operação e cobrança</h2>
-        <div className="sportsPicker">
-          {SPORT_OPTIONS.map(sport => (
-            <label key={sport}>
-              <input type="checkbox" checked={sports.includes(sport)} onChange={() => toggleSport(sport)} />
-              {sport}
-            </label>
+        <div className="onboardingSteps">
+          {[1, 2, 3, 4].map(item => (
+            <span key={item} className={step === item ? 'active' : step > item ? 'done' : ''}>{item}</span>
           ))}
         </div>
 
-        <div className="onboardingGrid">
-          <div>
-            <label>Senha *</label>
-            <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} />
-          </div>
-          <div>
-            <label>Confirmar senha *</label>
-            <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} />
-          </div>
+        {step === 1 && (
+          <>
+            <h2>Você está se cadastrando como?</h2>
+            <div className="organizerTypeGrid">
+              {organizerTypes.map(type => (
+                <button
+                  type="button"
+                  key={type.value}
+                  className={form.organizerType === type.value ? 'active' : ''}
+                  onClick={() => updateField('organizerType', type.value)}
+                >
+                  <strong>{type.title}</strong>
+                  <span>{type.text}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <h2>Qual seu esporte?</h2>
+            <div className="sportsPicker">
+              {SPORT_OPTIONS.map(sport => (
+                <label key={sport}>
+                  <input type="checkbox" checked={sports.includes(sport)} onChange={() => toggleSport(sport)} />
+                  {sport}
+                </label>
+              ))}
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            {!isIndividualOrganizer && (
+              <>
+                <h2>Dados da organização</h2>
+                <div className="onboardingGrid">
+                  <div>
+                    <label>Nome da organização *</label>
+                    <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>E-mail *</label>
+                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>WhatsApp *</label>
+                    <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+                  </div>
+                  <div>
+                    <label>País *</label>
+                    <select value={form.organizationCountry} onChange={e => updateField('organizationCountry', e.target.value)}>
+                      {COUNTRY_OPTIONS.map(country => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label>{isBrazilCountry(form.organizationCountry) ? 'CNPJ *' : 'ID *'}</label>
+                    <input value={form.organizationDocument} onChange={e => updateField('organizationDocument', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>CEP{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
+                    <input
+                      value={form.organizationZipCode}
+                      onChange={e => updateField('organizationZipCode', formatCep(e.target.value))}
+                      onBlur={e => lookupCep(e.target.value, 'organization')}
+                    />
+                  </div>
+                  <div>
+                    <label>Endereço{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
+                    <input value={form.organizationStreet} onChange={e => updateField('organizationStreet', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Número{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
+                    <input value={form.organizationNumber} onChange={e => updateField('organizationNumber', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Complemento</label>
+                    <input value={form.organizationComplement} onChange={e => updateField('organizationComplement', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Bairro{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
+                    <input value={form.organizationNeighborhood} onChange={e => updateField('organizationNeighborhood', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Cidade{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
+                    <input value={form.organizationCity} onChange={e => updateField('organizationCity', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Estado{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
+                    <input value={form.organizationState} onChange={e => updateField('organizationState', e.target.value)} />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <h2>Dados do responsável</h2>
+            <div className="onboardingGrid">
+              <div>
+                <label>Nome *</label>
+                <input value={form.responsibleName} onChange={e => updateField('responsibleName', e.target.value)} />
+              </div>
+              <div>
+                <label>Sobrenome *</label>
+                <input value={form.responsibleLastName} onChange={e => updateField('responsibleLastName', e.target.value)} />
+              </div>
+              {isIndividualOrganizer && (
+                <>
+                  <div>
+                    <label>E-mail *</label>
+                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>WhatsApp *</label>
+                    <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+                  </div>
+                </>
+              )}
+              <div>
+                <label>País *</label>
+                <select value={form.responsibleCountry} onChange={e => updateField('responsibleCountry', e.target.value)}>
+                  {COUNTRY_OPTIONS.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>{isBrazilCountry(form.responsibleCountry) ? 'CPF *' : 'ID *'}</label>
+                <input value={form.responsibleCpf} onChange={e => updateField('responsibleCpf', e.target.value)} />
+              </div>
+              <div>
+                <label>CEP{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
+                <input
+                  value={form.responsibleZipCode}
+                  onChange={e => updateField('responsibleZipCode', formatCep(e.target.value))}
+                  onBlur={e => lookupCep(e.target.value, 'responsible')}
+                />
+              </div>
+              <div>
+                <label>Endereço{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
+                <input value={form.responsibleStreet} onChange={e => updateField('responsibleStreet', e.target.value)} />
+              </div>
+              <div>
+                <label>Número{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
+                <input value={form.responsibleNumber} onChange={e => updateField('responsibleNumber', e.target.value)} />
+              </div>
+              <div>
+                <label>Complemento</label>
+                <input value={form.responsibleComplement} onChange={e => updateField('responsibleComplement', e.target.value)} />
+              </div>
+              <div>
+                <label>Bairro{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
+                <input value={form.responsibleNeighborhood} onChange={e => updateField('responsibleNeighborhood', e.target.value)} />
+              </div>
+              <div>
+                <label>Cidade{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
+                <input value={form.responsibleCity} onChange={e => updateField('responsibleCity', e.target.value)} />
+              </div>
+              <div>
+                <label>Estado{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
+                <input value={form.responsibleState} onChange={e => updateField('responsibleState', e.target.value)} />
+              </div>
+            </div>
+          </>
+        )}
+
+        {step === 4 && (
+          <>
+            <h2>Criação de login</h2>
+            <div className="onboardingGrid">
+              <div>
+                <label>E-mail de acesso</label>
+                <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+              </div>
+              <div>
+                <label>Senha *</label>
+                <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} />
+              </div>
+              <div>
+                <label>Confirmar senha *</label>
+                <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} />
+              </div>
+            </div>
+
+            <label className="termsLine">
+              <input
+                type="checkbox"
+                checked={form.termsAccepted}
+                onChange={e => updateField('termsAccepted', e.target.checked)}
+              />
+              Aceito os termos de uso e a política de comunicação da plataforma.
+            </label>
+          </>
+        )}
+
+        <div className="onboardingActions">
+          {step > 1 && <button type="button" onClick={previousStep}>Voltar</button>}
+          {step < 4 && <button type="button" className="primaryButton" onClick={nextStep}>Próximo</button>}
+          {step === 4 && (
+            <button className="primaryButton" onClick={register} disabled={loading}>
+              {loading ? 'Enviando...' : 'Criar conta do organizador'}
+            </button>
+          )}
         </div>
-
-        <label className="termsLine">
-          <input
-            type="checkbox"
-            checked={form.termsAccepted}
-            onChange={e => updateField('termsAccepted', e.target.checked)}
-          />
-          Aceito os termos de uso, política de comunicação e validação do organizador.
-        </label>
-
-        <button className="primaryButton" onClick={register} disabled={loading}>
-          {loading ? 'Enviando...' : 'Criar conta de organizador'}
-        </button>
-        <a href="/login">Já tenho conta</a>
       </section>
     </div>
   )
 }
 
 function PlayerSignup() {
-  const navigate = useNavigate()
+  const [step, setStep] = useState(1)
+  const [createdPlayer, setCreatedPlayer] = useState<any>(null)
   const [form, setForm] = useState<any>({
-    name: '',
+    firstName: '',
+    lastName: '',
     nickname: '',
     email: '',
     phone: '',
-    rg: '',
+    gender: '',
+    birthDate: '',
+    country: 'Brasil',
+    cpf: '',
+    zipCode: '',
+    street: '',
+    addressNumber: '',
+    complement: '',
+    neighborhood: '',
     city: '',
     state: '',
-    country: 'Brasil',
+    password: '',
+    confirmPassword: '',
     termsAccepted: false,
+    noticesAccepted: false,
   })
-  const [sports, setSports] = useState<string[]>(['Sinuca'])
+  const [sports, setSports] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
   function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  async function lookupPlayerCep(value: string) {
+    const cep = onlyDigits(value)
+    if (!isBrazilCountry(form.country) || cep.length !== 8) return
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      const data = await response.json()
+
+      if (data.erro) return
+
+      setForm((current: any) => ({
+        ...current,
+        street: data.logradouro || current.street,
+        neighborhood: data.bairro || current.neighborhood,
+        city: data.localidade || current.city,
+        state: data.uf || current.state,
+      }))
+    } catch {
+      // Endereço continua editável manualmente se a consulta externa falhar.
+    }
   }
 
   function toggleSport(sport: string) {
@@ -513,23 +907,65 @@ function PlayerSignup() {
     ))
   }
 
+  function nextPlayerStep() {
+    if (step === 1 && sports.length === 0) {
+      alert('Selecione pelo menos um esporte.')
+      return
+    }
+
+    if (step === 2 && (!form.firstName || !form.lastName || !form.email || !form.phone || !form.country)) {
+      alert('Preencha nome, sobrenome, e-mail, WhatsApp e país.')
+      return
+    }
+
+    if (step === 2 && isBrazilCountry(form.country)) {
+      if (!form.cpf || !form.zipCode || !form.street || !form.addressNumber || !form.neighborhood || !form.city || !form.state) {
+        alert('Preencha CPF, CEP, endereço, número, bairro, cidade e estado.')
+        return
+      }
+    }
+
+    if (step === 2 && !isBrazilCountry(form.country) && !form.addressNumber && (form.street || form.city || form.state)) {
+      alert('Preencha o número do endereço.')
+      return
+    }
+
+    setStep(current => Math.min(current + 1, 3))
+  }
+
+  function previousPlayerStep() {
+    setStep(current => Math.max(current - 1, 1))
+  }
+
   function registerPlayerAccount() {
-    if (!form.name || !form.email || !form.phone) {
-      alert('Preencha nome, e-mail e WhatsApp.')
+    if (!form.password) {
+      alert('Informe uma senha.')
+      return
+    }
+
+    if (form.password !== form.confirmPassword) {
+      alert('As senhas não conferem.')
       return
     }
 
     if (!form.termsAccepted) {
-      alert('Aceite os termos para criar o perfil.')
+      alert('Aceite os termos de uso para criar o perfil.')
+      return
+    }
+
+    if (!form.noticesAccepted) {
+      alert('Aceite os avisos por e-mail e WhatsApp para continuar.')
       return
     }
 
     setLoading(true)
+    const fullName = `${form.firstName} ${form.lastName}`.trim()
     fetch(`${API}/players/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...form,
+        name: fullName,
         favoriteSports: sports,
         phone: normalizeBrazilPhone(form.phone),
       }),
@@ -541,9 +977,27 @@ function PlayerSignup() {
           return
         }
 
-        navigate(`/jogador/${data.player.id}`)
+        setCreatedPlayer(data.player)
       })
       .finally(() => setLoading(false))
+  }
+
+  if (createdPlayer) {
+    return (
+      <div className="onboardingPage">
+        <section className="onboardingHero playerHero">
+          <span>Validação pendente</span>
+          <h1>Confirme seu cadastro de jogador.</h1>
+          <p>Enviamos um link de validação para o e-mail e WhatsApp informados. Depois de validar, seu perfil ficará ativo.</p>
+        </section>
+
+        <section className="onboardingCard">
+          <h2>{createdPlayer.name}</h2>
+          <p>Confira sua caixa de entrada e suas mensagens do WhatsApp.</p>
+          <a href="/login">Ir para login</a>
+        </section>
+      </div>
+    )
   }
 
   return (
@@ -559,64 +1013,153 @@ function PlayerSignup() {
       </section>
 
       <section className="onboardingCard">
-        <h2>Dados do jogador</h2>
-        <div className="onboardingGrid">
-          <div>
-            <label>Nome completo *</label>
-            <input value={form.name} onChange={e => updateField('name', e.target.value)} />
-          </div>
-          <div>
-            <label>Apelido</label>
-            <input value={form.nickname} onChange={e => updateField('nickname', e.target.value)} />
-          </div>
-          <div>
-            <label>E-mail *</label>
-            <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
-          </div>
-          <div>
-            <label>WhatsApp *</label>
-            <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
-          </div>
-          <div>
-            <label>RG</label>
-            <input value={form.rg} onChange={e => updateField('rg', formatRg(e.target.value))} />
-          </div>
-          <div>
-            <label>Cidade</label>
-            <input value={form.city} onChange={e => updateField('city', e.target.value)} />
-          </div>
-          <div>
-            <label>Estado</label>
-            <input value={form.state} onChange={e => updateField('state', e.target.value)} />
-          </div>
-          <div>
-            <label>País</label>
-            <input value={form.country} onChange={e => updateField('country', e.target.value)} />
-          </div>
-        </div>
-
-        <h2>Esportes</h2>
-        <div className="sportsPicker">
-          {SPORT_OPTIONS.map(sport => (
-            <label key={sport}>
-              <input type="checkbox" checked={sports.includes(sport)} onChange={() => toggleSport(sport)} />
-              {sport}
-            </label>
+        <div className="onboardingSteps">
+          {[1, 2, 3].map(item => (
+            <span key={item} className={step === item ? 'active' : step > item ? 'done' : ''}>{item}</span>
           ))}
         </div>
 
-        <label className="termsLine">
-          <input
-            type="checkbox"
-            checked={form.termsAccepted}
-            onChange={e => updateField('termsAccepted', e.target.checked)}
-          />
-          Aceito receber avisos de torneios, chamadas de partidas e atualizações do meu ranking.
-        </label>
+        {step === 1 && (
+          <>
+            <h2>Qual seu esporte?</h2>
+            <div className="sportsPicker">
+              {SPORT_OPTIONS.map(sport => (
+                <label key={sport}>
+                  <input type="checkbox" checked={sports.includes(sport)} onChange={() => toggleSport(sport)} />
+                  {sport}
+                </label>
+              ))}
+            </div>
+          </>
+        )}
 
-        <button className="primaryButton" onClick={registerPlayerAccount} disabled={loading}>
-          {loading ? 'Criando...' : 'Criar perfil de jogador'}
-        </button>
+        {step === 2 && (
+          <>
+            <h2>Dados do jogador</h2>
+            <div className="onboardingGrid">
+              <div>
+                <label>Nome *</label>
+                <input value={form.firstName} onChange={e => updateField('firstName', e.target.value)} />
+              </div>
+              <div>
+                <label>Sobrenome *</label>
+                <input value={form.lastName} onChange={e => updateField('lastName', e.target.value)} />
+              </div>
+              <div>
+                <label>Apelido</label>
+                <input value={form.nickname} onChange={e => updateField('nickname', e.target.value)} />
+              </div>
+              <div>
+                <label>E-mail *</label>
+                <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+              </div>
+              <div>
+                <label>WhatsApp *</label>
+                <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+              </div>
+              <div>
+                <label>Sexo</label>
+                <select value={form.gender} onChange={e => updateField('gender', e.target.value)}>
+                  <option value="">Selecione</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="feminino">Feminino</option>
+                </select>
+              </div>
+              <div>
+                <label>Data de nascimento</label>
+                <input type="date" value={form.birthDate} onChange={e => updateField('birthDate', e.target.value)} />
+              </div>
+              <div>
+                <label>País *</label>
+                <select value={form.country} onChange={e => updateField('country', e.target.value)}>
+                  {COUNTRY_OPTIONS.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>CPF{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input value={form.cpf} onChange={e => updateField('cpf', formatCpf(e.target.value))} />
+              </div>
+              <div>
+                <label>CEP{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input
+                  value={form.zipCode}
+                  onChange={e => updateField('zipCode', formatCep(e.target.value))}
+                  onBlur={e => lookupPlayerCep(e.target.value)}
+                />
+              </div>
+              <div>
+                <label>Endereço{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input value={form.street} onChange={e => updateField('street', e.target.value)} />
+              </div>
+              <div>
+                <label>Número{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input value={form.addressNumber} onChange={e => updateField('addressNumber', e.target.value)} />
+              </div>
+              <div>
+                <label>Complemento</label>
+                <input value={form.complement} onChange={e => updateField('complement', e.target.value)} />
+              </div>
+              <div>
+                <label>Bairro{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input value={form.neighborhood} onChange={e => updateField('neighborhood', e.target.value)} />
+              </div>
+              <div>
+                <label>Cidade{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input value={form.city} onChange={e => updateField('city', e.target.value)} />
+              </div>
+              <div>
+                <label>Estado{isBrazilCountry(form.country) ? ' *' : ''}</label>
+                <input value={form.state} onChange={e => updateField('state', e.target.value)} />
+              </div>
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <h2>Criação de senha</h2>
+            <div className="onboardingGrid">
+              <div>
+                <label>Senha *</label>
+                <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} />
+              </div>
+              <div>
+                <label>Confirmar senha *</label>
+                <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} />
+              </div>
+            </div>
+
+            <label className="termsLine">
+              <input
+                type="checkbox"
+                checked={form.termsAccepted}
+                onChange={e => updateField('termsAccepted', e.target.checked)}
+              />
+              Aceito os termos de uso da plataforma.
+            </label>
+
+            <label className="termsLine">
+              <input
+                type="checkbox"
+                checked={form.noticesAccepted}
+                onChange={e => updateField('noticesAccepted', e.target.checked)}
+              />
+              Aceito receber avisos via e-mail e WhatsApp.
+            </label>
+          </>
+        )}
+
+        <div className="onboardingActions">
+          {step > 1 && <button type="button" onClick={previousPlayerStep}>Voltar</button>}
+          {step < 3 && <button type="button" className="primaryButton" onClick={nextPlayerStep}>Próximo</button>}
+          {step === 3 && (
+            <button className="primaryButton" onClick={registerPlayerAccount} disabled={loading}>
+              {loading ? 'Criando...' : 'Criar perfil de jogador'}
+            </button>
+          )}
+        </div>
       </section>
     </div>
   )
@@ -900,13 +1443,9 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
       .catch(() => setCurrentPlan(''))
   }, [isMasterPlan])
 
-  function goToTournaments() {
-    if (window.location.pathname === '/app') {
-      document.getElementById('meus-torneios')?.scrollIntoView({ behavior: 'smooth' })
-      return
-    }
-
-    navigate('/app')
+  function goToTournamentFilter(filter: string) {
+    navigate(`/app?torneios=${filter}`)
+    setTimeout(() => document.getElementById('meus-torneios')?.scrollIntoView({ behavior: 'smooth' }), 80)
   }
 
   function logout() {
@@ -921,18 +1460,79 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
 
   return (
     <aside className="sidebar">
-      <div className="sidebarLogo">🎱 ProMaster</div>
+      <div className="sidebarLogo">ProMaster</div>
       <button onClick={() => navigate('/app')}>Dashboard</button>
-      <button onClick={() => navigate('/app/perfil')}>Perfil</button>
-      <button onClick={goToTournaments}>Meus Torneios</button>
-      <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
-      <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+
+      <details className="sidebarGroup">
+        <summary>Meus Torneios</summary>
+        <button className="sidebarSubButton" onClick={() => goToTournamentFilter('todos')}>Todos os Torneios</button>
+        <button className="sidebarSubButton" onClick={() => goToTournamentFilter('andamento')}>Em Andamento</button>
+        <button className="sidebarSubButton" onClick={() => goToTournamentFilter('inscricoes')}>Inscrições Abertas</button>
+        <button className="sidebarSubButton" onClick={() => goToTournamentFilter('encerrados')}>Encerrados</button>
+        <button className="sidebarSubButton" onClick={() => goToTournamentFilter('arquivados')}>Arquivados</button>
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Financeiro</summary>
+        <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Dashboard Financeiro</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Receitas</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições Recebidas</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Repasses</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Premiações</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Saques</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Relatórios</button>
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Cadastros</summary>
+        <span className="sidebarGroupLabel">Arenas</span>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Lista de Arenas</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Nova Arena</button>
+        <span className="sidebarGroupLabel">Jogadores</span>
+        <button className="sidebarSubButton" onClick={() => navigate('/cadastro-jogador')}>Cadastro</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Estatísticas</button>
+        <span className="sidebarGroupLabel">Usuários</span>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/usuarios')}>Usuários</button>
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Rankings</summary>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking Geral</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Ranking por Circuito</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking por Categoria</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Race to Master</button>
+      </details>
+
       {showMasterLinks && (
-        <>
-          <button onClick={() => navigate('/campeonatos')}>Campeonatos</button>
-          <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
-        </>
+        <details className="sidebarGroup">
+          <summary>Circuito ProMaster</summary>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Dashboard Geral</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Circuito</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/etapas')}>Etapas</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Pagamentos</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Cadastro de Arenas</button>
+        </details>
       )}
+
+      <details className="sidebarGroup">
+        <summary>Configurações</summary>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Organização</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Integrações</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Pagamentos</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>WhatsApp</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Notificações</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Termos e Políticas</button>
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Perfil</summary>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Meu Perfil</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Minha Arena</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Segurança</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Assinatura</button>
+      </details>
       <button className="sidebarFooterButton" onClick={logout}>Sair</button>
     </aside>
   )
@@ -1516,12 +2116,14 @@ function UsersPage() {
 
 function Dashboard({ user }: any) {
   const navigate = useNavigate()
+  const pageLocation = useLocation()
   const [tournaments, setTournaments] = useState<any[]>([])
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [detailsTournament, setDetailsTournament] = useState<any>(null)
   const [openTournamentMenuId, setOpenTournamentMenuId] = useState<number | null>(null)
   const plan = user?.organization?.plan || 'trial'
   const isMasterPlan = plan === 'master' || plan === 'free'
+  const tournamentFilter = new URLSearchParams(pageLocation.search).get('torneios') || 'todos'
   const finishedCount = tournaments.filter(t => t.status === 'finished').length
   const canceledCount = tournaments.filter(t =>
     ['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
@@ -1529,6 +2131,34 @@ function Dashboard({ user }: any) {
   const futureCount = tournaments.filter(t =>
     t.status !== 'finished' && !['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
   ).length
+  const filteredTournaments = tournaments.filter(t => {
+    const status = String(t.status || '').toLowerCase()
+
+    if (tournamentFilter === 'andamento') {
+      return ['running', 'playing', 'started', 'in_progress', 'em_andamento'].includes(status)
+    }
+
+    if (tournamentFilter === 'inscricoes') {
+      return Boolean(t.registrationOpen)
+    }
+
+    if (tournamentFilter === 'encerrados') {
+      return ['finished', 'closed', 'ended', 'encerrado'].includes(status)
+    }
+
+    if (tournamentFilter === 'arquivados') {
+      return ['archived', 'arquivado'].includes(status)
+    }
+
+    return true
+  })
+  const tournamentFilterLabels: Record<string, string> = {
+    todos: 'Todos os Torneios',
+    andamento: 'Em Andamento',
+    inscricoes: 'Inscrições Abertas',
+    encerrados: 'Encerrados',
+    arquivados: 'Arquivados',
+  }
 
   function logout() {
     localStorage.removeItem('token')
@@ -1599,10 +2229,11 @@ function Dashboard({ user }: any) {
 
         <div id="meus-torneios" className="panel">
           <h2>Meus Torneios</h2>
+          <p className="panelSubtitle">{tournamentFilterLabels[tournamentFilter] || 'Todos os Torneios'}</p>
 
-          {tournaments.length === 0 && <p>Nenhum torneio encontrado.</p>}
+          {filteredTournaments.length === 0 && <p>Nenhum torneio encontrado para este filtro.</p>}
 
-          {tournaments.length > 0 && (
+          {filteredTournaments.length > 0 && (
             <div className="tournamentsTableWrap">
               <table className="tournamentsTable">
                 <thead>
@@ -1615,7 +2246,7 @@ function Dashboard({ user }: any) {
                   </tr>
                 </thead>
                 <tbody>
-                  {tournaments.map(t => {
+                  {filteredTournaments.map(t => {
                     const publicUrl = publicTournamentUrl(t.publicSlug)
 
                     return (
@@ -3275,7 +3906,7 @@ function TournamentSettings() {
               </select>
               {form.format === 'round_robin' && (
                 <p className="helperText">
-                  Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou campeonatos com várias etapas/dias e ranking acumulado, use o plano Master.
+                  Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou Circuito ProMaster com várias etapas/dias e ranking acumulado, use o plano Master.
                 </p>
               )}
               <p className="helperText">Quantidade e modelo só podem ser alterados antes de gerar a chave.</p>
@@ -4167,25 +4798,98 @@ function PublicTournament() {
   )
 }
 
-function SeasonsPage({ user }: any) {
+function circuitStatusLabel(status?: string) {
+  const labels: Record<string, string> = {
+    draft: 'Rascunho',
+    running: 'Em andamento',
+    in_progress: 'Em andamento',
+    finished: 'Encerrado',
+    closed: 'Encerrado',
+    canceled: 'Cancelado',
+  }
+
+  return labels[String(status || '').toLowerCase()] || status || 'Rascunho'
+}
+
+function splitCircuitLines(value?: string) {
+  return String(value || '')
+    .split(/\n|;/)
+    .map(item => item.trim())
+    .filter(Boolean)
+}
+
+function formatCircuitDate(date?: string) {
+  if (!date) return '-'
+  return new Date(date).toLocaleDateString()
+}
+
+function parseCircuitStageLine(line: string, index: number) {
+  const parts = line.split('|').map(item => item.trim()).filter(Boolean)
+  return {
+    name: parts[0] || `Etapa ${index + 1}`,
+    city: parts[1] || parts[0] || 'Cidade a definir',
+    date: parts[2] || 'Data a definir',
+    arena: parts[3] || 'Arena a definir',
+  }
+}
+
+function defaultCircuitPoints() {
+  return [
+    { place: '1º', points: 100 },
+    { place: '2º', points: 80 },
+    { place: '3º', points: 60 },
+    { place: '5º ao 8º', points: 40 },
+    { place: '9º ao 16º', points: 20 },
+  ]
+}
+
+function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
   const navigate = useNavigate()
+  const { seasonId: routeSeasonId } = useParams()
   const isMasterPlan = user?.organization?.plan === 'master' || user?.organization?.plan === 'free'
   const [seasons, setSeasons] = useState<any[]>([])
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null)
   const [seasonDetails, setSeasonDetails] = useState<any>(null)
+  const [seasonOverview, setSeasonOverview] = useState<any>(null)
+  const [arenas, setArenas] = useState<any[]>([])
+  const [rankingCategory, setRankingCategory] = useState('Geral')
+  const [seasonRankingCategory, setSeasonRankingCategory] = useState('Geral')
+  const [showCreateSeason, setShowCreateSeason] = useState(false)
+  const [circuitDashboardOpen, setCircuitDashboardOpen] = useState(false)
   const [form, setForm] = useState<any>({
-    name: 'Campeonato da Temporada',
-    tournamentCount: 4,
-    playerCount: 32,
+    name: 'Circuito ProMaster São Paulo 2027',
+    tournamentCount: 8,
+    playerCount: 128,
     startDate: '',
     endDate: '',
-    locations: '',
-    rules: '',
-    prize: '',
+    locations: 'Etapa 1 | São Paulo | Março | Arena principal\nEtapa 2 | Santos | Abril | Arena a definir\nEtapa 3 | Campinas | Maio | Arena a definir\nMasters Final | São Paulo | Novembro | Arena principal',
+    rules: '1º lugar: 100 pontos\n2º lugar: 80 pontos\n3º lugar: 60 pontos\n5º ao 8º: 40 pontos\n9º ao 16º: 20 pontos\nRace to Masters: os 16 melhores classificam para a final',
+    prize: 'R$ 120.000',
+  })
+  const [arenaForm, setArenaForm] = useState<any>({
+    name: '',
+    website: '',
+    phone: '',
+    email: '',
+    country: 'Brasil',
+    zipCode: '',
+    street: '',
+    number: '',
+    complement: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+    responsibleName: '',
+    responsibleCpf: '',
+    responsiblePhone: '',
   })
 
   function updateSeasonField(field: string, value: string | number) {
     setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function updateArenaField(field: string, value: string) {
+    setArenaForm((current: any) => ({ ...current, [field]: value }))
   }
 
   function loadSeasons() {
@@ -4195,7 +4899,7 @@ function SeasonsPage({ user }: any) {
         const list = Array.isArray(data) ? data : []
         setSeasons(list)
 
-        if (!selectedSeasonId && list[0]) {
+        if (!selectedSeasonId && list[0] && defaultPanel !== 'dashboard') {
           setSelectedSeasonId(list[0].id)
         }
       })
@@ -4207,9 +4911,88 @@ function SeasonsPage({ user }: any) {
       .then(data => setSeasonDetails(data.error ? null : data))
   }
 
+  function loadSeasonOverview() {
+    fetch(`${API}/seasons/overview`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setSeasonOverview(data.error ? null : data))
+      .catch(() => setSeasonOverview(null))
+  }
+
+  function loadArenas() {
+    fetch(`${API}/arenas`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setArenas(Array.isArray(data) ? data : []))
+      .catch(() => setArenas([]))
+  }
+
+  async function lookupArenaCep(value: string) {
+    const cep = onlyDigits(value)
+    if (!isBrazilCountry(arenaForm.country) || cep.length !== 8) return
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      const data = await response.json()
+
+      if (data.erro) return
+
+      setArenaForm((current: any) => ({
+        ...current,
+        street: data.logradouro || current.street,
+        neighborhood: data.bairro || current.neighborhood,
+        city: data.localidade || current.city,
+        state: data.uf || current.state,
+      }))
+    } catch {
+      // O cadastro continua editável se a consulta externa falhar.
+    }
+  }
+
+  function createArena() {
+    if (!arenaForm.name) {
+      alert('Informe o nome do local.')
+      return
+    }
+
+    fetch(`${API}/arenas`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        ...arenaForm,
+        phone: normalizeBrazilPhone(arenaForm.phone),
+        responsiblePhone: normalizeBrazilPhone(arenaForm.responsiblePhone),
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setArenaForm({
+          name: '',
+          website: '',
+          phone: '',
+          email: '',
+          country: 'Brasil',
+          zipCode: '',
+          street: '',
+          number: '',
+          complement: '',
+          neighborhood: '',
+          city: '',
+          state: '',
+          responsibleName: '',
+          responsibleCpf: '',
+          responsiblePhone: '',
+        })
+        loadArenas()
+      })
+  }
+
   function createSeason() {
     if (!isMasterPlan) {
-      alert('Modo campeonato disponível apenas no plano Master.')
+      alert('Circuito ProMaster disponível apenas no plano Master.')
       return
     }
 
@@ -4226,7 +5009,10 @@ function SeasonsPage({ user }: any) {
         }
 
         setSelectedSeasonId(data.season.id)
+        setShowCreateSeason(false)
+        setCircuitDashboardOpen(true)
         loadSeasons()
+        loadSeasonOverview()
       })
   }
 
@@ -4244,15 +5030,29 @@ function SeasonsPage({ user }: any) {
           return
         }
 
-        alert(`Campeão da temporada: ${data.champion.name}`)
+        alert(`Líder final do circuito: ${data.champion.name}`)
         loadSeasonDetails(selectedSeasonId)
         loadSeasons()
+        loadSeasonOverview()
       })
   }
 
   useEffect(() => {
     loadSeasons()
-  }, [])
+    loadSeasonOverview()
+    if (defaultPanel === 'arenas') {
+      loadArenas()
+    }
+  }, [defaultPanel])
+
+  useEffect(() => {
+    if (routeSeasonId) {
+      setSelectedSeasonId(Number(routeSeasonId))
+      setCircuitDashboardOpen(true)
+    } else {
+      setCircuitDashboardOpen(false)
+    }
+  }, [routeSeasonId])
 
   useEffect(() => {
     if (selectedSeasonId) {
@@ -4260,157 +5060,770 @@ function SeasonsPage({ user }: any) {
     }
   }, [selectedSeasonId])
 
+  const selectedSeason = seasonDetails?.season
+  const circuitTournaments = seasonDetails?.tournaments || []
+  const circuitRanking = seasonDetails?.ranking || []
+  const stagePlan = splitCircuitLines(selectedSeason?.locations || form.locations).map(parseCircuitStageLine)
+  const stageTotal = selectedSeason?.tournamentCount || form.tournamentCount || stagePlan.length || circuitTournaments.length
+  const finishedStages = circuitTournaments.filter((tournament: any) => ['finished', 'closed', 'ended'].includes(String(tournament.status || '').toLowerCase())).length
+  const activeStage = circuitTournaments.find((tournament: any) => ['running', 'in_progress', 'playing'].includes(String(tournament.status || '').toLowerCase()))
+  const nextStage = circuitTournaments.find((tournament: any) => !['finished', 'closed', 'ended', 'canceled', 'cancelled'].includes(String(tournament.status || '').toLowerCase()))
+  const totalMatches = circuitTournaments.reduce((sum: number, tournament: any) => sum + (Array.isArray(tournament.matches) ? tournament.matches.length : 0), 0)
+  const topRanking = circuitRanking.slice(0, 8)
+  const raceToMasters = circuitRanking.slice(0, 16)
+  const rankingCategories = ['Geral', 'Master', 'Feminino', 'Iniciante', 'Equipes']
+  const categoryRanking = rankingCategory === 'Geral' ? topRanking : []
+  const pointsTable = defaultCircuitPoints()
+  const circuitMapStages = stagePlan.slice(0, Math.max(1, Math.min(stagePlan.length, 6)))
+  const executiveKpis = seasonOverview?.kpis || {}
+  const executiveRanking = seasonRankingCategory === 'Geral' ? (seasonOverview?.ranking || []) : []
+  const executiveCalendar = seasonOverview?.calendar || []
+  const executiveCircuits = seasonOverview?.circuits || []
+  const executiveRace = seasonOverview?.raceToMasters || { classified: [], bubble: [], outsideCount: 0 }
+  const executiveFinance = seasonOverview?.finance || {}
+  const executiveOperational = seasonOverview?.operational || {}
+  const executiveArenas = seasonOverview?.arenas || []
+  const allCircuitStages = seasons.flatMap((season: any) =>
+    (season.tournaments || []).map((tournament: any) => ({
+      ...tournament,
+      seasonName: season.name,
+      seasonId: season.id,
+    }))
+  )
+  const executiveSeasonYear = selectedSeason?.startDate
+    ? new Date(selectedSeason.startDate).getFullYear()
+    : new Date().getFullYear() + 1
+  const executiveTopScore = Math.max(1, ...((seasonOverview?.ranking || []).slice(0, 10).map((item: any) => Number(item.points || 0))))
+  const executiveOrganizerEvents = executiveCalendar.length
+
+  function executiveMonthLabel(date?: string) {
+    if (!date) return 'A definir'
+    return new Date(date).toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase()
+  }
+
+  function circuitVisualStatusLabel(status?: string) {
+    const labels: Record<string, string> = {
+      running: 'Em andamento',
+      next: 'Próxima etapa',
+      finished: 'Encerrado',
+    }
+
+    return labels[String(status || '')] || 'Próxima etapa'
+  }
+
+  function openCircuitDashboard(seasonId: number) {
+    setSelectedSeasonId(seasonId)
+    setCircuitDashboardOpen(true)
+    navigate(`/campeonatos/circuito/${seasonId}`)
+  }
+
+  function renderCreateCircuitForm() {
+    return (
+      <>
+        <label>Nome do circuito</label>
+        <input value={form.name} onChange={e => updateSeasonField('name', e.target.value)} />
+
+        <div className="seasonFormGrid">
+          <div>
+            <label>Nº de etapas</label>
+            <input type="number" value={form.tournamentCount} onChange={e => updateSeasonField('tournamentCount', Number(e.target.value))} />
+          </div>
+
+          <div>
+            <label>Jogadores no circuito</label>
+            <input type="number" value={form.playerCount} onChange={e => updateSeasonField('playerCount', Number(e.target.value))} />
+          </div>
+
+          <div>
+            <label>Início</label>
+            <input type="date" value={form.startDate} onChange={e => updateSeasonField('startDate', e.target.value)} />
+          </div>
+
+          <div>
+            <label>Final</label>
+            <input type="date" value={form.endDate} onChange={e => updateSeasonField('endDate', e.target.value)} />
+          </div>
+        </div>
+
+        <label>Calendário e sedes</label>
+        <textarea value={form.locations} onChange={e => updateSeasonField('locations', e.target.value)} placeholder="Etapa 1 | São Paulo | Março | Arena principal" />
+
+        <label>Pontuação e regras do circuito</label>
+        <textarea value={form.rules} onChange={e => updateSeasonField('rules', e.target.value)} placeholder="1º lugar: 100 pontos; Race to Masters: top 16..." />
+
+        <label>Premiação total</label>
+        <textarea value={form.prize} onChange={e => updateSeasonField('prize', e.target.value)} placeholder="Premiação total do circuito" />
+
+        <button className="primaryButton" onClick={createSeason}>
+          Criar circuito
+        </button>
+      </>
+    )
+  }
+
   return (
     <div className="saasLayout">
       <ClientSidebar isMasterPlan={isMasterPlan} />
 
       <main className="saasMain">
         <header className="hero">
-          <div className="badge">🏁 Modo Campeonato</div>
-          <h1>Campeonatos</h1>
-          <p>Configure temporadas com vários torneios e ranking por vitórias e derrotas.</p>
+          <div className="badge">🏆 Circuito ProMaster</div>
+          <h1>
+            {defaultPanel === 'etapas'
+              ? 'Etapas'
+              : defaultPanel === 'pagamentos'
+                ? 'Pagamentos'
+                : defaultPanel === 'inscricoes'
+                  ? 'Inscrições'
+                  : defaultPanel === 'arenas'
+                    ? 'Cadastro de Arenas'
+                    : defaultPanel === 'circuito'
+                      ? 'Circuito'
+                      : (defaultPanel === 'circuito-dashboard' || circuitDashboardOpen) && selectedSeason
+                    ? selectedSeason.name
+                    : 'Dashboard Geral'}
+          </h1>
+          <p>
+            {defaultPanel === 'dashboard'
+              ? 'Visão executiva da temporada, circuitos ativos, ranking, calendário, Race to Masters e gestão individual.'
+              : defaultPanel === 'circuito'
+                ? 'Selecione um circuito para abrir o dashboard individual com ranking, etapas, calendário e status.'
+                : defaultPanel === 'arenas'
+                  ? 'Cadastre arenas, salões, bares e demais locais onde as etapas e jogos acontecem.'
+              : 'Operação do Circuito ProMaster separada por etapas, pagamentos e participantes.'}
+          </p>
         </header>
 
         {!isMasterPlan && (
           <div className="panel cancelPanel">
             <h2>Recurso Master</h2>
-            <p>O modo campeonato está disponível para o plano Master.</p>
+            <p>O Circuito ProMaster está disponível para o plano Master.</p>
             <button onClick={() => navigate('/upgrade')}>Ver planos</button>
           </div>
         )}
 
-        <div className="seasonLayout">
-          <section className="panel">
-            <h2>Novo campeonato</h2>
+        {defaultPanel === 'dashboard' && !circuitDashboardOpen && (
+        <section className="panel seasonExecutivePanel">
+          <div className="seasonExecutiveHeader">
+            <div>
+              <span>Dashboard Executivo da Temporada</span>
+              <h2>Temporada {executiveSeasonYear}</h2>
+              <p>Visão de liga com circuitos, etapas, ranking acumulado, Race to Masters, financeiro e operação.</p>
+            </div>
+            <div className="seasonExecutiveActions">
+              <strong>{executiveKpis.stagesDone || 0} / {executiveKpis.stagesTotal || 0} etapas realizadas</strong>
+              <button className="primaryButton" onClick={() => setShowCreateSeason(true)}>+ Criar Novo Circuito</button>
+            </div>
+          </div>
 
-            <label>Nome da temporada</label>
-            <input value={form.name} onChange={e => updateSeasonField('name', e.target.value)} />
+          <div className="seasonKpiGrid">
+            <div><span>Jogadores</span><strong>{executiveKpis.players || 0}</strong></div>
+            <div><span>Circuitos</span><strong>{executiveKpis.circuits || seasons.length}</strong></div>
+            <div><span>Etapas</span><strong>{executiveKpis.stagesDone || 0}/{executiveKpis.stagesTotal || 0}</strong></div>
+            <div><span>Premiação Total</span><strong>{executiveKpis.prizeTotal || 'R$ 0,00'}</strong></div>
+            <div><span>Partidas</span><strong>{executiveKpis.matches || 0}</strong></div>
+            <div><span>Arenas</span><strong>{executiveKpis.arenas || 0}</strong></div>
+          </div>
 
-            <div className="seasonFormGrid">
-              <div>
-                <label>Nº de torneios</label>
-                <input type="number" value={form.tournamentCount} onChange={e => updateSeasonField('tournamentCount', Number(e.target.value))} />
+          <div className="seasonExecutiveGrid">
+            <div className="seasonExecutiveCard seasonExecutiveRanking">
+              <div className="seasonCardHeader">
+                <div>
+                  <h3>Top 20 Temporada</h3>
+                  <p>Ranking geral acumulado por etapa.</p>
+                </div>
+                <div className="rankingTabs">
+                  {['Geral', 'Feminino', 'Master', 'Equipes', 'Estado'].map(category => (
+                    <button
+                      key={category}
+                      className={seasonRankingCategory === category ? 'active' : ''}
+                      onClick={() => setSeasonRankingCategory(category)}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div>
-                <label>Jogadores na temporada</label>
-                <input type="number" value={form.playerCount} onChange={e => updateSeasonField('playerCount', Number(e.target.value))} />
-              </div>
-
-              <div>
-                <label>Início</label>
-                <input type="date" value={form.startDate} onChange={e => updateSeasonField('startDate', e.target.value)} />
-              </div>
-
-              <div>
-                <label>Final</label>
-                <input type="date" value={form.endDate} onChange={e => updateSeasonField('endDate', e.target.value)} />
+              <div className="seasonRankingTable executive">
+                <div className="seasonRankingHead">
+                  <span>Pos</span>
+                  <span>Jogador</span>
+                  <span>Pontos</span>
+                  <span>Vitórias</span>
+                </div>
+                {executiveRanking.length === 0 && <p>Ranking aguardando resultados para este filtro.</p>}
+                {executiveRanking.slice(0, 20).map((item: any, index: number) => (
+                  <div key={`${item.name}-${index}`} className="seasonRankingRow">
+                    <span>{index + 1}</span>
+                    <strong>{item.name}</strong>
+                    <span>{item.points}</span>
+                    <span>{item.wins}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <label>Locais</label>
-            <textarea value={form.locations} onChange={e => updateSeasonField('locations', e.target.value)} placeholder="Um local por linha ou lista de sedes" />
+            <div className="seasonExecutiveCard">
+              <h3>Calendário da Temporada</h3>
+              <div className="seasonCalendarList">
+                {executiveCalendar.length === 0 && <p>Nenhuma etapa programada ainda.</p>}
+                {executiveCalendar.map((stage: any) => (
+                  <div key={stage.id}>
+                    <span>{executiveMonthLabel(stage.eventDate)}</span>
+                    <strong>{stage.name}</strong>
+                    <small>{stage.location || 'Arena a definir'} • {tournamentStatusLabel(stage.status)}</small>
+                    <em>{stage.registrationOpen ? 'Inscrições abertas' : 'Inscrições fechadas'}{stage.liveStarted ? ' • Transmissão ao vivo' : ''}</em>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
-            <label>Regras da temporada</label>
-            <textarea value={form.rules} onChange={e => updateSeasonField('rules', e.target.value)} placeholder="Critérios, desempate, presença, pontuação..." />
+          <div className="seasonExecutiveCard seasonEvolutionCard">
+            <div className="seasonCardHeader">
+              <div>
+                <h3>Evolução do Ranking</h3>
+                <p>Leitura visual da pontuação acumulada dos líderes da temporada.</p>
+              </div>
+              <span>Top 10 jogadores</span>
+            </div>
+            <div className="seasonEvolutionChart">
+              {(seasonOverview?.ranking || []).slice(0, 10).map((item: any, index: number) => (
+                <div key={`${item.name}-evolution`}>
+                  <span>{index + 1}. {item.name}</span>
+                  <div><strong style={{ width: `${Math.max(8, Math.min(100, Number(item.points || 0) / executiveTopScore * 100))}%` }} /></div>
+                  <em>{item.points} pts</em>
+                </div>
+              ))}
+              {(!seasonOverview?.ranking || seasonOverview.ranking.length === 0) && <p>O gráfico será preenchido após as primeiras etapas concluídas.</p>}
+            </div>
+          </div>
 
-            <label>Premiação</label>
-            <textarea value={form.prize} onChange={e => updateSeasonField('prize', e.target.value)} placeholder="Premiação final da temporada" />
+          <div className="seasonExecutiveGrid three">
+            <div className="seasonExecutiveCard">
+              <h3>Circuitos Ativos</h3>
+              <div className="seasonCircuitStatusGrid">
+                {executiveCircuits.length === 0 && <p>Nenhum circuito criado.</p>}
+                {executiveCircuits.map((circuit: any) => (
+                  <button key={circuit.id} className={`status-${circuit.visualStatus}`} onClick={() => openCircuitDashboard(circuit.id)}>
+                    <span>{circuitVisualStatusLabel(circuit.visualStatus)}</span>
+                    <strong>{circuit.name}</strong>
+                    <small>{circuit.stagesDone || 0}/{circuit.stagesTotal || 0} etapas • Próxima: {circuit.nextStage || 'A definir'}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-            <button className="primaryButton" onClick={createSeason}>
-              Criar campeonato
-            </button>
-          </section>
+            <div className="seasonExecutiveCard">
+              <h3>Race to Masters</h3>
+              <div className="raceMastersBox">
+                <strong>Top 16 classificados</strong>
+                {executiveRace.classified?.slice(0, 6).map((item: any, index: number) => (
+                  <span key={`${item.name}-classified`}>🟢 {index + 1}. {item.name} <b>{item.points}</b></span>
+                ))}
+                <strong>Zona de disputa</strong>
+                {executiveRace.bubble?.slice(0, 4).map((item: any, index: number) => (
+                  <span key={`${item.name}-bubble`}>🟡 {index + 17}. {item.name} <b>{item.points}</b></span>
+                ))}
+                <small>{executiveRace.outsideCount || 0} jogadores fora da zona de classificação.</small>
+              </div>
+            </div>
 
-          <section className="panel">
-            <h2>Temporadas</h2>
+            <div className="seasonExecutiveCard">
+              <h3>Perfil da Temporada</h3>
+              <div className="seasonInsightList">
+                <span>Quem lidera <strong>{(seasonOverview?.ranking || [])[0]?.name || 'A definir'}</strong></span>
+                <span>Etapa com mais inscritos <strong>{executiveCalendar[0]?.name || 'A definir'}</strong></span>
+                <span>Arena mais ativa <strong>{executiveArenas[0]?.arena || 'A definir'}</strong></span>
+                <span>Circuito mais forte <strong>{executiveCircuits[0]?.name || 'A definir'}</strong></span>
+              </div>
+            </div>
+          </div>
 
-            {seasons.length === 0 && <p>Nenhum campeonato criado.</p>}
+          <div className="seasonExecutiveGrid lower">
+            <div className="seasonExecutiveCard">
+              <h3>Painel Financeiro</h3>
+              <div className="seasonFinanceGrid">
+                <div><span>Receita</span><strong>{executiveFinance.revenue || 'R$ 0,00'}</strong></div>
+                <div><span>Confirmado</span><strong>{executiveFinance.paidRevenue || 'R$ 0,00'}</strong></div>
+                <div><span>Pendente</span><strong>{executiveFinance.pendingRevenue || 'R$ 0,00'}</strong></div>
+                <div><span>Premiações</span><strong>{executiveFinance.prizeTotal || 'R$ 0,00'}</strong></div>
+                <div><span>Resultado</span><strong>{executiveFinance.estimatedResult || 'R$ 0,00'}</strong></div>
+              </div>
+            </div>
 
-            <div className="seasonList">
-              {seasons.map(season => (
-                <button
-                  key={season.id}
-                  className={selectedSeasonId === season.id ? 'seasonItem active' : 'seasonItem'}
-                  onClick={() => setSelectedSeasonId(season.id)}
-                >
+            <div className="seasonExecutiveCard">
+              <h3>Operacional</h3>
+              <div className="seasonOperationalGrid">
+                <span>Etapas abertas <strong>{executiveOperational.stagesOpen || 0}</strong></span>
+                <span>Em andamento <strong>{executiveOperational.stagesRunning || 0}</strong></span>
+                <span>Encerradas <strong>{executiveOperational.stagesClosed || 0}</strong></span>
+                <span>Pagamentos confirmados <strong>{executiveOperational.paymentsConfirmed || 0}</strong></span>
+                <span>Pagamentos pendentes <strong>{executiveOperational.paymentsPending || 0}</strong></span>
+                <span>Transmissões <strong>{executiveOperational.transmissions || 0}</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div className="seasonExecutiveGrid lower">
+            <div className="seasonExecutiveCard">
+              <h3>Ranking das Arenas</h3>
+              <div className="seasonSimpleTable">
+                <div><span>Arena</span><span>Eventos</span><span>Jogadores</span></div>
+                {executiveArenas.length === 0 && <p>Aguardando arenas com etapas.</p>}
+                {executiveArenas.map((arena: any) => (
+                  <div key={arena.arena}><strong>{arena.arena}</strong><span>{arena.events}</span><span>{arena.players}</span></div>
+                ))}
+              </div>
+            </div>
+
+            <div className="seasonExecutiveCard">
+              <h3>Ranking dos Organizadores</h3>
+              <div className="seasonSimpleTable organizer">
+                <div><span>Organizador</span><span>Eventos</span></div>
+                <div><strong>{user?.organization?.name || 'ProMaster Arena'}</strong><span>{executiveOrganizerEvents}</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        )}
+
+        {showCreateSeason && (
+          <div className="qrModal" onClick={() => setShowCreateSeason(false)}>
+            <div className="detailsContent seasonCreateModal" onClick={e => e.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <h2>Novo Circuito ProMaster</h2>
+                  <p>Configure a temporada, etapas previstas, regras de pontuação e premiação total.</p>
+                </div>
+                <button className="modalCloseButton" onClick={() => setShowCreateSeason(false)}>Fechar</button>
+              </div>
+              {renderCreateCircuitForm()}
+            </div>
+          </div>
+        )}
+
+        {defaultPanel === 'circuito' && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <h2>Circuitos</h2>
+                <p>Cards com as principais informações de cada circuito ativo ou planejado.</p>
+              </div>
+              <button className="primaryButton" onClick={() => setShowCreateSeason(true)}>+ Criar Novo Circuito</button>
+            </div>
+
+            <div className="seasonCircuitCards">
+              {seasons.length === 0 && <p>Nenhum circuito criado.</p>}
+              {seasons.map((season: any) => (
+                <button key={season.id} onClick={() => openCircuitDashboard(season.id)}>
+                  <span>{circuitStatusLabel(season.status)}</span>
                   <strong>{season.name}</strong>
-                  <span>{season.tournaments?.length || 0}/{season.tournamentCount} torneios</span>
-                  {season.championName && <small>Campeão: {season.championName}</small>}
+                  <div>
+                    <small>Data</small>
+                    <b>{formatCircuitDate(season.startDate)} até {formatCircuitDate(season.endDate)}</b>
+                  </div>
+                  <div>
+                    <small>Etapas</small>
+                    <b>{season.tournaments?.length || 0} / {season.tournamentCount}</b>
+                  </div>
+                  <div>
+                    <small>Jogadores</small>
+                    <b>{season.playerCount}</b>
+                  </div>
+                  <div>
+                    <small>Premiação</small>
+                    <b>{season.prize || 'A definir'}</b>
+                  </div>
                 </button>
               ))}
             </div>
           </section>
-        </div>
+        )}
 
-        {seasonDetails && (
+        {defaultPanel === 'arenas' && (
           <section className="panel seasonDetailsPanel">
             <div className="seasonDetailsHeader">
               <div>
+                <h2>Cadastro de Arenas</h2>
+                <p>Cadastre arenas, salões, bares e locais dos jogos para usar nas etapas do circuito.</p>
+              </div>
+            </div>
+
+            <div className="arenaManagerGrid">
+              <div className="arenaFormPanel">
+                <h3>Novo local</h3>
+                <div className="onboardingGrid">
+                  <div>
+                    <label>Nome do local *</label>
+                    <input value={arenaForm.name} onChange={e => updateArenaField('name', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Site</label>
+                    <input value={arenaForm.website} onChange={e => updateArenaField('website', e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label>Fone</label>
+                    <input value={arenaForm.phone} onChange={e => updateArenaField('phone', formatBrazilCellphone(e.target.value))} />
+                  </div>
+                  <div>
+                    <label>E-mail</label>
+                    <input type="email" value={arenaForm.email} onChange={e => updateArenaField('email', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>País</label>
+                    <select value={arenaForm.country} onChange={e => updateArenaField('country', e.target.value)}>
+                      {COUNTRY_OPTIONS.map(country => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label>CEP</label>
+                    <input
+                      value={arenaForm.zipCode}
+                      onChange={e => updateArenaField('zipCode', formatCep(e.target.value))}
+                      onBlur={e => lookupArenaCep(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label>Endereço</label>
+                    <input value={arenaForm.street} onChange={e => updateArenaField('street', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Número</label>
+                    <input value={arenaForm.number} onChange={e => updateArenaField('number', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Complemento</label>
+                    <input value={arenaForm.complement} onChange={e => updateArenaField('complement', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Bairro</label>
+                    <input value={arenaForm.neighborhood} onChange={e => updateArenaField('neighborhood', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Cidade</label>
+                    <input value={arenaForm.city} onChange={e => updateArenaField('city', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Estado</label>
+                    <input value={arenaForm.state} onChange={e => updateArenaField('state', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Responsável - nome completo</label>
+                    <input value={arenaForm.responsibleName} onChange={e => updateArenaField('responsibleName', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Responsável - CPF</label>
+                    <input value={arenaForm.responsibleCpf} onChange={e => updateArenaField('responsibleCpf', formatCpf(e.target.value))} />
+                  </div>
+                  <div>
+                    <label>Responsável - fone</label>
+                    <input value={arenaForm.responsiblePhone} onChange={e => updateArenaField('responsiblePhone', formatBrazilCellphone(e.target.value))} />
+                  </div>
+                </div>
+                <button className="primaryButton" onClick={createArena}>Cadastrar arena</button>
+              </div>
+
+              <div className="arenaListPanel">
+                <h3>Arenas cadastradas</h3>
+                <div className="arenaList">
+                  {arenas.length === 0 && <p>Nenhum local cadastrado ainda.</p>}
+                  {arenas.map((arena: any) => (
+                    <div key={arena.id}>
+                      <strong>{arena.name}</strong>
+                      <span>{[arena.street, arena.number, arena.neighborhood, arena.city, arena.state].filter(Boolean).join(', ') || 'Endereço a definir'}</span>
+                      <small>{arena.phone || 'Fone não informado'} • {arena.email || 'E-mail não informado'}</small>
+                      {arena.responsibleName && <em>Responsável: {arena.responsibleName}</em>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {(defaultPanel === 'circuito-dashboard' || (defaultPanel === 'dashboard' && circuitDashboardOpen)) && seasonDetails && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <button className="ghostButton compactButton" onClick={() => navigate('/campeonatos')}>
+                  Voltar ao Dashboard Geral
+                </button>
                 <h2>{seasonDetails.season.name}</h2>
-                <p>
-                  {seasonDetails.season.tournamentCount} torneios • {seasonDetails.season.playerCount} jogadores • status {seasonDetails.season.status}
-                </p>
+                <p>Ranking acumulado em etapas, mini-sites por etapa e classificação Race to Masters.</p>
+                <div className="circuitStatusStrip">
+                  <span className="circuitLiveDot" /> {circuitStatusLabel(seasonDetails.season.status)}
+                  <strong>Etapa atual: {activeStage?.name || nextStage?.name || 'A definir'}</strong>
+                  <strong>Próxima etapa: {nextStage?.name || 'Calendário completo'}</strong>
+                </div>
               </div>
 
               <div className="tournamentActions">
                 <button onClick={() => navigate(`/criar-torneio?seasonId=${seasonDetails.season.id}`)}>
-                  Criar torneio da temporada
+                  Criar etapa
                 </button>
                 <button className="primaryButton" onClick={finishSeason}>
-                  Declarar campeão
+                  Encerrar circuito
                 </button>
               </div>
+            </div>
+
+            <div className="circuitMetricGrid">
+              <div><span>Jogadores</span><strong>{seasonDetails.season.playerCount}</strong><small>capacidade configurada</small></div>
+              <div><span>Etapas</span><strong>{finishedStages} / {stageTotal}</strong><small>realizadas</small></div>
+              <div><span>Premiação total</span><strong>{seasonDetails.season.prize || '-'}</strong><small>circuito completo</small></div>
+              <div><span>Partidas</span><strong>{totalMatches}</strong><small>resultados computados</small></div>
             </div>
 
             {seasonDetails.champion && (
               <div className="seasonChampion">
-                <span>Campeão parcial/final</span>
+                <span>Líder do circuito</span>
                 <strong>🏆 {seasonDetails.champion.name}</strong>
-                <p>{seasonDetails.champion.points} pontos</p>
+                <p>{seasonDetails.champion.points} pontos acumulados</p>
               </div>
             )}
 
-            <div className="seasonInfoGrid">
-              <div><span>Datas</span><strong>{seasonDetails.season.startDate ? new Date(seasonDetails.season.startDate).toLocaleDateString() : '-'} até {seasonDetails.season.endDate ? new Date(seasonDetails.season.endDate).toLocaleDateString() : '-'}</strong></div>
-              <div><span>Locais</span><strong>{seasonDetails.season.locations || '-'}</strong></div>
-              <div><span>Regras</span><strong>{seasonDetails.season.rules || '-'}</strong></div>
-              <div><span>Premiação</span><strong>{seasonDetails.season.prize || '-'}</strong></div>
+            <div className="circuitDashboardGrid">
+              <div className="circuitMainCard">
+                <div className="seasonDetailsHeader compact">
+                  <div>
+                    <h3>Ranking Circuito</h3>
+                    <p>Classificação geral acumulada por vitórias nas etapas.</p>
+                  </div>
+                  <span>Top 16 classificam ao Masters</span>
+                </div>
+
+                <div className="seasonRankingTable">
+                  <div className="seasonRankingHead">
+                    <span>Pos</span>
+                    <span>Jogador</span>
+                    <span>Pontos</span>
+                    <span>V</span>
+                    <span>D</span>
+                    <span>Aprov.</span>
+                  </div>
+                  {topRanking.length === 0 && <p>Nenhum resultado computado ainda.</p>}
+                  {topRanking.map((item: any, index: number) => (
+                    <div key={item.name} className="seasonRankingRow">
+                      <span>{index + 1}</span>
+                      <strong>{item.name}</strong>
+                      <span>{item.points}</span>
+                      <span>{item.wins}</span>
+                      <span>{item.losses}</span>
+                      <span>{item.winRate}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="circuitSideStack">
+                <div className="circuitPanelCard">
+                  <h3>Race to Masters</h3>
+                  <p>Os 16 melhores do ano classificam para o Masters ProMaster.</p>
+                  <div className="raceList">
+                    {raceToMasters.slice(0, 6).map((item: any, index: number) => (
+                      <span key={item.name}>{index + 1}. {item.name} <strong>{item.points}</strong></span>
+                    ))}
+                    {raceToMasters.length === 0 && <small>Aguardando etapas finalizadas.</small>}
+                  </div>
+                </div>
+
+                <div className="circuitPanelCard">
+                  <h3>Pontuação</h3>
+                  {pointsTable.map(row => (
+                    <div key={row.place} className="pointsRuleRow">
+                      <span>{row.place}</span>
+                      <strong>{row.points} pts</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <h3>Torneios da temporada</h3>
+            <div className="circuitDashboardGrid lower">
+              <div className="circuitPanelCard">
+                <h3>Evolução Ranking</h3>
+                <div className="rankingEvolutionBars">
+                  {topRanking.slice(0, 6).map((item: any, index: number) => (
+                    <div key={item.name}>
+                      <span>{item.name}</span>
+                      <div><strong style={{ width: `${Math.max(12, Math.min(100, item.points / Math.max(1, topRanking[0]?.points || 1) * 100))}%` }} /></div>
+                      <em>{index < 2 ? 'subida' : index < 4 ? 'estável' : 'disputa'}</em>
+                    </div>
+                  ))}
+                  {topRanking.length === 0 && <p>O gráfico será gerado após os primeiros resultados.</p>}
+                </div>
+              </div>
+
+              <div className="circuitPanelCard">
+                <h3>Ranking por Categoria</h3>
+                <div className="rankingTabs">
+                  {rankingCategories.map(category => (
+                    <button key={category} className={rankingCategory === category ? 'active' : ''} onClick={() => setRankingCategory(category)}>
+                      {category}
+                    </button>
+                  ))}
+                </div>
+                <div className="categoryRankingList">
+                  {categoryRanking.map((item: any, index: number) => (
+                    <span key={item.name}>{index + 1}. {item.name} <strong>{item.points} pts</strong></span>
+                  ))}
+                  {categoryRanking.length === 0 && <p>Categoria aguardando jogadores classificados.</p>}
+                </div>
+              </div>
+            </div>
+
+            <h3>Calendário do Circuito</h3>
+            <div className="circuitTimeline">
+              {Array.from({ length: stageTotal }).map((_, index) => {
+                const tournament = circuitTournaments[index]
+                const plan = stagePlan[index]
+                const status = tournament
+                  ? tournamentStatusLabel(tournament.status)
+                  : index < finishedStages ? 'Realizado' : index === finishedStages ? 'Próximo' : 'Programado'
+                return (
+                  <div key={tournament?.id || index} className={tournament?.id === activeStage?.id ? 'live' : ''}>
+                    <span>{plan?.date || formatCircuitDate(tournament?.eventDate)}</span>
+                    <strong>{tournament?.name || plan?.name || `Etapa ${index + 1}`}</strong>
+                    <small>{tournament?.location || plan?.city || 'Cidade a definir'} • {status}</small>
+                  </div>
+                )
+              })}
+            </div>
+
+            <h3>Mapa das Etapas</h3>
+            <div className="circuitMapGrid">
+              <button className="circuitStageAddCard" onClick={() => navigate(`/criar-torneio?seasonId=${seasonDetails.season.id}`)}>
+                <span>+</span>
+                <strong>Adicionar Etapa</strong>
+                <small>Criar formulário da próxima etapa</small>
+              </button>
+              {circuitMapStages.map((stage, index) => (
+                <button
+                  key={`${stage.city}-${index}`}
+                  onClick={() => {
+                    const tournament = circuitTournaments[index]
+                    if (tournament?.id) {
+                      navigate(`/tournament/${tournament.id}`)
+                    } else {
+                      navigate(`/criar-torneio?seasonId=${seasonDetails.season.id}`)
+                    }
+                  }}
+                >
+                  <span>{index + 1}</span>
+                  <strong>{stage.city}</strong>
+                  <small>{stage.arena}</small>
+                </button>
+              ))}
+              {circuitMapStages.length === 0 && <p>Cadastre cidades e arenas no calendário do circuito.</p>}
+            </div>
+
+            <h3>Painel de Etapas</h3>
             <div className="seasonTournamentList">
-              {seasonDetails.tournaments.length === 0 && <p>Nenhum torneio vinculado ainda.</p>}
+              {seasonDetails.tournaments.length === 0 && <p>Nenhuma etapa vinculada ainda.</p>}
               {seasonDetails.tournaments.map((tournament: any) => (
                 <div key={tournament.id} className="clientTournamentRow">
                   <div>
                     <strong>{tournament.name}</strong>
-                  <span>{tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores</span>
+                    <span>{tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores • {tournament.location || 'Local a definir'}</span>
                   </div>
-                  <button onClick={() => navigate(`/tournament/${tournament.id}`)}>Painel</button>
+                  <button onClick={() => navigate(`/tournament/${tournament.id}`)}>Mini-site da etapa</button>
                 </div>
               ))}
             </div>
 
-            <h3>Ranking da temporada</h3>
-            <div className="seasonRankingTable">
-              <div className="seasonRankingHead">
-                <span>#</span>
-                <span>Jogador</span>
-                <span>Pontos</span>
-                <span>V</span>
-                <span>D</span>
-                <span>Aprov.</span>
+            <div className="circuitAdminGrid">
+              <div>
+                <span>Controle financeiro</span>
+                <strong>Inscrições, arrecadação e premiações por etapa.</strong>
               </div>
-              {seasonDetails.ranking.map((item: any, index: number) => (
-                <div key={item.name} className="seasonRankingRow">
-                  <span>{index + 1}</span>
-                  <strong>{item.name}</strong>
-                  <span>{item.points}</span>
-                  <span>{item.wins}</span>
-                  <span>{item.losses}</span>
-                  <span>{item.winRate}%</span>
-                </div>
+              <div>
+                <span>Patrocinadores</span>
+                <strong>Master, Ouro, Prata e ativações no telão.</strong>
+              </div>
+              <div>
+                <span>Telão do circuito</span>
+                <strong>Ranking ao vivo, líder, próxima etapa e destaques.</strong>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {defaultPanel === 'etapas' && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <h2>Etapas</h2>
+                <p>Operação das etapas vinculadas aos circuitos ativos.</p>
+              </div>
+              <button className="primaryButton" onClick={() => navigate(`/criar-torneio${selectedSeasonId ? `?seasonId=${selectedSeasonId}` : ''}`)}>
+                + Criar Etapa
+              </button>
+            </div>
+
+            <div className="seasonTournamentList">
+              {allCircuitStages.length === 0 && <p>Nenhuma etapa vinculada ainda.</p>}
+              {allCircuitStages.map((tournament: any) => (
+                <button key={tournament.id} className="clientTournamentRow clickableRow" onClick={() => navigate(`/tournament/${tournament.id}`)}>
+                  <div>
+                    <strong>{tournament.name}</strong>
+                    <span>{tournament.seasonName} • {tournamentStatusLabel(tournament.status)} • {tournament.location || 'Local a definir'}</span>
+                  </div>
+                  <span>{formatCircuitDate(tournament.eventDate)}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {defaultPanel === 'pagamentos' && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <h2>Pagamentos</h2>
+                <p>Resumo financeiro dos circuitos, etapas, inscrições e premiações.</p>
+              </div>
+            </div>
+
+            <div className="seasonFinanceGrid">
+              <div><span>Receita</span><strong>{executiveFinance.revenue || 'R$ 0,00'}</strong></div>
+              <div><span>Confirmado</span><strong>{executiveFinance.paidRevenue || 'R$ 0,00'}</strong></div>
+              <div><span>Pendente</span><strong>{executiveFinance.pendingRevenue || 'R$ 0,00'}</strong></div>
+              <div><span>Premiações</span><strong>{executiveFinance.prizeTotal || 'R$ 0,00'}</strong></div>
+              <div><span>Resultado</span><strong>{executiveFinance.estimatedResult || 'R$ 0,00'}</strong></div>
+            </div>
+          </section>
+        )}
+
+        {defaultPanel === 'inscricoes' && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <h2>Inscrições</h2>
+                <p>Controle executivo de participantes aprovados, aguardando confirmação e pagamentos.</p>
+              </div>
+            </div>
+
+            <div className="seasonOperationalGrid seasonOperationalLarge">
+              <span>Inscrições aprovadas <strong>{executiveOperational.registrationsApproved || 0}</strong></span>
+              <span>Aguardando confirmação <strong>{executiveOperational.registrationsWaiting || 0}</strong></span>
+              <span>Pagamentos confirmados <strong>{executiveOperational.paymentsConfirmed || 0}</strong></span>
+              <span>Pagamentos pendentes <strong>{executiveOperational.paymentsPending || 0}</strong></span>
+            </div>
+
+            <div className="seasonTournamentList">
+              {allCircuitStages.length === 0 && <p>Nenhuma etapa com inscrições ainda.</p>}
+              {allCircuitStages.map((tournament: any) => (
+                <button key={tournament.id} className="clientTournamentRow clickableRow" onClick={() => navigate(`/tournament/${tournament.id}/inscritos`)}>
+                  <div>
+                    <strong>{tournament.name}</strong>
+                    <span>{tournament.seasonName} • Inscrições {tournament.registrationOpen ? 'abertas' : 'fechadas'}</span>
+                  </div>
+                  <span>{tournamentStatusLabel(tournament.status)}</span>
+                </button>
               ))}
             </div>
           </section>
@@ -4767,7 +6180,7 @@ function CreateTournament({ user }: any) {
             )}
             {tournamentFormat === 'round_robin' && (
               <p className="helperText">
-                Todos contra todos: plano Pro permite até 64 jogadores. Plano Master permite torneios acima de 64 e também campeonatos em várias etapas/dias com ranking acumulado.
+                Todos contra todos: plano Pro permite até 64 jogadores. Plano Master permite torneios acima de 64 e também Circuito ProMaster em várias etapas/dias com ranking acumulado.
               </p>
             )}
 
@@ -4843,9 +6256,9 @@ function CreateTournament({ user }: any) {
 
             {seasons.length > 0 && (
               <>
-                <label>Campeonato / temporada</label>
+                <label>Circuito ProMaster</label>
                 <select value={seasonId} onChange={e => setSeasonId(e.target.value)}>
-                  <option value="">Torneio avulso fora de campeonato</option>
+                  <option value="">Torneio avulso fora de circuito</option>
                   {seasons.map(season => (
                     <option key={season.id} value={season.id}>
                       {season.name}
@@ -5090,7 +6503,7 @@ function CreateTournament({ user }: any) {
               {broadcastType === 'youtube' && youtubeUrl && <p>Transmissão: YouTube</p>}
               {broadcastType === 'obs' && <p>Transmissão: OBS</p>}
               <p>Cobrança: {paymentCollectionMode === 'platform' ? 'Automática pela plataforma' : paymentCollectionMode === 'both' ? 'Manual e automática' : 'Manual pelo organizador'}</p>
-              {seasonId && <p>Vinculado ao campeonato</p>}
+              {seasonId && <p>Vinculado ao Circuito ProMaster</p>}
             </div>
 
             <button className="primaryButton" onClick={createTournament}>
@@ -6704,29 +8117,59 @@ function TelaoTV() {
   )
 }
 
+function adminPlanLabel(plan: string) {
+  if (plan === 'free') return 'Acesso gratuito'
+  if (plan === 'trial') return 'Trial'
+  if (plan === 'pro') return 'Pro'
+  if (plan === 'master') return 'Master'
+  return plan || '-'
+}
+
+function clientStatusLabel(status: string) {
+  return status === 'blocked' ? 'Bloqueado' : 'Ativo'
+}
+
+function clientPersonType(org: any) {
+  const type = String(org.documentType || '').toLowerCase()
+  if (['cpf', 'pf', 'fisica', 'pessoa_fisica'].includes(type)) return 'pf'
+  if (['cnpj', 'pj', 'juridica', 'pessoa_juridica'].includes(type)) return 'pj'
+  return 'nao_informado'
+}
+
+function clientPersonTypeLabel(org: any) {
+  const type = clientPersonType(org)
+  if (type === 'pf') return 'Pessoa física'
+  if (type === 'pj') return 'Pessoa jurídica'
+  return 'Não informado'
+}
+
+function adminMoney(value: number) {
+  return `R$ ${Number(value || 0).toFixed(2).replace('.', ',')}`
+}
+
 function AdminClientes() {
   const navigate = useNavigate()
   const [orgs, setOrgs] = useState<any[]>([])
   const [search, setSearch] = useState('')
   const [planFilter, setPlanFilter] = useState('todos')
-  const [selectedOrg, setSelectedOrg] = useState<any>(null)
-  const [editingOrg, setEditingOrg] = useState<any>(null)
-  const [editForm, setEditForm] = useState<any>({
-    name: '',
-    email: '',
-    phone: '',
-    organizationName: '',
-    street: '',
-    number: '',
-    complement: '',
-    country: '',
-    state: '',
-    city: '',
-  })
+  const [statusFilter, setStatusFilter] = useState('todos')
+  const [typeFilter, setTypeFilter] = useState('todos')
+  const [sortBy, setSortBy] = useState('created_desc')
   const filteredOrgs = orgs
-    .filter(org => org.name?.toLowerCase().includes(search.toLowerCase()))
+    .filter(org => {
+      const adminUser = org.users?.find((user: any) => user.role === 'admin') || org.users?.[0]
+      const text = `${org.name || ''} ${adminUser?.name || ''} ${adminUser?.email || ''}`.toLowerCase()
+      return text.includes(search.toLowerCase())
+    })
     .filter(org => planFilter === 'todos' ? true : org.plan === planFilter)
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .filter(org => statusFilter === 'todos' ? true : (org.status || 'active') === statusFilter)
+    .filter(org => typeFilter === 'todos' ? true : clientPersonType(org) === typeFilter)
+    .sort((a, b) => {
+      if (sortBy === 'alpha_asc') return String(a.name || '').localeCompare(String(b.name || ''))
+      if (sortBy === 'alpha_desc') return String(b.name || '').localeCompare(String(a.name || ''))
+      if (sortBy === 'created_asc') return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+    })
 
   function loadClientes() {
     fetch(`${API}/admin/organizations`, {
@@ -6741,11 +8184,18 @@ function AdminClientes() {
       })
   }
 
-  function changePlan(id: number, plan: string) {
-    fetch(`${API}/admin/organization/${id}/plan`, {
-      method: 'POST',
+  function toggleBlock(org: any) {
+    const nextStatus = org.status === 'blocked' ? 'active' : 'blocked'
+    const message = nextStatus === 'blocked'
+      ? `Bloquear o cliente ${org.name}? O histórico será mantido.`
+      : `Desbloquear o cliente ${org.name}?`
+
+    if (!confirm(message)) return
+
+    fetch(`${API}/admin/organization/${org.id}/status`, {
+      method: 'PATCH',
       headers: authHeaders(),
-      body: JSON.stringify({ plan }),
+      body: JSON.stringify({ status: nextStatus }),
     })
       .then(res => res.json())
       .then(data => {
@@ -6758,47 +8208,15 @@ function AdminClientes() {
       })
   }
 
-  function openEditClient(org: any) {
+  function messageClient(org: any) {
     const adminUser = org.users?.find((user: any) => user.role === 'admin') || org.users?.[0]
 
-    setEditingOrg(org)
-    setEditForm({
-      name: adminUser?.name || '',
-      email: adminUser?.email || '',
-      phone: adminUser?.phone || '',
-      organizationName: org.name || '',
-      street: org.street || org.address || '',
-      number: org.number || '',
-      complement: org.complement || '',
-      country: org.country || '',
-      state: org.state || '',
-      city: org.city || '',
-    })
-  }
+    if (!adminUser?.email) {
+      alert('Cliente sem e-mail principal cadastrado.')
+      return
+    }
 
-  function updateEditField(field: string, value: string) {
-    setEditForm((current: any) => ({ ...current, [field]: value }))
-  }
-
-  function saveClientEdit() {
-    if (!editingOrg) return
-
-    fetch(`${API}/admin/organization/${editingOrg.id}/profile`, {
-      method: 'PUT',
-      headers: authHeaders(),
-      body: JSON.stringify(editForm),
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          alert(data.error)
-          return
-        }
-
-        setEditingOrg(null)
-        loadClientes()
-        alert('Cliente atualizado.')
-      })
+    window.location.href = `mailto:${adminUser.email}?subject=${encodeURIComponent('ProMaster Arena')}`
   }
 
  useEffect(() => {
@@ -6827,7 +8245,7 @@ function AdminClientes() {
         <header className="hero">
           <div className="badge">👑 Superadmin</div>
           <h1>Clientes / Arenas</h1>
-          <p>Gerencie organizações, planos, usuários e torneios.</p>
+          <p>Gerencie organizações, bloqueios, planos, usuários e histórico.</p>
         </header>
 
         <div className="panel">
@@ -6837,7 +8255,7 @@ function AdminClientes() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Pesquisar por nome"
+              placeholder="Pesquisar por cliente, responsável ou e-mail"
             />
 
             <select value={planFilter} onChange={e => setPlanFilter(e.target.value)}>
@@ -6847,146 +8265,453 @@ function AdminClientes() {
               <option value="pro">Pro</option>
               <option value="master">Master</option>
             </select>
+
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+              <option value="todos">Todos os status</option>
+              <option value="active">Clientes ativos</option>
+              <option value="blocked">Clientes bloqueados</option>
+            </select>
+
+            <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+              <option value="todos">Pessoa física e jurídica</option>
+              <option value="pf">Pessoa física</option>
+              <option value="pj">Pessoa jurídica</option>
+              <option value="nao_informado">Não informado</option>
+            </select>
+
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+              <option value="created_desc">Mais novos primeiro</option>
+              <option value="created_asc">Mais antigos primeiro</option>
+              <option value="alpha_asc">Nome A-Z</option>
+              <option value="alpha_desc">Nome Z-A</option>
+            </select>
           </div>
 
           {filteredOrgs.length === 0 && <p>Nenhum cliente encontrado.</p>}
 
-          {filteredOrgs.map(org => (
-            <div key={org.id} className="clientCard">
-              <div>
-                <strong>{org.name}</strong>
-                <span>Cadastro: {org.createdAt ? new Date(org.createdAt).toLocaleDateString() : '-'}</span>
-              </div>
-
-              <div className="clientMetrics">
-                <span>Plano: {org.plan === 'free' ? 'acesso gratuito' : org.plan}</span>
-                <span>Usuários: {org.users?.length || 0}</span>
-                <span>Torneios: {org.tournaments?.length || 0}</span>
-              </div>
-
-              <div className="clientActions">
-                <button onClick={() => changePlan(org.id, 'trial')}>Trial</button>
-                <button onClick={() => changePlan(org.id, 'pro')}>Pro</button>
-                <button onClick={() => changePlan(org.id, 'master')}>Master</button>
-                <button className="clientEditButton" onClick={() => openEditClient(org)}>
-                  Editar cliente/arena
-                </button>
-                <button onClick={() => setSelectedOrg(org)}>Torneios</button>
-                <button onClick={() => changePlan(org.id, 'free')}>Acesso gratuito</button>
-              </div>
+          {filteredOrgs.length > 0 && (
+            <div className="adminClientTableWrap">
+              <table className="adminClientTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Pessoa</th>
+                    <th>Plano</th>
+                    <th>Status</th>
+                    <th>Data cadastro</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrgs.map(org => (
+                    <tr key={org.id} className={org.status === 'blocked' ? 'blocked' : ''}>
+                      <td>#{org.id}</td>
+                      <td>
+                        <button className="tableNameButton" onClick={() => navigate(`/admin/clientes/${org.id}`)}>
+                          {org.name}
+                        </button>
+                      </td>
+                      <td>{clientPersonTypeLabel(org)}</td>
+                      <td>{adminPlanLabel(org.plan)}</td>
+                      <td>{clientStatusLabel(org.status || 'active')}</td>
+                      <td>{org.createdAt ? new Date(org.createdAt).toLocaleDateString() : '-'}</td>
+                      <td>
+                        <div className="adminClientActions">
+                          <button onClick={() => toggleBlock(org)}>
+                            {org.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}
+                          </button>
+                          <button onClick={() => messageClient(org)}>Mensagem</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ))}
+          )}
         </div>
+      </main>
+    </div>
+  )
+}
 
-        {editingOrg && (
-          <div className="qrModal" onClick={() => setEditingOrg(null)}>
-            <div className="detailsContent adminEditModal" onClick={e => e.stopPropagation()}>
-              <div className="detailsHeader">
-                <div>
-                  <span>Editar cliente/arena</span>
-                  <h3>{editingOrg.name}</h3>
-                  <p>Atualize os dados principais do cliente, contato e endereço da arena.</p>
-                </div>
-                <button className="modalCloseButton" onClick={() => setEditingOrg(null)}>Fechar</button>
+function AdminClientSidebar({ orgId, panel, orgName }: any) {
+  const navigate = useNavigate()
+
+  function logout() {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
+  return (
+    <aside className="sidebar">
+      <div className="sidebarLogo">👑 Admin Master</div>
+      <div className="adminClientSidebarContext">
+        <span>Cliente</span>
+        <strong>{orgName || 'Carregando...'}</strong>
+      </div>
+      <button className={panel === 'dashboard' ? 'active' : ''} onClick={() => navigate(`/admin/clientes/${orgId}`)}>Dashboard</button>
+      <button className={panel === 'financeiro' ? 'active' : ''} onClick={() => navigate(`/admin/clientes/${orgId}/financeiro`)}>Financeiro</button>
+      <button className={panel === 'perfil' ? 'active' : ''} onClick={() => navigate(`/admin/clientes/${orgId}/perfil`)}>Perfil</button>
+      <button onClick={() => navigate('/admin/clientes')}>Voltar aos clientes</button>
+      <button className="sidebarFooterButton" onClick={logout}>Sair</button>
+    </aside>
+  )
+}
+
+function AdminClientPage({ defaultPanel }: any) {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const panel = defaultPanel || 'dashboard'
+  const [data, setData] = useState<any>(null)
+  const [profileForm, setProfileForm] = useState<any>({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    organizationName: '',
+    documentType: '',
+    documentNumber: '',
+    supportedSports: '',
+    street: '',
+    number: '',
+    complement: '',
+    country: '',
+    state: '',
+    city: '',
+  })
+
+  const org = data?.organization
+  const summary = data?.summary || {}
+  const payments = data?.payments || []
+  const adminUser = org?.users?.find((user: any) => user.role === 'admin') || org?.users?.[0]
+
+  function loadClient() {
+    if (!id) return
+
+    fetch(`${API}/admin/organization/${id}`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          alert(result.error)
+          navigate('/admin/clientes')
+          return
+        }
+
+        setData(result)
+      })
+  }
+
+  function updateProfileField(field: string, value: string) {
+    setProfileForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function changePlan(plan: string) {
+    if (!id) return
+
+    fetch(`${API}/admin/organization/${id}/plan`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ plan }),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          alert(result.error)
+          return
+        }
+
+        loadClient()
+      })
+  }
+
+  function toggleBlock() {
+    if (!id || !org) return
+
+    const nextStatus = org.status === 'blocked' ? 'active' : 'blocked'
+    const message = nextStatus === 'blocked'
+      ? `Bloquear o cliente ${org.name}? O histórico será mantido.`
+      : `Desbloquear o cliente ${org.name}?`
+
+    if (!confirm(message)) return
+
+    fetch(`${API}/admin/organization/${id}/status`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ status: nextStatus }),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          alert(result.error)
+          return
+        }
+
+        loadClient()
+      })
+  }
+
+  function saveProfile() {
+    if (!id) return
+
+    fetch(`${API}/admin/organization/${id}/profile`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(profileForm),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          alert(result.error)
+          return
+        }
+
+        setProfileForm((current: any) => ({ ...current, password: '' }))
+        loadClient()
+        alert('Cliente atualizado.')
+      })
+  }
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      goHome()
+      return
+    }
+
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(result => {
+        if (result.user?.role !== 'superadmin') {
+          goHome()
+          return
+        }
+
+        loadClient()
+      })
+  }, [id])
+
+  useEffect(() => {
+    if (!org) return
+
+    setProfileForm({
+      name: adminUser?.name || '',
+      email: adminUser?.email || '',
+      phone: adminUser?.phone || '',
+      password: '',
+      organizationName: org.name || '',
+      documentType: org.documentType || '',
+      documentNumber: org.documentNumber || '',
+      supportedSports: org.supportedSports || '',
+      street: org.street || org.address || '',
+      number: org.number || '',
+      complement: org.complement || '',
+      country: org.country || '',
+      state: org.state || '',
+      city: org.city || '',
+    })
+  }, [org?.id])
+
+  return (
+    <div className="saasLayout">
+      <AdminClientSidebar orgId={id} panel={panel} orgName={org?.name} />
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">👑 Cliente Master</div>
+          <h1>{org?.name || 'Cliente'}</h1>
+          <p>
+            {adminPlanLabel(org?.plan)} • {clientStatusLabel(org?.status || 'active')} • {clientPersonTypeLabel(org || {})}
+          </p>
+          {org && (
+            <div className="tournamentActions">
+              <button onClick={toggleBlock}>{org.status === 'blocked' ? 'Desbloquear cliente' : 'Bloquear cliente'}</button>
+              <button onClick={() => window.location.href = `mailto:${adminUser?.email || ''}`}>Mensagem</button>
+            </div>
+          )}
+        </header>
+
+        {!org && <div className="panel">Carregando cliente...</div>}
+
+        {org && panel === 'dashboard' && (
+          <>
+            <div className="financeGrid adminStatsGrid">
+              <div className="financeCard">
+                <span>Torneios criados</span>
+                <strong>{summary.tournamentCount || 0}</strong>
               </div>
 
-              <div className="adminEditSection">
-                <h4>Dados do cliente</h4>
-                <div className="adminEditGrid">
-                  <div>
-                    <label>Nome do responsável</label>
-                    <input value={editForm.name} onChange={e => updateEditField('name', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>E-mail</label>
-                    <input type="email" value={editForm.email} onChange={e => updateEditField('email', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Telefone / WhatsApp</label>
-                    <input value={editForm.phone} onChange={e => updateEditField('phone', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Nome da arena / organização</label>
-                    <input value={editForm.organizationName} onChange={e => updateEditField('organizationName', e.target.value)} />
-                  </div>
-                </div>
+              <div className="financeCard">
+                <span>Participantes</span>
+                <strong>{summary.participantsCount || 0}</strong>
               </div>
 
-              <div className="adminEditSection">
-                <h4>Endereço da arena</h4>
-                <div className="adminEditGrid">
-                  <div className="adminEditWide">
-                    <label>Logradouro</label>
-                    <input value={editForm.street} onChange={e => updateEditField('street', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Número</label>
-                    <input value={editForm.number} onChange={e => updateEditField('number', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Complemento</label>
-                    <input value={editForm.complement} onChange={e => updateEditField('complement', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>País</label>
-                    <input value={editForm.country} onChange={e => updateEditField('country', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Estado</label>
-                    <input value={editForm.state} onChange={e => updateEditField('state', e.target.value)} />
-                  </div>
-
-                  <div>
-                    <label>Cidade</label>
-                    <input value={editForm.city} onChange={e => updateEditField('city', e.target.value)} />
-                  </div>
-                </div>
+              <div className="financeCard">
+                <span>Valor arrecadado</span>
+                <strong>{adminMoney(summary.revenue || 0)}</strong>
               </div>
 
-              <div className="adminModalActions">
-                <button onClick={() => setEditingOrg(null)}>Cancelar</button>
-                <button className="primaryButton" onClick={saveClientEdit}>
-                  Salvar cliente/arena
-                </button>
+              <div className="financeCard">
+                <span>Usuários</span>
+                <strong>{summary.usersCount || 0}</strong>
               </div>
             </div>
-          </div>
-        )}
 
-        {selectedOrg && (
-          <div className="qrModal" onClick={() => setSelectedOrg(null)}>
-            <div className="detailsContent" onClick={e => e.stopPropagation()}>
-              <div className="detailsHeader">
-                <div>
-                  <span>Torneios do cliente</span>
-                  <h3>{selectedOrg.name}</h3>
-                </div>
-                <button onClick={() => setSelectedOrg(null)}>Fechar</button>
-              </div>
-
-              {(selectedOrg.tournaments || []).length === 0 && <p>Nenhum torneio encontrado.</p>}
-
+            <div className="panel">
+              <h2>Torneios do cliente</h2>
+              {(org.tournaments || []).length === 0 && <p>Nenhum torneio criado.</p>}
               <div className="clientTournamentList">
-                {(selectedOrg.tournaments || []).map((tournament: any) => (
+                {(org.tournaments || []).map((tournament: any) => (
                   <div key={tournament.id} className="clientTournamentRow">
                     <div>
                       <strong>{tournament.name}</strong>
-                      <span>{tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores</span>
+                      <span>
+                        {tournamentStatusLabel(tournament.status)} • {tournament.playerCount} jogadores • {tournament.createdAt ? new Date(tournament.createdAt).toLocaleDateString() : '-'}
+                      </span>
                     </div>
-                    <button onClick={() => navigate(`/tournament/${tournament.id}`)}>
-                      Abrir
-                    </button>
+                    <button onClick={() => navigate(`/tournament/${tournament.id}`)}>Abrir</button>
                   </div>
                 ))}
               </div>
             </div>
+          </>
+        )}
+
+        {org && panel === 'financeiro' && (
+          <>
+            <div className="financeGrid">
+              <div className="financeCard">
+                <span>Plano atual</span>
+                <strong>{adminPlanLabel(org.plan)}</strong>
+              </div>
+
+              <div className="financeCard">
+                <span>Valor arrecadado</span>
+                <strong>{adminMoney(summary.revenue || 0)}</strong>
+              </div>
+
+              <div className="financeCard">
+                <span>Pagamentos aprovados</span>
+                <strong>{summary.approvedPayments || 0}</strong>
+              </div>
+
+              <div className="financeCard">
+                <span>Pagamentos pendentes</span>
+                <strong>{summary.pendingPayments || 0}</strong>
+              </div>
+            </div>
+
+            <div className="panel">
+              <h2>Alterar plano</h2>
+              <div className="adminClientPlanActions">
+                <button onClick={() => changePlan('trial')}>Trial</button>
+                <button onClick={() => changePlan('pro')}>Pro</button>
+                <button onClick={() => changePlan('master')}>Master</button>
+                <button onClick={() => changePlan('free')}>Acesso gratuito</button>
+              </div>
+            </div>
+
+            <div className="panel">
+              <h2>Histórico financeiro</h2>
+              {payments.length === 0 && <p>Nenhum pagamento registrado.</p>}
+              {payments.map((payment: any) => (
+                <div key={payment.id} className="paymentRow">
+                  <div>
+                    <strong>{adminPlanLabel(payment.plan)}</strong>
+                    <span>{payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : '-'}</span>
+                  </div>
+
+                  <div>
+                    <strong>{adminMoney(payment.amount)}</strong>
+                    <span className={`statusBadge ${payment.status}`}>{payment.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {org && panel === 'perfil' && (
+          <div className="panel">
+            <h2>Perfil do cliente</h2>
+
+            <div className="adminClientProfileGrid">
+              <div>
+                <label>Nome do responsável</label>
+                <input value={profileForm.name} onChange={e => updateProfileField('name', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Login / e-mail</label>
+                <input type="email" value={profileForm.email} onChange={e => updateProfileField('email', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Nova senha</label>
+                <input type="password" value={profileForm.password} onChange={e => updateProfileField('password', e.target.value)} placeholder="Deixe em branco para manter" />
+              </div>
+
+              <div>
+                <label>Telefone / WhatsApp</label>
+                <input value={profileForm.phone} onChange={e => updateProfileField('phone', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Nome da organização</label>
+                <input value={profileForm.organizationName} onChange={e => updateProfileField('organizationName', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Pessoa física / jurídica</label>
+                <select value={profileForm.documentType} onChange={e => updateProfileField('documentType', e.target.value)}>
+                  <option value="">Não informado</option>
+                  <option value="cpf">Pessoa física</option>
+                  <option value="cnpj">Pessoa jurídica</option>
+                </select>
+              </div>
+
+              <div>
+                <label>CPF / CNPJ</label>
+                <input value={profileForm.documentNumber} onChange={e => updateProfileField('documentNumber', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Modalidades atendidas</label>
+                <input value={profileForm.supportedSports} onChange={e => updateProfileField('supportedSports', e.target.value)} />
+              </div>
+
+              <div className="adminEditWide">
+                <label>Logradouro</label>
+                <input value={profileForm.street} onChange={e => updateProfileField('street', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Número</label>
+                <input value={profileForm.number} onChange={e => updateProfileField('number', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Complemento</label>
+                <input value={profileForm.complement} onChange={e => updateProfileField('complement', e.target.value)} />
+              </div>
+
+              <div>
+                <label>País</label>
+                <input value={profileForm.country} onChange={e => updateProfileField('country', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Estado</label>
+                <input value={profileForm.state} onChange={e => updateProfileField('state', e.target.value)} />
+              </div>
+
+              <div>
+                <label>Cidade</label>
+                <input value={profileForm.city} onChange={e => updateProfileField('city', e.target.value)} />
+              </div>
+            </div>
+
+            <button className="primaryButton" onClick={saveProfile}>Salvar perfil do cliente</button>
           </div>
         )}
       </main>

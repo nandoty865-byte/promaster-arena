@@ -1,0 +1,10 @@
+ALTER TABLE "Organization" ADD COLUMN "zipCode" TEXT;
+ALTER TABLE "Organization" ADD COLUMN "neighborhood" TEXT;
+ALTER TABLE "Organization" ADD COLUMN "responsibleCpf" TEXT;
+ALTER TABLE "Organization" ADD COLUMN "responsibleZipCode" TEXT;
+ALTER TABLE "Organization" ADD COLUMN "responsibleStreet" TEXT;
+ALTER TABLE "Organization" ADD COLUMN "responsibleNumber" TEXT;
+ALTER TABLE "Organization" ADD COLUMN "responsibleComplement" TEXT;
+ALTER TABLE "Organization" ADD COLUMN "responsibleNeighborhood" TEXT;
+ALTER TABLE "Organization" ADD COLUMN "responsibleCity" TEXT;
+ALTER TABLE "Organization" ADD COLUMN "responsibleState" TEXT;

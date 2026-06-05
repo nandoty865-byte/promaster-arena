@@ -1155,7 +1155,7 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
 
       if (nextFormat === 'round_robin' && organization?.plan === 'pro' && nextPlayerCount > 64) {
         return res.status(403).json({
-          error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou campeonato em etapas, use o plano Master.'
+          error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou Circuito ProMaster em etapas, use o plano Master.'
         })
       }
     }
@@ -1302,10 +1302,82 @@ app.get('/admin/organizations',
       include: {
         users: true,
         tournaments: true
-      }
+      },
+      orderBy: { createdAt: 'desc' },
     })
 
     res.json(orgs)
+})
+
+async function buildAdminOrganizationDetails(organizationId) {
+  const organization = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    include: {
+      users: { orderBy: { id: 'asc' } },
+      tournaments: {
+        include: {
+          players: true,
+          registrations: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  })
+
+  if (!organization) {
+    return null
+  }
+
+  const payments = await prisma.payment.findMany({
+    where: { organizationId },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const tournamentCount = organization.tournaments.length
+  const participantsCount = organization.tournaments.reduce((sum, tournament) => (
+    sum + Math.max(tournament.players?.length || 0, tournament.registrations?.length || 0)
+  ), 0)
+  const registrationRevenue = organization.tournaments.reduce((sum, tournament) => {
+    const fee = Number(tournament.registrationFee || 0)
+    if (!fee) return sum
+
+    const paidRegistrations = (tournament.registrations || []).filter(registration => (
+      ['paid', 'approved'].includes(registration.paymentStatus)
+    ))
+
+    return sum + (paidRegistrations.length * fee)
+  }, 0)
+  const planRevenue = payments
+    .filter(payment => payment.status === 'approved')
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0)
+
+  return {
+    organization,
+    payments,
+    summary: {
+      tournamentCount,
+      participantsCount,
+      usersCount: organization.users.length,
+      revenue: registrationRevenue + planRevenue,
+      pendingPayments: payments.filter(payment => payment.status === 'pending').length,
+      approvedPayments: payments.filter(payment => payment.status === 'approved').length,
+    },
+  }
+}
+
+app.get('/admin/organization/:id', auth, requireRole('superadmin'), async (req, res) => {
+  try {
+    const data = await buildAdminOrganizationDetails(Number(req.params.id))
+
+    if (!data) {
+      return res.status(404).json({ error: 'Cliente não encontrado' })
+    }
+
+    res.json(data)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar cliente' })
+  }
 })
 
 app.post('/admin/organization/:id/plan', auth, requireRole('superadmin'), async (req, res) => {
@@ -1334,6 +1406,27 @@ app.post('/admin/organization/:id/plan', auth, requireRole('superadmin'), async 
   res.json({ ok: true, org })
 })
 
+app.patch('/admin/organization/:id/status', auth, requireRole('superadmin'), async (req, res) => {
+  try {
+    const { status } = req.body
+    const allowedStatuses = ['active', 'blocked']
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Status inválido' })
+    }
+
+    const org = await prisma.organization.update({
+      where: { id: Number(req.params.id) },
+      data: { status },
+    })
+
+    res.json({ ok: true, org })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao atualizar status do cliente' })
+  }
+})
+
 app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), async (req, res) => {
   try {
     const organizationId = Number(req.params.id)
@@ -1341,6 +1434,7 @@ app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), asyn
       name,
       email,
       phone,
+      password,
       organizationName,
       street,
       number,
@@ -1373,13 +1467,19 @@ app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), asyn
     }
 
     if (adminUser) {
+      const userData = {
+        name: name || adminUser.name,
+        email: email || adminUser.email,
+        phone: phone || null,
+      }
+
+      if (password) {
+        userData.password = await bcrypt.hash(password, 10)
+      }
+
       await prisma.user.update({
         where: { id: adminUser.id },
-        data: {
-          name: name || adminUser.name,
-          email: email || adminUser.email,
-          phone: phone || null,
-        },
+        data: userData,
       })
     }
 
@@ -1398,6 +1498,9 @@ app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), asyn
         country: country || null,
         state: state || null,
         city: city || null,
+        documentType: documentType || null,
+        documentNumber: documentNumber || null,
+        supportedSports: supportedSports || null,
       },
     })
 
@@ -1596,7 +1699,7 @@ app.post('/tournaments/create-from-template', async (req, res) => {
         playerCount: template.playerCount,
         format: template.format,
         tableCount: Number(tableCount),
-        status: 'draft',
+        status: 'running',
         location,
         venueAddress: venueAddress || null,
         eventDate: eventDate ? new Date(eventDate) : null,
@@ -2534,6 +2637,7 @@ async function buildSeasonRanking(seasonId, organizationId) {
 
   for (const tournament of tournaments) {
     const playerMap = {}
+    const tournamentScoreMap = new Map()
 
     tournament.players.forEach(player => {
       playerMap[player.id] = player
@@ -2553,6 +2657,12 @@ async function buildSeasonRanking(seasonId, organizationId) {
       }
 
       rankingMap.get(key).tournaments.add(tournament.id)
+      tournamentScoreMap.set(key, {
+        key,
+        name: player.name,
+        wins: 0,
+        losses: 0,
+      })
     })
 
     tournament.matches.forEach(match => {
@@ -2564,7 +2674,8 @@ async function buildSeasonRanking(seasonId, organizationId) {
         const item = rankingMap.get(key)
         item.wins += 1
         item.played += 1
-        item.points += 3
+        const tournamentScore = tournamentScoreMap.get(key)
+        if (tournamentScore) tournamentScore.wins += 1
       }
 
       if (loser) {
@@ -2572,8 +2683,22 @@ async function buildSeasonRanking(seasonId, organizationId) {
         const item = rankingMap.get(key)
         item.losses += 1
         item.played += 1
+        const tournamentScore = tournamentScoreMap.get(key)
+        if (tournamentScore) tournamentScore.losses += 1
       }
     })
+
+    const stagePoints = [100, 80, 60]
+    Array.from(tournamentScoreMap.values())
+      .filter(item => item.wins > 0 || item.losses > 0)
+      .sort((a, b) => b.wins - a.wins || a.losses - b.losses || a.name.localeCompare(b.name))
+      .forEach((item, index) => {
+        const rankingItem = rankingMap.get(item.key)
+        if (!rankingItem) return
+
+        const points = stagePoints[index] || (index < 8 ? 40 : index < 16 ? 20 : 5)
+        rankingItem.points += points
+      })
   }
 
   const ranking = Array.from(rankingMap.values())
@@ -2596,6 +2721,241 @@ async function buildSeasonRanking(seasonId, organizationId) {
   }
 }
 
+function parseCurrencyAmount(value) {
+  const normalized = String(value || '')
+    .replace(/[^\d,.-]/g, '')
+    .replace(/\.(?=\d{3})/g, '')
+    .replace(',', '.')
+  const amount = Number(normalized)
+  return Number.isFinite(amount) ? amount : 0
+}
+
+function formatCurrencyAmount(value) {
+  return Number(value || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
+}
+
+function aggregateRankings(rankings) {
+  const map = new Map()
+
+  rankings.flat().forEach(item => {
+    const key = String(item.name || '').trim().toLowerCase()
+    if (!key) return
+
+    if (!map.has(key)) {
+      map.set(key, {
+        name: item.name,
+        points: 0,
+        wins: 0,
+        losses: 0,
+        played: 0,
+        tournaments: 0,
+      })
+    }
+
+    const current = map.get(key)
+    current.points += Number(item.points || 0)
+    current.wins += Number(item.wins || 0)
+    current.losses += Number(item.losses || 0)
+    current.played += Number(item.played || 0)
+    current.tournaments += Number(item.tournaments || 0)
+  })
+
+  return Array.from(map.values())
+    .map(item => ({
+      ...item,
+      winRate: item.played > 0 ? Math.round((item.wins / item.played) * 100) : 0,
+    }))
+    .sort((a, b) =>
+      b.points - a.points ||
+      b.wins - a.wins ||
+      b.winRate - a.winRate ||
+      a.name.localeCompare(b.name)
+    )
+}
+
+async function buildSeasonExecutiveDashboard(organizationId) {
+  const seasons = await prisma.season.findMany({
+    where: { organizationId },
+    include: {
+      tournaments: {
+        include: {
+          players: true,
+          matches: true,
+          registrations: true,
+        },
+        orderBy: { eventDate: 'asc' },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  const rankings = []
+  for (const season of seasons) {
+    const seasonRanking = await buildSeasonRanking(season.id, organizationId)
+    rankings.push(seasonRanking.ranking)
+  }
+
+  const allTournaments = seasons.flatMap(season => season.tournaments)
+  const playerNames = new Set()
+  const arenas = new Map()
+  let prizeTotal = 0
+  let revenue = 0
+  let paidRevenue = 0
+  let pendingRevenue = 0
+  let confirmedPayments = 0
+  let pendingPayments = 0
+  let approvedRegistrations = 0
+  let waitingRegistrations = 0
+
+  seasons.forEach(season => {
+    prizeTotal += parseCurrencyAmount(season.prize)
+  })
+
+  allTournaments.forEach(tournament => {
+    prizeTotal += parseCurrencyAmount(tournament.prize)
+
+    tournament.players.forEach(player => {
+      if (player.name) playerNames.add(player.name.trim().toLowerCase())
+    })
+
+    tournament.registrations.forEach(registration => {
+      if (registration.name) playerNames.add(registration.name.trim().toLowerCase())
+      const amount = Number(tournament.registrationFee || 0)
+      revenue += amount
+
+      if (['paid', 'pago', 'confirmed'].includes(String(registration.paymentStatus || '').toLowerCase())) {
+        paidRevenue += amount
+        confirmedPayments += 1
+      } else {
+        pendingRevenue += amount
+        pendingPayments += 1
+      }
+
+      if (['confirmed', 'confirmado'].includes(String(registration.status || '').toLowerCase())) {
+        approvedRegistrations += 1
+      } else {
+        waitingRegistrations += 1
+      }
+    })
+
+    const arenaName = tournament.location || 'Arena a definir'
+    if (!arenas.has(arenaName)) {
+      arenas.set(arenaName, {
+        arena: arenaName,
+        events: 0,
+        players: new Set(),
+      })
+    }
+
+    const arena = arenas.get(arenaName)
+    arena.events += 1
+    tournament.players.forEach(player => {
+      if (player.name) arena.players.add(player.name.trim().toLowerCase())
+    })
+    tournament.registrations.forEach(registration => {
+      if (registration.name) arena.players.add(registration.name.trim().toLowerCase())
+    })
+  })
+
+  const stagesDone = allTournaments.filter(tournament =>
+    ['finished', 'closed', 'ended'].includes(String(tournament.status || '').toLowerCase())
+  ).length
+  const stagesOpen = allTournaments.filter(tournament => tournament.registrationOpen).length
+  const stagesRunning = allTournaments.filter(tournament =>
+    ['running', 'in_progress', 'playing'].includes(String(tournament.status || '').toLowerCase())
+  ).length
+  const stagesClosed = allTournaments.filter(tournament =>
+    ['finished', 'closed', 'ended'].includes(String(tournament.status || '').toLowerCase())
+  ).length
+  const stagesTotal = seasons.reduce((sum, season) => sum + Number(season.tournamentCount || 0), 0) || allTournaments.length
+  const allMatches = allTournaments.flatMap(tournament => tournament.matches)
+  const ranking = aggregateRankings(rankings)
+
+  const calendar = allTournaments
+    .slice()
+    .sort((a, b) => new Date(a.eventDate || a.createdAt).getTime() - new Date(b.eventDate || b.createdAt).getTime())
+    .slice(0, 12)
+    .map(tournament => ({
+      id: tournament.id,
+      name: tournament.name,
+      location: tournament.location,
+      eventDate: tournament.eventDate,
+      status: tournament.status,
+      registrationOpen: tournament.registrationOpen,
+      liveStarted: tournament.liveStarted,
+    }))
+
+  const circuits = seasons.map(season => {
+    const tournaments = season.tournaments || []
+    const finished = tournaments.filter(tournament =>
+      ['finished', 'closed', 'ended'].includes(String(tournament.status || '').toLowerCase())
+    ).length
+    const hasLive = tournaments.some(tournament =>
+      ['running', 'in_progress', 'playing'].includes(String(tournament.status || '').toLowerCase()) || tournament.liveStarted
+    )
+
+    return {
+      id: season.id,
+      name: season.name,
+      status: season.status,
+      stagesDone: finished,
+      stagesTotal: season.tournamentCount,
+      nextStage: tournaments.find(tournament =>
+        !['finished', 'closed', 'ended', 'canceled', 'cancelled'].includes(String(tournament.status || '').toLowerCase())
+      )?.name || null,
+      visualStatus: hasLive ? 'running' : finished >= Number(season.tournamentCount || 0) ? 'finished' : 'next',
+    }
+  })
+
+  return {
+    kpis: {
+      players: playerNames.size,
+      circuits: seasons.length,
+      stagesDone,
+      stagesTotal,
+      prizeTotal: formatCurrencyAmount(prizeTotal),
+      matches: allMatches.length,
+      arenas: arenas.size,
+    },
+    ranking: ranking.slice(0, 20),
+    raceToMasters: {
+      classified: ranking.slice(0, 16),
+      bubble: ranking.slice(16, 25),
+      outsideCount: Math.max(0, ranking.length - 25),
+    },
+    calendar,
+    circuits,
+    finance: {
+      revenue: formatCurrencyAmount(revenue),
+      paidRevenue: formatCurrencyAmount(paidRevenue),
+      pendingRevenue: formatCurrencyAmount(pendingRevenue),
+      prizeTotal: formatCurrencyAmount(prizeTotal),
+      estimatedResult: formatCurrencyAmount(revenue - prizeTotal),
+    },
+    operational: {
+      stagesOpen,
+      stagesRunning,
+      stagesClosed,
+      paymentsConfirmed: confirmedPayments,
+      paymentsPending: pendingPayments,
+      registrationsApproved: approvedRegistrations,
+      registrationsWaiting: waitingRegistrations,
+      transmissions: allTournaments.filter(tournament => tournament.liveStarted).length,
+    },
+    arenas: Array.from(arenas.values())
+      .map(item => ({
+        arena: item.arena,
+        events: item.events,
+        players: item.players.size,
+      }))
+      .sort((a, b) => b.events - a.events || b.players - a.players)
+      .slice(0, 8),
+  }
+}
+
 app.get('/seasons', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
   try {
     const seasons = await prisma.season.findMany({
@@ -2611,7 +2971,7 @@ app.get('/seasons', auth, requireRole('admin', 'operator', 'viewer'), async (req
     res.json(seasons)
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Erro ao carregar campeonatos' })
+    res.status(500).json({ error: 'Erro ao carregar circuitos' })
   }
 })
 
@@ -2626,13 +2986,13 @@ app.post('/seasons', auth, requireRole('admin'), async (req, res) => {
     }
 
     if (org.plan !== 'master' && org.plan !== 'free') {
-      return res.status(403).json({ error: 'Modo campeonato disponível apenas no plano Master' })
+      return res.status(403).json({ error: 'Circuito ProMaster disponível apenas no plano Master' })
     }
 
     const { name, tournamentCount, playerCount, startDate, endDate, locations, rules, prize } = req.body
 
     if (!name || !tournamentCount || !playerCount) {
-      return res.status(400).json({ error: 'Informe nome, número de torneios e número de jogadores' })
+      return res.status(400).json({ error: 'Informe nome, número de etapas e número de jogadores' })
     }
 
     const season = await prisma.season.create({
@@ -2653,7 +3013,83 @@ app.post('/seasons', auth, requireRole('admin'), async (req, res) => {
     res.json({ ok: true, season })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Erro ao criar campeonato' })
+    res.status(500).json({ error: 'Erro ao criar circuito' })
+  }
+})
+
+app.get('/seasons/overview', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
+  try {
+    const dashboard = await buildSeasonExecutiveDashboard(req.user.organizationId)
+    res.json(dashboard)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar dashboard da temporada' })
+  }
+})
+
+app.get('/arenas', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
+  try {
+    const arenas = await prisma.arena.findMany({
+      where: { organizationId: req.user.organizationId },
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    })
+
+    res.json(arenas)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar arenas' })
+  }
+})
+
+app.post('/arenas', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const {
+      name,
+      website,
+      phone,
+      email,
+      country,
+      zipCode,
+      street,
+      number,
+      complement,
+      neighborhood,
+      city,
+      state,
+      responsibleName,
+      responsibleCpf,
+      responsiblePhone,
+    } = req.body
+
+    if (!name) {
+      return res.status(400).json({ error: 'Informe o nome do local' })
+    }
+
+    const arena = await prisma.arena.create({
+      data: {
+        organizationId: req.user.organizationId,
+        name,
+        website: website || null,
+        phone: phone || null,
+        email: email || null,
+        country: country || null,
+        zipCode: zipCode || null,
+        street: street || null,
+        number: number || null,
+        complement: complement || null,
+        neighborhood: neighborhood || null,
+        city: city || null,
+        state: state || null,
+        responsibleName: responsibleName || null,
+        responsibleCpf: responsibleCpf || null,
+        responsiblePhone: responsiblePhone || null,
+      },
+    })
+
+    res.json({ ok: true, arena })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao cadastrar arena' })
   }
 })
 
@@ -2668,7 +3104,7 @@ app.get('/seasons/:id', auth, requireRole('admin', 'operator', 'viewer'), async 
     })
 
     if (!season) {
-      return res.status(404).json({ error: 'Campeonato não encontrado' })
+      return res.status(404).json({ error: 'Circuito não encontrado' })
     }
 
     const data = await buildSeasonRanking(seasonId, req.user.organizationId)
@@ -2683,7 +3119,7 @@ app.get('/seasons/:id', auth, requireRole('admin', 'operator', 'viewer'), async 
     })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Erro ao carregar campeonato' })
+    res.status(500).json({ error: 'Erro ao carregar circuito' })
   }
 })
 
@@ -2698,7 +3134,7 @@ app.post('/seasons/:id/finish', auth, requireRole('admin'), async (req, res) => 
     })
 
     if (!season) {
-      return res.status(404).json({ error: 'Campeonato não encontrado' })
+      return res.status(404).json({ error: 'Circuito não encontrado' })
     }
 
     const data = await buildSeasonRanking(seasonId, req.user.organizationId)
@@ -2719,7 +3155,7 @@ app.post('/seasons/:id/finish', auth, requireRole('admin'), async (req, res) => 
     res.json({ ok: true, season: updated, champion: data.champion })
   } catch (error) {
     console.error(error)
-    res.status(500).json({ error: 'Erro ao finalizar campeonato' })
+    res.status(500).json({ error: 'Erro ao finalizar circuito' })
   }
 })
 
@@ -2846,7 +3282,7 @@ if (requestedPlayerCount > effectiveLimits.maxPlayers) {
 
 if (requestedFormat === 'round_robin' && currentPlan === 'pro' && requestedPlayerCount > 64) {
   return res.status(403).json({
-    error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou campeonato em etapas, use o plano Master.'
+    error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou Circuito ProMaster em etapas, use o plano Master.'
   })
 }
 
@@ -2873,11 +3309,11 @@ if (seasonId) {
   })
 
   if (!season) {
-    return res.status(404).json({ error: 'Campeonato não encontrado' })
+    return res.status(404).json({ error: 'Circuito não encontrado' })
   }
 
   if (org.plan !== 'master' && org.plan !== 'free') {
-    return res.status(403).json({ error: 'Modo campeonato disponível apenas no plano Master' })
+    return res.status(403).json({ error: 'Circuito ProMaster disponível apenas no plano Master' })
   }
 
   const seasonTournamentsCount = await prisma.tournament.count({
@@ -2885,11 +3321,11 @@ if (seasonId) {
   })
 
   if (seasonTournamentsCount >= season.tournamentCount) {
-    return res.status(403).json({ error: 'Este campeonato já atingiu o número configurado de torneios' })
+    return res.status(403).json({ error: 'Este circuito já atingiu o número configurado de etapas' })
   }
 
   if (requestedPlayerCount > season.playerCount) {
-    return res.status(403).json({ error: `A temporada foi configurada para até ${season.playerCount} jogadores.` })
+    return res.status(403).json({ error: `O circuito foi configurado para até ${season.playerCount} jogadores.` })
   }
 }
 
@@ -3565,10 +4001,27 @@ app.post('/auth/register-organizer', (req, res) => {
         phone,
         address,
         password,
+        organizerType = 'organizador',
         organizationName,
         documentType,
         documentNumber,
-        paymentCollectionMode = 'manual',
+        organizationZipCode,
+        organizationStreet,
+        organizationNeighborhood,
+        organizationCity,
+        organizationState,
+        organizationCountry,
+        organizationNumber,
+        organizationComplement,
+        responsibleCpf,
+        responsibleZipCode,
+        responsibleStreet,
+        responsibleNeighborhood,
+        responsibleCity,
+        responsibleState,
+        responsibleCountry,
+        responsibleNumber,
+        responsibleComplement,
         supportedSports = '',
         termsAccepted,
       } = req.body
@@ -3577,12 +4030,18 @@ app.post('/auth/register-organizer', (req, res) => {
         return res.status(400).json({ error: 'Organização, e-mail, telefone e senha são obrigatórios' })
       }
 
-      if (!documentType || !documentNumber) {
-        return res.status(400).json({ error: 'Informe tipo e número do documento do organizador' })
-      }
-
       if (termsAccepted !== 'true' && termsAccepted !== true) {
         return res.status(400).json({ error: 'Aceite os termos de uso para continuar' })
+      }
+
+      if (String(organizationCountry || responsibleCountry || '').toLowerCase() === 'brasil') {
+        const hasBrazilAddress = organizerType === 'organizador'
+          ? responsibleZipCode && responsibleStreet && responsibleNumber && responsibleNeighborhood && responsibleCity && responsibleState
+          : organizationZipCode && organizationStreet && organizationNumber && organizationNeighborhood && organizationCity && organizationState
+
+        if (!hasBrazilAddress) {
+          return res.status(400).json({ error: 'CEP, logradouro, número, bairro, cidade e estado são obrigatórios para cadastro no Brasil' })
+        }
       }
 
       const exists = await prisma.user.findUnique({ where: { email } })
@@ -3602,14 +4061,29 @@ app.post('/auth/register-organizer', (req, res) => {
           name: organizationName,
           slug: `${slug}-${Date.now()}`,
           address: address || null,
-          documentType,
-          documentNumber,
-          kycStatus: req.file ? 'under_review' : 'pending',
+          street: organizationStreet || responsibleStreet || null,
+          number: organizationNumber || responsibleNumber || null,
+          complement: organizationComplement || responsibleComplement || null,
+          zipCode: organizationZipCode || responsibleZipCode || null,
+          neighborhood: organizationNeighborhood || responsibleNeighborhood || null,
+          country: organizationCountry || responsibleCountry || null,
+          city: organizationCity || responsibleCity || null,
+          state: organizationState || responsibleState || null,
+          documentType: documentType || (organizerType === 'organizador' ? 'CPF' : 'CNPJ'),
+          documentNumber: documentNumber || null,
+          responsibleCpf: responsibleCpf || null,
+          responsibleZipCode: responsibleZipCode || null,
+          responsibleStreet: responsibleStreet || null,
+          responsibleNumber: responsibleNumber || null,
+          responsibleComplement: responsibleComplement || null,
+          responsibleNeighborhood: responsibleNeighborhood || null,
+          responsibleCity: responsibleCity || null,
+          responsibleState: responsibleState || null,
+          responsibleCountry: responsibleCountry || null,
+          kycStatus: 'not_required',
           kycDocumentUrl: req.file ? `/api/uploads/kyc/${req.file.filename}` : null,
           termsAcceptedAt: new Date(),
-          paymentCollectionMode: ['manual', 'platform', 'both'].includes(paymentCollectionMode)
-            ? paymentCollectionMode
-            : 'manual',
+          paymentCollectionMode: 'manual',
           supportedSports: supportedSports || null,
           plan: 'trial',
           trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -3641,21 +4115,20 @@ app.post('/auth/register-organizer', (req, res) => {
         text: `Seu cadastro de organizador foi recebido. Confirme seu e-mail: ${verifyUrl}`,
         html: `
           <h2>Cadastro de organizador recebido</h2>
-          <p>Sua arena <strong>${escapeHtml(organizationName)}</strong> foi criada em análise.</p>
-          <p>Status da validação: <strong>${req.file ? 'em análise' : 'pendente de documento'}</strong>.</p>
+          <p>Sua conta <strong>${escapeHtml(organizationName)}</strong> foi criada.</p>
           <p><a href="${verifyUrl}">Confirmar e-mail</a></p>
         `,
       })
 
       await sendWhatsApp({
         to: phone,
-        text: `ProMaster Arena: cadastro de organizador recebido para ${organizationName}. Confirme seu e-mail e acompanhe a validação no painel: ${APP_URL}/login`,
+        text: `ProMaster Arena: cadastro de organizador recebido para ${organizationName}. Valide seu cadastro por este link: ${verifyUrl}`,
       })
 
       res.json({
         ok: true,
         organizationId: organization.id,
-        message: 'Cadastro criado. Enviamos confirmação por e-mail e WhatsApp. A documentação ficará em análise.',
+        message: 'Cadastro criado. Enviamos confirmação por e-mail e WhatsApp.',
       })
     } catch (error) {
       console.error(error)
@@ -3668,23 +4141,47 @@ app.post('/players/register', async (req, res) => {
   try {
     const {
       name,
+      firstName,
+      lastName,
       nickname,
       email,
       phone,
       rg,
+      cpf,
+      gender,
+      birthDate,
+      zipCode,
+      street,
+      addressNumber,
+      complement,
+      neighborhood,
       city,
       state,
       country,
       favoriteSports,
+      password,
       termsAccepted,
+      noticesAccepted,
     } = req.body
 
-    if (!name || !email || !phone) {
-      return res.status(400).json({ error: 'Nome, e-mail e WhatsApp são obrigatórios' })
+    const fullName = String(name || `${firstName || ''} ${lastName || ''}`).trim()
+
+    if (!fullName || !email || !phone || !password) {
+      return res.status(400).json({ error: 'Nome, e-mail, WhatsApp e senha são obrigatórios' })
+    }
+
+    if (String(country || '').toLowerCase() === 'brasil') {
+      if (!cpf || !zipCode || !street || !addressNumber || !neighborhood || !city || !state) {
+        return res.status(400).json({ error: 'CPF, CEP, endereço, número, bairro, cidade e estado são obrigatórios para jogadores do Brasil' })
+      }
     }
 
     if (!termsAccepted) {
       return res.status(400).json({ error: 'Aceite os termos para criar o perfil do jogador' })
+    }
+
+    if (!noticesAccepted) {
+      return res.status(400).json({ error: 'Aceite o recebimento de avisos por e-mail e WhatsApp para participar dos torneios' })
     }
 
     const exists = await prisma.playerAccount.findUnique({ where: { email } })
@@ -3693,41 +4190,90 @@ app.post('/players/register', async (req, res) => {
       return res.status(400).json({ error: 'Já existe perfil de jogador com este e-mail' })
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const verifyToken = randomUUID()
     const player = await prisma.playerAccount.create({
       data: {
-        name,
+        name: fullName,
+        firstName: firstName || null,
+        lastName: lastName || null,
         nickname: nickname || null,
         email,
+        password: hashedPassword,
         phone: phone || null,
         rg: rg || null,
+        cpf: cpf || null,
+        gender: gender || null,
+        birthDate: birthDate ? new Date(birthDate) : null,
+        zipCode: zipCode || null,
+        street: street || null,
+        addressNumber: addressNumber || null,
+        complement: complement || null,
+        neighborhood: neighborhood || null,
         city: city || null,
         state: state || null,
         country: country || null,
         favoriteSports: Array.isArray(favoriteSports) ? favoriteSports.join(', ') : favoriteSports || null,
         termsAcceptedAt: new Date(),
+        noticesAcceptedAt: new Date(),
+        emailVerified: false,
+        verifyToken,
       },
     })
 
+    const verifyUrl = `${APP_URL}/api/players/verify/${verifyToken}`
+
     await sendEmail({
       to: email,
-      subject: 'Perfil de jogador criado - ProMaster Arena',
-      text: `Seu perfil de jogador foi criado. Acesse: ${APP_URL}/jogador/${player.id}`,
+      subject: 'Valide seu cadastro de jogador - ProMaster Arena',
+      text: `Seu perfil de jogador foi criado. Valide seu cadastro: ${verifyUrl}`,
       html: `
-        <h2>Perfil de jogador criado</h2>
-        <p>Olá <strong>${escapeHtml(name)}</strong>, seu perfil no ProMaster Arena está pronto.</p>
-        <p><a href="${APP_URL}/jogador/${player.id}">Ver meu painel de jogador</a></p>
+        <h2>Valide seu cadastro de jogador</h2>
+        <p>Olá <strong>${escapeHtml(fullName)}</strong>, confirme seu cadastro para ativar seu perfil no ProMaster Arena.</p>
+        <p><a href="${verifyUrl}">Validar cadastro</a></p>
       `,
     })
 
     await sendWhatsApp({
       to: phone,
-      text: `ProMaster Arena: seu perfil de jogador foi criado. Acesse histórico, ranking e avisos em ${APP_URL}/jogador/${player.id}`,
+      text: `ProMaster Arena: valide seu cadastro de jogador por este link: ${verifyUrl}`,
     })
 
-    res.json({ ok: true, player })
+    res.json({
+      ok: true,
+      player: { id: player.id, name: player.name, email: player.email },
+      message: 'Cadastro criado. Enviamos o link de validação por e-mail e WhatsApp.',
+    })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Erro ao criar perfil de jogador' })
+  }
+})
+
+app.get('/players/verify/:token', async (req, res) => {
+  try {
+    const { token } = req.params
+
+    const player = await prisma.playerAccount.findFirst({
+      where: { verifyToken: token },
+    })
+
+    if (!player) {
+      return res.status(400).send('Link de validação inválido ou expirado.')
+    }
+
+    await prisma.playerAccount.update({
+      where: { id: player.id },
+      data: {
+        emailVerified: true,
+        verifyToken: null,
+      },
+    })
+
+    res.redirect(`/jogador/${player.id}?verified=1`)
+  } catch (error) {
+    console.error(error)
+    res.status(500).send('Erro ao validar cadastro de jogador')
   }
 })
 
@@ -3982,6 +4528,10 @@ app.post('/auth/login', async (req, res) => {
 
     if (!validPassword) {
       return res.status(401).json({ error: 'Usuário ou senha inválidos' })
+    }
+
+    if (user.role !== 'superadmin' && ['blocked', 'deleted'].includes(user.organization?.status)) {
+      return res.status(403).json({ error: 'Acesso bloqueado. Entre em contato com o suporte ProMaster Arena.' })
     }
 
     const token = jwt.sign(
