@@ -4794,11 +4794,6 @@ function Landing() {
     <div className="landing">
       <LandingHeader />
 
-      <div className="landingNotice">
-        <strong>Aviso provisório</strong>
-        <span>Esta página está em modo teste. Alguns recursos e informações podem ser ajustados durante a validação da plataforma.</span>
-      </div>
-
       <section id="conteudo-principal" className="landingHero">
         <div className="landingHeroContent">
           <span className="landingBadge">Torneios em tempo real</span>
@@ -4941,36 +4936,6 @@ function Landing() {
         </div>
 
         <img src="/promaster-telao-reference.png" alt="Referência de telão profissional ProMaster Arena" />
-      </section>
-
-      <section id="planos" className="landingPlans">
-        <h2>Planos</h2>
-
-        <div className="plansGrid">
-          <div className="planCard">
-            <h3>Trial Free</h3>
-            <strong>7 dias ou 1 torneio</strong>
-            <p>Acesso aos principais recursos. Depois expira para novos torneios, mas mantém login e edição.</p>
-          </div>
-
-          <div className="planCard featured">
-            <h3>Pro</h3>
-            <strong>R$ 59,90/mês</strong>
-            <p>Mesmas funções principais, com torneios ilimitados até 64 jogadores.</p>
-          </div>
-
-          <div className="planCard">
-            <h3>Master</h3>
-            <strong>R$ 89,90/mês</strong>
-            <p>Torneios acima de 64 jogadores, usuários/equipe e recursos avançados.</p>
-          </div>
-
-          <div className="planCard">
-            <h3>Avulso</h3>
-            <strong>R$ 21,90</strong>
-            <p>Crédito para criar 1 torneio, ideal para eventos únicos.</p>
-          </div>
-        </div>
       </section>
 
       <LandingFooter />
