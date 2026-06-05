@@ -4532,7 +4532,7 @@ function LandingHeader() {
       <a className="skipLink" href="#conteudo-principal">Pular para o conteúdo</a>
       <header className="landingHeader">
         <a href="/" className="landingLogo">
-          <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
+          <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
           <span>ProMaster Arena</span>
         </a>
 
@@ -4634,7 +4634,7 @@ function LandingFooter() {
       <div className="landingFooterInner">
         <div className="footerBrand">
           <a href="/" className="landingLogo">
-            <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
+            <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
             <span className="footerLogoText" aria-label="ProMaster Arena">
               <span className="footerLogoPro">Pro</span>
               <span className="footerLogoMaster">Master</span>
@@ -5032,7 +5032,7 @@ function PlansComparison() {
     <div className="plansPage">
       <header className="plansPageHeader">
         <a href="/" className="landingLogo">
-          <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
+          <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
           <span>ProMaster Arena</span>
         </a>
         <div className="landingActions">
