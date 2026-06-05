@@ -5815,6 +5815,286 @@ button:hover {
   margin-top: 4px;
 }
 
+.seasonExecutivePanel {
+  margin-bottom: 24px;
+}
+
+.seasonExecutiveHeader,
+.seasonCardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.seasonExecutiveHeader span {
+  display: block;
+  color: #86efac;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.seasonExecutiveHeader h2 {
+  margin: 6px 0;
+  font-size: 34px;
+}
+
+.seasonExecutiveHeader p,
+.seasonCardHeader p {
+  color: #94a3b8;
+  margin: 0;
+}
+
+.seasonExecutiveHeader > strong,
+.seasonEvolutionCard .seasonCardHeader > span {
+  background: rgba(37,99,235,.18);
+  border: 1px solid rgba(96,165,250,.45);
+  border-radius: 999px;
+  color: #bfdbfe;
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+
+.seasonKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.seasonKpiGrid div,
+.seasonExecutiveCard {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.seasonKpiGrid span,
+.seasonFinanceGrid span {
+  display: block;
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.seasonKpiGrid strong {
+  display: block;
+  font-size: 27px;
+  margin-top: 8px;
+}
+
+.seasonExecutiveGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, .75fr);
+  gap: 16px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+.seasonExecutiveGrid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.seasonExecutiveGrid.lower {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.seasonExecutiveCard h3 {
+  margin-bottom: 8px;
+}
+
+.seasonRankingTable.executive .seasonRankingHead,
+.seasonRankingTable.executive .seasonRankingRow {
+  grid-template-columns: 54px minmax(160px, 1fr) 90px 90px;
+}
+
+.seasonCalendarList {
+  display: grid;
+  gap: 10px;
+}
+
+.seasonCalendarList div {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.seasonCalendarList span,
+.seasonCalendarList small,
+.seasonCalendarList em {
+  display: block;
+}
+
+.seasonCalendarList span {
+  color: #86efac;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.seasonCalendarList small {
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.seasonCalendarList em {
+  color: #93c5fd;
+  font-style: normal;
+  font-weight: 800;
+  margin-top: 6px;
+}
+
+.seasonEvolutionChart {
+  display: grid;
+  gap: 11px;
+}
+
+.seasonEvolutionChart > div {
+  display: grid;
+  grid-template-columns: 170px 1fr 72px;
+  gap: 12px;
+  align-items: center;
+}
+
+.seasonEvolutionChart span,
+.seasonEvolutionChart em {
+  font-weight: 900;
+}
+
+.seasonEvolutionChart em {
+  color: #93c5fd;
+  font-style: normal;
+}
+
+.seasonEvolutionChart div div {
+  height: 12px;
+  background: #0f172a;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.seasonEvolutionChart div div strong {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #60a5fa);
+}
+
+.seasonCircuitStatusGrid,
+.raceMastersBox,
+.seasonInsightList,
+.seasonOperationalGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.seasonCircuitStatusGrid div,
+.raceMastersBox span,
+.seasonInsightList span,
+.seasonOperationalGrid span,
+.seasonFinanceGrid div {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.seasonCircuitStatusGrid span {
+  display: inline-flex;
+  margin-bottom: 7px;
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.seasonCircuitStatusGrid small {
+  display: block;
+  color: #94a3b8;
+  margin-top: 5px;
+}
+
+.seasonCircuitStatusGrid .status-running {
+  border-color: rgba(34,197,94,.45);
+}
+
+.seasonCircuitStatusGrid .status-next {
+  border-color: rgba(250,204,21,.45);
+}
+
+.seasonCircuitStatusGrid .status-finished {
+  border-color: rgba(248,113,113,.45);
+}
+
+.raceMastersBox strong {
+  color: #86efac;
+  margin-top: 6px;
+}
+
+.raceMastersBox span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.raceMastersBox small {
+  color: #94a3b8;
+}
+
+.seasonInsightList span,
+.seasonOperationalGrid span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.seasonInsightList strong,
+.seasonOperationalGrid strong {
+  color: #fff;
+  text-align: right;
+}
+
+.seasonFinanceGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.seasonFinanceGrid strong {
+  display: block;
+  margin-top: 7px;
+}
+
+.seasonSimpleTable {
+  display: grid;
+  gap: 8px;
+}
+
+.seasonSimpleTable div {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 90px 90px;
+  gap: 10px;
+  align-items: center;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.seasonSimpleTable.organizer div {
+  grid-template-columns: minmax(180px, 1fr) 90px;
+}
+
+.seasonSimpleTable div:first-child {
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .seasonLayout {
   display: grid;
   grid-template-columns: minmax(360px, .95fr) minmax(320px, .65fr);
@@ -6481,6 +6761,13 @@ button:hover {
   .adminClientProfileGrid,
   .usersLayout,
   .userRow,
+  .seasonKpiGrid,
+  .seasonExecutiveGrid,
+  .seasonExecutiveGrid.three,
+  .seasonExecutiveGrid.lower,
+  .seasonFinanceGrid,
+  .seasonSimpleTable div,
+  .seasonSimpleTable.organizer div,
   .seasonLayout,
   .seasonFormGrid,
   .seasonInfoGrid,
@@ -6502,6 +6789,16 @@ button:hover {
     flex-direction: column;
   }
 
+  .seasonExecutiveHeader,
+  .seasonCardHeader {
+    flex-direction: column;
+  }
+
+  .seasonExecutiveHeader > strong {
+    white-space: normal;
+  }
+
+  .seasonEvolutionChart > div,
   .rankingEvolutionBars > div {
     grid-template-columns: 1fr;
   }
