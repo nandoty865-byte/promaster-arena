@@ -222,6 +222,12 @@ body {
   margin-top: 0;
 }
 
+.panelSubtitle {
+  color: #93c5fd;
+  font-weight: 800;
+  margin: -4px 0 16px;
+}
+
 .panel input,
 .panel select,
 .panel textarea {
@@ -3284,6 +3290,7 @@ button:hover {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 .sidebarLogo {
@@ -3313,11 +3320,20 @@ button:hover {
 .sidebarGroup {
   display: grid;
   gap: 0;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .sidebarGroup button {
   margin-bottom: 8px;
+}
+
+.sidebarGroupLabel {
+  display: block;
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 900;
+  margin: 4px 0 7px 18px;
+  text-transform: uppercase;
 }
 
 .sidebar .sidebarSubButton {

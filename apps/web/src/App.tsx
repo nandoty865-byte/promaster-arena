@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import {
   LineChart,
@@ -1452,6 +1452,11 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
     navigate('/app')
   }
 
+  function goToTournamentFilter(filter: string) {
+    navigate(`/app?torneios=${filter}`)
+    setTimeout(() => document.getElementById('meus-torneios')?.scrollIntoView({ behavior: 'smooth' }), 80)
+  }
+
   function logout() {
     if (onLogout) {
       onLogout()
@@ -1465,11 +1470,49 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
   return (
     <aside className="sidebar">
       <div className="sidebarLogo">🎱 ProMaster</div>
-      <button onClick={() => navigate('/app')}>Dashboard</button>
-      <button onClick={() => navigate('/app/perfil')}>Perfil</button>
-      <button onClick={goToTournaments}>Meus Torneios</button>
-      <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
-      <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
+      <button onClick={() => navigate('/app')}>🏠 Dashboard</button>
+
+      <div className="sidebarGroup">
+        <button onClick={goToTournaments}>🏆 Meus Torneios</button>
+        <button className="sidebarSubButton" onClick={() => goToTournamentFilter('todos')}>Todos os Torneios</button>
+        <button className="sidebarSubButton" onClick={() => goToTournamentFilter('andamento')}>Em Andamento</button>
+        <button className="sidebarSubButton" onClick={() => goToTournamentFilter('inscricoes')}>Inscrições Abertas</button>
+        <button className="sidebarSubButton" onClick={() => goToTournamentFilter('encerrados')}>Encerrados</button>
+        <button className="sidebarSubButton" onClick={() => goToTournamentFilter('arquivados')}>Arquivados</button>
+      </div>
+
+      <div className="sidebarGroup">
+        <button onClick={() => navigate('/upgrade')}>💰 Financeiro</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Dashboard Financeiro</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Receitas</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições Recebidas</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Repasses</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Premiações</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Saques</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Relatórios</button>
+      </div>
+
+      <div className="sidebarGroup">
+        <button onClick={() => navigate('/campeonatos/arenas')}>📋 Cadastros</button>
+        <span className="sidebarGroupLabel">🏟 Arenas</span>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Lista de Arenas</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Nova Arena</button>
+        <span className="sidebarGroupLabel">👤 Jogadores</span>
+        <button className="sidebarSubButton" onClick={() => navigate('/cadastro-jogador')}>Cadastro</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Estatísticas</button>
+        <span className="sidebarGroupLabel">👥 Usuários</span>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/usuarios')}>Usuários</button>
+      </div>
+
+      <div className="sidebarGroup">
+        <button onClick={() => navigate('/campeonatos')}>📊 Rankings</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking Geral</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Ranking por Circuito</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking por Categoria</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Race to Master</button>
+      </div>
+
       {showMasterLinks && (
         <div className="sidebarGroup">
           <button onClick={() => navigate('/campeonatos')}>Circuito ProMaster</button>
@@ -1479,9 +1522,26 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Pagamentos</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Cadastro de Arenas</button>
-          <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
         </div>
       )}
+
+      <div className="sidebarGroup">
+        <button onClick={() => navigate('/app/perfil')}>⚙️ Configurações</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Organização</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Integrações</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Pagamentos</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>WhatsApp</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Notificações</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Termos e Políticas</button>
+      </div>
+
+      <div className="sidebarGroup">
+        <button onClick={() => navigate('/app/perfil')}>👤 Perfil</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Meu Perfil</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Minha Arena</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Segurança</button>
+        <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Assinatura</button>
+      </div>
       <button className="sidebarFooterButton" onClick={logout}>Sair</button>
     </aside>
   )
@@ -2065,12 +2125,14 @@ function UsersPage() {
 
 function Dashboard({ user }: any) {
   const navigate = useNavigate()
+  const pageLocation = useLocation()
   const [tournaments, setTournaments] = useState<any[]>([])
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [detailsTournament, setDetailsTournament] = useState<any>(null)
   const [openTournamentMenuId, setOpenTournamentMenuId] = useState<number | null>(null)
   const plan = user?.organization?.plan || 'trial'
   const isMasterPlan = plan === 'master' || plan === 'free'
+  const tournamentFilter = new URLSearchParams(pageLocation.search).get('torneios') || 'todos'
   const finishedCount = tournaments.filter(t => t.status === 'finished').length
   const canceledCount = tournaments.filter(t =>
     ['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
@@ -2078,6 +2140,34 @@ function Dashboard({ user }: any) {
   const futureCount = tournaments.filter(t =>
     t.status !== 'finished' && !['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
   ).length
+  const filteredTournaments = tournaments.filter(t => {
+    const status = String(t.status || '').toLowerCase()
+
+    if (tournamentFilter === 'andamento') {
+      return ['running', 'playing', 'started', 'in_progress', 'em_andamento'].includes(status)
+    }
+
+    if (tournamentFilter === 'inscricoes') {
+      return Boolean(t.registrationOpen)
+    }
+
+    if (tournamentFilter === 'encerrados') {
+      return ['finished', 'closed', 'ended', 'encerrado'].includes(status)
+    }
+
+    if (tournamentFilter === 'arquivados') {
+      return ['archived', 'arquivado'].includes(status)
+    }
+
+    return true
+  })
+  const tournamentFilterLabels: Record<string, string> = {
+    todos: 'Todos os Torneios',
+    andamento: 'Em Andamento',
+    inscricoes: 'Inscrições Abertas',
+    encerrados: 'Encerrados',
+    arquivados: 'Arquivados',
+  }
 
   function logout() {
     localStorage.removeItem('token')
@@ -2148,10 +2238,11 @@ function Dashboard({ user }: any) {
 
         <div id="meus-torneios" className="panel">
           <h2>Meus Torneios</h2>
+          <p className="panelSubtitle">{tournamentFilterLabels[tournamentFilter] || 'Todos os Torneios'}</p>
 
-          {tournaments.length === 0 && <p>Nenhum torneio encontrado.</p>}
+          {filteredTournaments.length === 0 && <p>Nenhum torneio encontrado para este filtro.</p>}
 
-          {tournaments.length > 0 && (
+          {filteredTournaments.length > 0 && (
             <div className="tournamentsTableWrap">
               <table className="tournamentsTable">
                 <thead>
@@ -2164,7 +2255,7 @@ function Dashboard({ user }: any) {
                   </tr>
                 </thead>
                 <tbody>
-                  {tournaments.map(t => {
+                  {filteredTournaments.map(t => {
                     const publicUrl = publicTournamentUrl(t.publicSlug)
 
                     return (
