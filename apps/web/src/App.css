@@ -3310,7 +3310,27 @@ button:hover {
   transform: translateX(2px);
 }
 
-.sidebar button:last-child {
+.sidebarGroup {
+  display: grid;
+  gap: 0;
+  margin-bottom: 10px;
+}
+
+.sidebarGroup button {
+  margin-bottom: 8px;
+}
+
+.sidebar .sidebarSubButton {
+  width: calc(100% - 18px);
+  margin-left: 18px;
+  padding: 9px 12px;
+  background: #020617;
+  border: 1px solid #1e293b;
+  color: #bfdbfe;
+  font-size: 13px;
+}
+
+.sidebar > button:last-child {
   margin-top: auto;
 }
 
@@ -5728,6 +5748,17 @@ button:hover {
   padding: 12px;
 }
 
+.clientTournamentRow.clickableRow {
+  width: 100%;
+  text-align: left;
+  color: #fff;
+}
+
+.clientTournamentRow.clickableRow:hover {
+  border-color: #60a5fa;
+  background: #102040;
+}
+
 .clientTournamentRow span {
   display: block;
   color: #94a3b8;
@@ -5846,7 +5877,20 @@ button:hover {
   margin: 0;
 }
 
+.seasonExecutiveActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.seasonExecutiveActions button {
+  width: auto;
+  margin: 0;
+}
+
 .seasonExecutiveHeader > strong,
+.seasonExecutiveActions strong,
 .seasonEvolutionCard .seasonCardHeader > span {
   background: rgba(37,99,235,.18);
   border: 1px solid rgba(96,165,250,.45);
@@ -5991,7 +6035,7 @@ button:hover {
   gap: 10px;
 }
 
-.seasonCircuitStatusGrid div,
+.seasonCircuitStatusGrid button,
 .raceMastersBox span,
 .seasonInsightList span,
 .seasonOperationalGrid span,
@@ -6000,6 +6044,17 @@ button:hover {
   border: 1px solid #1e293b;
   border-radius: 12px;
   padding: 10px 12px;
+}
+
+.seasonCircuitStatusGrid button {
+  width: 100%;
+  color: #fff;
+  text-align: left;
+}
+
+.seasonCircuitStatusGrid button:hover {
+  background: #102040;
+  border-color: #60a5fa;
 }
 
 .seasonCircuitStatusGrid span {
@@ -6350,11 +6405,23 @@ button:hover {
 }
 
 .circuitTimeline div,
-.circuitMapGrid div {
+.circuitMapGrid div,
+.circuitMapGrid button {
   background: #020617;
   border: 1px solid #1e293b;
   border-radius: 14px;
   padding: 14px;
+}
+
+.circuitMapGrid button {
+  width: 100%;
+  text-align: left;
+  color: #fff;
+}
+
+.circuitMapGrid button:hover {
+  border-color: #60a5fa;
+  background: #102040;
 }
 
 .circuitTimeline div.live {
@@ -6386,6 +6453,30 @@ button:hover {
   background: #2563eb;
   margin-bottom: 10px;
   font-weight: 900;
+}
+
+.circuitStageAddCard {
+  border-style: dashed;
+}
+
+.circuitStageAddCard span {
+  background: #22c55e;
+}
+
+.seasonCreateModal {
+  max-width: 760px;
+}
+
+.compactButton {
+  width: auto;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+}
+
+.ghostButton {
+  background: #020617;
+  border: 1px solid #334155;
+  color: #bfdbfe;
 }
 
 .circuitAdminGrid {
