@@ -365,6 +365,9 @@ export default function App() {
       <Route path="/app/usuarios" element={<UsersPage />} />
       <Route path="/upgrade" element={<Upgrade />} />
       <Route path="/campeonatos" element={<SeasonsPage user={user} />} />
+      <Route path="/campeonatos/etapas" element={<SeasonsPage user={user} defaultPanel="etapas" />} />
+      <Route path="/campeonatos/pagamentos" element={<SeasonsPage user={user} defaultPanel="pagamentos" />} />
+      <Route path="/campeonatos/inscricoes" element={<SeasonsPage user={user} defaultPanel="inscricoes" />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
       <Route path="/tournament/:id/painel" element={<TournamentOverview />} />
       <Route path="/tournament/:id" element={<TournamentOverview />} />
@@ -1451,10 +1454,14 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
       <button onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
       <button onClick={() => navigate('/upgrade')}>Planos e pagamentos</button>
       {showMasterLinks && (
-        <>
+        <div className="sidebarGroup">
           <button onClick={() => navigate('/campeonatos')}>Circuito ProMaster</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Dashboard Geral</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/etapas')}>Etapas</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Pagamentos</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições</button>
           <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
-        </>
+        </div>
       )}
       <button className="sidebarFooterButton" onClick={logout}>Sair</button>
     </aside>
@@ -4735,7 +4742,7 @@ function defaultCircuitPoints() {
   ]
 }
 
-function SeasonsPage({ user }: any) {
+function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
   const navigate = useNavigate()
   const isMasterPlan = user?.organization?.plan === 'master' || user?.organization?.plan === 'free'
   const [seasons, setSeasons] = useState<any[]>([])
@@ -4744,6 +4751,8 @@ function SeasonsPage({ user }: any) {
   const [seasonOverview, setSeasonOverview] = useState<any>(null)
   const [rankingCategory, setRankingCategory] = useState('Geral')
   const [seasonRankingCategory, setSeasonRankingCategory] = useState('Geral')
+  const [showCreateSeason, setShowCreateSeason] = useState(false)
+  const [circuitDashboardOpen, setCircuitDashboardOpen] = useState(false)
   const [form, setForm] = useState<any>({
     name: 'Circuito ProMaster São Paulo 2027',
     tournamentCount: 8,
@@ -4766,7 +4775,7 @@ function SeasonsPage({ user }: any) {
         const list = Array.isArray(data) ? data : []
         setSeasons(list)
 
-        if (!selectedSeasonId && list[0]) {
+        if (!selectedSeasonId && list[0] && defaultPanel !== 'dashboard') {
           setSelectedSeasonId(list[0].id)
         }
       })
@@ -4804,6 +4813,8 @@ function SeasonsPage({ user }: any) {
         }
 
         setSelectedSeasonId(data.season.id)
+        setShowCreateSeason(false)
+        setCircuitDashboardOpen(true)
         loadSeasons()
         loadSeasonOverview()
       })
@@ -4833,7 +4844,7 @@ function SeasonsPage({ user }: any) {
   useEffect(() => {
     loadSeasons()
     loadSeasonOverview()
-  }, [])
+  }, [defaultPanel])
 
   useEffect(() => {
     if (selectedSeasonId) {
@@ -4864,6 +4875,13 @@ function SeasonsPage({ user }: any) {
   const executiveFinance = seasonOverview?.finance || {}
   const executiveOperational = seasonOverview?.operational || {}
   const executiveArenas = seasonOverview?.arenas || []
+  const allCircuitStages = seasons.flatMap((season: any) =>
+    (season.tournaments || []).map((tournament: any) => ({
+      ...tournament,
+      seasonName: season.name,
+      seasonId: season.id,
+    }))
+  )
   const executiveSeasonYear = selectedSeason?.startDate
     ? new Date(selectedSeason.startDate).getFullYear()
     : new Date().getFullYear() + 1
@@ -4885,6 +4903,56 @@ function SeasonsPage({ user }: any) {
     return labels[String(status || '')] || 'Próxima etapa'
   }
 
+  function openCircuitDashboard(seasonId: number) {
+    setSelectedSeasonId(seasonId)
+    setCircuitDashboardOpen(true)
+    navigate('/campeonatos')
+  }
+
+  function renderCreateCircuitForm() {
+    return (
+      <>
+        <label>Nome do circuito</label>
+        <input value={form.name} onChange={e => updateSeasonField('name', e.target.value)} />
+
+        <div className="seasonFormGrid">
+          <div>
+            <label>Nº de etapas</label>
+            <input type="number" value={form.tournamentCount} onChange={e => updateSeasonField('tournamentCount', Number(e.target.value))} />
+          </div>
+
+          <div>
+            <label>Jogadores no circuito</label>
+            <input type="number" value={form.playerCount} onChange={e => updateSeasonField('playerCount', Number(e.target.value))} />
+          </div>
+
+          <div>
+            <label>Início</label>
+            <input type="date" value={form.startDate} onChange={e => updateSeasonField('startDate', e.target.value)} />
+          </div>
+
+          <div>
+            <label>Final</label>
+            <input type="date" value={form.endDate} onChange={e => updateSeasonField('endDate', e.target.value)} />
+          </div>
+        </div>
+
+        <label>Calendário e sedes</label>
+        <textarea value={form.locations} onChange={e => updateSeasonField('locations', e.target.value)} placeholder="Etapa 1 | São Paulo | Março | Arena principal" />
+
+        <label>Pontuação e regras do circuito</label>
+        <textarea value={form.rules} onChange={e => updateSeasonField('rules', e.target.value)} placeholder="1º lugar: 100 pontos; Race to Masters: top 16..." />
+
+        <label>Premiação total</label>
+        <textarea value={form.prize} onChange={e => updateSeasonField('prize', e.target.value)} placeholder="Premiação total do circuito" />
+
+        <button className="primaryButton" onClick={createSeason}>
+          Criar circuito
+        </button>
+      </>
+    )
+  }
+
   return (
     <div className="saasLayout">
       <ClientSidebar isMasterPlan={isMasterPlan} />
@@ -4892,8 +4960,22 @@ function SeasonsPage({ user }: any) {
       <main className="saasMain">
         <header className="hero">
           <div className="badge">🏆 Circuito ProMaster</div>
-          <h1>Circuitos</h1>
-          <p>Crie temporadas em etapas, ranking acumulado, Race to Masters, calendário, premiação e mini-sites para cada etapa.</p>
+          <h1>
+            {defaultPanel === 'etapas'
+              ? 'Etapas'
+              : defaultPanel === 'pagamentos'
+                ? 'Pagamentos'
+                : defaultPanel === 'inscricoes'
+                  ? 'Inscrições'
+                  : circuitDashboardOpen && selectedSeason
+                    ? selectedSeason.name
+                    : 'Dashboard Geral'}
+          </h1>
+          <p>
+            {defaultPanel === 'dashboard'
+              ? 'Visão executiva da temporada, circuitos ativos, ranking, calendário, Race to Masters e gestão individual.'
+              : 'Operação do Circuito ProMaster separada por etapas, pagamentos e participantes.'}
+          </p>
         </header>
 
         {!isMasterPlan && (
@@ -4904,6 +4986,7 @@ function SeasonsPage({ user }: any) {
           </div>
         )}
 
+        {defaultPanel === 'dashboard' && !circuitDashboardOpen && (
         <section className="panel seasonExecutivePanel">
           <div className="seasonExecutiveHeader">
             <div>
@@ -4911,7 +4994,10 @@ function SeasonsPage({ user }: any) {
               <h2>Temporada {executiveSeasonYear}</h2>
               <p>Visão de liga com circuitos, etapas, ranking acumulado, Race to Masters, financeiro e operação.</p>
             </div>
-            <strong>{executiveKpis.stagesDone || 0} / {executiveKpis.stagesTotal || 0} etapas realizadas</strong>
+            <div className="seasonExecutiveActions">
+              <strong>{executiveKpis.stagesDone || 0} / {executiveKpis.stagesTotal || 0} etapas realizadas</strong>
+              <button className="primaryButton" onClick={() => setShowCreateSeason(true)}>+ Criar Novo Circuito</button>
+            </div>
           </div>
 
           <div className="seasonKpiGrid">
@@ -5000,15 +5086,15 @@ function SeasonsPage({ user }: any) {
 
           <div className="seasonExecutiveGrid three">
             <div className="seasonExecutiveCard">
-              <h3>Situação dos Circuitos</h3>
+              <h3>Circuitos Ativos</h3>
               <div className="seasonCircuitStatusGrid">
                 {executiveCircuits.length === 0 && <p>Nenhum circuito criado.</p>}
                 {executiveCircuits.map((circuit: any) => (
-                  <div key={circuit.id} className={`status-${circuit.visualStatus}`}>
+                  <button key={circuit.id} className={`status-${circuit.visualStatus}`} onClick={() => openCircuitDashboard(circuit.id)}>
                     <span>{circuitVisualStatusLabel(circuit.visualStatus)}</span>
                     <strong>{circuit.name}</strong>
                     <small>{circuit.stagesDone || 0}/{circuit.stagesTotal || 0} etapas • Próxima: {circuit.nextStage || 'A definir'}</small>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -5085,75 +5171,30 @@ function SeasonsPage({ user }: any) {
             </div>
           </div>
         </section>
+        )}
 
-        <div className="seasonLayout">
-          <section className="panel">
-            <h2>Novo Circuito ProMaster</h2>
-
-            <label>Nome do circuito</label>
-            <input value={form.name} onChange={e => updateSeasonField('name', e.target.value)} />
-
-            <div className="seasonFormGrid">
-              <div>
-                <label>Nº de etapas</label>
-                <input type="number" value={form.tournamentCount} onChange={e => updateSeasonField('tournamentCount', Number(e.target.value))} />
+        {showCreateSeason && (
+          <div className="qrModal" onClick={() => setShowCreateSeason(false)}>
+            <div className="detailsContent seasonCreateModal" onClick={e => e.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <h2>Novo Circuito ProMaster</h2>
+                  <p>Configure a temporada, etapas previstas, regras de pontuação e premiação total.</p>
+                </div>
+                <button className="modalCloseButton" onClick={() => setShowCreateSeason(false)}>Fechar</button>
               </div>
-
-              <div>
-                <label>Jogadores no circuito</label>
-                <input type="number" value={form.playerCount} onChange={e => updateSeasonField('playerCount', Number(e.target.value))} />
-              </div>
-
-              <div>
-                <label>Início</label>
-                <input type="date" value={form.startDate} onChange={e => updateSeasonField('startDate', e.target.value)} />
-              </div>
-
-              <div>
-                <label>Final</label>
-                <input type="date" value={form.endDate} onChange={e => updateSeasonField('endDate', e.target.value)} />
-              </div>
+              {renderCreateCircuitForm()}
             </div>
+          </div>
+        )}
 
-            <label>Calendário e sedes</label>
-            <textarea value={form.locations} onChange={e => updateSeasonField('locations', e.target.value)} placeholder="Etapa 1 | São Paulo | Março | Arena principal" />
-
-            <label>Pontuação e regras do circuito</label>
-            <textarea value={form.rules} onChange={e => updateSeasonField('rules', e.target.value)} placeholder="1º lugar: 100 pontos; Race to Masters: top 16..." />
-
-            <label>Premiação total</label>
-            <textarea value={form.prize} onChange={e => updateSeasonField('prize', e.target.value)} placeholder="Premiação total do circuito" />
-
-            <button className="primaryButton" onClick={createSeason}>
-              Criar circuito
-            </button>
-          </section>
-
-          <section className="panel">
-            <h2>Circuitos ativos</h2>
-
-            {seasons.length === 0 && <p>Nenhum circuito criado.</p>}
-
-            <div className="seasonList">
-              {seasons.map(season => (
-                <button
-                  key={season.id}
-                  className={selectedSeasonId === season.id ? 'seasonItem active' : 'seasonItem'}
-                  onClick={() => setSelectedSeasonId(season.id)}
-                >
-                  <strong>{season.name}</strong>
-                  <span>{season.tournaments?.length || 0}/{season.tournamentCount} etapas</span>
-                  {season.championName && <small>Líder final: {season.championName}</small>}
-                </button>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        {seasonDetails && (
+        {defaultPanel === 'dashboard' && circuitDashboardOpen && seasonDetails && (
           <section className="panel seasonDetailsPanel">
             <div className="seasonDetailsHeader">
               <div>
+                <button className="ghostButton compactButton" onClick={() => setCircuitDashboardOpen(false)}>
+                  Voltar ao Dashboard Geral
+                </button>
                 <h2>{seasonDetails.season.name}</h2>
                 <p>Ranking acumulado em etapas, mini-sites por etapa e classificação Race to Masters.</p>
                 <div className="circuitStatusStrip">
@@ -5298,12 +5339,27 @@ function SeasonsPage({ user }: any) {
 
             <h3>Mapa das Etapas</h3>
             <div className="circuitMapGrid">
+              <button className="circuitStageAddCard" onClick={() => navigate(`/criar-torneio?seasonId=${seasonDetails.season.id}`)}>
+                <span>+</span>
+                <strong>Adicionar Etapa</strong>
+                <small>Criar formulário da próxima etapa</small>
+              </button>
               {circuitMapStages.map((stage, index) => (
-                <div key={`${stage.city}-${index}`}>
+                <button
+                  key={`${stage.city}-${index}`}
+                  onClick={() => {
+                    const tournament = circuitTournaments[index]
+                    if (tournament?.id) {
+                      navigate(`/tournament/${tournament.id}`)
+                    } else {
+                      navigate(`/criar-torneio?seasonId=${seasonDetails.season.id}`)
+                    }
+                  }}
+                >
                   <span>{index + 1}</span>
                   <strong>{stage.city}</strong>
                   <small>{stage.arena}</small>
-                </div>
+                </button>
               ))}
               {circuitMapStages.length === 0 && <p>Cadastre cidades e arenas no calendário do circuito.</p>}
             </div>
@@ -5335,6 +5391,83 @@ function SeasonsPage({ user }: any) {
                 <span>Telão do circuito</span>
                 <strong>Ranking ao vivo, líder, próxima etapa e destaques.</strong>
               </div>
+            </div>
+          </section>
+        )}
+
+        {defaultPanel === 'etapas' && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <h2>Etapas</h2>
+                <p>Operação das etapas vinculadas aos circuitos ativos.</p>
+              </div>
+              <button className="primaryButton" onClick={() => navigate(`/criar-torneio${selectedSeasonId ? `?seasonId=${selectedSeasonId}` : ''}`)}>
+                + Criar Etapa
+              </button>
+            </div>
+
+            <div className="seasonTournamentList">
+              {allCircuitStages.length === 0 && <p>Nenhuma etapa vinculada ainda.</p>}
+              {allCircuitStages.map((tournament: any) => (
+                <button key={tournament.id} className="clientTournamentRow clickableRow" onClick={() => navigate(`/tournament/${tournament.id}`)}>
+                  <div>
+                    <strong>{tournament.name}</strong>
+                    <span>{tournament.seasonName} • {tournamentStatusLabel(tournament.status)} • {tournament.location || 'Local a definir'}</span>
+                  </div>
+                  <span>{formatCircuitDate(tournament.eventDate)}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {defaultPanel === 'pagamentos' && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <h2>Pagamentos</h2>
+                <p>Resumo financeiro dos circuitos, etapas, inscrições e premiações.</p>
+              </div>
+            </div>
+
+            <div className="seasonFinanceGrid">
+              <div><span>Receita</span><strong>{executiveFinance.revenue || 'R$ 0,00'}</strong></div>
+              <div><span>Confirmado</span><strong>{executiveFinance.paidRevenue || 'R$ 0,00'}</strong></div>
+              <div><span>Pendente</span><strong>{executiveFinance.pendingRevenue || 'R$ 0,00'}</strong></div>
+              <div><span>Premiações</span><strong>{executiveFinance.prizeTotal || 'R$ 0,00'}</strong></div>
+              <div><span>Resultado</span><strong>{executiveFinance.estimatedResult || 'R$ 0,00'}</strong></div>
+            </div>
+          </section>
+        )}
+
+        {defaultPanel === 'inscricoes' && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <h2>Inscrições</h2>
+                <p>Controle executivo de participantes aprovados, aguardando confirmação e pagamentos.</p>
+              </div>
+            </div>
+
+            <div className="seasonOperationalGrid seasonOperationalLarge">
+              <span>Inscrições aprovadas <strong>{executiveOperational.registrationsApproved || 0}</strong></span>
+              <span>Aguardando confirmação <strong>{executiveOperational.registrationsWaiting || 0}</strong></span>
+              <span>Pagamentos confirmados <strong>{executiveOperational.paymentsConfirmed || 0}</strong></span>
+              <span>Pagamentos pendentes <strong>{executiveOperational.paymentsPending || 0}</strong></span>
+            </div>
+
+            <div className="seasonTournamentList">
+              {allCircuitStages.length === 0 && <p>Nenhuma etapa com inscrições ainda.</p>}
+              {allCircuitStages.map((tournament: any) => (
+                <button key={tournament.id} className="clientTournamentRow clickableRow" onClick={() => navigate(`/tournament/${tournament.id}/inscritos`)}>
+                  <div>
+                    <strong>{tournament.name}</strong>
+                    <span>{tournament.seasonName} • Inscrições {tournament.registrationOpen ? 'abertas' : 'fechadas'}</span>
+                  </div>
+                  <span>{tournamentStatusLabel(tournament.status)}</span>
+                </button>
+              ))}
             </div>
           </section>
         )}
