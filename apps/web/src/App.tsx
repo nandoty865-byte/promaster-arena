@@ -4635,9 +4635,13 @@ function LandingFooter() {
         <div className="footerBrand">
           <a href="/" className="landingLogo">
             <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
-            <span>ProMaster Arena</span>
+            <span className="footerLogoText" aria-label="ProMaster Arena">
+              <span className="footerLogoPro">Pro</span>
+              <span className="footerLogoMaster">Master</span>
+              <span className="footerLogoArena">Arena</span>
+            </span>
           </a>
-          <p>Torneios, rankings, inscrições, pagamentos e telão em uma experiência esportiva em tempo real.</p>
+          <p>Torneios em Tempo Real</p>
         </div>
 
         <nav className="footerLinks" aria-label="Mapa do site">
