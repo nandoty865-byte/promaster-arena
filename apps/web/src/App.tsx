@@ -4533,7 +4533,11 @@ function LandingHeader() {
       <header className="landingHeader">
         <a href="/" className="landingLogo">
           <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
-          <span>ProMaster Arena</span>
+          <span className="brandLogoText" aria-label="ProMaster Arena">
+            <span className="brandLogoPro">Pro</span>
+            <span className="brandLogoMaster">Master</span>
+            <span className="brandLogoArena">Arena</span>
+          </span>
         </a>
 
         <nav className="landingNav" aria-label="Navegação principal">
@@ -4635,10 +4639,10 @@ function LandingFooter() {
         <div className="footerBrand">
           <a href="/" className="landingLogo">
             <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
-            <span className="footerLogoText" aria-label="ProMaster Arena">
-              <span className="footerLogoPro">Pro</span>
-              <span className="footerLogoMaster">Master</span>
-              <span className="footerLogoArena">Arena</span>
+            <span className="brandLogoText" aria-label="ProMaster Arena">
+              <span className="brandLogoPro">Pro</span>
+              <span className="brandLogoMaster">Master</span>
+              <span className="brandLogoArena">Arena</span>
             </span>
           </a>
           <p>Torneios em Tempo Real</p>
@@ -5033,7 +5037,11 @@ function PlansComparison() {
       <header className="plansPageHeader">
         <a href="/" className="landingLogo">
           <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
-          <span>ProMaster Arena</span>
+          <span className="brandLogoText" aria-label="ProMaster Arena">
+            <span className="brandLogoPro">Pro</span>
+            <span className="brandLogoMaster">Master</span>
+            <span className="brandLogoArena">Arena</span>
+          </span>
         </a>
         <div className="landingActions">
           <a href="/login">Entrar</a>
