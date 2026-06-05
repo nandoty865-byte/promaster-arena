@@ -357,6 +357,9 @@ export default function App() {
       <Route path="/inscreva-se" element={<SignupChoice />} />
       <Route path="/cadastro-organizador" element={<OrganizerSignup />} />
       <Route path="/cadastro-jogador" element={<PlayerSignup />} />
+      <Route path="/organizador" element={<PersonaLanding type="organizador" />} />
+      <Route path="/jogador" element={<PersonaLanding type="jogador" />} />
+      <Route path="/arena" element={<PersonaLanding type="arena" />} />
       <Route path="/jogador/:id" element={<PlayerDashboard />} />
       <Route path="/" element={<Landing />} />
       <Route path="/planos" element={<PlansComparison />} />
@@ -4423,26 +4426,203 @@ function Financeiro() {
   )
 }
 
+type PersonaLandingType = 'organizador' | 'jogador' | 'arena'
+
+const personaLandingContent: Record<PersonaLandingType, {
+  badge: string
+  title: string
+  description: string
+  cta: string
+  secondary: string
+  panelTitle: string
+  panelEyebrow: string
+  metrics: Array<[string, string]>
+  benefits: Array<[string, string]>
+  steps: Array<[string, string]>
+  showcaseTitle: string
+  showcaseText: string
+  image: string
+}> = {
+  organizador: {
+    badge: 'Para organizadores',
+    title: 'Organize torneios profissionais em minutos.',
+    description: 'Controle inscrições, pagamentos, rankings, partidas, telão e transmissão ao vivo em uma única plataforma.',
+    cta: 'Criar torneio gratuitamente',
+    secondary: 'Ver demonstração',
+    panelEyebrow: 'Visão geral',
+    panelTitle: 'Operação completa do torneio',
+    metrics: [['12', 'Torneios ativos'], ['1.248', 'Inscrições'], ['R$ 48.750', 'Receita total'], ['25.430', 'Visualizações']],
+    benefits: [
+      ['Inscrições online', 'Página de torneio profissional, otimizada para conversão e compartilhamento.'],
+      ['Pagamentos integrados', 'Pix, cartão e controle manual com acompanhamento financeiro.'],
+      ['Rankings em tempo real', 'Pontuação, classificação e histórico atualizados automaticamente.'],
+      ['Telão profissional', 'Exiba confrontos, resultados e patrocinadores com visual de arena.'],
+    ],
+    steps: [
+      ['Crie seu torneio', 'Configure regras, formato, premiação e página pública.'],
+      ['Divulgue e receba inscrições', 'Compartilhe link e acompanhe pagamentos e confirmações.'],
+      ['Gerencie as partidas', 'Controle mesas, jogadores, placares, WO e vencedores.'],
+      ['Transmita e engaje', 'Use telão, página pública e comunicação com jogadores.'],
+    ],
+    showcaseTitle: 'Menos planilha, mais espetáculo.',
+    showcaseText: 'O organizador acompanha tudo em uma operação visual, com dados claros e recursos pensados para evento presencial e transmissão.',
+    image: '/promaster-telao-reference.png',
+  },
+  jogador: {
+    badge: 'Para jogadores',
+    title: 'Sua carreira esportiva começa aqui.',
+    description: 'Participe de torneios, acompanhe rankings, evolua seu desempenho e construa seu histórico competitivo.',
+    cta: 'Criar meu perfil gratuitamente',
+    secondary: 'Ver torneios',
+    panelEyebrow: 'Perfil do jogador',
+    panelTitle: 'Ranking, estatísticas e conquistas',
+    metrics: [['2.450', 'Pontos'], ['38', 'Torneios'], ['18', 'Títulos'], ['81%', 'Aproveitamento']],
+    benefits: [
+      ['Participe de torneios', 'Encontre eventos próximos e inscreva-se em segundos.'],
+      ['Acompanhe rankings', 'Veja sua posição no ranking regional, estadual e nacional.'],
+      ['Estatísticas completas', 'Analise vitórias, derrotas, evolução e desempenho.'],
+      ['Histórico de partidas', 'Construa uma trajetória com resultados e conquistas.'],
+    ],
+    steps: [
+      ['Crie seu perfil', 'Cadastre seus dados, esportes e preferências.'],
+      ['Entre nos torneios', 'Inscreva-se em eventos e receba avisos importantes.'],
+      ['Compita e pontue', 'Cada resultado alimenta rankings e estatísticas.'],
+      ['Evolua no circuito', 'Acompanhe sua progressão e dispute classificações.'],
+    ],
+    showcaseTitle: 'Ranking vivo, perfil forte e histórico real.',
+    showcaseText: 'O jogador deixa de ser apenas um nome na chave e passa a ter dados, conquistas, calendário e evolução dentro da plataforma.',
+    image: '/promaster-hero-broadcast.png',
+  },
+  arena: {
+    badge: 'Para arenas e clubes',
+    title: 'Transforme sua arena em uma operação profissional.',
+    description: 'Gestão completa de eventos, campeonatos, mesas, pagamentos e transmissão para clubes, bares, salões e arenas.',
+    cta: 'Solicitar demonstração',
+    secondary: 'Ver planos',
+    panelEyebrow: 'Gestão da arena',
+    panelTitle: 'Eventos, financeiro e comunidade',
+    metrics: [['+35%', 'Mais inscrições'], ['+42%', 'Mais recorrência'], ['+60%', 'Mais engajamento'], ['+80', 'Arenas parceiras']],
+    benefits: [
+      ['Gestão de mesas', 'Controle ocupação, chamadas, partidas e andamento em tempo real.'],
+      ['Eventos recorrentes', 'Crie calendário, rankings, circuitos e campeonatos.'],
+      ['Financeiro integrado', 'Receba pagamentos, acompanhe receitas e organize repasses.'],
+      ['Patrocinadores', 'Monetize sua audiência com telão, página pública e transmissão.'],
+    ],
+    steps: [
+      ['Cadastre sua arena', 'Organize dados, responsáveis e modalidades.'],
+      ['Crie eventos recorrentes', 'Transforme torneios avulsos em calendário fixo.'],
+      ['Acompanhe indicadores', 'Veja inscrições, receita, público e ranking.'],
+      ['Cresça a comunidade', 'Engaje jogadores e parceiros com experiência premium.'],
+    ],
+    showcaseTitle: 'Sua arena como centro de competição.',
+    showcaseText: 'A plataforma ajuda a transformar movimento local em recorrência, receita, ranking e comunidade esportiva.',
+    image: '/promaster-hero-broadcast.png',
+  },
+}
+
+function LandingHeader() {
+  return (
+    <header className="landingHeader">
+      <a href="/" className="landingLogo">
+        <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
+        <span>ProMaster Arena</span>
+      </a>
+
+      <nav className="landingNav">
+        <div className="landingNavDropdown">
+          <button type="button">Experiência</button>
+          <div className="landingNavMenu">
+            <a href="/organizador">Organizador</a>
+            <a href="/jogador">Jogador</a>
+            <a href="/arena">Arena</a>
+          </div>
+        </div>
+        <a href="/#recursos">Recursos</a>
+        <a href="/planos">Planos</a>
+      </nav>
+
+      <div className="landingActions">
+        <a href="/login">Entrar</a>
+        <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
+      </div>
+    </header>
+  )
+}
+
+function PersonaLanding({ type }: { type: PersonaLandingType }) {
+  const page = personaLandingContent[type]
+
+  return (
+    <div className={`landing personaLanding personaLanding-${type}`}>
+      <LandingHeader />
+
+      <section className="personaHero">
+        <div className="personaHeroCopy">
+          <span className="landingBadge">{page.badge}</span>
+          <h1>{page.title}</h1>
+          <p>{page.description}</p>
+          <div className="landingCtas">
+            <a className="landingButton" href="/inscreva-se">{page.cta}</a>
+            <a className="landingSecondary" href={type === 'arena' ? '/planos' : '/'}>{page.secondary}</a>
+          </div>
+        </div>
+
+        <div className="personaPanel">
+          <span>{page.panelEyebrow}</span>
+          <h2>{page.panelTitle}</h2>
+          <div className="personaMetrics">
+            {page.metrics.map(([value, label]) => (
+              <div key={label}>
+                <strong>{value}</strong>
+                <small>{label}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="personaBenefits">
+        <h2>Tudo que você precisa em um só lugar</h2>
+        <div>
+          {page.benefits.map(([title, text]) => (
+            <article key={title}>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="personaFlow">
+        <h2>Como funciona</h2>
+        <div>
+          {page.steps.map(([title, text], index) => (
+            <article key={title}>
+              <span>{index + 1}</span>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="personaShowcase">
+        <div>
+          <span className="landingBadge">ProMaster Arena</span>
+          <h2>{page.showcaseTitle}</h2>
+          <p>{page.showcaseText}</p>
+          <a className="landingButton" href="/inscreva-se">Começar agora</a>
+        </div>
+        <img src={page.image} alt={page.showcaseTitle} />
+      </section>
+    </div>
+  )
+}
+
 function Landing() {
   return (
     <div className="landing">
-      <header className="landingHeader">
-        <a href="/" className="landingLogo">
-          <img src="/promaster-logo.jpeg" alt="ProMaster Arena" />
-          <span>ProMaster Arena</span>
-        </a>
-
-        <nav className="landingNav">
-          <a href="#experiencia">Experiência</a>
-          <a href="#recursos">Recursos</a>
-          <a href="#planos">Planos</a>
-        </nav>
-
-        <div className="landingActions">
-          <a href="/login">Entrar</a>
-          <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
-        </div>
-      </header>
+      <LandingHeader />
 
       <div className="landingNotice">
         <strong>Aviso provisório</strong>
