@@ -3522,6 +3522,35 @@ button:hover {
   padding: 28px;
 }
 
+.skipLink {
+  position: fixed;
+  left: 24px;
+  top: 10px;
+  z-index: 100;
+  transform: translateY(-160%);
+  background: #bef264;
+  color: #052e16;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .36);
+  transition: transform .16s ease;
+}
+
+.skipLink:focus-visible {
+  transform: translateY(0);
+}
+
+.landing a:focus-visible,
+.landing button:focus-visible,
+.landing summary:focus-visible,
+.plansPage a:focus-visible,
+.plansPage button:focus-visible {
+  outline: 3px solid #bef264;
+  outline-offset: 4px;
+}
+
 .landingHeader {
   max-width: 1180px;
   margin: 0 auto 18px;
@@ -3588,7 +3617,7 @@ button:hover {
 }
 
 .landingNav a,
-.landingNavDropdown button {
+.landingNavDropdown summary {
   color: #cbd5e1;
   font-size: 14px;
   font-weight: 900;
@@ -3599,14 +3628,19 @@ button:hover {
   position: relative;
 }
 
-.landingNavDropdown button {
+.landingNavDropdown summary {
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
+  list-style: none;
 }
 
-.landingNavDropdown button::after {
+.landingNavDropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.landingNavDropdown summary::after {
   content: '';
   display: inline-block;
   width: 6px;
@@ -3615,6 +3649,10 @@ button:hover {
   border-right: 2px solid #86efac;
   border-bottom: 2px solid #86efac;
   transform: rotate(45deg) translateY(-2px);
+}
+
+.landingNavDropdown[open] summary::after {
+  transform: rotate(225deg) translate(-1px, -1px);
 }
 
 .landingNavMenu {
@@ -3635,6 +3673,7 @@ button:hover {
   transition: opacity .18s ease, transform .18s ease;
 }
 
+.landingNavDropdown[open] .landingNavMenu,
 .landingNavDropdown:hover .landingNavMenu,
 .landingNavDropdown:focus-within .landingNavMenu {
   opacity: 1;
@@ -4266,6 +4305,136 @@ button:hover {
   box-shadow: 0 24px 90px rgba(0, 0, 0, .34);
 }
 
+.landingFooter {
+  max-width: 1180px;
+  margin: 70px auto 0;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(190, 242, 100, .12), transparent 28%),
+    rgba(2, 6, 23, .9);
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .28);
+  overflow: hidden;
+}
+
+.landingFooterInner {
+  display: grid;
+  grid-template-columns: 1.35fr repeat(4, minmax(0, 1fr));
+  gap: 26px;
+  padding: 30px;
+}
+
+.footerBrand p {
+  max-width: 330px;
+  color: #cbd5e1;
+  line-height: 1.55;
+  margin: 18px 0 0;
+}
+
+.footerLinks {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.footerLinks strong {
+  color: #f8fafc;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.footerLinks a {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.footerLinks a:hover {
+  color: #bef264;
+}
+
+.footerSocials div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.footerSocials a {
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(190, 242, 100, .28);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, .86);
+  color: #d9f99d;
+  font-size: 13px;
+}
+
+.landingFooterBottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 30px;
+  border-top: 1px solid rgba(148, 163, 184, .16);
+  color: #94a3b8;
+  font-weight: 800;
+}
+
+.staticPublicMain {
+  max-width: 1180px;
+  margin: 34px auto 0;
+  padding: clamp(28px, 5vw, 56px);
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 32px;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, .96), rgba(2, 6, 23, .9)),
+    radial-gradient(circle at top right, rgba(190, 242, 100, .12), transparent 30%);
+  box-shadow: 0 30px 110px rgba(0, 0, 0, .34);
+}
+
+.staticPublicMain h1 {
+  max-width: 850px;
+  margin: 0 0 18px;
+  font-size: clamp(38px, 6vw, 68px);
+  line-height: .98;
+}
+
+.staticPublicMain > p {
+  max-width: 790px;
+  color: #cbd5e1;
+  font-size: 20px;
+  line-height: 1.55;
+}
+
+.staticPublicGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 34px;
+}
+
+.staticPublicGrid article {
+  min-height: 190px;
+  padding: 22px;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 22px;
+  background: rgba(2, 6, 23, .72);
+}
+
+.staticPublicGrid strong {
+  display: block;
+  color: #bef264;
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+.staticPublicGrid p {
+  color: #cbd5e1;
+  line-height: 1.55;
+}
+
 .playersTextarea {
   min-height: 320px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -4890,6 +5059,47 @@ button:hover {
   font-size: 12px;
 }
 
+@media (min-width: 1600px) {
+  .landingHeader,
+  .landingNotice,
+  .landingHero,
+  .landingSportsStrip,
+  .landingStory,
+  .landingShowcase,
+  .landingBroadcastSection,
+  .landingPlans,
+  .personaHero,
+  .personaBenefits,
+  .personaFlow,
+  .personaShowcase,
+  .landingFooter,
+  .staticPublicMain {
+    max-width: 1440px;
+  }
+
+  .landingHero {
+    min-height: 760px;
+  }
+
+  .landingHeroContent {
+    width: min(760px, 100%);
+  }
+
+  .landingLiveDeck {
+    width: min(520px, calc(100% - 64px));
+  }
+}
+
+@media (max-width: 1180px) {
+  .landingFooterInner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footerBrand {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 900px) {
   .landingHero,
   .landingFeatures,
@@ -4904,6 +5114,8 @@ button:hover {
   .plansGrid,
   .signupChoiceGrid,
   .plansCompareGrid,
+  .staticPublicGrid,
+  .landingFooterInner,
   .billingPlansGrid,
   .planSummaryWide,
   .cancelReasons,
@@ -5014,6 +5226,7 @@ button:hover {
   }
 
   .landingNavDropdown:hover .landingNavMenu,
+  .landingNavDropdown[open] .landingNavMenu,
   .landingNavDropdown:focus-within .landingNavMenu {
     transform: translateY(0);
   }
@@ -5049,6 +5262,61 @@ button:hover {
     flex-direction: column;
     gap: 18px;
     align-items: flex-start;
+  }
+
+  .landingFooterBottom {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing {
+    padding: 16px;
+  }
+
+  .landingHeader,
+  .landingFooter,
+  .staticPublicMain {
+    border-radius: 20px;
+  }
+
+  .landingLogo span {
+    font-size: 18px;
+  }
+
+  .landingCtas,
+  .landingActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .landingButton,
+  .landingSecondary,
+  .landingActions a {
+    text-align: center;
+  }
+
+  .landingHeroContent,
+  .personaHeroCopy,
+  .personaPanel,
+  .personaBenefits,
+  .personaFlow,
+  .personaShowcase,
+  .broadcastCopy,
+  .staticPublicMain {
+    padding: 20px;
+  }
+
+  .landingSportsStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .landingFooterInner {
+    padding: 22px;
+  }
+
+  .landingFooterBottom {
+    padding: 16px 22px;
   }
 }
 
