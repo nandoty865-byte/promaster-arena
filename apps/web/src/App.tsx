@@ -4550,12 +4550,14 @@ function LandingHeader() {
             </div>
           </details>
           <a href="/#recursos">Recursos</a>
+          <a href="/#modalidades">Modalidades</a>
           <a href="/planos">Planos</a>
+          <a href="/#como-funciona">Como funciona</a>
         </nav>
 
         <div className="landingActions">
           <a href="/login">Entrar</a>
-          <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
+          <a className="landingButton" href="/inscreva-se">Começar agora</a>
         </div>
       </header>
     </>
@@ -4684,7 +4686,7 @@ function LandingFooter() {
 
       <div className="landingFooterBottom">
         <span>© 2026 ProMaster Arena. Todos os direitos reservados.</span>
-        <span>Plataforma em modo teste.</span>
+        <span>Torneios em tempo real.</span>
       </div>
     </footer>
   )
@@ -4790,152 +4792,180 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
 }
 
 function Landing() {
+  const platformStats = [
+    ['+50.000', 'Usuários ativos'],
+    ['+10.000', 'Torneios realizados'],
+    ['+250.000', 'Partidas transmitidas'],
+    ['100%', 'Seguro e confiável'],
+  ]
+
+  const featureCards = [
+    ['Torneios em tempo real', 'Acompanhe tudo ao vivo, com atualizações instantâneas.'],
+    ['Placar ao vivo', 'Resultados em tempo real com estatísticas precisas.'],
+    ['Telão interativo', 'Exiba partidas, chaves e informações em grandes telas.'],
+    ['Comunicação instantânea', 'Chat integrado entre jogadores, times e organizadores.'],
+    ['Ranking e estatísticas', 'Desempenho, rankings e histórico sempre atualizados.'],
+    ['Seguro, justo e profissional', 'Ambiente confiável com regras claras e suporte especializado.'],
+  ]
+
+  const modalities = [
+    ['Futebol', 'Campo, society e ligas recorrentes'],
+    ['Sinuca', 'Mesas, ranking, chamadas e telão'],
+    ['Tênis de mesa', 'Chaves, grupos e resultados rápidos'],
+    ['Basquete', 'Placar, transmissão e estatísticas'],
+    ['E-sports', 'Partidas online e comunidades ativas'],
+    ['Vôlei', 'Equipes, fases e calendário'],
+  ]
+
+  const steps = [
+    ['1', 'Crie sua conta', 'Cadastre-se gratuitamente e acesse a plataforma.'],
+    ['2', 'Crie ou entre em um torneio', 'Crie seu torneio ou participe de um já existente.'],
+    ['3', 'Dispute ao vivo', 'Acompanhe partidas, placares e estatísticas em tempo real.'],
+    ['4', 'Suba no ranking', 'Mostre seu desempenho e seja reconhecido.'],
+  ]
+
   return (
-    <div className="landing">
+    <div className="landing landingArenaPage">
       <LandingHeader />
 
-      <section id="conteudo-principal" className="landingHero">
-        <div className="landingHeroContent">
-          <span className="landingBadge">Torneios em tempo real</span>
+      <section id="conteudo-principal" className="landingHero arenaLandingHero">
+        <div className="arenaHeroCopy">
+          <img className="arenaHeroLogo" src="/promaster-logo-novo.png" alt="ProMaster Arena" />
+          <span className="landingBadge">Seguro, justo e profissional</span>
 
-          <h1>Transforme torneios em eventos profissionais.</h1>
+          <h1 className="arenaHeroTitle">
+            <span>A plataforma completa</span>
+            <strong>Para torneios</strong>
+            <span>em tempo real</span>
+          </h1>
 
           <p>
-            Inscrições, pagamentos, chaveamento, rankings, telão e transmissão em uma
-            experiência feita para arenas, organizadores, jogadores e público.
+            Crie, organize e dispute torneios com placar ao vivo, comunicação instantânea,
+            ranking atualizado, página pública e telão profissional.
           </p>
 
           <div className="landingCtas">
-            <a className="landingButton" href="/inscreva-se">Criar torneio grátis</a>
-            <a className="landingSecondary" href="/planos">Ver planos</a>
+            <a className="landingButton landingButtonGlow" href="/inscreva-se">Começar agora</a>
+            <a className="landingSecondary" href="/#recursos">Ver demonstração</a>
           </div>
 
-          <div className="landingStats">
-            <div>
-              <strong>Ao vivo</strong>
-              <span>placar, ranking e chamadas</span>
-            </div>
-            <div>
-              <strong>Pix</strong>
-              <span>inscrições e financeiro</span>
-            </div>
-            <div>
-              <strong>Telão</strong>
-              <span>experiência broadcast</span>
-            </div>
+          <div className="arenaTrustLine">
+            <span>Eventos em tempo real</span>
+            <span>Rankings profissionais</span>
+            <span>Comunidade ativa</span>
           </div>
         </div>
 
-        <div className="landingLiveDeck">
-          <div className="liveDeckHeader">
-            <span>AO VIVO</span>
-            <strong>Campinas Open</strong>
-          </div>
-          <div className="liveScore">
-            <span>Fernando</span>
-            <strong>2 x 1</strong>
-            <span>Carlos</span>
-          </div>
-          <div className="liveGrid">
-            <div>
+        <div className="arenaHeroVisual" aria-label="Prévia visual da plataforma ProMaster Arena">
+          <div className="arenaLaptopMock">
+            <div className="arenaMockTop">
+              <strong>ProMaster Arena</strong>
+              <span>AO VIVO</span>
+            </div>
+            <div className="arenaMockGrid">
+              <div className="arenaMockList">
+                <span>Torneios ao vivo</span>
+                <p>CS2 Open Cup <strong>2 x 1</strong></p>
+                <p>Futebol Amador <strong>2 x 1</strong></p>
+                <p>Sinuca Master Cup <strong>3 x 2</strong></p>
+                <p>Tênis de Mesa Open <strong>1 x 0</strong></p>
+              </div>
+              <div className="arenaMockScore">
+                <span>Placar ao vivo</span>
+                <strong>2 - 1</strong>
+                <small>Verde FC x Azul FC</small>
+              </div>
+            </div>
+            <div className="arenaMockFooter">
               <span>Ranking</span>
-              <strong>1. Fernando</strong>
-            </div>
-            <div>
-              <span>Mesa</span>
-              <strong>03</strong>
-            </div>
-            <div>
-              <span>Próxima</span>
-              <strong>João x Regis</strong>
+              <span>Partidas</span>
+              <span>Comunidade</span>
             </div>
           </div>
-        </div>
-      </section>
 
-      <section className="landingSportsStrip" aria-label="Modalidades atendidas">
-        <span>E-sports</span>
-        <span>Futebol</span>
-        <span>Sinuca</span>
-        <span>Tênis de mesa</span>
-        <span>Basquete</span>
-        <span>Vôlei</span>
-        <strong>E muito mais</strong>
-      </section>
-
-      <section id="experiencia" className="landingStory">
-        <div>
-          <span>01</span>
-          <h2>Crie</h2>
-          <p>Configure esporte, formato, regras, inscrições, premiação e página pública em minutos.</p>
-        </div>
-
-        <div>
-          <span>02</span>
-          <h2>Divulgue</h2>
-          <p>Compartilhe link, QR Code e página pública com dados do torneio e inscrições online.</p>
-        </div>
-
-        <div>
-          <span>03</span>
-          <h2>Gerencie</h2>
-          <p>Acompanhe jogadores, pagamentos, mesas, partidas, ranking e resultados em tempo real.</p>
-        </div>
-
-        <div>
-          <span>04</span>
-          <h2>Transmita</h2>
-          <p>Leve o torneio para o telão, página pública e transmissão com visual de evento profissional.</p>
-        </div>
-      </section>
-
-      <section id="recursos" className="landingShowcase">
-        <div className="showcaseText">
-          <span className="landingBadge">Realtime first</span>
-          <h2>O diferencial não é só criar a chave. É transformar o evento em espetáculo.</h2>
-          <p>
-            O ProMaster conecta organizador, jogador, árbitro, público e transmissão.
-            Cada atualização pode aparecer no painel, no telão e na página pública.
-          </p>
-        </div>
-
-        <div className="showcaseGrid">
-          <div>
-            <strong>Organizador</strong>
-            <span>inscrições, pagamentos, mesas, torneios e circuitos</span>
-          </div>
-          <div>
-            <strong>Jogador</strong>
-            <span>perfil, ranking, histórico, estatísticas e avisos</span>
-          </div>
-          <div>
-            <strong>Arena</strong>
-            <span>gestão de eventos, financeiro, público e transmissão</span>
-          </div>
-          <div>
-            <strong>Broadcast</strong>
-            <span>telão, placar, chamadas, ranking e conteúdo ao vivo</span>
+          <div className="arenaPhoneMock">
+            <strong>Torneios</strong>
+            <span>Em destaque</span>
+            <p>Sinuca Master Cup</p>
+            <p>Futebol Amador Cup</p>
+            <p>Tênis de Mesa Open</p>
           </div>
         </div>
       </section>
 
-      <section className="landingBroadcastSection">
-        <div className="broadcastCopy">
-          <span className="landingBadge">Telão profissional</span>
-          <h2>Visual de arena, pronto para TV, streaming e evento presencial.</h2>
-          <p>
-            Exiba placar, próximos jogos, ranking, patrocinadores, QR Code e chamadas
-            de partidas com leitura rápida para público, jogadores e transmissão.
-          </p>
-          <div className="broadcastBullets">
-            <span>Placar ao vivo</span>
-            <span>Ranking em tempo real</span>
-            <span>Patrocinadores</span>
-            <span>Modo streaming</span>
+      <section className="landingMetricsStrip" aria-label="Indicadores da plataforma">
+        {platformStats.map(([value, label]) => (
+          <div key={label}>
+            <strong>{value}</strong>
+            <span>{label}</span>
           </div>
-        </div>
+        ))}
+      </section>
 
-        <img src="/promaster-telao-reference.png" alt="Referência de telão profissional ProMaster Arena" />
+      <section id="recursos" className="arenaSection arenaFeatureSection">
+        <span className="landingBadge">Recursos completos</span>
+        <h2>
+          Tudo que você precisa para torneios de <strong>alto nível</strong>
+        </h2>
+
+        <div className="arenaFeatureGrid">
+          {featureCards.map(([title, text]) => (
+            <article key={title}>
+              <span aria-hidden="true" />
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="modalidades" className="arenaSection arenaModalitiesSection">
+        <span className="landingBadge">Modalidades</span>
+        <h2>
+          Escolha <strong>sua arena</strong>
+        </h2>
+
+        <div className="arenaModalityGrid">
+          {modalities.map(([title, text]) => (
+            <article key={title} className={`arenaSportCard arenaSportCard-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+              <div>
+                <span>{title.slice(0, 2).toUpperCase()}</span>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="como-funciona" className="arenaSection arenaStepsSection">
+        <span className="landingBadge">Como funciona</span>
+        <h2>
+          4 passos para <strong>começar</strong>
+        </h2>
+
+        <div className="arenaStepsGrid">
+          {steps.map(([number, title, text]) => (
+            <article key={title}>
+              <span>{number}</span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="arenaFinalBand">
+        <div>
+          <h2>
+            Sua competição. <strong>Sua arena.</strong>
+          </h2>
+          <p>Suas regras. Sua vitória.</p>
+        </div>
+        <div>
+          <span>Junte-se a jogadores e organizadores hoje mesmo.</span>
+          <a className="landingButton landingButtonGlow" href="/inscreva-se">Começar agora</a>
+        </div>
       </section>
 
       <LandingFooter />
