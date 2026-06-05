@@ -116,6 +116,8 @@ model PlayerAccount {
   phone           String?
   rg              String?
   cpf             String?
+  gender          String?
+  birthDate       DateTime?
   zipCode         String?
   street          String?
   addressNumber   String?
@@ -295,6 +297,30 @@ tournamentCredits Int @default(0)
   users       User[]
   tournaments Tournament[]
   seasons     Season[]
+  arenas      Arena[]
+}
+
+model Arena {
+  id                    Int      @id @default(autoincrement())
+  organizationId        Int
+  name                  String
+  website               String?
+  phone                 String?
+  email                 String?
+  country               String?
+  zipCode               String?
+  street                String?
+  number                String?
+  complement            String?
+  neighborhood          String?
+  city                  String?
+  state                 String?
+  responsibleName       String?
+  responsibleCpf        String?
+  responsiblePhone      String?
+  createdAt             DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
 }
 
 model Payment {

@@ -3027,6 +3027,72 @@ app.get('/seasons/overview', auth, requireRole('admin', 'operator', 'viewer'), a
   }
 })
 
+app.get('/arenas', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
+  try {
+    const arenas = await prisma.arena.findMany({
+      where: { organizationId: req.user.organizationId },
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+    })
+
+    res.json(arenas)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar arenas' })
+  }
+})
+
+app.post('/arenas', auth, requireRole('admin', 'operator'), async (req, res) => {
+  try {
+    const {
+      name,
+      website,
+      phone,
+      email,
+      country,
+      zipCode,
+      street,
+      number,
+      complement,
+      neighborhood,
+      city,
+      state,
+      responsibleName,
+      responsibleCpf,
+      responsiblePhone,
+    } = req.body
+
+    if (!name) {
+      return res.status(400).json({ error: 'Informe o nome do local' })
+    }
+
+    const arena = await prisma.arena.create({
+      data: {
+        organizationId: req.user.organizationId,
+        name,
+        website: website || null,
+        phone: phone || null,
+        email: email || null,
+        country: country || null,
+        zipCode: zipCode || null,
+        street: street || null,
+        number: number || null,
+        complement: complement || null,
+        neighborhood: neighborhood || null,
+        city: city || null,
+        state: state || null,
+        responsibleName: responsibleName || null,
+        responsibleCpf: responsibleCpf || null,
+        responsiblePhone: responsiblePhone || null,
+      },
+    })
+
+    res.json({ ok: true, arena })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao cadastrar arena' })
+  }
+})
+
 app.get('/seasons/:id', auth, requireRole('admin', 'operator', 'viewer'), async (req, res) => {
   try {
     const seasonId = Number(req.params.id)
@@ -4082,6 +4148,8 @@ app.post('/players/register', async (req, res) => {
       phone,
       rg,
       cpf,
+      gender,
+      birthDate,
       zipCode,
       street,
       addressNumber,
@@ -4135,6 +4203,8 @@ app.post('/players/register', async (req, res) => {
         phone: phone || null,
         rg: rg || null,
         cpf: cpf || null,
+        gender: gender || null,
+        birthDate: birthDate ? new Date(birthDate) : null,
         zipCode: zipCode || null,
         street: street || null,
         addressNumber: addressNumber || null,

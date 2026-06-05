@@ -365,9 +365,12 @@ export default function App() {
       <Route path="/app/usuarios" element={<UsersPage />} />
       <Route path="/upgrade" element={<Upgrade />} />
       <Route path="/campeonatos" element={<SeasonsPage user={user} />} />
+      <Route path="/campeonatos/circuito" element={<SeasonsPage user={user} defaultPanel="circuito" />} />
+      <Route path="/campeonatos/circuito/:seasonId" element={<SeasonsPage user={user} defaultPanel="circuito-dashboard" />} />
       <Route path="/campeonatos/etapas" element={<SeasonsPage user={user} defaultPanel="etapas" />} />
       <Route path="/campeonatos/pagamentos" element={<SeasonsPage user={user} defaultPanel="pagamentos" />} />
       <Route path="/campeonatos/inscricoes" element={<SeasonsPage user={user} defaultPanel="inscricoes" />} />
+      <Route path="/campeonatos/arenas" element={<SeasonsPage user={user} defaultPanel="arenas" />} />
       <Route path="/criar-torneio" element={<CreateTournament user={user} />} />
       <Route path="/tournament/:id/painel" element={<TournamentOverview />} />
       <Route path="/tournament/:id" element={<TournamentOverview />} />
@@ -851,6 +854,8 @@ function PlayerSignup() {
     nickname: '',
     email: '',
     phone: '',
+    gender: '',
+    birthDate: '',
     country: 'Brasil',
     cpf: '',
     zipCode: '',
@@ -1051,6 +1056,18 @@ function PlayerSignup() {
               <div>
                 <label>WhatsApp *</label>
                 <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+              </div>
+              <div>
+                <label>Sexo</label>
+                <select value={form.gender} onChange={e => updateField('gender', e.target.value)}>
+                  <option value="">Selecione</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="feminino">Feminino</option>
+                </select>
+              </div>
+              <div>
+                <label>Data de nascimento</label>
+                <input type="date" value={form.birthDate} onChange={e => updateField('birthDate', e.target.value)} />
               </div>
               <div>
                 <label>País *</label>
@@ -1457,9 +1474,11 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
         <div className="sidebarGroup">
           <button onClick={() => navigate('/campeonatos')}>Circuito ProMaster</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Dashboard Geral</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Circuito</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/etapas')}>Etapas</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Pagamentos</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições</button>
+          <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Cadastro de Arenas</button>
           <button onClick={() => navigate('/app/usuarios')}>Usuários</button>
         </div>
       )}
@@ -4744,11 +4763,13 @@ function defaultCircuitPoints() {
 
 function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
   const navigate = useNavigate()
+  const { seasonId: routeSeasonId } = useParams()
   const isMasterPlan = user?.organization?.plan === 'master' || user?.organization?.plan === 'free'
   const [seasons, setSeasons] = useState<any[]>([])
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null)
   const [seasonDetails, setSeasonDetails] = useState<any>(null)
   const [seasonOverview, setSeasonOverview] = useState<any>(null)
+  const [arenas, setArenas] = useState<any[]>([])
   const [rankingCategory, setRankingCategory] = useState('Geral')
   const [seasonRankingCategory, setSeasonRankingCategory] = useState('Geral')
   const [showCreateSeason, setShowCreateSeason] = useState(false)
@@ -4763,9 +4784,30 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
     rules: '1º lugar: 100 pontos\n2º lugar: 80 pontos\n3º lugar: 60 pontos\n5º ao 8º: 40 pontos\n9º ao 16º: 20 pontos\nRace to Masters: os 16 melhores classificam para a final',
     prize: 'R$ 120.000',
   })
+  const [arenaForm, setArenaForm] = useState<any>({
+    name: '',
+    website: '',
+    phone: '',
+    email: '',
+    country: 'Brasil',
+    zipCode: '',
+    street: '',
+    number: '',
+    complement: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+    responsibleName: '',
+    responsibleCpf: '',
+    responsiblePhone: '',
+  })
 
   function updateSeasonField(field: string, value: string | number) {
     setForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  function updateArenaField(field: string, value: string) {
+    setArenaForm((current: any) => ({ ...current, [field]: value }))
   }
 
   function loadSeasons() {
@@ -4792,6 +4834,78 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
       .then(res => res.json())
       .then(data => setSeasonOverview(data.error ? null : data))
       .catch(() => setSeasonOverview(null))
+  }
+
+  function loadArenas() {
+    fetch(`${API}/arenas`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setArenas(Array.isArray(data) ? data : []))
+      .catch(() => setArenas([]))
+  }
+
+  async function lookupArenaCep(value: string) {
+    const cep = onlyDigits(value)
+    if (!isBrazilCountry(arenaForm.country) || cep.length !== 8) return
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      const data = await response.json()
+
+      if (data.erro) return
+
+      setArenaForm((current: any) => ({
+        ...current,
+        street: data.logradouro || current.street,
+        neighborhood: data.bairro || current.neighborhood,
+        city: data.localidade || current.city,
+        state: data.uf || current.state,
+      }))
+    } catch {
+      // O cadastro continua editável se a consulta externa falhar.
+    }
+  }
+
+  function createArena() {
+    if (!arenaForm.name) {
+      alert('Informe o nome do local.')
+      return
+    }
+
+    fetch(`${API}/arenas`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        ...arenaForm,
+        phone: normalizeBrazilPhone(arenaForm.phone),
+        responsiblePhone: normalizeBrazilPhone(arenaForm.responsiblePhone),
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setArenaForm({
+          name: '',
+          website: '',
+          phone: '',
+          email: '',
+          country: 'Brasil',
+          zipCode: '',
+          street: '',
+          number: '',
+          complement: '',
+          neighborhood: '',
+          city: '',
+          state: '',
+          responsibleName: '',
+          responsibleCpf: '',
+          responsiblePhone: '',
+        })
+        loadArenas()
+      })
   }
 
   function createSeason() {
@@ -4844,7 +4958,19 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
   useEffect(() => {
     loadSeasons()
     loadSeasonOverview()
+    if (defaultPanel === 'arenas') {
+      loadArenas()
+    }
   }, [defaultPanel])
+
+  useEffect(() => {
+    if (routeSeasonId) {
+      setSelectedSeasonId(Number(routeSeasonId))
+      setCircuitDashboardOpen(true)
+    } else {
+      setCircuitDashboardOpen(false)
+    }
+  }, [routeSeasonId])
 
   useEffect(() => {
     if (selectedSeasonId) {
@@ -4906,7 +5032,7 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
   function openCircuitDashboard(seasonId: number) {
     setSelectedSeasonId(seasonId)
     setCircuitDashboardOpen(true)
-    navigate('/campeonatos')
+    navigate(`/campeonatos/circuito/${seasonId}`)
   }
 
   function renderCreateCircuitForm() {
@@ -4967,13 +5093,21 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
                 ? 'Pagamentos'
                 : defaultPanel === 'inscricoes'
                   ? 'Inscrições'
-                  : circuitDashboardOpen && selectedSeason
+                  : defaultPanel === 'arenas'
+                    ? 'Cadastro de Arenas'
+                    : defaultPanel === 'circuito'
+                      ? 'Circuito'
+                      : (defaultPanel === 'circuito-dashboard' || circuitDashboardOpen) && selectedSeason
                     ? selectedSeason.name
                     : 'Dashboard Geral'}
           </h1>
           <p>
             {defaultPanel === 'dashboard'
               ? 'Visão executiva da temporada, circuitos ativos, ranking, calendário, Race to Masters e gestão individual.'
+              : defaultPanel === 'circuito'
+                ? 'Selecione um circuito para abrir o dashboard individual com ranking, etapas, calendário e status.'
+                : defaultPanel === 'arenas'
+                  ? 'Cadastre arenas, salões, bares e demais locais onde as etapas e jogos acontecem.'
               : 'Operação do Circuito ProMaster separada por etapas, pagamentos e participantes.'}
           </p>
         </header>
@@ -5188,11 +5322,152 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
           </div>
         )}
 
-        {defaultPanel === 'dashboard' && circuitDashboardOpen && seasonDetails && (
+        {defaultPanel === 'circuito' && (
           <section className="panel seasonDetailsPanel">
             <div className="seasonDetailsHeader">
               <div>
-                <button className="ghostButton compactButton" onClick={() => setCircuitDashboardOpen(false)}>
+                <h2>Circuitos</h2>
+                <p>Cards com as principais informações de cada circuito ativo ou planejado.</p>
+              </div>
+              <button className="primaryButton" onClick={() => setShowCreateSeason(true)}>+ Criar Novo Circuito</button>
+            </div>
+
+            <div className="seasonCircuitCards">
+              {seasons.length === 0 && <p>Nenhum circuito criado.</p>}
+              {seasons.map((season: any) => (
+                <button key={season.id} onClick={() => openCircuitDashboard(season.id)}>
+                  <span>{circuitStatusLabel(season.status)}</span>
+                  <strong>{season.name}</strong>
+                  <div>
+                    <small>Data</small>
+                    <b>{formatCircuitDate(season.startDate)} até {formatCircuitDate(season.endDate)}</b>
+                  </div>
+                  <div>
+                    <small>Etapas</small>
+                    <b>{season.tournaments?.length || 0} / {season.tournamentCount}</b>
+                  </div>
+                  <div>
+                    <small>Jogadores</small>
+                    <b>{season.playerCount}</b>
+                  </div>
+                  <div>
+                    <small>Premiação</small>
+                    <b>{season.prize || 'A definir'}</b>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {defaultPanel === 'arenas' && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <h2>Cadastro de Arenas</h2>
+                <p>Cadastre arenas, salões, bares e locais dos jogos para usar nas etapas do circuito.</p>
+              </div>
+            </div>
+
+            <div className="arenaManagerGrid">
+              <div className="arenaFormPanel">
+                <h3>Novo local</h3>
+                <div className="onboardingGrid">
+                  <div>
+                    <label>Nome do local *</label>
+                    <input value={arenaForm.name} onChange={e => updateArenaField('name', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Site</label>
+                    <input value={arenaForm.website} onChange={e => updateArenaField('website', e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label>Fone</label>
+                    <input value={arenaForm.phone} onChange={e => updateArenaField('phone', formatBrazilCellphone(e.target.value))} />
+                  </div>
+                  <div>
+                    <label>E-mail</label>
+                    <input type="email" value={arenaForm.email} onChange={e => updateArenaField('email', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>País</label>
+                    <select value={arenaForm.country} onChange={e => updateArenaField('country', e.target.value)}>
+                      {COUNTRY_OPTIONS.map(country => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label>CEP</label>
+                    <input
+                      value={arenaForm.zipCode}
+                      onChange={e => updateArenaField('zipCode', formatCep(e.target.value))}
+                      onBlur={e => lookupArenaCep(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label>Endereço</label>
+                    <input value={arenaForm.street} onChange={e => updateArenaField('street', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Número</label>
+                    <input value={arenaForm.number} onChange={e => updateArenaField('number', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Complemento</label>
+                    <input value={arenaForm.complement} onChange={e => updateArenaField('complement', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Bairro</label>
+                    <input value={arenaForm.neighborhood} onChange={e => updateArenaField('neighborhood', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Cidade</label>
+                    <input value={arenaForm.city} onChange={e => updateArenaField('city', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Estado</label>
+                    <input value={arenaForm.state} onChange={e => updateArenaField('state', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Responsável - nome completo</label>
+                    <input value={arenaForm.responsibleName} onChange={e => updateArenaField('responsibleName', e.target.value)} />
+                  </div>
+                  <div>
+                    <label>Responsável - CPF</label>
+                    <input value={arenaForm.responsibleCpf} onChange={e => updateArenaField('responsibleCpf', formatCpf(e.target.value))} />
+                  </div>
+                  <div>
+                    <label>Responsável - fone</label>
+                    <input value={arenaForm.responsiblePhone} onChange={e => updateArenaField('responsiblePhone', formatBrazilCellphone(e.target.value))} />
+                  </div>
+                </div>
+                <button className="primaryButton" onClick={createArena}>Cadastrar arena</button>
+              </div>
+
+              <div className="arenaListPanel">
+                <h3>Arenas cadastradas</h3>
+                <div className="arenaList">
+                  {arenas.length === 0 && <p>Nenhum local cadastrado ainda.</p>}
+                  {arenas.map((arena: any) => (
+                    <div key={arena.id}>
+                      <strong>{arena.name}</strong>
+                      <span>{[arena.street, arena.number, arena.neighborhood, arena.city, arena.state].filter(Boolean).join(', ') || 'Endereço a definir'}</span>
+                      <small>{arena.phone || 'Fone não informado'} • {arena.email || 'E-mail não informado'}</small>
+                      {arena.responsibleName && <em>Responsável: {arena.responsibleName}</em>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {(defaultPanel === 'circuito-dashboard' || (defaultPanel === 'dashboard' && circuitDashboardOpen)) && seasonDetails && (
+          <section className="panel seasonDetailsPanel">
+            <div className="seasonDetailsHeader">
+              <div>
+                <button className="ghostButton compactButton" onClick={() => navigate('/campeonatos')}>
                   Voltar ao Dashboard Geral
                 </button>
                 <h2>{seasonDetails.season.name}</h2>
