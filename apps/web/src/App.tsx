@@ -1541,6 +1541,27 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
 function AdminSidebar() {
   const navigate = useNavigate()
 
+  function adminMenuItem(label: string, path?: string) {
+    const isInDevelopment = !path
+
+    return (
+      <button
+        className={`sidebarSubButton${isInDevelopment ? ' sidebarSoonButton' : ''}`}
+        disabled={isInDevelopment}
+        onClick={() => path && navigate(path)}
+        type="button"
+      >
+        <span>{label}</span>
+        {isInDevelopment && (
+          <span className="sidebarSoonBadge">
+            <span className="sidebarSoonIcon" />
+            Em desenvolvimento
+          </span>
+        )}
+      </button>
+    )
+  }
+
   function logout() {
     localStorage.removeItem('token')
     window.location.href = '/login'
@@ -1548,10 +1569,141 @@ function AdminSidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebarLogo">👑 Admin Master</div>
-      <button onClick={() => navigate('/admin')}>Dashboard</button>
-      <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
-      <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
+      <div className="sidebarLogo">Admin Master</div>
+      <button onClick={() => navigate('/admin')}>Dashboard Global</button>
+
+      <details className="sidebarGroup">
+        <summary>Gestão de Torneios</summary>
+        {adminMenuItem('Todos os Torneios')}
+        {adminMenuItem('Aprovações')}
+        {adminMenuItem('Em Andamento')}
+        {adminMenuItem('Finalizados')}
+        {adminMenuItem('Cancelados')}
+        {adminMenuItem('Denúncias')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Gestão de Circuitos</summary>
+        {adminMenuItem('Todos os Circuitos')}
+        {adminMenuItem('Temporadas')}
+        {adminMenuItem('Masters')}
+        {adminMenuItem('Calendário')}
+        {adminMenuItem('Homologações')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Usuários</summary>
+        {adminMenuItem('Jogadores')}
+        {adminMenuItem('Organizadores', '/admin/clientes')}
+        {adminMenuItem('Árbitros')}
+        {adminMenuItem('Administradores')}
+        {adminMenuItem('SuperAdmins')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Arenas</summary>
+        {adminMenuItem('Todas Arenas')}
+        {adminMenuItem('Homologadas')}
+        {adminMenuItem('Pendentes')}
+        {adminMenuItem('Bloqueadas')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Financeiro</summary>
+        {adminMenuItem('Dashboard Financeiro', '/admin/financeiro')}
+        {adminMenuItem('Receitas')}
+        {adminMenuItem('Comissões')}
+        {adminMenuItem('Repasses')}
+        {adminMenuItem('Saques')}
+        {adminMenuItem('Premiações')}
+        {adminMenuItem('Chargebacks')}
+        {adminMenuItem('Gateway')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Rankings</summary>
+        {adminMenuItem('Ranking Geral')}
+        {adminMenuItem('Por Circuito')}
+        {adminMenuItem('Por Categoria')}
+        {adminMenuItem('Race to Masters')}
+        {adminMenuItem('Histórico')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Transmissões</summary>
+        {adminMenuItem('Ao Vivo')}
+        {adminMenuItem('Histórico')}
+        {adminMenuItem('YouTube')}
+        {adminMenuItem('TikTok')}
+        {adminMenuItem('Instagram')}
+        {adminMenuItem('Overlays')}
+        {adminMenuItem('Patrocinadores')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Marketing</summary>
+        {adminMenuItem('Landing Pages')}
+        {adminMenuItem('Campanhas')}
+        {adminMenuItem('Parceiros')}
+        {adminMenuItem('Patrocinadores')}
+        {adminMenuItem('Banners')}
+        {adminMenuItem('Notificações')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Segurança</summary>
+        {adminMenuItem('Usuários Suspeitos')}
+        {adminMenuItem('Organizadores Suspeitos')}
+        {adminMenuItem('Antifraude')}
+        {adminMenuItem('KYC')}
+        {adminMenuItem('Bloqueios')}
+        {adminMenuItem('Blacklist')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Auditoria</summary>
+        {adminMenuItem('Ações da Plataforma')}
+        {adminMenuItem('Filtros por Usuário')}
+        {adminMenuItem('Filtros por Torneio')}
+        {adminMenuItem('Filtros por Circuito')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Configurações</summary>
+        {adminMenuItem('Sistema')}
+        {adminMenuItem('Integrações')}
+        {adminMenuItem('Pagamentos')}
+        {adminMenuItem('WhatsApp')}
+        {adminMenuItem('Email')}
+        {adminMenuItem('LGPD')}
+        {adminMenuItem('Termos')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>IA e Automações</summary>
+        {adminMenuItem('Agentes IA')}
+        {adminMenuItem('Notificações')}
+        {adminMenuItem('WhatsApp')}
+        {adminMenuItem('Rankings Automáticos')}
+        {adminMenuItem('Relatórios')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Relatórios</summary>
+        {adminMenuItem('Financeiro')}
+        {adminMenuItem('Usuários')}
+        {adminMenuItem('Circuitos')}
+        {adminMenuItem('Torneios')}
+        {adminMenuItem('Arenas')}
+        {adminMenuItem('Patrocinadores')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Perfil</summary>
+        {adminMenuItem('Meu Perfil')}
+        {adminMenuItem('Segurança')}
+        {adminMenuItem('Preferências')}
+      </details>
       <button className="sidebarFooterButton" onClick={logout}>Sair</button>
     </aside>
   )
@@ -8346,7 +8498,7 @@ function AdminClientSidebar({ orgId, panel, orgName }: any) {
 
   return (
     <aside className="sidebar">
-      <div className="sidebarLogo">👑 Admin Master</div>
+      <div className="sidebarLogo">Admin Master</div>
       <div className="adminClientSidebarContext">
         <span>Cliente</span>
         <strong>{orgName || 'Carregando...'}</strong>

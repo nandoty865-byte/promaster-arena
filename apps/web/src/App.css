@@ -3387,6 +3387,43 @@ button:hover {
   font-size: 13px;
 }
 
+.sidebar .sidebarSoonButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.sidebar .sidebarSoonButton:hover {
+  background: #020617;
+  color: #94a3b8;
+  transform: none;
+}
+
+.sidebarSoonBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  background: rgba(250, 204, 21, .08);
+  color: #fde68a;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.sidebarSoonIcon {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #facc15;
+}
+
 .sidebar > button:last-child {
   margin-top: auto;
 }
