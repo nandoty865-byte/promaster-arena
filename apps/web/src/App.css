@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap');
 
 :root {
-  --font-title: 'Bebas Neue', sans-serif;
+  --font-title: 'Teko', 'Bebas Neue', sans-serif;
   --font-ui: 'Rajdhani', sans-serif;
   --font-body: 'Inter', sans-serif;
   --landing-black: #030504;
@@ -4268,20 +4268,19 @@ button:hover {
   gap: 0;
   margin: 0 0 16px;
   font-family: var(--font-title);
-  font-size: clamp(50px, 5.2vw, 74px);
-  line-height: .95;
+  line-height: .9;
   text-transform: uppercase;
-  letter-spacing: .035em;
-  font-weight: 400;
+  letter-spacing: 1px;
+  font-style: italic;
+  font-weight: 700;
   text-shadow: 0 6px 22px rgba(0, 0, 0, .72);
 }
 
 .arenaLandingHero .arenaHeroTitle {
   font-family: var(--font-title);
-  font-size: clamp(50px, 5.2vw, 74px);
-  line-height: .95;
-  letter-spacing: .035em;
-  font-weight: 400;
+  line-height: .9;
+  letter-spacing: 1px;
+  font-weight: 700;
 }
 
 .arenaHeroTitle span,
@@ -4291,43 +4290,41 @@ button:hover {
 }
 
 .arenaHeroTitle span {
-  color: #f8fafc;
+  color: #f5f5f5;
   font-style: italic;
-}
-
-.arenaHeroTitleTop,
-.arenaHeroTitleBottom {
-  font-size: .66em;
 }
 
 .arenaHeroTitleTop {
-  text-align: justify;
-  text-align-last: justify;
+  font-size: clamp(32px, 3.5vw, 44px);
+  font-weight: 700;
+  line-height: .95;
+  text-align: center;
+  text-align-last: center;
 }
 
 .arenaHeroTitleBottom {
+  font-size: clamp(34px, 4vw, 46px);
+  font-weight: 700;
+  line-height: .95;
   text-align: center;
+  text-align-last: center;
 }
 
 .arenaHeroTitle strong {
-  color: transparent;
-  background:
-    linear-gradient(
-      180deg,
-      #f6ffd8 0%,
-      #c9ff2f 26%,
-      #73b600 52%,
-      #284800 70%,
-      #a6ff00 100%
-    );
-  -webkit-background-clip: text;
-  background-clip: text;
+  color: #a6ff00;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  font-size: clamp(52px, 6vw, 74px);
   font-style: italic;
-  font-weight: 400;
-  letter-spacing: .012em;
-  text-align: justify;
-  text-align-last: justify;
-  text-shadow: 0 7px 18px rgba(0, 0, 0, .72);
+  font-weight: 800;
+  line-height: .9;
+  letter-spacing: 1px;
+  text-align: center;
+  text-align-last: center;
+  text-shadow:
+    0 0 8px rgba(166, 255, 0, .6),
+    0 0 20px rgba(166, 255, 0, .35);
 }
 
 .arenaHeroCopy p {
@@ -9124,11 +9121,24 @@ button:hover {
   }
 
   .arenaLandingHero .arenaHeroTitle {
-    font-size: 48px;
+    line-height: .9;
+  }
+
+  .arenaHeroTitleTop {
+    font-size: clamp(30px, 8vw, 40px);
+  }
+
+  .arenaHeroTitle strong {
+    font-size: clamp(48px, 12vw, 66px);
+  }
+
+  .arenaHeroTitleBottom {
+    font-size: clamp(32px, 9vw, 44px);
   }
 
   .arenaHeroTitleTop,
-  .arenaHeroTitle strong {
+  .arenaHeroTitle strong,
+  .arenaHeroTitleBottom {
     text-align: center;
     text-align-last: center;
   }
@@ -9196,7 +9206,19 @@ button:hover {
   }
 
   .arenaLandingHero .arenaHeroTitle {
-    font-size: 42px;
+    line-height: .9;
+  }
+
+  .arenaHeroTitleTop {
+    font-size: clamp(30px, 11vw, 38px);
+  }
+
+  .arenaHeroTitle strong {
+    font-size: clamp(46px, 17vw, 58px);
+  }
+
+  .arenaHeroTitleBottom {
+    font-size: clamp(31px, 12vw, 40px);
   }
 
   .arenaHeroTitle span,
