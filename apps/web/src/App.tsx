@@ -4815,10 +4815,10 @@ function Landing() {
   ]
 
   const steps = [
-    ['1', 'Crie sua conta', 'Cadastre-se gratuitamente e acesse a plataforma.'],
-    ['2', 'Crie ou entre em um torneio', 'Crie seu torneio ou participe de um já existente.'],
-    ['3', 'Dispute ao vivo', 'Acompanhe partidas, placares e estatísticas em tempo real.'],
-    ['4', 'Suba no ranking', 'Mostre seu desempenho e seja reconhecido.'],
+    ['1', 'Crie sua conta', 'Cadastre-se gratuitamente e acesse a plataforma.', '/landing-icon-step-1.png'],
+    ['2', 'Crie ou entre em um torneio', 'Crie seu torneio ou participe de um já existente.', '/landing-icon-step-2.png'],
+    ['3', 'Dispute ao vivo', 'Acompanhe partidas, placares e estatísticas em tempo real.', '/landing-icon-step-3.png'],
+    ['4', 'Suba no ranking', 'Mostre seu desempenho e seja reconhecido.', '/landing-icon-step-4.png'],
   ]
 
   return (
@@ -4830,7 +4830,7 @@ function Landing() {
           <img className="arenaHeroLogo" src="/promaster-logo-novo.png" alt="ProMaster Arena" />
 
           <h1 className="arenaHeroTitle">
-            <span>A plataforma</span>
+            <span>A plataforma completa</span>
             <strong>Para torneios</strong>
             <span>em tempo real</span>
           </h1>
@@ -4890,7 +4890,7 @@ function Landing() {
           {modalities.map(([slug, title, text]) => (
             <article key={title} className={`arenaSportCard arenaSportCard-${slug}`}>
               <div>
-                <span>{title.slice(0, 2).toUpperCase()}</span>
+                <img src={`/landing-modality-icon-${slug}.png`} alt="" aria-hidden="true" />
                 <h3>{title}</h3>
                 <p>{text}</p>
               </div>
@@ -4906,9 +4906,10 @@ function Landing() {
         </h2>
 
         <div className="arenaStepsGrid">
-          {steps.map(([number, title, text]) => (
+          {steps.map(([number, title, text, icon]) => (
             <article key={title}>
-              <span>{number}</span>
+              <img src={icon} alt="" aria-hidden="true" />
+              <span className="arenaStepNumber">{number}</span>
               <h3>{title}</h3>
               <p>{text}</p>
             </article>
@@ -4924,7 +4925,7 @@ function Landing() {
           <p>Suas regras. Sua vitória.</p>
         </div>
         <div>
-          <span>Junte-se a jogadores e organizadores hoje mesmo.</span>
+          <span>Junte-se a milhares de jogadores<br />e organizadores hoje mesmo.</span>
           <a className="landingButton landingButtonGlow" href="/inscreva-se">Começar agora</a>
         </div>
       </section>
