@@ -4550,6 +4550,7 @@ function LandingHeader() {
             </div>
           </details>
           <a href="/planos">Planos</a>
+          <a href="/contato">Contato</a>
         </nav>
 
         <div className="landingActions">
