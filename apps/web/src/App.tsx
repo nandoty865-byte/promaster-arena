@@ -357,6 +357,15 @@ export default function App() {
       <Route path="/inscreva-se" element={<SignupChoice />} />
       <Route path="/cadastro-organizador" element={<OrganizerSignup />} />
       <Route path="/cadastro-jogador" element={<PlayerSignup />} />
+      <Route path="/organizador" element={<PersonaLanding type="organizador" />} />
+      <Route path="/jogador" element={<PersonaLanding type="jogador" />} />
+      <Route path="/arena" element={<PersonaLanding type="arena" />} />
+      <Route path="/sobre" element={<StaticPublicPage type="sobre" />} />
+      <Route path="/contato" element={<StaticPublicPage type="contato" />} />
+      <Route path="/blog" element={<StaticPublicPage type="blog" />} />
+      <Route path="/termos" element={<StaticPublicPage type="termos" />} />
+      <Route path="/privacidade" element={<StaticPublicPage type="privacidade" />} />
+      <Route path="/lgpd" element={<StaticPublicPage type="lgpd" />} />
       <Route path="/jogador/:id" element={<PlayerDashboard />} />
       <Route path="/" element={<Landing />} />
       <Route path="/planos" element={<PlansComparison />} />
@@ -1541,6 +1550,27 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
 function AdminSidebar() {
   const navigate = useNavigate()
 
+  function adminMenuItem(label: string, path?: string) {
+    const isInDevelopment = !path
+
+    return (
+      <button
+        className={`sidebarSubButton${isInDevelopment ? ' sidebarSoonButton' : ''}`}
+        disabled={isInDevelopment}
+        onClick={() => path && navigate(path)}
+        type="button"
+      >
+        <span>{label}</span>
+        {isInDevelopment && (
+          <span className="sidebarSoonBadge">
+            <span className="sidebarSoonIcon" />
+            Em desenvolvimento
+          </span>
+        )}
+      </button>
+    )
+  }
+
   function logout() {
     localStorage.removeItem('token')
     window.location.href = '/login'
@@ -1548,10 +1578,141 @@ function AdminSidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebarLogo">👑 Admin Master</div>
-      <button onClick={() => navigate('/admin')}>Dashboard</button>
-      <button onClick={() => navigate('/admin/financeiro')}>Financeiro</button>
-      <button onClick={() => navigate('/admin/clientes')}>Clientes</button>
+      <div className="sidebarLogo">Admin Master</div>
+      <button onClick={() => navigate('/admin')}>Dashboard Global</button>
+
+      <details className="sidebarGroup">
+        <summary>Gestão de Torneios</summary>
+        {adminMenuItem('Todos os Torneios')}
+        {adminMenuItem('Aprovações')}
+        {adminMenuItem('Em Andamento')}
+        {adminMenuItem('Finalizados')}
+        {adminMenuItem('Cancelados')}
+        {adminMenuItem('Denúncias')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Gestão de Circuitos</summary>
+        {adminMenuItem('Todos os Circuitos')}
+        {adminMenuItem('Temporadas')}
+        {adminMenuItem('Masters')}
+        {adminMenuItem('Calendário')}
+        {adminMenuItem('Homologações')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Usuários</summary>
+        {adminMenuItem('Jogadores')}
+        {adminMenuItem('Organizadores', '/admin/clientes')}
+        {adminMenuItem('Árbitros')}
+        {adminMenuItem('Administradores')}
+        {adminMenuItem('SuperAdmins')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Arenas</summary>
+        {adminMenuItem('Todas Arenas')}
+        {adminMenuItem('Homologadas')}
+        {adminMenuItem('Pendentes')}
+        {adminMenuItem('Bloqueadas')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Financeiro</summary>
+        {adminMenuItem('Dashboard Financeiro', '/admin/financeiro')}
+        {adminMenuItem('Receitas')}
+        {adminMenuItem('Comissões')}
+        {adminMenuItem('Repasses')}
+        {adminMenuItem('Saques')}
+        {adminMenuItem('Premiações')}
+        {adminMenuItem('Chargebacks')}
+        {adminMenuItem('Gateway')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Rankings</summary>
+        {adminMenuItem('Ranking Geral')}
+        {adminMenuItem('Por Circuito')}
+        {adminMenuItem('Por Categoria')}
+        {adminMenuItem('Race to Masters')}
+        {adminMenuItem('Histórico')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Transmissões</summary>
+        {adminMenuItem('Ao Vivo')}
+        {adminMenuItem('Histórico')}
+        {adminMenuItem('YouTube')}
+        {adminMenuItem('TikTok')}
+        {adminMenuItem('Instagram')}
+        {adminMenuItem('Overlays')}
+        {adminMenuItem('Patrocinadores')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Marketing</summary>
+        {adminMenuItem('Landing Pages')}
+        {adminMenuItem('Campanhas')}
+        {adminMenuItem('Parceiros')}
+        {adminMenuItem('Patrocinadores')}
+        {adminMenuItem('Banners')}
+        {adminMenuItem('Notificações')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Segurança</summary>
+        {adminMenuItem('Usuários Suspeitos')}
+        {adminMenuItem('Organizadores Suspeitos')}
+        {adminMenuItem('Antifraude')}
+        {adminMenuItem('KYC')}
+        {adminMenuItem('Bloqueios')}
+        {adminMenuItem('Blacklist')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Auditoria</summary>
+        {adminMenuItem('Ações da Plataforma')}
+        {adminMenuItem('Filtros por Usuário')}
+        {adminMenuItem('Filtros por Torneio')}
+        {adminMenuItem('Filtros por Circuito')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Configurações</summary>
+        {adminMenuItem('Sistema')}
+        {adminMenuItem('Integrações')}
+        {adminMenuItem('Pagamentos')}
+        {adminMenuItem('WhatsApp')}
+        {adminMenuItem('Email')}
+        {adminMenuItem('LGPD')}
+        {adminMenuItem('Termos')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>IA e Automações</summary>
+        {adminMenuItem('Agentes IA')}
+        {adminMenuItem('Notificações')}
+        {adminMenuItem('WhatsApp')}
+        {adminMenuItem('Rankings Automáticos')}
+        {adminMenuItem('Relatórios')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Relatórios</summary>
+        {adminMenuItem('Financeiro')}
+        {adminMenuItem('Usuários')}
+        {adminMenuItem('Circuitos')}
+        {adminMenuItem('Torneios')}
+        {adminMenuItem('Arenas')}
+        {adminMenuItem('Patrocinadores')}
+      </details>
+
+      <details className="sidebarGroup">
+        <summary>Perfil</summary>
+        {adminMenuItem('Meu Perfil')}
+        {adminMenuItem('Segurança')}
+        {adminMenuItem('Preferências')}
+      </details>
       <button className="sidebarFooterButton" onClick={logout}>Sair</button>
     </aside>
   )
@@ -4271,100 +4432,505 @@ function Financeiro() {
   )
 }
 
-function Landing() {
+type PersonaLandingType = 'organizador' | 'jogador' | 'arena'
+
+const personaLandingContent: Record<PersonaLandingType, {
+  badge: string
+  title: string
+  description: string
+  cta: string
+  secondary: string
+  panelTitle: string
+  panelEyebrow: string
+  metrics: Array<[string, string]>
+  benefits: Array<[string, string]>
+  steps: Array<[string, string]>
+  showcaseTitle: string
+  showcaseText: string
+  image: string
+}> = {
+  organizador: {
+    badge: 'Para organizadores',
+    title: 'Organize torneios profissionais em minutos.',
+    description: 'Controle inscrições, pagamentos, rankings, partidas, telão e transmissão ao vivo em uma única plataforma.',
+    cta: 'Criar torneio gratuitamente',
+    secondary: 'Ver demonstração',
+    panelEyebrow: 'Visão geral',
+    panelTitle: 'Operação completa do torneio',
+    metrics: [['12', 'Torneios ativos'], ['1.248', 'Inscrições'], ['R$ 48.750', 'Receita total'], ['25.430', 'Visualizações']],
+    benefits: [
+      ['Inscrições online', 'Página de torneio profissional, otimizada para conversão e compartilhamento.'],
+      ['Pagamentos integrados', 'Pix, cartão e controle manual com acompanhamento financeiro.'],
+      ['Rankings em tempo real', 'Pontuação, classificação e histórico atualizados automaticamente.'],
+      ['Telão profissional', 'Exiba confrontos, resultados e patrocinadores com visual de arena.'],
+    ],
+    steps: [
+      ['Crie seu torneio', 'Configure regras, formato, premiação e página pública.'],
+      ['Divulgue e receba inscrições', 'Compartilhe link e acompanhe pagamentos e confirmações.'],
+      ['Gerencie as partidas', 'Controle mesas, jogadores, placares, WO e vencedores.'],
+      ['Transmita e engaje', 'Use telão, página pública e comunicação com jogadores.'],
+    ],
+    showcaseTitle: 'Menos planilha, mais espetáculo.',
+    showcaseText: 'O organizador acompanha tudo em uma operação visual, com dados claros e recursos pensados para evento presencial e transmissão.',
+    image: '/promaster-telao-reference.png',
+  },
+  jogador: {
+    badge: 'Para jogadores',
+    title: 'Sua carreira esportiva começa aqui.',
+    description: 'Participe de torneios, acompanhe rankings, evolua seu desempenho e construa seu histórico competitivo.',
+    cta: 'Criar meu perfil gratuitamente',
+    secondary: 'Ver torneios',
+    panelEyebrow: 'Perfil do jogador',
+    panelTitle: 'Ranking, estatísticas e conquistas',
+    metrics: [['2.450', 'Pontos'], ['38', 'Torneios'], ['18', 'Títulos'], ['81%', 'Aproveitamento']],
+    benefits: [
+      ['Participe de torneios', 'Encontre eventos próximos e inscreva-se em segundos.'],
+      ['Acompanhe rankings', 'Veja sua posição no ranking regional, estadual e nacional.'],
+      ['Estatísticas completas', 'Analise vitórias, derrotas, evolução e desempenho.'],
+      ['Histórico de partidas', 'Construa uma trajetória com resultados e conquistas.'],
+    ],
+    steps: [
+      ['Crie seu perfil', 'Cadastre seus dados, esportes e preferências.'],
+      ['Entre nos torneios', 'Inscreva-se em eventos e receba avisos importantes.'],
+      ['Compita e pontue', 'Cada resultado alimenta rankings e estatísticas.'],
+      ['Evolua no circuito', 'Acompanhe sua progressão e dispute classificações.'],
+    ],
+    showcaseTitle: 'Ranking vivo, perfil forte e histórico real.',
+    showcaseText: 'O jogador deixa de ser apenas um nome na chave e passa a ter dados, conquistas, calendário e evolução dentro da plataforma.',
+    image: '/promaster-hero-broadcast.png',
+  },
+  arena: {
+    badge: 'Para arenas e clubes',
+    title: 'Transforme sua arena em uma operação profissional.',
+    description: 'Gestão completa de eventos, campeonatos, mesas, pagamentos e transmissão para clubes, bares, salões e arenas.',
+    cta: 'Solicitar demonstração',
+    secondary: 'Ver planos',
+    panelEyebrow: 'Gestão da arena',
+    panelTitle: 'Eventos, financeiro e comunidade',
+    metrics: [['+35%', 'Mais inscrições'], ['+42%', 'Mais recorrência'], ['+60%', 'Mais engajamento'], ['+80', 'Arenas parceiras']],
+    benefits: [
+      ['Gestão de mesas', 'Controle ocupação, chamadas, partidas e andamento em tempo real.'],
+      ['Eventos recorrentes', 'Crie calendário, rankings, circuitos e campeonatos.'],
+      ['Financeiro integrado', 'Receba pagamentos, acompanhe receitas e organize repasses.'],
+      ['Patrocinadores', 'Monetize sua audiência com telão, página pública e transmissão.'],
+    ],
+    steps: [
+      ['Cadastre sua arena', 'Organize dados, responsáveis e modalidades.'],
+      ['Crie eventos recorrentes', 'Transforme torneios avulsos em calendário fixo.'],
+      ['Acompanhe indicadores', 'Veja inscrições, receita, público e ranking.'],
+      ['Cresça a comunidade', 'Engaje jogadores e parceiros com experiência premium.'],
+    ],
+    showcaseTitle: 'Sua arena como centro de competição.',
+    showcaseText: 'A plataforma ajuda a transformar movimento local em recorrência, receita, ranking e comunidade esportiva.',
+    image: '/promaster-hero-broadcast.png',
+  },
+}
+
+function LandingHeader() {
   return (
-    <div className="landing">
+    <>
+      <a className="skipLink" href="#conteudo-principal">Pular para o conteúdo</a>
       <header className="landingHeader">
-        <div className="landingLogo">🎱 ProMaster Arena</div>
+        <a href="/" className="landingLogo">
+          <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
+          <span className="brandLogoText" aria-label="ProMaster Arena">
+            <span className="brandLogoPro">Pro</span>
+            <span className="brandLogoMaster">Master</span>
+            <span className="brandLogoArena">Arena</span>
+          </span>
+        </a>
+
+        <nav className="landingNav" aria-label="Navegação principal">
+          <details className="landingNavDropdown">
+            <summary>Experiência</summary>
+            <div className="landingNavMenu">
+              <a href="/organizador">Organizador</a>
+              <a href="/jogador">Jogador</a>
+              <a href="/arena">Arena</a>
+            </div>
+          </details>
+          <a href="/planos">Planos</a>
+        </nav>
 
         <div className="landingActions">
           <a href="/login">Entrar</a>
-          <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
+          <a className="landingButton" href="/inscreva-se">Começar agora</a>
         </div>
       </header>
+    </>
+  )
+}
 
-      <div className="landingNotice">
-        <strong>Aviso provisório</strong>
-        <span>Esta página está em modo teste. Alguns recursos e informações podem ser ajustados durante a validação da plataforma.</span>
+type StaticPublicPageType = 'sobre' | 'contato' | 'blog' | 'termos' | 'privacidade' | 'lgpd'
+
+const staticPublicPages: Record<StaticPublicPageType, {
+  eyebrow: string
+  title: string
+  description: string
+  blocks: Array<[string, string]>
+}> = {
+  sobre: {
+    eyebrow: 'Sobre a plataforma',
+    title: 'O ProMaster Arena transforma torneios em experiências profissionais.',
+    description: 'Criamos uma estrutura para organizadores, arenas e jogadores acompanharem eventos, rankings, pagamentos, telão e comunicação em tempo real.',
+    blocks: [
+      ['Missão', 'Profissionalizar torneios e circuitos esportivos com tecnologia acessível, visual premium e operação simples.'],
+      ['Experiência', 'A plataforma conecta página pública, painel do organizador, modo árbitro, telão e avisos para jogadores.'],
+      ['Comunidade', 'Jogadores, arenas, clubes e organizadores ganham histórico, ranking, calendário e novas oportunidades de receita.'],
+    ],
+  },
+  contato: {
+    eyebrow: 'Contato',
+    title: 'Fale com o ProMaster Arena.',
+    description: 'Use este canal para dúvidas comerciais, suporte, parcerias, demonstrações e implantação da plataforma na sua arena.',
+    blocks: [
+      ['Comercial', 'Solicite demonstração para arenas, clubes, bares, salões e organizadores de eventos esportivos.'],
+      ['Suporte', 'Atendimento para configuração de torneios, páginas públicas, inscrições, pagamentos e transmissões.'],
+      ['Parcerias', 'Espaço para patrocinadores, ligas, circuitos e projetos especiais.'],
+    ],
+  },
+  blog: {
+    eyebrow: 'Blog',
+    title: 'Conteúdo para organizadores, jogadores e arenas.',
+    description: 'Em breve, artigos sobre gestão de torneios, rankings, circuitos, transmissões, pagamentos e crescimento de comunidades esportivas.',
+    blocks: [
+      ['Gestão de torneios', 'Boas práticas para inscrições, regulamentos, sorteios, check-in e operação no dia do evento.'],
+      ['Ranking e circuitos', 'Como criar recorrência, categorias, pontuação e temporadas com mais engajamento.'],
+      ['Broadcast e telão', 'Ideias para transformar eventos locais em experiências com aparência profissional.'],
+    ],
+  },
+  termos: {
+    eyebrow: 'Termos de uso',
+    title: 'Regras gerais de uso da plataforma.',
+    description: 'Esta página resume as bases de uso do ProMaster Arena. A versão jurídica final deve ser revisada antes da operação comercial plena.',
+    blocks: [
+      ['Uso responsável', 'Organizadores e usuários devem manter dados corretos, respeitar regras dos eventos e atuar com boa-fé.'],
+      ['Eventos e pagamentos', 'Cada organizador é responsável por regras, premiações, inscrições, cancelamentos e comunicação com participantes.'],
+      ['Disponibilidade', 'A plataforma pode receber melhorias, manutenções e ajustes durante o período de testes.'],
+    ],
+  },
+  privacidade: {
+    eyebrow: 'Privacidade',
+    title: 'Proteção dos dados dos usuários.',
+    description: 'O ProMaster Arena deve tratar dados pessoais com transparência, segurança e finalidade clara para operação de eventos e comunicação.',
+    blocks: [
+      ['Dados coletados', 'Podem ser usados dados de cadastro, contato, inscrições, pagamentos, rankings e participação em torneios.'],
+      ['Finalidade', 'Os dados apoiam login, inscrições, avisos, rankings, suporte, segurança e operação dos eventos.'],
+      ['Segurança', 'A plataforma deve adotar boas práticas de acesso, armazenamento e controle administrativo.'],
+    ],
+  },
+  lgpd: {
+    eyebrow: 'LGPD',
+    title: 'Compromisso com transparência e controle de dados.',
+    description: 'A estrutura da plataforma deve apoiar direitos dos titulares, gestão segura das informações e processos claros para organizadores.',
+    blocks: [
+      ['Direitos do titular', 'Usuários devem poder solicitar acesso, correção, atualização ou exclusão conforme as regras aplicáveis.'],
+      ['Base operacional', 'Dados são tratados para execução de cadastro, participação em eventos, comunicação e segurança da plataforma.'],
+      ['Governança', 'A evolução da plataforma deve incluir políticas, registros e controles para operação em escala.'],
+    ],
+  },
+}
+
+function LandingFooter() {
+  return (
+    <footer className="landingFooter">
+      <div className="landingFooterInner">
+        <div className="footerBrand">
+          <a href="/" className="landingLogo">
+            <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
+            <span className="brandLogoText" aria-label="ProMaster Arena">
+              <span className="brandLogoPro">Pro</span>
+              <span className="brandLogoMaster">Master</span>
+              <span className="brandLogoArena">Arena</span>
+            </span>
+          </a>
+          <p>Torneios em Tempo Real</p>
+        </div>
+
+        <nav className="footerLinks" aria-label="Mapa do site">
+          <strong>Mapa do site</strong>
+          <a href="/sobre">Sobre</a>
+          <a href="/planos">Preços</a>
+          <a href="/contato">Contato</a>
+          <a href="/blog">Blog</a>
+        </nav>
+
+        <nav className="footerLinks" aria-label="Experiências">
+          <strong>Experiência</strong>
+          <a href="/organizador">Organizador</a>
+          <a href="/jogador">Jogador</a>
+          <a href="/arena">Arena</a>
+          <a href="/inscreva-se">Inscreva-se</a>
+        </nav>
+
+        <nav className="footerLinks" aria-label="Links legais">
+          <strong>Legal</strong>
+          <a href="/privacidade">Política de Privacidade</a>
+          <a href="/termos">Termos de Uso</a>
+          <a href="/lgpd">LGPD</a>
+        </nav>
+
+        <nav className="footerLinks footerSocials" aria-label="Redes sociais">
+          <strong>Redes sociais</strong>
+          <div>
+            <a href="/contato" aria-label="Instagram da ProMaster Arena">IG</a>
+            <a href="/contato" aria-label="YouTube da ProMaster Arena">YT</a>
+            <a href="/contato" aria-label="WhatsApp da ProMaster Arena">WA</a>
+            <a href="/contato" aria-label="LinkedIn da ProMaster Arena">IN</a>
+          </div>
+        </nav>
       </div>
 
-      <section className="landingHero">
-        <div>
-          <span className="landingBadge">Sistema SaaS para torneios</span>
+      <div className="landingFooterBottom">
+        <span>© 2026 ProMaster Arena. Todos os direitos reservados.</span>
+        <span>Torneios em tempo real.</span>
+      </div>
+    </footer>
+  )
+}
 
-          <h1>Organize torneios profissionais com chave, telão, ranking e Pix.</h1>
+function StaticPublicPage({ type }: { type: StaticPublicPageType }) {
+  const page = staticPublicPages[type]
+
+  return (
+    <div className="landing staticPublicPage">
+      <LandingHeader />
+
+      <main id="conteudo-principal" className="staticPublicMain">
+        <span className="landingBadge">{page.eyebrow}</span>
+        <h1>{page.title}</h1>
+        <p>{page.description}</p>
+
+        <div className="staticPublicGrid">
+          {page.blocks.map(([title, text]) => (
+            <article key={title}>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </main>
+
+      <LandingFooter />
+    </div>
+  )
+}
+
+function PersonaLanding({ type }: { type: PersonaLandingType }) {
+  const page = personaLandingContent[type]
+
+  return (
+    <div className={`landing personaLanding personaLanding-${type}`}>
+      <LandingHeader />
+
+      <section id="conteudo-principal" className="personaHero">
+        <div className="personaHeroCopy">
+          <span className="landingBadge">{page.badge}</span>
+          <h1>{page.title}</h1>
+          <p>{page.description}</p>
+          <div className="landingCtas">
+            <a className="landingButton" href="/inscreva-se">{page.cta}</a>
+            <a className="landingSecondary" href={type === 'arena' ? '/planos' : '/'}>{page.secondary}</a>
+          </div>
+        </div>
+
+        <div className="personaPanel">
+          <span>{page.panelEyebrow}</span>
+          <h2>{page.panelTitle}</h2>
+          <div className="personaMetrics">
+            {page.metrics.map(([value, label]) => (
+              <div key={label}>
+                <strong>{value}</strong>
+                <small>{label}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="personaBenefits">
+        <h2>Tudo que você precisa em um só lugar</h2>
+        <div>
+          {page.benefits.map(([title, text]) => (
+            <article key={title}>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="personaFlow">
+        <h2>Como funciona</h2>
+        <div>
+          {page.steps.map(([title, text], index) => (
+            <article key={title}>
+              <span>{index + 1}</span>
+              <strong>{title}</strong>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="personaShowcase">
+        <div>
+          <span className="landingBadge">ProMaster Arena</span>
+          <h2>{page.showcaseTitle}</h2>
+          <p>{page.showcaseText}</p>
+          <a className="landingButton" href="/inscreva-se">Começar agora</a>
+        </div>
+        <img src={page.image} alt={page.showcaseTitle} />
+      </section>
+
+      <LandingFooter />
+    </div>
+  )
+}
+
+function Landing() {
+  const platformStats = [
+    ['+50.000', 'Usuários ativos'],
+    ['+10.000', 'Torneios realizados'],
+    ['+250.000', 'Partidas transmitidas'],
+    ['100%', 'Seguro e confiável'],
+  ]
+
+  const featureCards = [
+    ['trophy', 'Torneios em tempo real', 'Acompanhe tudo ao vivo, com atualizações instantâneas.'],
+    ['live', 'Placar ao vivo', 'Resultados em tempo real com estatísticas precisas.'],
+    ['board', 'Telão interativo', 'Exiba partidas, chaves e informações em grandes telas.'],
+    ['chat', 'Comunicação instantânea', 'Chat integrado entre jogadores, times e organizadores.'],
+    ['ranking', 'Ranking e estatísticas', 'Desempenho, rankings e histórico sempre atualizados.'],
+    ['shield', 'Seguro, justo e profissional', 'Ambiente confiável com regras claras e suporte especializado.'],
+  ]
+
+  const modalities = [
+    ['futebol', 'Futebol', 'Campo, society e ligas recorrentes'],
+    ['sinuca', 'Sinuca', 'Mesas, ranking, chamadas e telão'],
+    ['tenis', 'Tênis de mesa', 'Chaves, grupos e resultados rápidos'],
+    ['basquete', 'Basquete', 'Placar, transmissão e estatísticas'],
+    ['esports', 'E-sports', 'Partidas online e comunidades ativas'],
+    ['volei', 'Vôlei', 'Equipes, fases e calendário'],
+  ]
+
+  const steps = [
+    ['1', 'Crie sua conta', 'Cadastre-se gratuitamente e acesse a plataforma.', '/landing-icon-step-1.png'],
+    ['2', 'Crie ou entre em um torneio', 'Crie seu torneio ou participe de um já existente.', '/landing-icon-step-2.png'],
+    ['3', 'Dispute ao vivo', 'Acompanhe partidas, placares e estatísticas em tempo real.', '/landing-icon-step-3.png'],
+    ['4', 'Suba no ranking', 'Mostre seu desempenho e seja reconhecido.', '/landing-icon-step-4.png'],
+  ]
+
+  return (
+    <div className="landing landingArenaPage">
+      <LandingHeader />
+
+      <section id="conteudo-principal" className="landingHero arenaLandingHero">
+        <div className="arenaHeroCopy">
+          <img className="arenaHeroLogo" src="/promaster-logo-novo.png" alt="ProMaster Arena" />
+
+          <h1 className="arenaHeroTitle">
+            <span>A plataforma completa</span>
+            <strong>Para torneios</strong>
+            <span>em tempo real</span>
+          </h1>
 
           <p>
-            Plataforma para clubes, bares, arenas e organizadores criarem torneios
-            de sinuca e esportes com visual profissional, QR Code público e gestão online.
+            Crie, organize e dispute torneios com placar ao vivo, comunicação instantânea,
+            ranking atualizado, página pública e telão profissional.
           </p>
 
           <div className="landingCtas">
-            <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
-            <a className="landingSecondary" href="/planos">Ver planos</a>
+            <a className="landingButton landingButtonGlow" href="/inscreva-se">Começar agora</a>
+            <a className="landingSecondary" href="/#recursos">Ver demonstração</a>
           </div>
         </div>
 
-        <div className="landingPreview">
-          <h3>🏆 Torneio ao vivo</h3>
-          <div className="previewMatch">João <strong>VS</strong> Carlos</div>
-          <div className="previewCard">Ranking em tempo real</div>
-          <div className="previewCard">QR Code para público</div>
-          <div className="previewCard">Telão profissional</div>
-        </div>
-      </section>
-
-      <section className="landingFeatures">
-        <div>
-          <h2>Chave automática</h2>
-          <p>Crie torneios com jogadores reais e sorteio automático.</p>
-        </div>
-
-        <div>
-          <h2>Telão público</h2>
-          <p>Exiba partidas, status e ranking em TV ou projetor.</p>
-        </div>
-
-        <div>
-          <h2>Cobranças automáticas</h2>
-          <p>Selecione o melhor plano, ative cobranças automáticas por torneio e acompanhe tudo no painel financeiro.</p>
-        </div>
-
-        <div>
-          <h2>Jogadores</h2>
-          <p>Estatísticas em tempo real, ranking, histórico dos torneios e mais.</p>
-        </div>
-      </section>
-
-      <section id="planos" className="landingPlans">
-        <h2>Planos</h2>
-
-        <div className="plansGrid">
-          <div className="planCard">
-            <h3>Trial Free</h3>
-            <strong>7 dias ou 1 torneio</strong>
-            <p>Acesso aos principais recursos. Depois expira para novos torneios, mas mantém login e edição.</p>
-          </div>
-
-          <div className="planCard featured">
-            <h3>Pro</h3>
-            <strong>R$ 59,90/mês</strong>
-            <p>Mesmas funções principais, com torneios ilimitados até 64 jogadores.</p>
-          </div>
-
-          <div className="planCard">
-            <h3>Master</h3>
-            <strong>R$ 89,90/mês</strong>
-            <p>Torneios acima de 64 jogadores, usuários/equipe e recursos avançados.</p>
-          </div>
-
-          <div className="planCard">
-            <h3>Avulso</h3>
-            <strong>R$ 21,90</strong>
-            <p>Crédito para criar 1 torneio, ideal para eventos únicos.</p>
+        <div className="arenaHeroVisual" aria-label="Prévia visual da plataforma ProMaster Arena">
+          <div className="arenaDeviceStage">
+            <img className="arenaNotebookMockup" src="/landing-notebook-mockup.png" alt="Painel ProMaster Arena em notebook" />
+            <img className="arenaPhoneMockupImage" src="/landing-phone-mockup.png" alt="Aplicação ProMaster Arena em celular" />
           </div>
         </div>
       </section>
+
+      <section className="landingMetricsStrip" aria-label="Indicadores da plataforma">
+        {platformStats.map(([value, label]) => (
+          <div key={label}>
+            <strong>{value}</strong>
+            <span>{label}</span>
+          </div>
+        ))}
+      </section>
+
+      <section id="recursos" className="arenaSection arenaFeatureSection">
+        <span className="landingBadge">Recursos completos</span>
+        <h2>
+          Tudo que você precisa para torneios de <strong>alto nível</strong>
+        </h2>
+
+        <div className="arenaFeatureGrid">
+          {featureCards.map(([icon, title, text]) => (
+            <article key={title}>
+              <span className={`arenaFeatureIcon arenaFeatureIcon-${icon}`} aria-hidden="true" />
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="modalidades" className="arenaSection arenaModalitiesSection">
+        <span className="landingBadge">Modalidades</span>
+        <h2>
+          Escolha <strong>sua arena</strong>
+        </h2>
+
+        <div className="arenaModalityGrid">
+          {modalities.map(([slug, title, text]) => (
+            <article key={title} className={`arenaSportCard arenaSportCard-${slug}`}>
+              <div>
+                <img src={`/landing-modality-icon-${slug}.png`} alt="" aria-hidden="true" />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="como-funciona" className="arenaSection arenaStepsSection">
+        <span className="landingBadge">Como funciona</span>
+        <h2>
+          4 passos para <strong>começar</strong>
+        </h2>
+
+        <div className="arenaStepsGrid">
+          {steps.map(([number, title, text, icon]) => (
+            <article key={title}>
+              <img src={icon} alt="" aria-hidden="true" />
+              <span className="arenaStepNumber">{number}</span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="arenaFinalBand">
+        <div>
+          <h2>
+            Sua competição. <strong>Sua arena.</strong>
+          </h2>
+          <p>Suas regras. Sua vitória.</p>
+        </div>
+        <div>
+          <span>Junte-se a milhares de jogadores<br />e organizadores hoje mesmo.</span>
+          <a className="landingButton landingButtonGlow" href="/inscreva-se">Começar agora</a>
+        </div>
+      </section>
+
+      <LandingFooter />
     </div>
   )
 }
@@ -4426,14 +4992,21 @@ function PlansComparison() {
   return (
     <div className="plansPage">
       <header className="plansPageHeader">
-        <a href="/" className="landingLogo">🎱 ProMaster Arena</a>
+        <a href="/" className="landingLogo">
+          <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
+          <span className="brandLogoText" aria-label="ProMaster Arena">
+            <span className="brandLogoPro">Pro</span>
+            <span className="brandLogoMaster">Master</span>
+            <span className="brandLogoArena">Arena</span>
+          </span>
+        </a>
         <div className="landingActions">
           <a href="/login">Entrar</a>
           <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
         </div>
       </header>
 
-      <main className="plansPageMain">
+      <main id="conteudo-principal" className="plansPageMain">
         <section className="plansHero">
           <span>Comparativo de planos</span>
           <h1>Escolha o plano certo para sua arena</h1>
@@ -4489,6 +5062,8 @@ function PlansComparison() {
           </div>
         </section>
       </main>
+
+      <LandingFooter />
     </div>
   )
 }
@@ -8346,7 +8921,7 @@ function AdminClientSidebar({ orgId, panel, orgName }: any) {
 
   return (
     <aside className="sidebar">
-      <div className="sidebarLogo">👑 Admin Master</div>
+      <div className="sidebarLogo">Admin Master</div>
       <div className="adminClientSidebarContext">
         <span>Cliente</span>
         <strong>{orgName || 'Carregando...'}</strong>
