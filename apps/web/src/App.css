@@ -4311,18 +4311,23 @@ button:hover {
 
 .arenaHeroTitle strong {
   color: transparent;
-  background: linear-gradient(180deg, #f4ffd7 0%, var(--landing-green) 42%, #64ad00 100%);
+  background:
+    linear-gradient(
+      180deg,
+      #f6ffd8 0%,
+      #c9ff2f 26%,
+      #73b600 52%,
+      #284800 70%,
+      #a6ff00 100%
+    );
   -webkit-background-clip: text;
   background-clip: text;
   font-style: italic;
   font-weight: 400;
-  letter-spacing: .035em;
+  letter-spacing: .012em;
   text-align: justify;
   text-align-last: justify;
-  text-shadow:
-    0 0 8px rgba(166, 255, 0, .65),
-    0 0 20px rgba(166, 255, 0, .35),
-    0 7px 18px rgba(0, 0, 0, .72);
+  text-shadow: 0 7px 18px rgba(0, 0, 0, .72);
 }
 
 .arenaHeroCopy p {
@@ -4371,7 +4376,7 @@ button:hover {
   min-height: 560px;
   display: grid;
   align-items: center;
-  margin-left: -28px;
+  margin-left: -54px;
   z-index: 1;
 }
 
@@ -4385,9 +4390,9 @@ button:hover {
 }
 
 .arenaNotebookMockup {
-  width: min(980px, 106%);
+  width: min(940px, 100%);
   display: block;
-  margin-right: -26px;
+  margin-right: 10px;
   transform: translateY(30px);
   filter:
     drop-shadow(0 38px 70px rgba(0, 0, 0, .72))
@@ -4397,7 +4402,7 @@ button:hover {
 .arenaPhoneMockupImage {
   position: absolute;
   left: auto;
-  right: 0;
+  right: 22px;
   bottom: 18px;
   width: min(190px, 20%);
   min-width: 118px;
