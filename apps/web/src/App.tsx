@@ -4830,9 +4830,9 @@ function Landing() {
           <img className="arenaHeroLogo" src="/promaster-logo-novo.png" alt="ProMaster Arena" />
 
           <h1 className="arenaHeroTitle">
-            <span>A plataforma completa</span>
+            <span className="arenaHeroTitleTop">A plataforma completa</span>
             <strong>Para torneios</strong>
-            <span>em tempo real</span>
+            <span className="arenaHeroTitleBottom">em tempo real</span>
           </h1>
 
           <p>

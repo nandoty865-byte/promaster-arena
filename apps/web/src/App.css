@@ -4215,8 +4215,8 @@ button:hover {
   min-height: 760px;
   margin: 0 -28px;
   display: grid;
-  grid-template-columns: minmax(420px, .8fr) minmax(520px, 1.2fr);
-  gap: clamp(24px, 3vw, 54px);
+  grid-template-columns: minmax(500px, .78fr) minmax(580px, 1.22fr);
+  gap: clamp(8px, 1.4vw, 28px);
   align-items: center;
   padding: clamp(16px, 3.8vw, 58px) clamp(34px, 5vw, 82px) clamp(34px, 5vw, 82px);
   border-radius: 0;
@@ -4248,24 +4248,26 @@ button:hover {
 }
 
 .arenaHeroCopy {
-  max-width: 760px;
+  width: min(740px, 100%);
+  max-width: 740px;
   text-align: center;
+  justify-self: center;
 }
 
 .arenaHeroLogo {
-  width: 232px;
+  width: 218px;
   max-width: 48vw;
   display: block;
-  margin: -6px auto 14px;
+  margin: -10px auto 12px;
   filter: drop-shadow(0 0 22px rgba(157, 255, 0, .38));
 }
 
 .arenaHeroTitle {
   display: grid;
-  gap: 2px;
+  gap: 0;
   margin: 0 0 18px;
   font-family: var(--font-title);
-  font-size: clamp(44px, 6vw, 86px);
+  font-size: clamp(42px, 5.4vw, 84px);
   line-height: .95;
   text-transform: uppercase;
   letter-spacing: .045em;
@@ -4275,7 +4277,7 @@ button:hover {
 
 .arenaLandingHero .arenaHeroTitle {
   font-family: var(--font-title);
-  font-size: clamp(44px, 6vw, 86px);
+  font-size: clamp(42px, 5.4vw, 84px);
   line-height: .95;
   letter-spacing: .045em;
   font-weight: 400;
@@ -4292,6 +4294,20 @@ button:hover {
   font-style: italic;
 }
 
+.arenaHeroTitleTop,
+.arenaHeroTitleBottom {
+  font-size: .68em;
+}
+
+.arenaHeroTitleTop {
+  text-align: justify;
+  text-align-last: justify;
+}
+
+.arenaHeroTitleBottom {
+  text-align: center;
+}
+
 .arenaHeroTitle strong {
   color: transparent;
   background: linear-gradient(180deg, #f4ffd7 0%, var(--landing-green) 42%, #64ad00 100%);
@@ -4300,6 +4316,8 @@ button:hover {
   font-style: italic;
   font-weight: 400;
   letter-spacing: .045em;
+  text-align: justify;
+  text-align-last: justify;
   text-shadow:
     0 0 8px rgba(166, 255, 0, .65),
     0 0 20px rgba(166, 255, 0, .35),
@@ -4352,6 +4370,8 @@ button:hover {
   min-height: 520px;
   display: grid;
   align-items: center;
+  margin-left: -70px;
+  z-index: 1;
 }
 
 .arenaDeviceStage {
@@ -4360,14 +4380,14 @@ button:hover {
   display: grid;
   align-items: center;
   justify-items: end;
-  padding-left: 76px;
+  padding-left: 108px;
 }
 
 .arenaNotebookMockup {
-  width: min(980px, 104%);
+  width: min(1080px, 112%);
   display: block;
-  margin-right: -24px;
-  transform: translateY(18px);
+  margin-right: -46px;
+  transform: translateY(24px);
   filter:
     drop-shadow(0 38px 70px rgba(0, 0, 0, .72))
     drop-shadow(0 0 38px rgba(157, 255, 0, .16));
@@ -4377,9 +4397,9 @@ button:hover {
   position: absolute;
   left: 0;
   right: auto;
-  bottom: 10px;
-  width: min(250px, 28%);
-  min-width: 150px;
+  bottom: 22px;
+  width: min(205px, 22%);
+  min-width: 122px;
   transform: scaleX(-1);
   filter:
     drop-shadow(0 30px 54px rgba(0, 0, 0, .62))
@@ -9064,6 +9084,7 @@ button:hover {
 
   .arenaHeroVisual {
     min-height: 420px;
+    margin-left: 0;
   }
 
   .arenaDeviceStage {
@@ -9097,6 +9118,12 @@ button:hover {
 
   .arenaLandingHero .arenaHeroTitle {
     font-size: 48px;
+  }
+
+  .arenaHeroTitleTop,
+  .arenaHeroTitle strong {
+    text-align: center;
+    text-align-last: center;
   }
 
   .arenaHeroVisual {
