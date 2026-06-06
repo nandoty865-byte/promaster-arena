@@ -4549,10 +4549,7 @@ function LandingHeader() {
               <a href="/arena">Arena</a>
             </div>
           </details>
-          <a href="/#recursos">Recursos</a>
-          <a href="/#modalidades">Modalidades</a>
           <a href="/planos">Planos</a>
-          <a href="/#como-funciona">Como funciona</a>
         </nav>
 
         <div className="landingActions">
@@ -4800,21 +4797,21 @@ function Landing() {
   ]
 
   const featureCards = [
-    ['Torneios em tempo real', 'Acompanhe tudo ao vivo, com atualizações instantâneas.'],
-    ['Placar ao vivo', 'Resultados em tempo real com estatísticas precisas.'],
-    ['Telão interativo', 'Exiba partidas, chaves e informações em grandes telas.'],
-    ['Comunicação instantânea', 'Chat integrado entre jogadores, times e organizadores.'],
-    ['Ranking e estatísticas', 'Desempenho, rankings e histórico sempre atualizados.'],
-    ['Seguro, justo e profissional', 'Ambiente confiável com regras claras e suporte especializado.'],
+    ['trophy', 'Torneios em tempo real', 'Acompanhe tudo ao vivo, com atualizações instantâneas.'],
+    ['live', 'Placar ao vivo', 'Resultados em tempo real com estatísticas precisas.'],
+    ['board', 'Telão interativo', 'Exiba partidas, chaves e informações em grandes telas.'],
+    ['chat', 'Comunicação instantânea', 'Chat integrado entre jogadores, times e organizadores.'],
+    ['ranking', 'Ranking e estatísticas', 'Desempenho, rankings e histórico sempre atualizados.'],
+    ['shield', 'Seguro, justo e profissional', 'Ambiente confiável com regras claras e suporte especializado.'],
   ]
 
   const modalities = [
-    ['Futebol', 'Campo, society e ligas recorrentes'],
-    ['Sinuca', 'Mesas, ranking, chamadas e telão'],
-    ['Tênis de mesa', 'Chaves, grupos e resultados rápidos'],
-    ['Basquete', 'Placar, transmissão e estatísticas'],
-    ['E-sports', 'Partidas online e comunidades ativas'],
-    ['Vôlei', 'Equipes, fases e calendário'],
+    ['futebol', 'Futebol', 'Campo, society e ligas recorrentes'],
+    ['sinuca', 'Sinuca', 'Mesas, ranking, chamadas e telão'],
+    ['tenis', 'Tênis de mesa', 'Chaves, grupos e resultados rápidos'],
+    ['basquete', 'Basquete', 'Placar, transmissão e estatísticas'],
+    ['esports', 'E-sports', 'Partidas online e comunidades ativas'],
+    ['volei', 'Vôlei', 'Equipes, fases e calendário'],
   ]
 
   const steps = [
@@ -4831,7 +4828,6 @@ function Landing() {
       <section id="conteudo-principal" className="landingHero arenaLandingHero">
         <div className="arenaHeroCopy">
           <img className="arenaHeroLogo" src="/promaster-logo-novo.png" alt="ProMaster Arena" />
-          <span className="landingBadge">Seguro, justo e profissional</span>
 
           <h1 className="arenaHeroTitle">
             <span>A plataforma completa</span>
@@ -4848,47 +4844,12 @@ function Landing() {
             <a className="landingButton landingButtonGlow" href="/inscreva-se">Começar agora</a>
             <a className="landingSecondary" href="/#recursos">Ver demonstração</a>
           </div>
-
-          <div className="arenaTrustLine">
-            <span>Eventos em tempo real</span>
-            <span>Rankings profissionais</span>
-            <span>Comunidade ativa</span>
-          </div>
         </div>
 
         <div className="arenaHeroVisual" aria-label="Prévia visual da plataforma ProMaster Arena">
-          <div className="arenaLaptopMock">
-            <div className="arenaMockTop">
-              <strong>ProMaster Arena</strong>
-              <span>AO VIVO</span>
-            </div>
-            <div className="arenaMockGrid">
-              <div className="arenaMockList">
-                <span>Torneios ao vivo</span>
-                <p>CS2 Open Cup <strong>2 x 1</strong></p>
-                <p>Futebol Amador <strong>2 x 1</strong></p>
-                <p>Sinuca Master Cup <strong>3 x 2</strong></p>
-                <p>Tênis de Mesa Open <strong>1 x 0</strong></p>
-              </div>
-              <div className="arenaMockScore">
-                <span>Placar ao vivo</span>
-                <strong>2 - 1</strong>
-                <small>Verde FC x Azul FC</small>
-              </div>
-            </div>
-            <div className="arenaMockFooter">
-              <span>Ranking</span>
-              <span>Partidas</span>
-              <span>Comunidade</span>
-            </div>
-          </div>
-
-          <div className="arenaPhoneMock">
-            <strong>Torneios</strong>
-            <span>Em destaque</span>
-            <p>Sinuca Master Cup</p>
-            <p>Futebol Amador Cup</p>
-            <p>Tênis de Mesa Open</p>
+          <div className="arenaDeviceStage">
+            <img className="arenaNotebookMockup" src="/landing-notebook-mockup.png" alt="Painel ProMaster Arena em notebook" />
+            <img className="arenaPhoneMockupImage" src="/landing-phone-mockup.png" alt="Aplicação ProMaster Arena em celular" />
           </div>
         </div>
       </section>
@@ -4909,9 +4870,9 @@ function Landing() {
         </h2>
 
         <div className="arenaFeatureGrid">
-          {featureCards.map(([title, text]) => (
+          {featureCards.map(([icon, title, text]) => (
             <article key={title}>
-              <span aria-hidden="true" />
+              <span className={`arenaFeatureIcon arenaFeatureIcon-${icon}`} aria-hidden="true" />
               <h3>{title}</h3>
               <p>{text}</p>
             </article>
@@ -4926,8 +4887,8 @@ function Landing() {
         </h2>
 
         <div className="arenaModalityGrid">
-          {modalities.map(([title, text]) => (
-            <article key={title} className={`arenaSportCard arenaSportCard-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+          {modalities.map(([slug, title, text]) => (
+            <article key={title} className={`arenaSportCard arenaSportCard-${slug}`}>
               <div>
                 <span>{title.slice(0, 2).toUpperCase()}</span>
                 <h3>{title}</h3>
