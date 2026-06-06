@@ -4223,7 +4223,7 @@ button:hover {
   background:
     radial-gradient(circle at 36% 42%, rgba(157, 255, 0, .18), transparent 28%),
     linear-gradient(90deg, rgba(0, 0, 0, .94) 0%, rgba(0, 0, 0, .72) 36%, rgba(0, 0, 0, .34) 100%),
-    url('/landing-arena-bg.png') center / cover no-repeat;
+    url('/landing-arena-bg.png') center top / cover no-repeat;
   box-shadow:
     inset 0 -1px 0 rgba(157, 255, 0, .22),
     0 34px 120px rgba(0, 0, 0, .56);
@@ -4291,10 +4291,13 @@ button:hover {
 }
 
 .arenaHeroTitle strong {
-  color: var(--landing-green);
+  color: transparent;
+  background: linear-gradient(180deg, #f4ffd7 0%, var(--landing-green) 42%, #64ad00 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
   font-style: italic;
   font-weight: 400;
-  letter-spacing: .04em;
+  letter-spacing: 1px;
   text-shadow:
     0 0 8px rgba(166, 255, 0, .65),
     0 0 20px rgba(166, 255, 0, .35),
@@ -4315,6 +4318,25 @@ button:hover {
 
 .arenaHeroCopy .landingCtas {
   justify-content: center;
+}
+
+.arenaHeroCopy .landingSecondary {
+  position: relative;
+  overflow: visible;
+}
+
+.arenaHeroCopy .landingSecondary::before {
+  content: '';
+  position: absolute;
+  left: -18px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 16px solid rgba(166, 255, 0, .78);
+  filter: drop-shadow(0 0 12px rgba(166, 255, 0, .5));
+  transform: translateY(-50%);
 }
 
 .arenaTrustLine {
@@ -4362,6 +4384,7 @@ button:hover {
   bottom: 10px;
   width: min(250px, 28%);
   min-width: 150px;
+  transform: none;
   filter:
     drop-shadow(0 30px 54px rgba(0, 0, 0, .62))
     drop-shadow(0 0 20px rgba(157, 255, 0, .14));
@@ -4735,17 +4758,23 @@ button:hover {
   padding: 18px;
 }
 
-.arenaModalityGrid article span {
-  width: 46px;
-  height: 46px;
-  display: inline-grid;
-  place-items: center;
+.arenaModalityGrid article img {
+  width: 58px;
+  height: 58px;
+  display: block;
   margin-bottom: 18px;
-  border: 1px solid rgba(255, 255, 255, .7);
-  border-radius: 999px;
-  color: #f8fafc;
-  background: rgba(0, 0, 0, .42);
-  font-weight: 900;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 14px rgba(166, 255, 0, .62))
+    drop-shadow(0 8px 18px rgba(0, 0, 0, .6));
+}
+
+.arenaModalityGrid p {
+  display: -webkit-box;
+  min-height: 42px;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .arenaStepsGrid {
@@ -4762,19 +4791,44 @@ button:hover {
   background: rgba(0, 0, 0, .46);
 }
 
-.arenaStepsGrid article > span {
-  width: 70px;
-  height: 70px;
+.arenaStepsGrid article > img {
+  width: 80px;
+  height: 80px;
+  display: block;
+  margin: 0 auto 10px;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 16px rgba(166, 255, 0, .55))
+    drop-shadow(0 14px 24px rgba(0, 0, 0, .5));
+}
+
+.arenaStepsGrid article > .arenaStepNumber {
+  width: 42px;
+  height: 42px;
   display: inline-grid;
   place-items: center;
-  margin-bottom: 22px;
+  margin-bottom: 14px;
   border: 1px solid rgba(157, 255, 0, .42);
   border-radius: 999px;
   color: #9dff00;
   background: rgba(157, 255, 0, .08);
-  font-size: 24px;
+  font-family: var(--font-ui);
+  font-size: 28px;
   font-weight: 1000;
   box-shadow: 0 0 30px rgba(157, 255, 0, .18);
+}
+
+.arenaStepsGrid h3 {
+  color: var(--landing-green);
+  font-size: 24px;
+  text-shadow: 0 0 16px rgba(166, 255, 0, .22);
+}
+
+.arenaStepsGrid p {
+  max-width: 250px;
+  margin: 0 auto;
+  color: #e2e8f0;
+  font-size: 16px;
 }
 
 .arenaFinalBand {
@@ -4789,8 +4843,8 @@ button:hover {
   border: 1px solid rgba(157, 255, 0, .5);
   border-radius: 12px;
   background:
-    linear-gradient(90deg, rgba(2, 6, 23, .7), rgba(2, 6, 23, .38)),
-    url('/promaster-hero-broadcast.png') center / cover no-repeat;
+    linear-gradient(90deg, rgba(0, 0, 0, .78), rgba(0, 0, 0, .44)),
+    url('/landing-final-bg.png') center / cover no-repeat;
   box-shadow: inset 0 0 50px rgba(157, 255, 0, .08);
 }
 
@@ -4805,6 +4859,10 @@ button:hover {
 .arenaFinalBand h2 strong {
   color: #9dff00;
   display: block;
+  font-style: italic;
+  text-shadow:
+    0 0 8px rgba(166, 255, 0, .58),
+    0 0 22px rgba(166, 255, 0, .28);
 }
 
 .arenaFinalBand p,
@@ -4818,6 +4876,10 @@ button:hover {
   display: grid;
   justify-items: start;
   gap: 14px;
+}
+
+.arenaFinalBand > div:last-child span {
+  line-height: 1.25;
 }
 
 .personaLanding {
