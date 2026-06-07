@@ -191,6 +191,17 @@ function isPublicPath(path: string) {
     path === '/inscreva-se' ||
     path === '/cadastro-organizador' ||
     path === '/cadastro-jogador' ||
+    path === '/organizador' ||
+    path === '/jogador' ||
+    path === '/arena' ||
+    path === '/planos' ||
+    path === '/agenda' ||
+    path === '/sobre' ||
+    path === '/contato' ||
+    path === '/blog' ||
+    path === '/termos' ||
+    path === '/privacidade' ||
+    path === '/lgpd' ||
     path.startsWith('/jogador/') ||
     path.startsWith('/telao/') ||
     path.startsWith('/public/')
@@ -360,6 +371,7 @@ export default function App() {
       <Route path="/organizador" element={<PersonaLanding type="organizador" />} />
       <Route path="/jogador" element={<PersonaLanding type="jogador" />} />
       <Route path="/arena" element={<PersonaLanding type="arena" />} />
+      <Route path="/agenda" element={<StaticPublicPage type="agenda" />} />
       <Route path="/sobre" element={<StaticPublicPage type="sobre" />} />
       <Route path="/contato" element={<StaticPublicPage type="contato" />} />
       <Route path="/blog" element={<StaticPublicPage type="blog" />} />
@@ -4549,7 +4561,8 @@ function LandingHeader() {
               <a href="/arena">Arena</a>
             </div>
           </details>
-          <a href="/planos">Planos</a>
+          <a href="/agenda">Agenda</a>
+          <a href="/planos">Plano</a>
           <a href="/contato">Contato</a>
         </nav>
 
@@ -4562,7 +4575,7 @@ function LandingHeader() {
   )
 }
 
-type StaticPublicPageType = 'sobre' | 'contato' | 'blog' | 'termos' | 'privacidade' | 'lgpd'
+type StaticPublicPageType = 'sobre' | 'contato' | 'blog' | 'agenda' | 'termos' | 'privacidade' | 'lgpd'
 
 const staticPublicPages: Record<StaticPublicPageType, {
   eyebrow: string
@@ -4588,6 +4601,16 @@ const staticPublicPages: Record<StaticPublicPageType, {
       ['Comercial', 'Solicite demonstração para arenas, clubes, bares, salões e organizadores de eventos esportivos.'],
       ['Suporte', 'Atendimento para configuração de torneios, páginas públicas, inscrições, pagamentos e transmissões.'],
       ['Parcerias', 'Espaço para patrocinadores, ligas, circuitos e projetos especiais.'],
+    ],
+  },
+  agenda: {
+    eyebrow: 'Agenda',
+    title: 'Próximos torneios, jogos em andamento e transmissões.',
+    description: 'A agenda pública reúne eventos futuros, partidas ao vivo, placares em andamento e links para páginas públicas dos torneios.',
+    blocks: [
+      ['Próximos torneios', 'Eventos com inscrições abertas, data, modalidade, arena e status de confirmação.'],
+      ['Jogos em andamento', 'Acompanhamento de partidas, mesas, chamadas e atualizações em tempo real.'],
+      ['Transmissões e telão', 'Links para tela pública, telão e visualizações de broadcast quando o organizador ativar o evento ao vivo.'],
     ],
   },
   blog: {
@@ -4651,9 +4674,9 @@ function LandingFooter() {
         <nav className="footerLinks" aria-label="Mapa do site">
           <strong>Mapa do site</strong>
           <a href="/sobre">Sobre</a>
-          <a href="/planos">Preços</a>
+          <a href="/planos">Plano</a>
+          <a href="/agenda">Agenda</a>
           <a href="/contato">Contato</a>
-          <a href="/blog">Blog</a>
         </nav>
 
         <nav className="footerLinks" aria-label="Experiências">
@@ -4832,13 +4855,15 @@ function Landing() {
     <div className="landing landingArenaPage">
       <section className="landingTopHeadline" aria-label="Atualizações ao vivo">
         <strong>ProMaster Live</strong>
-        <div>
-          {liveHeadlines.map(([title, text]) => (
-            <span key={title}>
-              <b>{title}</b>
-              {text}
-            </span>
-          ))}
+        <div className="landingTopHeadlineViewport">
+          <div className="landingTopHeadlineTrack">
+            {[...liveHeadlines, ...liveHeadlines].map(([title, text], index) => (
+              <span key={`${title}-${index}`}>
+                <b>{title}</b>
+                {text}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 

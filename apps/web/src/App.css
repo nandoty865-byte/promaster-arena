@@ -4167,6 +4167,7 @@ button:hover {
 
 .landingArenaPage {
   font-family: var(--font-body);
+  padding-top: 66px;
   background:
     radial-gradient(circle at 52% 0%, rgba(157, 255, 0, .12), transparent 28%),
     radial-gradient(circle at 12% 8%, rgba(59, 130, 246, .1), transparent 25%),
@@ -4174,19 +4175,25 @@ button:hover {
 }
 
 .landingTopHeadline {
-  max-width: 1280px;
-  min-height: 38px;
-  margin: 0 auto 10px;
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 70;
+  width: 100%;
+  max-width: none;
+  min-height: 42px;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 8px 18px;
-  border: 1px solid rgba(166, 255, 0, .2);
+  padding: 8px 28px;
+  border: 0;
+  border-bottom: 1px solid rgba(166, 255, 0, .38);
   border-radius: 0;
   background:
-    linear-gradient(90deg, rgba(166, 255, 0, .12), rgba(0, 0, 0, .3), rgba(166, 255, 0, .08)),
-    rgba(0, 0, 0, .58);
-  box-shadow: 0 16px 44px rgba(0, 0, 0, .26);
+    linear-gradient(90deg, rgba(0, 0, 0, .96), rgba(5, 12, 7, .94), rgba(0, 0, 0, .96)),
+    rgba(0, 0, 0, .82);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, .38);
+  backdrop-filter: blur(14px);
   overflow: hidden;
 }
 
@@ -4201,13 +4208,33 @@ button:hover {
   text-shadow: 0 0 16px rgba(166, 255, 0, .32);
 }
 
-.landingTopHeadline div {
+.landingTopHeadlineViewport {
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.landingTopHeadlineTrack {
+  width: max-content;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 34px;
   white-space: nowrap;
-  overflow: hidden;
+  animation: landingHeadlineTicker 28s linear infinite;
+}
+
+.landingTopHeadlineTrack:hover {
+  animation-play-state: paused;
+}
+
+@keyframes landingHeadlineTicker {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .landingTopHeadline span {
@@ -4228,6 +4255,7 @@ button:hover {
 }
 
 .landingArenaPage .landingHeader {
+  top: 50px;
   border-radius: 0;
   border-color: rgba(157, 255, 0, .24);
   background: rgba(0, 0, 0, .76);
@@ -9227,15 +9255,22 @@ button:hover {
 
 @media (max-width: 900px) {
   .landingTopHeadline {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 6px;
+    min-height: 40px;
+    gap: 12px;
+    padding: 8px 16px;
   }
 
-  .landingTopHeadline div {
-    width: 100%;
-    overflow-x: auto;
-    padding-bottom: 2px;
+  .landingTopHeadline strong {
+    font-size: 12px;
+  }
+
+  .landingTopHeadlineTrack {
+    gap: 26px;
+    animation-duration: 22s;
+  }
+
+  .landingArenaPage .landingHeader {
+    top: 46px;
   }
 
   .arenaLandingHero {
