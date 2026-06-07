@@ -4791,10 +4791,10 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
 
 function Landing() {
   const platformStats = [
-    ['/landing-icon-step-1.png', 'Organizador'],
-    ['/landing-icon-board.png', 'Arena'],
-    ['/landing-icon-trophy.png', 'Jogador'],
-    ['/landing-icon-shield.png', '100%'],
+    ['/landing-role-organizer.png', 'Organizador'],
+    ['/landing-role-arena.png', 'Arena'],
+    ['/landing-role-player.png', 'Jogador'],
+    ['/landing-role-secure.png', '100%'],
   ]
 
   const featureCards = [
@@ -4909,8 +4909,10 @@ function Landing() {
           {steps.map(([number, title, text, icon]) => (
             <article key={title}>
               <img src={icon} alt="" aria-hidden="true" />
-              <span className="arenaStepNumber">{number}</span>
-              <h3>{title}</h3>
+              <div className="arenaStepHeading">
+                <span className="arenaStepNumber">{number}</span>
+                <h3>{title}</h3>
+              </div>
               <p>{text}</p>
             </article>
           ))}
