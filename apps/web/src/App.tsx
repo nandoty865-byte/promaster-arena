@@ -4791,10 +4791,10 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
 
 function Landing() {
   const platformStats = [
-    ['+50.000', 'Usuários ativos'],
-    ['+10.000', 'Torneios realizados'],
-    ['+250.000', 'Partidas transmitidas'],
-    ['100%', 'Seguro e confiável'],
+    ['/landing-icon-step-1.png', 'Organizador'],
+    ['/landing-icon-board.png', 'Arena'],
+    ['/landing-icon-trophy.png', 'Jogador'],
+    ['/landing-icon-shield.png', '100%'],
   ]
 
   const featureCards = [
@@ -4856,9 +4856,9 @@ function Landing() {
       </section>
 
       <section className="landingMetricsStrip" aria-label="Indicadores da plataforma">
-        {platformStats.map(([value, label]) => (
+        {platformStats.map(([icon, label]) => (
           <div key={label}>
-            <strong>{value}</strong>
+            <img src={icon} alt="" aria-hidden="true" />
             <span>{label}</span>
           </div>
         ))}
