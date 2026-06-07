@@ -4538,6 +4538,30 @@ const personaLandingContent: Record<PersonaLandingType, {
   },
 }
 
+const landingLiveHeadlines = [
+  ['Próximos torneios', 'Sinuca Master Cup - inscrições abertas'],
+  ['Jogos em andamento', 'Mesa 04: Fernando 2 x 1 João Paulo'],
+  ['Placar ao vivo', 'Bingo rodada 3 - prêmio acumulado'],
+]
+
+function LandingTopHeadline() {
+  return (
+    <section className="landingTopHeadline" aria-label="Atualizações ao vivo">
+      <strong><span className="landingTopHeadlinePro">Pro</span>Master Live</strong>
+      <div className="landingTopHeadlineViewport">
+        <div className="landingTopHeadlineTrack">
+          {[...landingLiveHeadlines, ...landingLiveHeadlines].map(([title, text], index) => (
+            <span key={`${title}-${index}`}>
+              <b>{title}</b>
+              {text}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function LandingHeader() {
   return (
     <>
@@ -4740,7 +4764,130 @@ function StaticPublicPage({ type }: { type: StaticPublicPageType }) {
   )
 }
 
+function OrganizerLanding() {
+  const organizerFeatures = [
+    ['/organizer/icons/inscricoes-online.svg', 'Inscrições Online', 'Receba inscrições e pagamentos via Pix, cartão ou boleto de forma automática.'],
+    ['/organizer/icons/gestao-completa.svg', 'Gestão Completa', 'Controle etapas, jogos, jogadores, chaves, grupos e muito mais.'],
+    ['/organizer/icons/rankings-estatisticas.svg', 'Rankings e Estatísticas', 'Acompanhe o desempenho dos jogadores e gere rankings automaticamente.'],
+    ['/organizer/icons/transmissao-ao-vivo.svg', 'Transmissão ao Vivo', 'Transmita para YouTube, Facebook e Twitch com integração total.'],
+    ['/organizer/icons/tela-profissional.svg', 'Telão Profissional', 'Exiba jogos, chaves e resultados em telões com layout personalizável.'],
+    ['/organizer/icons/relatorios-financeiros.svg', 'Relatórios Financeiros', 'Tenha controle total sobre receita, despesas e premiações.'],
+  ]
+
+  const organizerSteps = [
+    ['/organizer/icons/crie-o-torneio.svg', 'Crie o torneio', 'Configure regras, categorias, formas de disputa e premiação.'],
+    ['/organizer/icons/divulgue-receba-inscricoes.svg', 'Divulgue e receba inscrições', 'Compartilhe o link e receba inscrições online.'],
+    ['/organizer/icons/gerencie-partidas.svg', 'Gerencie as partidas', 'Acompanhe jogos, resultados e chaves em tempo real.'],
+    ['/organizer/icons/transmita-engaje.svg', 'Transmita e engaje', 'Transmita ao vivo e ofereça uma experiência profissional.'],
+  ]
+
+  const testimonials = [
+    ['/organizer/photos/avatar-organizador-1.webp', 'Fabio Martins', 'Arena 147 - São Paulo/SP', 'O ProMaster Arena mudou a forma como organizamos nossos torneios. Muito mais profissional e fácil.'],
+    ['/organizer/photos/avatar-organizador-2.webp', 'André Souza', 'Sinuca Club - Curitiba/PR', 'A plataforma é completa e o suporte sempre nos ajuda quando precisamos. Recomendo demais.'],
+    ['/organizer/photos/avatar-organizador-3.webp', 'Lucas Pereira', 'Bola 8 Snooker Bar - BH/MG', 'A transmissão integrada é um show à parte. Nossos eventos viraram referência.'],
+  ]
+
+  const partners = ['Arena 147', 'Sinuka Club', 'Bola 8 Snooker Bar', 'Maxxi Sports', 'Point da Sinuca']
+
+  return (
+    <div className="landing organizerLandingPage">
+      <LandingTopHeadline />
+      <LandingHeader />
+
+      <main id="conteudo-principal">
+        <section className="organizerHero">
+          <div className="organizerHeroCopy">
+            <span className="organizerBadge">Para organizadores</span>
+            <h1>
+              Organize torneios profissionais em <strong>minutos</strong>
+            </h1>
+            <p>
+              Plataforma completa para gestão de torneios, inscrições, pagamentos,
+              rankings e transmissões ao vivo.
+            </p>
+            <div className="organizerHeroActions">
+              <a className="landingButton" href="/cadastro-organizador">Criar torneio gratuitamente</a>
+              <a className="landingSecondary" href="/#recursos">Ver demonstração</a>
+            </div>
+          </div>
+
+          <div className="organizerHeroMockup" aria-label="Prévia do painel do organizador">
+            <img src="/organizer/photos/dashboard-hero-mockup-recriado.webp" alt="Dashboard do organizador ProMaster Arena" />
+          </div>
+        </section>
+
+        <section className="organizerTrust" aria-label="Arenas e organizadores parceiros">
+          <span>Confiado por arenas e organizadores em todo o Brasil</span>
+          <div>
+            {partners.map(partner => <strong key={partner}>{partner}</strong>)}
+          </div>
+        </section>
+
+        <section className="organizerSection organizerFeaturesSection">
+          <h2>Tudo que você precisa em um só lugar</h2>
+          <div className="organizerFeatureGrid">
+            {organizerFeatures.map(([icon, title, text]) => (
+              <article key={title} className="organizerFeatureCard">
+                <img src={icon} alt="" aria-hidden="true" />
+                <div>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="organizerSection organizerHowSection">
+          <h2>Como funciona</h2>
+          <p>Em 4 passos simples você cria e gerencia seu torneio</p>
+          <div className="organizerStepsGrid">
+            {organizerSteps.map(([icon, title, text], index) => (
+              <article key={title} className="organizerStepCard">
+                <img src={icon} alt="" aria-hidden="true" />
+                <h3>{index + 1}. {title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="organizerSection organizerTestimonials">
+          <h2>O que dizem nossos organizadores</h2>
+          <div className="organizerTestimonialsGrid">
+            {testimonials.map(([avatar, name, role, quote]) => (
+              <article key={name} className="organizerTestimonialCard">
+                <img src={avatar} alt={name} />
+                <div>
+                  <p>{quote}</p>
+                  <strong>{name}</strong>
+                  <span>{role}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="organizerCtaBanner">
+          <div>
+            <h2>Pronto para levar seus torneios ao próximo nível?</h2>
+            <p>Crie agora mesmo seu torneio gratuitamente e descubra por que somos a plataforma número 1 do Brasil.</p>
+            <a className="landingButton" href="/cadastro-organizador">Criar torneio gratuitamente</a>
+          </div>
+          <img src="/organizer/photos/trofeu-cta-recriado.webp" alt="Troféu ProMaster Arena" />
+        </section>
+      </main>
+
+      <LandingFooter />
+    </div>
+  )
+}
+
 function PersonaLanding({ type }: { type: PersonaLandingType }) {
+  if (type === 'organizador') {
+    return <OrganizerLanding />
+  }
+
   const page = personaLandingContent[type]
 
   return (
@@ -4820,12 +4967,6 @@ function Landing() {
     { icon: '/landing-role-secure.png', label: '100%' },
   ]
 
-  const liveHeadlines = [
-    ['Próximos torneios', 'Sinuca Master Cup - inscrições abertas'],
-    ['Jogos em andamento', 'Mesa 04: Fernando 2 x 1 João Paulo'],
-    ['Placar ao vivo', 'Bingo rodada 3 - prêmio acumulado'],
-  ]
-
   const featureCards = [
     ['trophy', 'Torneios em tempo real', 'Acompanhe tudo ao vivo, com atualizações instantâneas.'],
     ['live', 'Placar ao vivo', 'Resultados em tempo real com estatísticas precisas.'],
@@ -4853,19 +4994,7 @@ function Landing() {
 
   return (
     <div className="landing landingArenaPage">
-      <section className="landingTopHeadline" aria-label="Atualizações ao vivo">
-        <strong><span className="landingTopHeadlinePro">Pro</span>Master Live</strong>
-        <div className="landingTopHeadlineViewport">
-          <div className="landingTopHeadlineTrack">
-            {[...liveHeadlines, ...liveHeadlines].map(([title, text], index) => (
-              <span key={`${title}-${index}`}>
-                <b>{title}</b>
-                {text}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+      <LandingTopHeadline />
 
       <LandingHeader />
 
