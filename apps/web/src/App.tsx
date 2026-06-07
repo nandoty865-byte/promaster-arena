@@ -4791,10 +4791,16 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
 
 function Landing() {
   const platformStats = [
-    ['/landing-role-organizer.png', 'Organizador'],
-    ['/landing-role-arena.png', 'Arena'],
-    ['/landing-role-player.png', 'Jogador'],
-    ['/landing-role-secure.png', '100%'],
+    { icon: '/landing-role-organizer.png', label: 'Organizador', href: '/organizador' },
+    { icon: '/landing-role-arena.png', label: 'Arena', href: '/arena' },
+    { icon: '/landing-role-player.png', label: 'Jogador', href: '/jogador' },
+    { icon: '/landing-role-secure.png', label: '100%' },
+  ]
+
+  const liveHeadlines = [
+    ['Próximos torneios', 'Sinuca Master Cup - inscrições abertas'],
+    ['Jogos em andamento', 'Mesa 04: Fernando 2 x 1 João Paulo'],
+    ['Placar ao vivo', 'Bingo rodada 3 - prêmio acumulado'],
   ]
 
   const featureCards = [
@@ -4824,6 +4830,18 @@ function Landing() {
 
   return (
     <div className="landing landingArenaPage">
+      <section className="landingTopHeadline" aria-label="Atualizações ao vivo">
+        <strong>ProMaster Live</strong>
+        <div>
+          {liveHeadlines.map(([title, text]) => (
+            <span key={title}>
+              <b>{title}</b>
+              {text}
+            </span>
+          ))}
+        </div>
+      </section>
+
       <LandingHeader />
 
       <section id="conteudo-principal" className="landingHero arenaLandingHero">
@@ -4856,12 +4874,24 @@ function Landing() {
       </section>
 
       <section className="landingMetricsStrip" aria-label="Indicadores da plataforma">
-        {platformStats.map(([icon, label]) => (
-          <div key={label}>
-            <img src={icon} alt="" aria-hidden="true" />
-            <span>{label}</span>
-          </div>
-        ))}
+        {platformStats.map(({ icon, label, href }) => {
+          const content = (
+            <>
+              <img src={icon} alt="" aria-hidden="true" />
+              <span>{label}</span>
+            </>
+          )
+
+          return href ? (
+            <a key={label} href={href}>
+              {content}
+            </a>
+          ) : (
+            <div key={label}>
+              {content}
+            </div>
+          )
+        })}
       </section>
 
       <section id="recursos" className="arenaSection arenaFeatureSection">
@@ -4910,8 +4940,7 @@ function Landing() {
             <article key={title}>
               <img src={icon} alt="" aria-hidden="true" />
               <div className="arenaStepHeading">
-                <span className="arenaStepNumber">{number}</span>
-                <h3>{title}</h3>
+                <h3><span className="arenaStepNumber">{number}.</span> {title}</h3>
               </div>
               <p>{text}</p>
             </article>
