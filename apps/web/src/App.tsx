@@ -4883,9 +4883,167 @@ function OrganizerLanding() {
   )
 }
 
+function PlayerLanding() {
+  const playerFeatures = [
+    ['/player/icons/participe-de-torneios.svg', 'Participe de torneios', 'Encontre torneios perto de você e inscreva-se em segundos.'],
+    ['/player/icons/acompanhe-rankings.svg', 'Acompanhe rankings', 'Veja sua posição no ranking regional, estadual e nacional.'],
+    ['/player/icons/estatisticas-completas.svg', 'Estatísticas completas', 'Analise seu desempenho e evolua a cada partida.'],
+    ['/player/icons/historico-de-partidas.svg', 'Histórico de partidas', 'Confira todos os seus jogos, resultados e conquistas.'],
+  ]
+
+  const upcomingTournaments = [
+    ['/player/icons/torneio-sinuca.svg', 'Campinas Open de Sinuca', 'Campinas/SP', '25 MAI', 'R$ 5.000'],
+    ['/player/icons/calendario-torneio.svg', 'Santos 8 Ball Cup', 'Santos/SP', '08 JUN', 'R$ 3.000'],
+    ['/player/icons/premiacao.svg', 'Masters ProMaster 2027', 'São Paulo/SP', '20 JUL', 'R$ 20.000'],
+  ]
+
+  const achievements = [
+    ['/player/icons/trofeu-campeao.svg', 'Campeão', '5x'],
+    ['/player/icons/trofeu-vice.svg', 'Vice-campeão', '3x'],
+    ['/player/icons/top-3.svg', 'Top 3', '12x'],
+  ]
+
+  const medals = [
+    '/player/icons/medalha.svg',
+    '/player/icons/trofeu-campeao.svg',
+    '/player/icons/trofeu-vice.svg',
+    '/player/icons/top-3.svg',
+  ]
+
+  return (
+    <div className="landing playerLandingPage">
+      <LandingTopHeadline />
+      <LandingHeader />
+
+      <main id="conteudo-principal">
+        <section className="playerHero">
+          <div className="playerHeroCopy">
+            <span className="playerBadge">Para jogadores</span>
+            <h1>
+              Sua <strong>carreira</strong> esportiva começa aqui
+            </h1>
+            <p>
+              Participe de torneios, acompanhe rankings, melhore seu desempenho
+              e construa sua história nas mesas.
+            </p>
+            <a className="landingButton playerPrimaryButton" href="/inscreva-se">Criar meu perfil gratuitamente</a>
+          </div>
+
+          <div className="playerHeroVisual" aria-label="Jogador de sinuca em ação">
+            <img src="/player/photos/hero-jogador-sinuca-recriado.webp" alt="Jogador de sinuca mirando uma tacada" />
+          </div>
+        </section>
+
+        <section className="playerProfilePanel" aria-label="Resumo de carreira do jogador">
+          <article className="playerProfileCard">
+            <img className="playerAvatar" src="/player/photos/avatar-jogador-generico-recriado.webp" alt="Avatar de jogador ProMaster Arena" />
+            <div>
+              <strong>Fernando Toyomoto</strong>
+              <span>São Paulo/SP</span>
+              <small>Ranking Geral</small>
+            </div>
+            <div className="playerStatGrid">
+              <span><b>2.450</b>Pontos</span>
+              <span><b>38</b>Torneios</span>
+              <span><b>18</b>Títulos</span>
+            </div>
+          </article>
+
+          <article className="playerRankingPanel">
+            <div>
+              <strong>Evolução no Ranking</strong>
+              <span>Últimos 8 meses</span>
+            </div>
+            <svg viewBox="0 0 520 170" role="img" aria-label="Gráfico de evolução do ranking do jogador">
+              <defs>
+                <linearGradient id="playerRankingFill" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#4f7bff" stopOpacity=".45" />
+                  <stop offset="100%" stopColor="#4f7bff" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path className="playerChartGrid" d="M20 32 H500 M20 72 H500 M20 112 H500 M20 152 H500" />
+              <path className="playerChartFill" d="M22 138 L80 124 L136 118 L188 94 L244 102 L306 74 L362 82 L420 54 L496 30 L496 154 L22 154 Z" />
+              <path className="playerChartLine" d="M22 138 L80 124 L136 118 L188 94 L244 102 L306 74 L362 82 L420 54 L496 30" />
+            </svg>
+          </article>
+        </section>
+
+        <section className="playerSection">
+          <h2>Tudo para você crescer no esporte</h2>
+          <div className="playerFeatureGrid">
+            {playerFeatures.map(([icon, title, text]) => (
+              <article key={title} className="playerFeatureCard">
+                <img src={icon} alt="" aria-hidden="true" />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="playerTournamentGrid">
+          <article className="playerUpcomingPanel">
+            <div className="playerPanelHeader">
+              <h2>Próximos torneios</h2>
+              <a href="/agenda">Ver todos</a>
+            </div>
+            <div className="playerTournamentList">
+              {upcomingTournaments.map(([icon, name, location, date, prize]) => (
+                <div key={name} className="playerTournamentRow">
+                  <img src={icon} alt="" aria-hidden="true" />
+                  <div>
+                    <strong>{name}</strong>
+                    <span>{location}</span>
+                  </div>
+                  <time>{date}</time>
+                  <b>{prize}</b>
+                  <a href="/inscreva-se">Inscrever-se</a>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <aside className="playerAchievementsPanel">
+            <h2>Conquistas</h2>
+            <div className="playerAchievementGrid">
+              {achievements.map(([icon, label, value]) => (
+                <span key={label}>
+                  <img src={icon} alt="" aria-hidden="true" />
+                  <strong>{label}</strong>
+                  <small>{value}</small>
+                </span>
+              ))}
+            </div>
+            <h3>Medalhas</h3>
+            <div className="playerMedals">
+              {medals.map((icon, index) => (
+                <img key={`${icon}-${index}`} src={icon} alt="" aria-hidden="true" />
+              ))}
+            </div>
+          </aside>
+        </section>
+
+        <section className="playerCommunityCta">
+          <div>
+            <h2>Entre para a comunidade ProMaster Arena</h2>
+            <p>Crie seu perfil gratuito e comece sua jornada rumo ao topo do ranking.</p>
+            <a className="landingButton playerPrimaryButton" href="/inscreva-se">Criar meu perfil</a>
+          </div>
+        </section>
+      </main>
+
+      <LandingFooter />
+    </div>
+  )
+}
+
 function PersonaLanding({ type }: { type: PersonaLandingType }) {
   if (type === 'organizador') {
     return <OrganizerLanding />
+  }
+
+  if (type === 'jogador') {
+    return <PlayerLanding />
   }
 
   const page = personaLandingContent[type]

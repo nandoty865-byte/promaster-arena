@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter+Tight:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap');
 
 :root {
   --font-title: 'Teko', 'Bebas Neue', sans-serif;
@@ -5618,6 +5618,517 @@ button:hover {
   box-shadow: 0 20px 70px rgba(0, 0, 0, .4);
 }
 
+.playerLandingPage {
+  --player-bg: #050814;
+  --player-surface: #0b1020;
+  --player-surface-2: #10172a;
+  --player-border: #1e2a55;
+  --player-blue: #2f5bff;
+  --player-blue-light: #4f7bff;
+  --player-purple: #6d28d9;
+  --player-text: #f7f9ff;
+  --player-muted: #9aa6c0;
+  --player-gold: #f6c449;
+  padding-top: 66px;
+  background:
+    radial-gradient(circle at 78% 4%, rgba(79, 123, 255, .24), transparent 28%),
+    radial-gradient(circle at 18% 20%, rgba(109, 40, 217, .22), transparent 32%),
+    linear-gradient(180deg, #030611 0%, var(--player-bg) 42%, #030611 100%);
+  color: var(--player-text);
+  font-family: var(--font-body);
+}
+
+.playerLandingPage .landingHeader {
+  top: 50px;
+  border-radius: 0;
+  border-color: rgba(79, 123, 255, .22);
+  background: rgba(3, 6, 17, .88);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .38);
+}
+
+.playerLandingPage .landingNav a,
+.playerLandingPage .landingNavDropdown summary,
+.playerLandingPage .landingActions a {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.playerLandingPage main {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.playerLandingPage .landingButton,
+.playerLandingPage .landingSecondary {
+  min-height: 48px;
+  border-radius: 8px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.playerPrimaryButton {
+  background: linear-gradient(135deg, var(--player-blue), var(--player-blue-light));
+  border-color: rgba(79, 123, 255, .72);
+  color: #fff;
+  box-shadow: 0 18px 48px rgba(47, 91, 255, .28);
+}
+
+.playerHero {
+  min-height: 560px;
+  display: grid;
+  grid-template-columns: minmax(0, .86fr) minmax(440px, 1.14fr);
+  gap: clamp(28px, 5vw, 70px);
+  align-items: center;
+  padding: clamp(34px, 6vw, 76px) 0 44px;
+}
+
+.playerHeroCopy {
+  max-width: 580px;
+  position: relative;
+  z-index: 2;
+}
+
+.playerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 7px 11px;
+  border: 1px solid rgba(79, 123, 255, .32);
+  border-radius: 999px;
+  background: rgba(47, 91, 255, .12);
+  color: #8fb0ff;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.playerBadge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--player-blue-light);
+  box-shadow: 0 0 14px rgba(79, 123, 255, .72);
+}
+
+.playerHero h1 {
+  margin: 0;
+  color: var(--player-text);
+  font-family: 'Inter Tight', var(--font-body);
+  font-size: clamp(44px, 5.8vw, 72px);
+  font-weight: 800;
+  letter-spacing: -.05em;
+  line-height: .98;
+}
+
+.playerHero h1 strong {
+  color: var(--player-blue-light);
+  font-weight: 800;
+  text-shadow: 0 0 30px rgba(79, 123, 255, .32);
+}
+
+.playerHero p {
+  max-width: 540px;
+  margin: 22px 0 0;
+  color: #c5cde0;
+  font-size: 17px;
+  line-height: 1.56;
+}
+
+.playerHero .landingButton {
+  margin-top: 30px;
+}
+
+.playerHeroVisual {
+  position: relative;
+  min-height: 430px;
+}
+
+.playerHeroVisual::before {
+  content: '';
+  position: absolute;
+  inset: 12% -6% 6% 18%;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 56% 46%, rgba(79, 123, 255, .28), transparent 48%),
+    radial-gradient(circle at 76% 12%, rgba(109, 40, 217, .22), transparent 38%);
+  filter: blur(10px);
+}
+
+.playerHeroVisual img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 430px;
+  display: block;
+  object-fit: cover;
+  object-position: center right;
+  border: 1px solid rgba(79, 123, 255, .22);
+  border-radius: 18px;
+  box-shadow:
+    0 32px 78px rgba(0, 0, 0, .56),
+    0 0 36px rgba(47, 91, 255, .16);
+}
+
+.playerProfilePanel {
+  display: grid;
+  grid-template-columns: minmax(300px, .76fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 6px;
+}
+
+.playerProfileCard,
+.playerRankingPanel,
+.playerFeatureCard,
+.playerUpcomingPanel,
+.playerAchievementsPanel,
+.playerCommunityCta {
+  border: 1px solid rgba(79, 123, 255, .16);
+  border-radius: 12px;
+  background:
+    linear-gradient(145deg, rgba(16, 23, 42, .94), rgba(5, 8, 20, .94));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .04),
+    0 20px 70px rgba(0, 0, 0, .25);
+}
+
+.playerProfileCard {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 18px;
+  align-items: center;
+  padding: 22px;
+}
+
+.playerAvatar {
+  width: 86px;
+  height: 86px;
+  border-radius: 999px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px rgba(79, 123, 255, .24);
+}
+
+.playerProfileCard strong,
+.playerRankingPanel strong,
+.playerUpcomingPanel h2,
+.playerAchievementsPanel h2,
+.playerCommunityCta h2 {
+  color: var(--player-text);
+  font-family: 'Inter Tight', var(--font-body);
+  font-weight: 800;
+}
+
+.playerProfileCard strong {
+  display: block;
+  font-size: 20px;
+}
+
+.playerProfileCard span,
+.playerProfileCard small {
+  display: block;
+  color: var(--player-muted);
+}
+
+.playerProfileCard small {
+  margin-top: 6px;
+  color: #9fb7ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.playerStatGrid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.playerStatGrid span {
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(47, 91, 255, .08);
+  color: var(--player-muted);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.playerStatGrid b {
+  display: block;
+  color: var(--player-text);
+  font-family: var(--font-ui);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.playerRankingPanel {
+  padding: 22px;
+  overflow: hidden;
+}
+
+.playerRankingPanel > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 10px;
+}
+
+.playerRankingPanel span {
+  color: var(--player-muted);
+  font-size: 12px;
+}
+
+.playerRankingPanel svg {
+  width: 100%;
+  min-height: 178px;
+  display: block;
+}
+
+.playerChartGrid {
+  stroke: rgba(154, 166, 192, .12);
+  stroke-width: 1;
+}
+
+.playerChartFill {
+  fill: url(#playerRankingFill);
+}
+
+.playerChartLine {
+  fill: none;
+  stroke: #6f91ff;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 10px rgba(79, 123, 255, .45));
+}
+
+.playerSection {
+  padding: clamp(42px, 6vw, 76px) 0 0;
+}
+
+.playerSection > h2 {
+  margin: 0;
+  color: var(--player-text);
+  font-family: 'Inter Tight', var(--font-body);
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.playerFeatureGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 30px;
+}
+
+.playerFeatureCard {
+  min-height: 210px;
+  padding: 24px;
+}
+
+.playerFeatureCard img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 14px rgba(79, 123, 255, .34));
+}
+
+.playerFeatureCard h3 {
+  margin: 18px 0 10px;
+  color: var(--player-text);
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.playerFeatureCard p,
+.playerTournamentRow span,
+.playerCommunityCta p {
+  margin: 0;
+  color: var(--player-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.playerTournamentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .36fr);
+  gap: 18px;
+  padding: clamp(34px, 5vw, 58px) 0 0;
+}
+
+.playerUpcomingPanel,
+.playerAchievementsPanel {
+  padding: 22px;
+}
+
+.playerPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.playerPanelHeader h2,
+.playerAchievementsPanel h2 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -.03em;
+}
+
+.playerPanelHeader a {
+  color: var(--player-blue-light);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.playerTournamentList {
+  display: grid;
+  gap: 12px;
+}
+
+.playerTournamentRow {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 64px 90px 112px;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgba(79, 123, 255, .12);
+  border-radius: 10px;
+  background: rgba(5, 8, 20, .55);
+}
+
+.playerTournamentRow img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.playerTournamentRow strong {
+  display: block;
+  color: var(--player-text);
+  font-size: 15px;
+}
+
+.playerTournamentRow time,
+.playerTournamentRow b {
+  color: var(--player-text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.playerTournamentRow a {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: #86ef5a;
+  color: #06110a;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.playerAchievementGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.playerAchievementGrid span {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: 10px;
+  background: rgba(246, 196, 73, .08);
+}
+
+.playerAchievementGrid img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.playerAchievementGrid strong {
+  color: var(--player-text);
+  font-size: 12px;
+  text-align: center;
+}
+
+.playerAchievementGrid small {
+  color: var(--player-gold);
+  font-weight: 800;
+}
+
+.playerAchievementsPanel h3 {
+  margin: 22px 0 10px;
+  color: var(--player-text);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.playerMedals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.playerMedals img {
+  width: 30px;
+  height: 30px;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(79, 123, 255, .08);
+}
+
+.playerCommunityCta {
+  min-height: 260px;
+  margin: clamp(44px, 7vw, 86px) 0 0;
+  display: grid;
+  align-items: center;
+  padding: clamp(28px, 5vw, 52px);
+  background:
+    linear-gradient(90deg, rgba(12, 18, 48, .94), rgba(12, 18, 48, .62)),
+    url('/player/photos/cta-comunidade-jogadores-recriado.webp') center right / cover;
+  overflow: hidden;
+}
+
+.playerCommunityCta h2 {
+  max-width: 660px;
+  margin: 0;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -.04em;
+}
+
+.playerCommunityCta p {
+  max-width: 560px;
+  margin: 14px 0 24px;
+}
+
 .landingFooter {
   width: calc(100% + 56px);
   margin: 70px -28px 0;
@@ -9795,65 +10306,90 @@ button:hover {
     width: min(100% - 28px, 760px);
   }
 
+  .playerLandingPage main {
+    width: min(100% - 28px, 760px);
+  }
+
   .organizerHero,
-  .organizerCtaBanner {
+  .organizerCtaBanner,
+  .playerHero,
+  .playerProfilePanel,
+  .playerTournamentGrid {
     grid-template-columns: 1fr;
   }
 
-  .organizerHero {
+  .organizerHero,
+  .playerHero {
     min-height: auto;
     padding-top: 34px;
   }
 
   .organizerHeroCopy,
-  .organizerHero p {
+  .organizerHero p,
+  .playerHeroCopy,
+  .playerHero p {
     max-width: none;
   }
 
-  .organizerHeroMockup {
+  .organizerHeroMockup,
+  .playerHeroVisual {
     min-height: auto;
+  }
+
+  .playerHeroVisual img {
+    min-height: 340px;
   }
 
   .organizerFeatureGrid,
   .organizerStepsGrid,
-  .organizerTestimonialsGrid {
+  .organizerTestimonialsGrid,
+  .playerFeatureGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .organizerCtaBanner h2,
-  .organizerCtaBanner p {
+  .organizerCtaBanner p,
+  .playerCommunityCta h2,
+  .playerCommunityCta p {
     text-align: center;
   }
 
-  .organizerCtaBanner p {
+  .organizerCtaBanner p,
+  .playerCommunityCta p {
     margin-left: auto;
     margin-right: auto;
   }
 
-  .organizerCtaBanner .landingButton {
+  .organizerCtaBanner .landingButton,
+  .playerCommunityCta .landingButton {
     margin: 0 auto;
   }
 }
 
 @media (max-width: 680px) {
-  .organizerLandingPage {
+  .organizerLandingPage,
+  .playerLandingPage {
     padding-top: 52px;
   }
 
-  .organizerLandingPage .landingHeader {
+  .organizerLandingPage .landingHeader,
+  .playerLandingPage .landingHeader {
     top: auto;
   }
 
-  .organizerHero {
+  .organizerHero,
+  .playerHero {
     gap: 24px;
   }
 
-  .organizerHeroActions {
+  .organizerHeroActions,
+  .playerHero .landingButton {
     display: grid;
     grid-template-columns: 1fr;
   }
 
-  .organizerHeroActions a {
+  .organizerHeroActions a,
+  .playerHero .landingButton {
     width: 100%;
     justify-content: center;
   }
@@ -9873,12 +10409,16 @@ button:hover {
 
   .organizerFeatureGrid,
   .organizerStepsGrid,
-  .organizerTestimonialsGrid {
+  .organizerTestimonialsGrid,
+  .playerFeatureGrid,
+  .playerStatGrid,
+  .playerAchievementGrid {
     grid-template-columns: 1fr;
   }
 
   .organizerFeatureCard,
-  .organizerTestimonialCard {
+  .organizerTestimonialCard,
+  .playerProfileCard {
     grid-template-columns: 44px 1fr;
     padding: 18px;
   }
@@ -9892,7 +10432,25 @@ button:hover {
     min-height: auto;
   }
 
-  .organizerCtaBanner {
+  .playerProfileCard .playerStatGrid {
+    grid-column: 1 / -1;
+  }
+
+  .playerTournamentRow {
+    grid-template-columns: 42px 1fr;
+    gap: 10px 14px;
+  }
+
+  .playerTournamentRow time,
+  .playerTournamentRow b,
+  .playerTournamentRow a {
+    grid-column: 2;
+    justify-self: start;
+    text-align: left;
+  }
+
+  .organizerCtaBanner,
+  .playerCommunityCta {
     padding: 24px;
   }
 }
