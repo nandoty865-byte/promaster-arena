@@ -4807,12 +4807,12 @@ function Landing() {
   ]
 
   const modalities = [
-    ['futebol', 'Futebol', 'Campo, society e ligas recorrentes'],
-    ['sinuca', 'Sinuca', 'Mesas, ranking, chamadas e telão'],
-    ['tenis', 'Tênis de mesa', 'Chaves, grupos e resultados rápidos'],
-    ['basquete', 'Basquete', 'Placar, transmissão e estatísticas'],
-    ['esports', 'E-sports', 'Partidas online e comunidades ativas'],
-    ['volei', 'Vôlei', 'Equipes, fases e calendário'],
+    ['futebol', 'Futebol'],
+    ['sinuca', 'Sinuca'],
+    ['tenis', 'Tênis de mesa'],
+    ['basquete', 'Basquete'],
+    ['esports', 'E-sports'],
+    ['volei', 'Vôlei'],
   ]
 
   const steps = [
@@ -4888,12 +4888,11 @@ function Landing() {
         </h2>
 
         <div className="arenaModalityGrid">
-          {modalities.map(([slug, title, text]) => (
+          {modalities.map(([slug, title]) => (
             <article key={title} className={`arenaSportCard arenaSportCard-${slug}`}>
               <div>
                 <img src={`/landing-modality-icon-${slug}.png`} alt="" aria-hidden="true" />
                 <h3>{title}</h3>
-                <p>{text}</p>
               </div>
             </article>
           ))}
