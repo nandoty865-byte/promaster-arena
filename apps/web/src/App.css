@@ -4208,6 +4208,10 @@ button:hover {
   text-shadow: 0 0 16px rgba(166, 255, 0, .32);
 }
 
+.landingTopHeadlinePro {
+  color: #fff;
+}
+
 .landingTopHeadlineViewport {
   min-width: 0;
   flex: 1;

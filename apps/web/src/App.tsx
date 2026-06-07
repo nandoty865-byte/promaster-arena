@@ -4832,7 +4832,7 @@ function Landing() {
     ['board', 'Telão interativo', 'Exiba partidas, chaves e informações em grandes telas.'],
     ['chat', 'Comunicação instantânea', 'Chat integrado entre jogadores, times e organizadores.'],
     ['ranking', 'Ranking e estatísticas', 'Desempenho, rankings e histórico sempre atualizados.'],
-    ['shield', 'Seguro, justo e profissional', 'Ambiente confiável com regras claras e suporte especializado.'],
+    ['shield', 'Seguro e profissional', 'Ambiente confiável com regras claras.'],
   ]
 
   const modalities = [
@@ -4854,7 +4854,7 @@ function Landing() {
   return (
     <div className="landing landingArenaPage">
       <section className="landingTopHeadline" aria-label="Atualizações ao vivo">
-        <strong>ProMaster Live</strong>
+        <strong><span className="landingTopHeadlinePro">Pro</span>Master Live</strong>
         <div className="landingTopHeadlineViewport">
           <div className="landingTopHeadlineTrack">
             {[...liveHeadlines, ...liveHeadlines].map(([title, text], index) => (
