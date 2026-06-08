@@ -4534,7 +4534,7 @@ const personaLandingContent: Record<PersonaLandingType, {
     ],
     showcaseTitle: 'Sua arena como centro de competição.',
     showcaseText: 'A plataforma ajuda a transformar movimento local em recorrência, receita, ranking e comunidade esportiva.',
-    image: '/promaster-hero-broadcast.png',
+    image: '/arena/photos/hero-arena-sinuca-premium-recriado.webp',
   },
 }
 
