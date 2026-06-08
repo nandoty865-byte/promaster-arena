@@ -5257,6 +5257,42 @@ button:hover {
   box-shadow: 0 24px 90px rgba(0, 0, 0, .34);
 }
 
+.personaCtaVisual {
+  max-width: 1180px;
+  margin: -36px auto 70px;
+  padding: 26px;
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 24px;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, .92), rgba(2, 6, 23, .86));
+  box-shadow: 0 28px 110px rgba(0, 0, 0, .34);
+}
+
+.personaCtaVisual img {
+  width: 100%;
+  min-height: 280px;
+  object-fit: cover;
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 22px;
+}
+
+.personaCtaVisual h2 {
+  margin: 12px 0 14px;
+  color: #f8fafc;
+  font-size: 24px;
+  line-height: 1.16;
+}
+
+.personaCtaVisual p {
+  margin: 0 0 20px;
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
 .organizerLandingPage {
   --organizer-bg: #070b10;
   --organizer-surface: #0d131a;
@@ -6962,6 +6998,7 @@ button:hover {
   .personaBenefits,
   .personaFlow,
   .personaShowcase,
+  .personaCtaVisual,
   .staticPublicMain {
     max-width: 1440px;
   }
@@ -7004,6 +7041,7 @@ button:hover {
   .personaBenefits > div,
   .personaFlow > div,
   .personaShowcase,
+  .personaCtaVisual,
   .showcaseGrid,
   .plansGrid,
   .signupChoiceGrid,
@@ -7130,7 +7168,8 @@ button:hover {
   .personaPanel,
   .personaBenefits,
   .personaFlow,
-  .personaShowcase {
+  .personaShowcase,
+  .personaCtaVisual {
     padding: 22px;
   }
 
@@ -7140,6 +7179,14 @@ button:hover {
 
   .personaShowcase img {
     min-height: 250px;
+  }
+
+  .personaCtaVisual {
+    margin-top: -18px;
+  }
+
+  .personaCtaVisual img {
+    min-height: 230px;
   }
 
   .landingNotice {
@@ -7206,6 +7253,7 @@ button:hover {
   .personaBenefits,
   .personaFlow,
   .personaShowcase,
+  .personaCtaVisual,
   .broadcastCopy,
   .staticPublicMain {
     padding: 20px;
