@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter+Tight:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap');
 
 :root {
-  --font-title: 'Bebas Neue', sans-serif;
+  --font-title: 'Teko', 'Bebas Neue', sans-serif;
   --font-ui: 'Rajdhani', sans-serif;
   --font-body: 'Inter', sans-serif;
   --landing-black: #030504;
@@ -16,13 +16,22 @@
   box-sizing: border-box;
 }
 
-body {
+html,
+body,
+#root {
   margin: 0;
+  min-height: 100%;
+  background: #020617;
+  color: #f8fafc;
+}
+
+body {
   background:
     radial-gradient(circle at top, rgba(34, 197, 94, 0.18), transparent 28%),
     linear-gradient(135deg, #050816, #0b1020 55%, #050816);
   color: white;
   font-family: Inter, Arial, sans-serif;
+  overflow-x: hidden;
 }
 
 .app {
@@ -4167,13 +4176,99 @@ button:hover {
 
 .landingArenaPage {
   font-family: var(--font-body);
+  padding-top: 66px;
   background:
     radial-gradient(circle at 52% 0%, rgba(157, 255, 0, .12), transparent 28%),
     radial-gradient(circle at 12% 8%, rgba(59, 130, 246, .1), transparent 25%),
     linear-gradient(180deg, var(--landing-black) 0%, #020617 46%, var(--landing-black) 100%);
 }
 
+.landingTopHeadline {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 70;
+  width: 100%;
+  max-width: none;
+  min-height: 42px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 28px;
+  border: 0;
+  border-bottom: 1px solid rgba(166, 255, 0, .38);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, .96), rgba(5, 12, 7, .94), rgba(0, 0, 0, .96)),
+    rgba(0, 0, 0, .82);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, .38);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+.landingTopHeadline strong {
+  flex: 0 0 auto;
+  color: var(--landing-green);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  text-shadow: 0 0 16px rgba(166, 255, 0, .32);
+}
+
+.landingTopHeadlinePro {
+  color: #fff;
+}
+
+.landingTopHeadlineViewport {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.landingTopHeadlineTrack {
+  width: max-content;
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  white-space: nowrap;
+  animation: landingHeadlineTicker 28s linear infinite;
+}
+
+.landingTopHeadlineTrack:hover {
+  animation-play-state: paused;
+}
+
+@keyframes landingHeadlineTicker {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.landingTopHeadline span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #e5e7eb;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+
+.landingTopHeadline b {
+  color: var(--landing-green);
+  font-weight: 700;
+}
+
 .landingArenaPage .landingHeader {
+  top: 50px;
   border-radius: 0;
   border-color: rgba(157, 255, 0, .24);
   background: rgba(0, 0, 0, .76);
@@ -4206,23 +4301,24 @@ button:hover {
   font-weight: 700;
   letter-spacing: .8px;
   text-transform: uppercase;
+  border-radius: 8px;
 }
 
 .arenaLandingHero {
   width: calc(100% + 56px);
   max-width: none;
-  min-height: 760px;
+  min-height: 610px;
   margin: 0 -28px;
   display: grid;
-  grid-template-columns: minmax(420px, .8fr) minmax(520px, 1.2fr);
-  gap: clamp(24px, 3vw, 54px);
+  grid-template-columns: minmax(420px, .78fr) minmax(610px, 1.22fr);
+  gap: clamp(12px, 2vw, 34px);
   align-items: center;
-  padding: clamp(34px, 5vw, 82px);
+  padding: clamp(18px, 3vw, 42px) clamp(34px, 5vw, 82px) clamp(20px, 3vw, 42px);
   border-radius: 0;
-  border-color: rgba(157, 255, 0, .28);
+  border: 0;
   background:
-    radial-gradient(circle at 36% 42%, rgba(157, 255, 0, .18), transparent 28%),
-    linear-gradient(90deg, rgba(0, 0, 0, .94) 0%, rgba(0, 0, 0, .72) 36%, rgba(0, 0, 0, .34) 100%),
+    radial-gradient(circle at 34% 38%, rgba(157, 255, 0, .16), transparent 30%),
+    linear-gradient(90deg, rgba(0, 0, 0, .82) 0%, rgba(0, 0, 0, .54) 42%, rgba(0, 0, 0, .18) 100%),
     url('/landing-arena-bg.png') center top / cover no-repeat;
   box-shadow:
     inset 0 -1px 0 rgba(157, 255, 0, .22),
@@ -4231,13 +4327,12 @@ button:hover {
 
 .arenaLandingHero::before {
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, .08), rgba(0, 0, 0, .72)),
-    linear-gradient(90deg, rgba(0, 0, 0, .62), transparent 58%);
+    linear-gradient(180deg, rgba(0, 0, 0, .02), rgba(0, 0, 0, .45)),
+    linear-gradient(90deg, rgba(0, 0, 0, .32), transparent 62%);
 }
 
 .arenaLandingHero::after {
-  height: 1px;
-  background: rgba(157, 255, 0, .42);
+  display: none;
 }
 
 .arenaHeroCopy,
@@ -4247,70 +4342,95 @@ button:hover {
 }
 
 .arenaHeroCopy {
-  max-width: 620px;
+  width: min(520px, 100%);
+  max-width: 520px;
   text-align: center;
+  justify-self: center;
+  align-self: center;
 }
 
 .arenaHeroLogo {
-  width: 250px;
+  width: 238px;
   max-width: 48vw;
   display: block;
-  margin: 0 auto 22px;
+  margin: 0 auto 16px;
   filter: drop-shadow(0 0 22px rgba(157, 255, 0, .38));
 }
 
 .arenaHeroTitle {
   display: grid;
-  gap: 3px;
-  margin: 0 0 18px;
+  gap: 0;
+  margin: 0 0 16px;
   font-family: var(--font-title);
-  font-size: clamp(44px, 6vw, 86px);
-  line-height: .95;
+  line-height: .9;
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-weight: 400;
+  font-style: italic;
+  font-weight: 700;
   text-shadow: 0 6px 22px rgba(0, 0, 0, .72);
 }
 
 .arenaLandingHero .arenaHeroTitle {
   font-family: var(--font-title);
-  font-size: clamp(44px, 6vw, 86px);
-  line-height: .95;
+  line-height: .9;
   letter-spacing: 1px;
-  font-weight: 400;
+  font-weight: 700;
 }
 
 .arenaHeroTitle span,
 .arenaHeroTitle strong {
   display: block;
+  white-space: nowrap;
+  font-style: italic;
+  transform: skewX(-8deg);
+  transform-origin: center;
 }
 
 .arenaHeroTitle span {
-  color: #f8fafc;
+  color: #f5f5f5;
   font-style: italic;
+}
+
+.arenaHeroTitleTop {
+  font-size: clamp(32px, 3.5vw, 44px);
+  font-weight: 700;
+  line-height: .95;
+  text-align: center;
+  text-align-last: center;
+}
+
+.arenaHeroTitleBottom {
+  font-size: clamp(34px, 4vw, 46px);
+  font-weight: 700;
+  line-height: .95;
+  text-align: center;
+  text-align-last: center;
 }
 
 .arenaHeroTitle strong {
-  color: transparent;
-  background: linear-gradient(180deg, #f4ffd7 0%, var(--landing-green) 42%, #64ad00 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
+  color: #a6ff00;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  font-size: clamp(52px, 6vw, 74px);
   font-style: italic;
-  font-weight: 400;
+  font-weight: 800;
+  line-height: .9;
   letter-spacing: 1px;
+  text-align: center;
+  text-align-last: center;
   text-shadow:
-    0 0 8px rgba(166, 255, 0, .65),
-    0 0 20px rgba(166, 255, 0, .35),
-    0 7px 18px rgba(0, 0, 0, .72);
+    0 0 8px rgba(166, 255, 0, .6),
+    0 0 20px rgba(166, 255, 0, .35);
 }
 
 .arenaHeroCopy p {
-  max-width: 620px;
+  max-width: 500px;
   margin-left: auto;
   margin-right: auto;
   color: #e2e8f0;
   font-family: var(--font-body);
-  font-size: clamp(16px, 1.25vw, 21px);
+  font-size: clamp(15px, 1.05vw, 18px);
   line-height: 1.5;
   font-weight: 400;
   text-shadow: 0 3px 12px rgba(0, 0, 0, .72);
@@ -4326,17 +4446,7 @@ button:hover {
 }
 
 .arenaHeroCopy .landingSecondary::before {
-  content: '';
-  position: absolute;
-  left: -18px;
-  top: 50%;
-  width: 0;
-  height: 0;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  border-right: 16px solid rgba(166, 255, 0, .78);
-  filter: drop-shadow(0 0 12px rgba(166, 255, 0, .5));
-  transform: translateY(-50%);
+  display: none;
 }
 
 .arenaTrustLine {
@@ -4357,22 +4467,27 @@ button:hover {
 }
 
 .arenaHeroVisual {
-  min-height: 520px;
+  min-height: 560px;
   display: grid;
   align-items: center;
+  margin-left: -54px;
+  z-index: 1;
 }
 
 .arenaDeviceStage {
   position: relative;
-  min-height: 560px;
+  min-height: 570px;
   display: grid;
   align-items: center;
   justify-items: end;
+  padding-left: 0;
 }
 
 .arenaNotebookMockup {
   width: min(940px, 100%);
   display: block;
+  margin-right: 10px;
+  transform: translateY(30px);
   filter:
     drop-shadow(0 38px 70px rgba(0, 0, 0, .72))
     drop-shadow(0 0 38px rgba(157, 255, 0, .16));
@@ -4380,10 +4495,11 @@ button:hover {
 
 .arenaPhoneMockupImage {
   position: absolute;
-  right: 0;
-  bottom: 10px;
-  width: min(250px, 28%);
-  min-width: 150px;
+  left: auto;
+  right: 22px;
+  bottom: 18px;
+  width: min(190px, 20%);
+  min-width: 118px;
   transform: none;
   filter:
     drop-shadow(0 30px 54px rgba(0, 0, 0, .62))
@@ -4528,44 +4644,86 @@ button:hover {
 
 .landingMetricsStrip {
   max-width: 1280px;
-  margin: 0 auto;
+  margin: 0 auto 4px;
+  position: relative;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid rgba(157, 255, 0, .3);
-  border-bottom: 1px solid rgba(157, 255, 0, .3);
-  background: rgba(0, 0, 0, .62);
+  border: 0;
+  background: transparent;
 }
 
-.landingMetricsStrip div {
-  min-height: 86px;
-  display: grid;
+.landingMetricsStrip::before,
+.landingMetricsStrip::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(166, 255, 0, .72), transparent);
+}
+
+.landingMetricsStrip::before {
+  top: 0;
+}
+
+.landingMetricsStrip::after {
+  bottom: 0;
+}
+
+.landingMetricsStrip > a,
+.landingMetricsStrip > div {
+  position: relative;
+  min-height: 58px;
+  display: flex;
   place-items: center;
-  align-content: center;
-  gap: 4px;
-  padding: 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 14px;
   text-align: center;
-  border-left: 1px solid rgba(157, 255, 0, .18);
+  border: 0;
+  text-decoration: none;
 }
 
-.landingMetricsStrip div:first-child {
-  border-left: 0;
+.landingMetricsStrip > * + *::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(166, 255, 0, .58), transparent);
 }
 
-.landingMetricsStrip strong {
-  color: var(--landing-green);
-  font-family: var(--font-ui);
-  font-size: clamp(32px, 2.4vw, 40px);
-  line-height: 1;
-  font-weight: 700;
-  letter-spacing: .5px;
+.landingMetricsStrip > a {
+  cursor: pointer;
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.landingMetricsStrip > a:hover,
+.landingMetricsStrip > a:focus-visible {
+  filter: brightness(1.16);
+  transform: translateY(-1px);
+}
+
+.landingMetricsStrip img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0 12px rgba(166, 255, 0, .45));
 }
 
 .landingMetricsStrip span {
-  color: #e2e8f0;
+  color: var(--landing-green);
   font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: .4px;
   text-transform: uppercase;
+  text-shadow: 0 0 14px rgba(166, 255, 0, .28);
 }
 
 .arenaSection {
@@ -4641,7 +4799,7 @@ button:hover {
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
-  background-color: transparent;
+  background-color: transparent !important;
   box-shadow: none;
   filter: drop-shadow(0 0 14px rgba(157, 255, 0, .46));
 }
@@ -4713,7 +4871,8 @@ button:hover {
   min-height: 260px;
   display: flex;
   align-items: flex-end;
-  text-align: left;
+  justify-content: center;
+  text-align: center;
   background:
     linear-gradient(180deg, rgba(0, 0, 0, .12), rgba(0, 0, 0, .9)),
     var(--sport-bg) center / cover no-repeat;
@@ -4755,26 +4914,33 @@ button:hover {
 .arenaModalityGrid article div {
   position: relative;
   z-index: 1;
-  padding: 18px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 18px 12px 20px;
 }
 
 .arenaModalityGrid article img {
   width: 58px;
   height: 58px;
   display: block;
-  margin-bottom: 18px;
+  margin: 0 0 12px;
   object-fit: contain;
   filter:
     drop-shadow(0 0 14px rgba(166, 255, 0, .62))
     drop-shadow(0 8px 18px rgba(0, 0, 0, .6));
 }
 
+.arenaModalityGrid h3 {
+  margin-bottom: 0;
+  font-size: clamp(18px, 1.2vw, 22px);
+  white-space: nowrap;
+}
+
 .arenaModalityGrid p {
-  display: -webkit-box;
-  min-height: 42px;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  display: none;
 }
 
 .arenaStepsGrid {
@@ -4802,23 +4968,31 @@ button:hover {
     drop-shadow(0 14px 24px rgba(0, 0, 0, .5));
 }
 
-.arenaStepsGrid article > .arenaStepNumber {
-  width: 42px;
-  height: 42px;
-  display: inline-grid;
-  place-items: center;
-  margin-bottom: 14px;
-  border: 1px solid rgba(157, 255, 0, .42);
-  border-radius: 999px;
+.arenaStepHeading {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.arenaStepHeading .arenaStepNumber {
+  width: auto;
+  height: auto;
+  display: inline;
+  border: 0;
+  border-radius: 0;
   color: #9dff00;
-  background: rgba(157, 255, 0, .08);
+  background: transparent;
   font-family: var(--font-ui);
-  font-size: 28px;
+  font-size: 34px;
+  line-height: .8;
   font-weight: 1000;
-  box-shadow: 0 0 30px rgba(157, 255, 0, .18);
+  box-shadow: none;
+  text-shadow:
+    0 0 10px rgba(166, 255, 0, .45),
+    0 0 24px rgba(166, 255, 0, .2);
 }
 
 .arenaStepsGrid h3 {
+  margin: 0;
   color: var(--landing-green);
   font-size: 24px;
   text-shadow: 0 0 16px rgba(166, 255, 0, .22);
@@ -4843,7 +5017,7 @@ button:hover {
   border: 1px solid rgba(157, 255, 0, .5);
   border-radius: 12px;
   background:
-    linear-gradient(90deg, rgba(0, 0, 0, .78), rgba(0, 0, 0, .44)),
+    linear-gradient(90deg, rgba(0, 0, 0, .54), rgba(0, 0, 0, .18)),
     url('/landing-final-bg.png') center / cover no-repeat;
   box-shadow: inset 0 0 50px rgba(157, 255, 0, .08);
 }
@@ -4874,8 +5048,9 @@ button:hover {
 
 .arenaFinalBand > div:last-child {
   display: grid;
-  justify-items: start;
+  justify-items: center;
   gap: 14px;
+  text-align: center;
 }
 
 .arenaFinalBand > div:last-child span {
@@ -5089,6 +5264,914 @@ button:hover {
   border: 1px solid rgba(148, 163, 184, .2);
   border-radius: 22px;
   box-shadow: 0 24px 90px rgba(0, 0, 0, .34);
+}
+
+.personaCtaVisual {
+  max-width: 1180px;
+  margin: -36px auto 70px;
+  padding: 26px;
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 24px;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, .18);
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, .92), rgba(2, 6, 23, .86));
+  box-shadow: 0 28px 110px rgba(0, 0, 0, .34);
+}
+
+.personaCtaVisual img {
+  width: 100%;
+  min-height: 280px;
+  object-fit: cover;
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 22px;
+}
+
+.personaCtaVisual h2 {
+  margin: 12px 0 14px;
+  color: #f8fafc;
+  font-size: 24px;
+  line-height: 1.16;
+}
+
+.personaCtaVisual p {
+  margin: 0 0 20px;
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.organizerLandingPage {
+  --organizer-bg: #070b10;
+  --organizer-surface: #0d131a;
+  --organizer-surface-2: #111923;
+  --organizer-border: #1e2b22;
+  --organizer-green: #86f13c;
+  --organizer-green-dark: #4bae22;
+  --organizer-text: #f5f7fa;
+  --organizer-muted: #9aa4ae;
+  padding-top: 66px;
+  background:
+    radial-gradient(circle at 78% 0%, rgba(134, 241, 60, .13), transparent 28%),
+    radial-gradient(circle at 8% 18%, rgba(56, 189, 248, .08), transparent 30%),
+    linear-gradient(180deg, #05080c 0%, var(--organizer-bg) 42%, #05080c 100%);
+  color: var(--organizer-text);
+}
+
+.organizerLandingPage .landingHeader {
+  top: 50px;
+  border-radius: 0;
+  border-color: rgba(134, 241, 60, .2);
+  background: rgba(5, 8, 12, .86);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .36);
+}
+
+.organizerLandingPage .landingNav a,
+.organizerLandingPage .landingNavDropdown summary,
+.organizerLandingPage .landingActions a {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.organizerLandingPage main {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.organizerHero {
+  min-height: 560px;
+  display: grid;
+  grid-template-columns: minmax(0, .92fr) minmax(440px, 1.08fr);
+  gap: clamp(28px, 5vw, 70px);
+  align-items: center;
+  padding: clamp(34px, 6vw, 76px) 0 44px;
+}
+
+.organizerHeroCopy {
+  max-width: 560px;
+}
+
+.organizerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 7px 11px;
+  border: 1px solid rgba(134, 241, 60, .28);
+  border-radius: 999px;
+  background: rgba(15, 42, 25, .56);
+  color: var(--organizer-green);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.organizerBadge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--organizer-green);
+  box-shadow: 0 0 14px rgba(134, 241, 60, .62);
+}
+
+.organizerHero h1 {
+  max-width: 650px;
+  margin: 0;
+  color: var(--organizer-text);
+  font-family: var(--font-heading, var(--font-body));
+  font-size: clamp(44px, 5.8vw, 72px);
+  font-weight: 800;
+  letter-spacing: -.045em;
+  line-height: .98;
+}
+
+.organizerHero h1 strong {
+  display: block;
+  color: var(--organizer-green);
+  font-weight: 800;
+  text-shadow: 0 0 28px rgba(134, 241, 60, .22);
+}
+
+.organizerHero p {
+  max-width: 540px;
+  margin: 22px 0 0;
+  color: #c7d0d9;
+  font-size: 17px;
+  line-height: 1.56;
+}
+
+.organizerHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.organizerLandingPage .landingButton,
+.organizerLandingPage .landingSecondary {
+  min-height: 48px;
+  border-radius: 8px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.organizerHeroMockup {
+  position: relative;
+  min-height: 420px;
+  display: grid;
+  place-items: center;
+}
+
+.organizerHeroMockup::before {
+  content: '';
+  position: absolute;
+  inset: 10% -4% 4% 8%;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(134, 241, 60, .2), transparent 48%),
+    rgba(6, 16, 14, .62);
+  filter: blur(8px);
+}
+
+.organizerHeroMockup img {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 670px);
+  filter:
+    drop-shadow(0 34px 70px rgba(0, 0, 0, .58))
+    drop-shadow(0 0 28px rgba(134, 241, 60, .1));
+}
+
+.organizerTrust {
+  margin: 0 calc(50% - 50vw);
+  padding: 24px max(24px, calc((100vw - 1180px) / 2));
+  border-top: 1px solid rgba(148, 163, 184, .12);
+  border-bottom: 1px solid rgba(148, 163, 184, .12);
+  background:
+    linear-gradient(90deg, rgba(5, 8, 12, .96), rgba(14, 22, 24, .92), rgba(5, 8, 12, .96));
+  text-align: center;
+}
+
+.organizerTrust span {
+  display: block;
+  margin-bottom: 18px;
+  color: var(--organizer-green);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.organizerTrust div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(18px, 5vw, 58px);
+}
+
+.organizerTrust strong {
+  color: rgba(245, 247, 250, .64);
+  font-family: var(--font-ui);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.organizerSection {
+  padding: clamp(42px, 6vw, 76px) 0 0;
+}
+
+.organizerSection > h2,
+.organizerCtaBanner h2 {
+  margin: 0;
+  color: var(--organizer-text);
+  font-family: var(--font-heading, var(--font-body));
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.organizerHowSection > p {
+  margin: 10px 0 0;
+  color: var(--organizer-muted);
+  text-align: center;
+  font-size: 15px;
+}
+
+.organizerFeatureGrid,
+.organizerStepsGrid,
+.organizerTestimonialsGrid {
+  display: grid;
+  gap: 18px;
+  margin-top: 30px;
+}
+
+.organizerFeatureGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.organizerStepsGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.organizerTestimonialsGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.organizerFeatureCard,
+.organizerStepCard,
+.organizerTestimonialCard {
+  border: 1px solid rgba(134, 241, 60, .14);
+  border-radius: 10px;
+  background:
+    linear-gradient(145deg, rgba(17, 25, 35, .92), rgba(8, 13, 18, .92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .04),
+    0 18px 60px rgba(0, 0, 0, .24);
+}
+
+.organizerFeatureCard {
+  min-height: 142px;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 18px;
+  align-items: start;
+  padding: 22px;
+}
+
+.organizerFeatureCard img,
+.organizerStepCard img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(134, 241, 60, .28));
+}
+
+.organizerFeatureCard h3,
+.organizerStepCard h3 {
+  margin: 0 0 9px;
+  color: var(--organizer-text);
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.organizerFeatureCard p,
+.organizerStepCard p,
+.organizerTestimonialCard p,
+.organizerCtaBanner p {
+  margin: 0;
+  color: var(--organizer-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.organizerStepCard {
+  min-height: 210px;
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: 14px;
+  padding: 24px;
+}
+
+.organizerStepCard img {
+  width: 54px;
+  height: 54px;
+}
+
+.organizerTestimonialCard {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 16px;
+  padding: 20px;
+}
+
+.organizerTestimonialCard > img {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px rgba(134, 241, 60, .18);
+}
+
+.organizerTestimonialCard strong,
+.organizerTestimonialCard span {
+  display: block;
+}
+
+.organizerTestimonialCard strong {
+  margin-top: 14px;
+  color: var(--organizer-text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.organizerTestimonialCard span {
+  margin-top: 2px;
+  color: var(--organizer-muted);
+  font-size: 12px;
+}
+
+.organizerCtaBanner {
+  min-height: 300px;
+  margin: clamp(44px, 7vw, 86px) 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, .86fr) minmax(320px, 1fr);
+  gap: 26px;
+  align-items: center;
+  padding: clamp(28px, 5vw, 52px);
+  border: 1px solid rgba(134, 241, 60, .2);
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, rgba(7, 11, 16, .94), rgba(7, 11, 16, .64)),
+    radial-gradient(circle at 88% 24%, rgba(134, 241, 60, .16), transparent 30%),
+    var(--organizer-surface);
+  overflow: hidden;
+}
+
+.organizerCtaBanner h2 {
+  max-width: 620px;
+  text-align: left;
+}
+
+.organizerCtaBanner p {
+  max-width: 580px;
+  margin: 16px 0 24px;
+}
+
+.organizerCtaBanner img {
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, .4);
+}
+
+.playerLandingPage {
+  --player-bg: #050814;
+  --player-surface: #0b1020;
+  --player-surface-2: #10172a;
+  --player-border: #1e2a55;
+  --player-blue: #2f5bff;
+  --player-blue-light: #4f7bff;
+  --player-purple: #6d28d9;
+  --player-text: #f7f9ff;
+  --player-muted: #9aa6c0;
+  --player-gold: #f6c449;
+  padding-top: 66px;
+  background:
+    radial-gradient(circle at 78% 4%, rgba(79, 123, 255, .24), transparent 28%),
+    radial-gradient(circle at 18% 20%, rgba(109, 40, 217, .22), transparent 32%),
+    linear-gradient(180deg, #030611 0%, var(--player-bg) 42%, #030611 100%);
+  color: var(--player-text);
+  font-family: var(--font-body);
+}
+
+.playerLandingPage .landingHeader {
+  top: 50px;
+  border-radius: 0;
+  border-color: rgba(79, 123, 255, .22);
+  background: rgba(3, 6, 17, .88);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .38);
+}
+
+.playerLandingPage .landingNav a,
+.playerLandingPage .landingNavDropdown summary,
+.playerLandingPage .landingActions a {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.playerLandingPage main {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.playerLandingPage .landingButton,
+.playerLandingPage .landingSecondary {
+  min-height: 48px;
+  border-radius: 8px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.playerPrimaryButton {
+  background: linear-gradient(135deg, var(--player-blue), var(--player-blue-light));
+  border-color: rgba(79, 123, 255, .72);
+  color: #fff;
+  box-shadow: 0 18px 48px rgba(47, 91, 255, .28);
+}
+
+.playerHero {
+  min-height: 560px;
+  display: grid;
+  grid-template-columns: minmax(0, .86fr) minmax(440px, 1.14fr);
+  gap: clamp(28px, 5vw, 70px);
+  align-items: center;
+  padding: clamp(34px, 6vw, 76px) 0 44px;
+}
+
+.playerHeroCopy {
+  max-width: 580px;
+  position: relative;
+  z-index: 2;
+}
+
+.playerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 7px 11px;
+  border: 1px solid rgba(79, 123, 255, .32);
+  border-radius: 999px;
+  background: rgba(47, 91, 255, .12);
+  color: #8fb0ff;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.playerBadge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--player-blue-light);
+  box-shadow: 0 0 14px rgba(79, 123, 255, .72);
+}
+
+.playerHero h1 {
+  margin: 0;
+  color: var(--player-text);
+  font-family: 'Inter Tight', var(--font-body);
+  font-size: clamp(44px, 5.8vw, 72px);
+  font-weight: 800;
+  letter-spacing: -.05em;
+  line-height: .98;
+}
+
+.playerHero h1 strong {
+  color: var(--player-blue-light);
+  font-weight: 800;
+  text-shadow: 0 0 30px rgba(79, 123, 255, .32);
+}
+
+.playerHero p {
+  max-width: 540px;
+  margin: 22px 0 0;
+  color: #c5cde0;
+  font-size: 17px;
+  line-height: 1.56;
+}
+
+.playerHero .landingButton {
+  margin-top: 30px;
+}
+
+.playerHeroVisual {
+  position: relative;
+  min-height: 430px;
+}
+
+.playerHeroVisual::before {
+  content: '';
+  position: absolute;
+  inset: 12% -6% 6% 18%;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 56% 46%, rgba(79, 123, 255, .28), transparent 48%),
+    radial-gradient(circle at 76% 12%, rgba(109, 40, 217, .22), transparent 38%);
+  filter: blur(10px);
+}
+
+.playerHeroVisual img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 430px;
+  display: block;
+  object-fit: cover;
+  object-position: center right;
+  border: 1px solid rgba(79, 123, 255, .22);
+  border-radius: 18px;
+  box-shadow:
+    0 32px 78px rgba(0, 0, 0, .56),
+    0 0 36px rgba(47, 91, 255, .16);
+}
+
+.playerProfilePanel {
+  display: grid;
+  grid-template-columns: minmax(300px, .76fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 6px;
+}
+
+.playerProfileCard,
+.playerRankingPanel,
+.playerFeatureCard,
+.playerUpcomingPanel,
+.playerAchievementsPanel,
+.playerCommunityCta {
+  border: 1px solid rgba(79, 123, 255, .16);
+  border-radius: 12px;
+  background:
+    linear-gradient(145deg, rgba(16, 23, 42, .94), rgba(5, 8, 20, .94));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .04),
+    0 20px 70px rgba(0, 0, 0, .25);
+}
+
+.playerProfileCard {
+  display: grid;
+  grid-template-columns: 86px 1fr;
+  gap: 18px;
+  align-items: center;
+  padding: 22px;
+}
+
+.playerAvatar {
+  width: 86px;
+  height: 86px;
+  border-radius: 999px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px rgba(79, 123, 255, .24);
+}
+
+.playerProfileCard strong,
+.playerRankingPanel strong,
+.playerUpcomingPanel h2,
+.playerAchievementsPanel h2,
+.playerCommunityCta h2 {
+  color: var(--player-text);
+  font-family: 'Inter Tight', var(--font-body);
+  font-weight: 800;
+}
+
+.playerProfileCard strong {
+  display: block;
+  font-size: 20px;
+}
+
+.playerProfileCard span,
+.playerProfileCard small {
+  display: block;
+  color: var(--player-muted);
+}
+
+.playerProfileCard small {
+  margin-top: 6px;
+  color: #9fb7ff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.playerStatGrid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.playerStatGrid span {
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(47, 91, 255, .08);
+  color: var(--player-muted);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.playerStatGrid b {
+  display: block;
+  color: var(--player-text);
+  font-family: var(--font-ui);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.playerRankingPanel {
+  padding: 22px;
+  overflow: hidden;
+}
+
+.playerRankingPanel > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 10px;
+}
+
+.playerRankingPanel span {
+  color: var(--player-muted);
+  font-size: 12px;
+}
+
+.playerRankingPanel svg {
+  width: 100%;
+  min-height: 178px;
+  display: block;
+}
+
+.playerChartGrid {
+  stroke: rgba(154, 166, 192, .12);
+  stroke-width: 1;
+}
+
+.playerChartFill {
+  fill: url(#playerRankingFill);
+}
+
+.playerChartLine {
+  fill: none;
+  stroke: #6f91ff;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 10px rgba(79, 123, 255, .45));
+}
+
+.playerSection {
+  padding: clamp(42px, 6vw, 76px) 0 0;
+}
+
+.playerSection > h2 {
+  margin: 0;
+  color: var(--player-text);
+  font-family: 'Inter Tight', var(--font-body);
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.playerFeatureGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 30px;
+}
+
+.playerFeatureCard {
+  min-height: 210px;
+  padding: 24px;
+}
+
+.playerFeatureCard img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 14px rgba(79, 123, 255, .34));
+}
+
+.playerFeatureCard h3 {
+  margin: 18px 0 10px;
+  color: var(--player-text);
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.playerFeatureCard p,
+.playerTournamentRow span,
+.playerCommunityCta p {
+  margin: 0;
+  color: var(--player-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.playerTournamentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .36fr);
+  gap: 18px;
+  padding: clamp(34px, 5vw, 58px) 0 0;
+}
+
+.playerUpcomingPanel,
+.playerAchievementsPanel {
+  padding: 22px;
+}
+
+.playerPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.playerPanelHeader h2,
+.playerAchievementsPanel h2 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -.03em;
+}
+
+.playerPanelHeader a {
+  color: var(--player-blue-light);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.playerTournamentList {
+  display: grid;
+  gap: 12px;
+}
+
+.playerTournamentRow {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 64px 90px 112px;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgba(79, 123, 255, .12);
+  border-radius: 10px;
+  background: rgba(5, 8, 20, .55);
+}
+
+.playerTournamentRow img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.playerTournamentRow strong {
+  display: block;
+  color: var(--player-text);
+  font-size: 15px;
+}
+
+.playerTournamentRow time,
+.playerTournamentRow b {
+  color: var(--player-text);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.playerTournamentRow a {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: #86ef5a;
+  color: #06110a;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.playerAchievementGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.playerAchievementGrid span {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: 10px;
+  background: rgba(246, 196, 73, .08);
+}
+
+.playerAchievementGrid img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.playerAchievementGrid strong {
+  color: var(--player-text);
+  font-size: 12px;
+  text-align: center;
+}
+
+.playerAchievementGrid small {
+  color: var(--player-gold);
+  font-weight: 800;
+}
+
+.playerAchievementsPanel h3 {
+  margin: 22px 0 10px;
+  color: var(--player-text);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.playerMedals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.playerMedals img {
+  width: 30px;
+  height: 30px;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(79, 123, 255, .08);
+}
+
+.playerCommunityCta {
+  min-height: 260px;
+  margin: clamp(44px, 7vw, 86px) 0 0;
+  display: grid;
+  align-items: center;
+  padding: clamp(28px, 5vw, 52px);
+  background:
+    linear-gradient(90deg, rgba(12, 18, 48, .94), rgba(12, 18, 48, .62)),
+    url('/player/photos/cta-comunidade-jogadores-recriado.webp') center right / cover;
+  overflow: hidden;
+}
+
+.playerCommunityCta h2 {
+  max-width: 660px;
+  margin: 0;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -.04em;
+}
+
+.playerCommunityCta p {
+  max-width: 560px;
+  margin: 14px 0 24px;
 }
 
 .landingFooter {
@@ -5924,6 +7007,7 @@ button:hover {
   .personaBenefits,
   .personaFlow,
   .personaShowcase,
+  .personaCtaVisual,
   .staticPublicMain {
     max-width: 1440px;
   }
@@ -5966,6 +7050,7 @@ button:hover {
   .personaBenefits > div,
   .personaFlow > div,
   .personaShowcase,
+  .personaCtaVisual,
   .showcaseGrid,
   .plansGrid,
   .signupChoiceGrid,
@@ -6092,7 +7177,8 @@ button:hover {
   .personaPanel,
   .personaBenefits,
   .personaFlow,
-  .personaShowcase {
+  .personaShowcase,
+  .personaCtaVisual {
     padding: 22px;
   }
 
@@ -6102,6 +7188,14 @@ button:hover {
 
   .personaShowcase img {
     min-height: 250px;
+  }
+
+  .personaCtaVisual {
+    margin-top: -18px;
+  }
+
+  .personaCtaVisual img {
+    min-height: 230px;
   }
 
   .landingNotice {
@@ -6168,6 +7262,7 @@ button:hover {
   .personaBenefits,
   .personaFlow,
   .personaShowcase,
+  .personaCtaVisual,
   .broadcastCopy,
   .staticPublicMain {
     padding: 20px;
@@ -9063,29 +10158,54 @@ button:hover {
   }
 
   .arenaHeroCopy {
-    max-width: 720px;
+    width: min(640px, 100%);
+    max-width: 640px;
   }
 
   .arenaHeroVisual {
     min-height: 420px;
+    margin-left: 0;
   }
 
   .arenaDeviceStage {
     min-height: 430px;
     justify-items: center;
+    padding-left: 0;
   }
 
   .arenaNotebookMockup {
     width: min(900px, 100%);
+    margin-right: 0;
+    transform: translateY(10px);
   }
 
   .arenaPhoneMockupImage {
+    left: auto;
     right: 5%;
-    width: min(210px, 24%);
+    width: min(170px, 22%);
   }
 }
 
 @media (max-width: 900px) {
+  .landingTopHeadline {
+    min-height: 40px;
+    gap: 12px;
+    padding: 8px 16px;
+  }
+
+  .landingTopHeadline strong {
+    font-size: 12px;
+  }
+
+  .landingTopHeadlineTrack {
+    gap: 26px;
+    animation-duration: 22s;
+  }
+
+  .landingArenaPage .landingHeader {
+    top: 46px;
+  }
+
   .arenaLandingHero {
     gap: 26px;
     border-radius: 0;
@@ -9096,7 +10216,26 @@ button:hover {
   }
 
   .arenaLandingHero .arenaHeroTitle {
-    font-size: 48px;
+    line-height: .9;
+  }
+
+  .arenaHeroTitleTop {
+    font-size: clamp(30px, 8vw, 40px);
+  }
+
+  .arenaHeroTitle strong {
+    font-size: clamp(48px, 12vw, 66px);
+  }
+
+  .arenaHeroTitleBottom {
+    font-size: clamp(32px, 9vw, 44px);
+  }
+
+  .arenaHeroTitleTop,
+  .arenaHeroTitle strong,
+  .arenaHeroTitleBottom {
+    text-align: center;
+    text-align-last: center;
   }
 
   .arenaHeroVisual {
@@ -9113,16 +10252,18 @@ button:hover {
   }
 
   .arenaPhoneMockupImage {
-    width: min(160px, 26%);
-    min-width: 120px;
+    width: min(135px, 22%);
+    min-width: 104px;
+    left: auto;
+    right: 3%;
   }
 
   .landingMetricsStrip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .landingMetricsStrip div:nth-child(3) {
-    border-left: 0;
+  .landingMetricsStrip > :nth-child(3) {
+    border: 0;
   }
 
   .arenaFeatureGrid,
@@ -9154,12 +10295,30 @@ button:hover {
   .arenaPhoneMockupImage {
     width: 112px;
     min-width: 0;
+    left: auto;
     right: 0;
     bottom: 0;
   }
 
   .arenaLandingHero .arenaHeroTitle {
-    font-size: 42px;
+    line-height: .9;
+  }
+
+  .arenaHeroTitleTop {
+    font-size: clamp(30px, 11vw, 38px);
+  }
+
+  .arenaHeroTitle strong {
+    font-size: clamp(46px, 17vw, 58px);
+  }
+
+  .arenaHeroTitleBottom {
+    font-size: clamp(31px, 12vw, 40px);
+  }
+
+  .arenaHeroTitle span,
+  .arenaHeroTitle strong {
+    white-space: normal;
   }
 
   .landingCtas,
@@ -9180,16 +10339,175 @@ button:hover {
     grid-template-columns: 1fr;
   }
 
-  .landingMetricsStrip div {
-    border-left: 0;
-    border-top: 1px solid rgba(157, 255, 0, .18);
+  .landingMetricsStrip > * {
+    border: 0;
   }
 
-  .landingMetricsStrip div:first-child {
-    border-top: 0;
+  .landingMetricsStrip > * + *::before {
+    top: 0;
+    bottom: auto;
+    left: 18%;
+    right: 18%;
+    width: auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(166, 255, 0, .48), transparent);
   }
 
   .arenaModalityGrid article {
     min-height: 220px;
+  }
+}
+
+@media (max-width: 980px) {
+  .organizerLandingPage main {
+    width: min(100% - 28px, 760px);
+  }
+
+  .playerLandingPage main {
+    width: min(100% - 28px, 760px);
+  }
+
+  .organizerHero,
+  .organizerCtaBanner,
+  .playerHero,
+  .playerProfilePanel,
+  .playerTournamentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .organizerHero,
+  .playerHero {
+    min-height: auto;
+    padding-top: 34px;
+  }
+
+  .organizerHeroCopy,
+  .organizerHero p,
+  .playerHeroCopy,
+  .playerHero p {
+    max-width: none;
+  }
+
+  .organizerHeroMockup,
+  .playerHeroVisual {
+    min-height: auto;
+  }
+
+  .playerHeroVisual img {
+    min-height: 340px;
+  }
+
+  .organizerFeatureGrid,
+  .organizerStepsGrid,
+  .organizerTestimonialsGrid,
+  .playerFeatureGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .organizerCtaBanner h2,
+  .organizerCtaBanner p,
+  .playerCommunityCta h2,
+  .playerCommunityCta p {
+    text-align: center;
+  }
+
+  .organizerCtaBanner p,
+  .playerCommunityCta p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .organizerCtaBanner .landingButton,
+  .playerCommunityCta .landingButton {
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 680px) {
+  .organizerLandingPage,
+  .playerLandingPage {
+    padding-top: 52px;
+  }
+
+  .organizerLandingPage .landingHeader,
+  .playerLandingPage .landingHeader {
+    top: auto;
+  }
+
+  .organizerHero,
+  .playerHero {
+    gap: 24px;
+  }
+
+  .organizerHeroActions,
+  .playerHero .landingButton {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .organizerHeroActions a,
+  .playerHero .landingButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .organizerTrust {
+    margin-left: -14px;
+    margin-right: -14px;
+  }
+
+  .organizerTrust div {
+    gap: 16px 24px;
+  }
+
+  .organizerTrust strong {
+    font-size: 15px;
+  }
+
+  .organizerFeatureGrid,
+  .organizerStepsGrid,
+  .organizerTestimonialsGrid,
+  .playerFeatureGrid,
+  .playerStatGrid,
+  .playerAchievementGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .organizerFeatureCard,
+  .organizerTestimonialCard,
+  .playerProfileCard {
+    grid-template-columns: 44px 1fr;
+    padding: 18px;
+  }
+
+  .organizerFeatureCard img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .organizerStepCard {
+    min-height: auto;
+  }
+
+  .playerProfileCard .playerStatGrid {
+    grid-column: 1 / -1;
+  }
+
+  .playerTournamentRow {
+    grid-template-columns: 42px 1fr;
+    gap: 10px 14px;
+  }
+
+  .playerTournamentRow time,
+  .playerTournamentRow b,
+  .playerTournamentRow a {
+    grid-column: 2;
+    justify-self: start;
+    text-align: left;
+  }
+
+  .organizerCtaBanner,
+  .playerCommunityCta {
+    padding: 24px;
   }
 }

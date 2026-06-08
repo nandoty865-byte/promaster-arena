@@ -191,6 +191,17 @@ function isPublicPath(path: string) {
     path === '/inscreva-se' ||
     path === '/cadastro-organizador' ||
     path === '/cadastro-jogador' ||
+    path === '/organizador' ||
+    path === '/jogador' ||
+    path === '/arena' ||
+    path === '/planos' ||
+    path === '/agenda' ||
+    path === '/sobre' ||
+    path === '/contato' ||
+    path === '/blog' ||
+    path === '/termos' ||
+    path === '/privacidade' ||
+    path === '/lgpd' ||
     path.startsWith('/jogador/') ||
     path.startsWith('/telao/') ||
     path.startsWith('/public/')
@@ -360,6 +371,7 @@ export default function App() {
       <Route path="/organizador" element={<PersonaLanding type="organizador" />} />
       <Route path="/jogador" element={<PersonaLanding type="jogador" />} />
       <Route path="/arena" element={<PersonaLanding type="arena" />} />
+      <Route path="/agenda" element={<StaticPublicPage type="agenda" />} />
       <Route path="/sobre" element={<StaticPublicPage type="sobre" />} />
       <Route path="/contato" element={<StaticPublicPage type="contato" />} />
       <Route path="/blog" element={<StaticPublicPage type="blog" />} />
@@ -4448,6 +4460,8 @@ const personaLandingContent: Record<PersonaLandingType, {
   showcaseTitle: string
   showcaseText: string
   image: string
+  showcaseImage?: string
+  ctaImage?: string
 }> = {
   organizador: {
     badge: 'Para organizadores',
@@ -4522,8 +4536,34 @@ const personaLandingContent: Record<PersonaLandingType, {
     ],
     showcaseTitle: 'Sua arena como centro de competição.',
     showcaseText: 'A plataforma ajuda a transformar movimento local em recorrência, receita, ranking e comunidade esportiva.',
-    image: '/promaster-hero-broadcast.png',
+    image: '/arena/photos/hero-arena-sinuca-premium-recriado.webp',
+    showcaseImage: '/arena/photos/card-gestao-arena-abstrato-recriado.webp',
+    ctaImage: '/arena/photos/cta-dashboard-dispositivos-recriado.webp',
   },
+}
+
+const landingLiveHeadlines = [
+  ['Próximos torneios', 'Sinuca Master Cup - inscrições abertas'],
+  ['Jogos em andamento', 'Mesa 04: Fernando 2 x 1 João Paulo'],
+  ['Placar ao vivo', 'Bingo rodada 3 - prêmio acumulado'],
+]
+
+function LandingTopHeadline() {
+  return (
+    <section className="landingTopHeadline" aria-label="Atualizações ao vivo">
+      <strong><span className="landingTopHeadlinePro">Pro</span>Master Live</strong>
+      <div className="landingTopHeadlineViewport">
+        <div className="landingTopHeadlineTrack">
+          {[...landingLiveHeadlines, ...landingLiveHeadlines].map(([title, text], index) => (
+            <span key={`${title}-${index}`}>
+              <b>{title}</b>
+              {text}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 function LandingHeader() {
@@ -4549,7 +4589,9 @@ function LandingHeader() {
               <a href="/arena">Arena</a>
             </div>
           </details>
-          <a href="/planos">Planos</a>
+          <a href="/agenda">Agenda</a>
+          <a href="/planos">Plano</a>
+          <a href="/contato">Contato</a>
         </nav>
 
         <div className="landingActions">
@@ -4561,7 +4603,7 @@ function LandingHeader() {
   )
 }
 
-type StaticPublicPageType = 'sobre' | 'contato' | 'blog' | 'termos' | 'privacidade' | 'lgpd'
+type StaticPublicPageType = 'sobre' | 'contato' | 'blog' | 'agenda' | 'termos' | 'privacidade' | 'lgpd'
 
 const staticPublicPages: Record<StaticPublicPageType, {
   eyebrow: string
@@ -4587,6 +4629,16 @@ const staticPublicPages: Record<StaticPublicPageType, {
       ['Comercial', 'Solicite demonstração para arenas, clubes, bares, salões e organizadores de eventos esportivos.'],
       ['Suporte', 'Atendimento para configuração de torneios, páginas públicas, inscrições, pagamentos e transmissões.'],
       ['Parcerias', 'Espaço para patrocinadores, ligas, circuitos e projetos especiais.'],
+    ],
+  },
+  agenda: {
+    eyebrow: 'Agenda',
+    title: 'Próximos torneios, jogos em andamento e transmissões.',
+    description: 'A agenda pública reúne eventos futuros, partidas ao vivo, placares em andamento e links para páginas públicas dos torneios.',
+    blocks: [
+      ['Próximos torneios', 'Eventos com inscrições abertas, data, modalidade, arena e status de confirmação.'],
+      ['Jogos em andamento', 'Acompanhamento de partidas, mesas, chamadas e atualizações em tempo real.'],
+      ['Transmissões e telão', 'Links para tela pública, telão e visualizações de broadcast quando o organizador ativar o evento ao vivo.'],
     ],
   },
   blog: {
@@ -4650,9 +4702,9 @@ function LandingFooter() {
         <nav className="footerLinks" aria-label="Mapa do site">
           <strong>Mapa do site</strong>
           <a href="/sobre">Sobre</a>
-          <a href="/planos">Preços</a>
+          <a href="/planos">Plano</a>
+          <a href="/agenda">Agenda</a>
           <a href="/contato">Contato</a>
-          <a href="/blog">Blog</a>
         </nav>
 
         <nav className="footerLinks" aria-label="Experiências">
@@ -4716,7 +4768,288 @@ function StaticPublicPage({ type }: { type: StaticPublicPageType }) {
   )
 }
 
+function OrganizerLanding() {
+  const organizerFeatures = [
+    ['/organizer/icons/inscricoes-online.svg', 'Inscrições Online', 'Receba inscrições e pagamentos via Pix, cartão ou boleto de forma automática.'],
+    ['/organizer/icons/gestao-completa.svg', 'Gestão Completa', 'Controle etapas, jogos, jogadores, chaves, grupos e muito mais.'],
+    ['/organizer/icons/rankings-estatisticas.svg', 'Rankings e Estatísticas', 'Acompanhe o desempenho dos jogadores e gere rankings automaticamente.'],
+    ['/organizer/icons/transmissao-ao-vivo.svg', 'Transmissão ao Vivo', 'Transmita para YouTube, Facebook e Twitch com integração total.'],
+    ['/organizer/icons/tela-profissional.svg', 'Telão Profissional', 'Exiba jogos, chaves e resultados em telões com layout personalizável.'],
+    ['/organizer/icons/relatorios-financeiros.svg', 'Relatórios Financeiros', 'Tenha controle total sobre receita, despesas e premiações.'],
+  ]
+
+  const organizerSteps = [
+    ['/organizer/icons/crie-o-torneio.svg', 'Crie o torneio', 'Configure regras, categorias, formas de disputa e premiação.'],
+    ['/organizer/icons/divulgue-receba-inscricoes.svg', 'Divulgue e receba inscrições', 'Compartilhe o link e receba inscrições online.'],
+    ['/organizer/icons/gerencie-partidas.svg', 'Gerencie as partidas', 'Acompanhe jogos, resultados e chaves em tempo real.'],
+    ['/organizer/icons/transmita-engaje.svg', 'Transmita e engaje', 'Transmita ao vivo e ofereça uma experiência profissional.'],
+  ]
+
+  const testimonials = [
+    ['/organizer/photos/avatar-organizador-1.webp', 'Fabio Martins', 'Arena 147 - São Paulo/SP', 'O ProMaster Arena mudou a forma como organizamos nossos torneios. Muito mais profissional e fácil.'],
+    ['/organizer/photos/avatar-organizador-2.webp', 'André Souza', 'Sinuca Club - Curitiba/PR', 'A plataforma é completa e o suporte sempre nos ajuda quando precisamos. Recomendo demais.'],
+    ['/organizer/photos/avatar-organizador-3.webp', 'Lucas Pereira', 'Bola 8 Snooker Bar - BH/MG', 'A transmissão integrada é um show à parte. Nossos eventos viraram referência.'],
+  ]
+
+  const partners = ['Arena 147', 'Sinuka Club', 'Bola 8 Snooker Bar', 'Maxxi Sports', 'Point da Sinuca']
+
+  return (
+    <div className="landing organizerLandingPage">
+      <LandingTopHeadline />
+      <LandingHeader />
+
+      <main id="conteudo-principal">
+        <section className="organizerHero">
+          <div className="organizerHeroCopy">
+            <span className="organizerBadge">Para organizadores</span>
+            <h1>
+              Organize torneios profissionais em <strong>minutos</strong>
+            </h1>
+            <p>
+              Plataforma completa para gestão de torneios, inscrições, pagamentos,
+              rankings e transmissões ao vivo.
+            </p>
+            <div className="organizerHeroActions">
+              <a className="landingButton" href="/cadastro-organizador">Criar torneio gratuitamente</a>
+              <a className="landingSecondary" href="/#recursos">Ver demonstração</a>
+            </div>
+          </div>
+
+          <div className="organizerHeroMockup" aria-label="Prévia do painel do organizador">
+            <img src="/organizer/photos/dashboard-hero-mockup-recriado.webp" alt="Dashboard do organizador ProMaster Arena" />
+          </div>
+        </section>
+
+        <section className="organizerTrust" aria-label="Arenas e organizadores parceiros">
+          <span>Confiado por arenas e organizadores em todo o Brasil</span>
+          <div>
+            {partners.map(partner => <strong key={partner}>{partner}</strong>)}
+          </div>
+        </section>
+
+        <section className="organizerSection organizerFeaturesSection">
+          <h2>Tudo que você precisa em um só lugar</h2>
+          <div className="organizerFeatureGrid">
+            {organizerFeatures.map(([icon, title, text]) => (
+              <article key={title} className="organizerFeatureCard">
+                <img src={icon} alt="" aria-hidden="true" />
+                <div>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="organizerSection organizerHowSection">
+          <h2>Como funciona</h2>
+          <p>Em 4 passos simples você cria e gerencia seu torneio</p>
+          <div className="organizerStepsGrid">
+            {organizerSteps.map(([icon, title, text], index) => (
+              <article key={title} className="organizerStepCard">
+                <img src={icon} alt="" aria-hidden="true" />
+                <h3>{index + 1}. {title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="organizerSection organizerTestimonials">
+          <h2>O que dizem nossos organizadores</h2>
+          <div className="organizerTestimonialsGrid">
+            {testimonials.map(([avatar, name, role, quote]) => (
+              <article key={name} className="organizerTestimonialCard">
+                <img src={avatar} alt={name} />
+                <div>
+                  <p>{quote}</p>
+                  <strong>{name}</strong>
+                  <span>{role}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="organizerCtaBanner">
+          <div>
+            <h2>Pronto para levar seus torneios ao próximo nível?</h2>
+            <p>Crie agora mesmo seu torneio gratuitamente e descubra por que somos a plataforma número 1 do Brasil.</p>
+            <a className="landingButton" href="/cadastro-organizador">Criar torneio gratuitamente</a>
+          </div>
+          <img src="/organizer/photos/trofeu-cta-recriado.webp" alt="Troféu ProMaster Arena" />
+        </section>
+      </main>
+
+      <LandingFooter />
+    </div>
+  )
+}
+
+function PlayerLanding() {
+  const playerFeatures = [
+    ['/player/icons/participe-de-torneios.svg', 'Participe de torneios', 'Encontre torneios perto de você e inscreva-se em segundos.'],
+    ['/player/icons/acompanhe-rankings.svg', 'Acompanhe rankings', 'Veja sua posição no ranking regional, estadual e nacional.'],
+    ['/player/icons/estatisticas-completas.svg', 'Estatísticas completas', 'Analise seu desempenho e evolua a cada partida.'],
+    ['/player/icons/historico-de-partidas.svg', 'Histórico de partidas', 'Confira todos os seus jogos, resultados e conquistas.'],
+  ]
+
+  const upcomingTournaments = [
+    ['/player/icons/torneio-sinuca.svg', 'Campinas Open de Sinuca', 'Campinas/SP', '25 MAI', 'R$ 5.000'],
+    ['/player/icons/calendario-torneio.svg', 'Santos 8 Ball Cup', 'Santos/SP', '08 JUN', 'R$ 3.000'],
+    ['/player/icons/premiacao.svg', 'Masters ProMaster 2027', 'São Paulo/SP', '20 JUL', 'R$ 20.000'],
+  ]
+
+  const achievements = [
+    ['/player/icons/trofeu-campeao.svg', 'Campeão', '5x'],
+    ['/player/icons/trofeu-vice.svg', 'Vice-campeão', '3x'],
+    ['/player/icons/top-3.svg', 'Top 3', '12x'],
+  ]
+
+  const medals = [
+    '/player/icons/medalha.svg',
+    '/player/icons/trofeu-campeao.svg',
+    '/player/icons/trofeu-vice.svg',
+    '/player/icons/top-3.svg',
+  ]
+
+  return (
+    <div className="landing playerLandingPage">
+      <LandingTopHeadline />
+      <LandingHeader />
+
+      <main id="conteudo-principal">
+        <section className="playerHero">
+          <div className="playerHeroCopy">
+            <span className="playerBadge">Para jogadores</span>
+            <h1>
+              Sua <strong>carreira</strong> esportiva começa aqui
+            </h1>
+            <p>
+              Participe de torneios, acompanhe rankings, melhore seu desempenho
+              e construa sua história nas mesas.
+            </p>
+            <a className="landingButton playerPrimaryButton" href="/inscreva-se">Criar meu perfil gratuitamente</a>
+          </div>
+
+          <div className="playerHeroVisual" aria-label="Jogador de sinuca em ação">
+            <img src="/player/photos/hero-jogador-sinuca-recriado.webp" alt="Jogador de sinuca mirando uma tacada" />
+          </div>
+        </section>
+
+        <section className="playerProfilePanel" aria-label="Resumo de carreira do jogador">
+          <article className="playerProfileCard">
+            <img className="playerAvatar" src="/player/photos/avatar-jogador-generico-recriado.webp" alt="Avatar de jogador ProMaster Arena" />
+            <div>
+              <strong>Fernando Toyomoto</strong>
+              <span>São Paulo/SP</span>
+              <small>Ranking Geral</small>
+            </div>
+            <div className="playerStatGrid">
+              <span><b>2.450</b>Pontos</span>
+              <span><b>38</b>Torneios</span>
+              <span><b>18</b>Títulos</span>
+            </div>
+          </article>
+
+          <article className="playerRankingPanel">
+            <div>
+              <strong>Evolução no Ranking</strong>
+              <span>Últimos 8 meses</span>
+            </div>
+            <svg viewBox="0 0 520 170" role="img" aria-label="Gráfico de evolução do ranking do jogador">
+              <defs>
+                <linearGradient id="playerRankingFill" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#4f7bff" stopOpacity=".45" />
+                  <stop offset="100%" stopColor="#4f7bff" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path className="playerChartGrid" d="M20 32 H500 M20 72 H500 M20 112 H500 M20 152 H500" />
+              <path className="playerChartFill" d="M22 138 L80 124 L136 118 L188 94 L244 102 L306 74 L362 82 L420 54 L496 30 L496 154 L22 154 Z" />
+              <path className="playerChartLine" d="M22 138 L80 124 L136 118 L188 94 L244 102 L306 74 L362 82 L420 54 L496 30" />
+            </svg>
+          </article>
+        </section>
+
+        <section className="playerSection">
+          <h2>Tudo para você crescer no esporte</h2>
+          <div className="playerFeatureGrid">
+            {playerFeatures.map(([icon, title, text]) => (
+              <article key={title} className="playerFeatureCard">
+                <img src={icon} alt="" aria-hidden="true" />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="playerTournamentGrid">
+          <article className="playerUpcomingPanel">
+            <div className="playerPanelHeader">
+              <h2>Próximos torneios</h2>
+              <a href="/agenda">Ver todos</a>
+            </div>
+            <div className="playerTournamentList">
+              {upcomingTournaments.map(([icon, name, location, date, prize]) => (
+                <div key={name} className="playerTournamentRow">
+                  <img src={icon} alt="" aria-hidden="true" />
+                  <div>
+                    <strong>{name}</strong>
+                    <span>{location}</span>
+                  </div>
+                  <time>{date}</time>
+                  <b>{prize}</b>
+                  <a href="/inscreva-se">Inscrever-se</a>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <aside className="playerAchievementsPanel">
+            <h2>Conquistas</h2>
+            <div className="playerAchievementGrid">
+              {achievements.map(([icon, label, value]) => (
+                <span key={label}>
+                  <img src={icon} alt="" aria-hidden="true" />
+                  <strong>{label}</strong>
+                  <small>{value}</small>
+                </span>
+              ))}
+            </div>
+            <h3>Medalhas</h3>
+            <div className="playerMedals">
+              {medals.map((icon, index) => (
+                <img key={`${icon}-${index}`} src={icon} alt="" aria-hidden="true" />
+              ))}
+            </div>
+          </aside>
+        </section>
+
+        <section className="playerCommunityCta">
+          <div>
+            <h2>Entre para a comunidade ProMaster Arena</h2>
+            <p>Crie seu perfil gratuito e comece sua jornada rumo ao topo do ranking.</p>
+            <a className="landingButton playerPrimaryButton" href="/inscreva-se">Criar meu perfil</a>
+          </div>
+        </section>
+      </main>
+
+      <LandingFooter />
+    </div>
+  )
+}
+
 function PersonaLanding({ type }: { type: PersonaLandingType }) {
+  if (type === 'organizador') {
+    return <OrganizerLanding />
+  }
+
+  if (type === 'jogador') {
+    return <PlayerLanding />
+  }
+
   const page = personaLandingContent[type]
 
   return (
@@ -4780,8 +5113,20 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
           <p>{page.showcaseText}</p>
           <a className="landingButton" href="/inscreva-se">Começar agora</a>
         </div>
-        <img src={page.image} alt={page.showcaseTitle} />
+        <img src={page.showcaseImage || page.image} alt={page.showcaseTitle} />
       </section>
+
+      {page.ctaImage && (
+        <section className="personaCtaVisual">
+          <img src={page.ctaImage} alt="" aria-hidden="true" />
+          <div>
+            <span className="landingBadge">Gestão em tempo real</span>
+            <h2>Controle sua arena em todos os dispositivos.</h2>
+            <p>Mesas, eventos, inscrições e indicadores conectados em uma operação visual.</p>
+            <a className="landingButton" href="/inscreva-se">{page.cta}</a>
+          </div>
+        </section>
+      )}
 
       <LandingFooter />
     </div>
@@ -4790,10 +5135,10 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
 
 function Landing() {
   const platformStats = [
-    ['+50.000', 'Usuários ativos'],
-    ['+10.000', 'Torneios realizados'],
-    ['+250.000', 'Partidas transmitidas'],
-    ['100%', 'Seguro e confiável'],
+    { icon: '/landing-role-organizer.png', label: 'Organizador', href: '/organizador' },
+    { icon: '/landing-role-arena.png', label: 'Arena', href: '/arena' },
+    { icon: '/landing-role-player.png', label: 'Jogador', href: '/jogador' },
+    { icon: '/landing-role-secure.png', label: '100%' },
   ]
 
   const featureCards = [
@@ -4802,16 +5147,16 @@ function Landing() {
     ['board', 'Telão interativo', 'Exiba partidas, chaves e informações em grandes telas.'],
     ['chat', 'Comunicação instantânea', 'Chat integrado entre jogadores, times e organizadores.'],
     ['ranking', 'Ranking e estatísticas', 'Desempenho, rankings e histórico sempre atualizados.'],
-    ['shield', 'Seguro, justo e profissional', 'Ambiente confiável com regras claras e suporte especializado.'],
+    ['shield', 'Seguro e profissional', 'Ambiente confiável com regras claras.'],
   ]
 
   const modalities = [
-    ['futebol', 'Futebol', 'Campo, society e ligas recorrentes'],
-    ['sinuca', 'Sinuca', 'Mesas, ranking, chamadas e telão'],
-    ['tenis', 'Tênis de mesa', 'Chaves, grupos e resultados rápidos'],
-    ['basquete', 'Basquete', 'Placar, transmissão e estatísticas'],
-    ['esports', 'E-sports', 'Partidas online e comunidades ativas'],
-    ['volei', 'Vôlei', 'Equipes, fases e calendário'],
+    ['futebol', 'Futebol'],
+    ['sinuca', 'Sinuca'],
+    ['tenis', 'Tênis de mesa'],
+    ['basquete', 'Basquete'],
+    ['esports', 'E-sports'],
+    ['volei', 'Vôlei'],
   ]
 
   const steps = [
@@ -4823,6 +5168,8 @@ function Landing() {
 
   return (
     <div className="landing landingArenaPage">
+      <LandingTopHeadline />
+
       <LandingHeader />
 
       <section id="conteudo-principal" className="landingHero arenaLandingHero">
@@ -4830,9 +5177,9 @@ function Landing() {
           <img className="arenaHeroLogo" src="/promaster-logo-novo.png" alt="ProMaster Arena" />
 
           <h1 className="arenaHeroTitle">
-            <span>A plataforma completa</span>
+            <span className="arenaHeroTitleTop">A plataforma completa</span>
             <strong>Para torneios</strong>
-            <span>em tempo real</span>
+            <span className="arenaHeroTitleBottom">em tempo real</span>
           </h1>
 
           <p>
@@ -4855,12 +5202,24 @@ function Landing() {
       </section>
 
       <section className="landingMetricsStrip" aria-label="Indicadores da plataforma">
-        {platformStats.map(([value, label]) => (
-          <div key={label}>
-            <strong>{value}</strong>
-            <span>{label}</span>
-          </div>
-        ))}
+        {platformStats.map(({ icon, label, href }) => {
+          const content = (
+            <>
+              <img src={icon} alt="" aria-hidden="true" />
+              <span>{label}</span>
+            </>
+          )
+
+          return href ? (
+            <a key={label} href={href}>
+              {content}
+            </a>
+          ) : (
+            <div key={label}>
+              {content}
+            </div>
+          )
+        })}
       </section>
 
       <section id="recursos" className="arenaSection arenaFeatureSection">
@@ -4887,12 +5246,11 @@ function Landing() {
         </h2>
 
         <div className="arenaModalityGrid">
-          {modalities.map(([slug, title, text]) => (
+          {modalities.map(([slug, title]) => (
             <article key={title} className={`arenaSportCard arenaSportCard-${slug}`}>
               <div>
                 <img src={`/landing-modality-icon-${slug}.png`} alt="" aria-hidden="true" />
                 <h3>{title}</h3>
-                <p>{text}</p>
               </div>
             </article>
           ))}
@@ -4909,8 +5267,9 @@ function Landing() {
           {steps.map(([number, title, text, icon]) => (
             <article key={title}>
               <img src={icon} alt="" aria-hidden="true" />
-              <span className="arenaStepNumber">{number}</span>
-              <h3>{title}</h3>
+              <div className="arenaStepHeading">
+                <h3><span className="arenaStepNumber">{number}.</span> {title}</h3>
+              </div>
               <p>{text}</p>
             </article>
           ))}
