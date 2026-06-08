@@ -4460,6 +4460,8 @@ const personaLandingContent: Record<PersonaLandingType, {
   showcaseTitle: string
   showcaseText: string
   image: string
+  showcaseImage?: string
+  ctaImage?: string
 }> = {
   organizador: {
     badge: 'Para organizadores',
@@ -4534,7 +4536,9 @@ const personaLandingContent: Record<PersonaLandingType, {
     ],
     showcaseTitle: 'Sua arena como centro de competição.',
     showcaseText: 'A plataforma ajuda a transformar movimento local em recorrência, receita, ranking e comunidade esportiva.',
-    image: '/promaster-hero-broadcast.png',
+    image: '/arena/photos/hero-arena-sinuca-premium-recriado.webp',
+    showcaseImage: '/arena/photos/card-gestao-arena-abstrato-recriado.webp',
+    ctaImage: '/arena/photos/cta-dashboard-dispositivos-recriado.webp',
   },
 }
 
@@ -5109,8 +5113,20 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
           <p>{page.showcaseText}</p>
           <a className="landingButton" href="/inscreva-se">Começar agora</a>
         </div>
-        <img src={page.image} alt={page.showcaseTitle} />
+        <img src={page.showcaseImage || page.image} alt={page.showcaseTitle} />
       </section>
+
+      {page.ctaImage && (
+        <section className="personaCtaVisual">
+          <img src={page.ctaImage} alt="" aria-hidden="true" />
+          <div>
+            <span className="landingBadge">Gestão em tempo real</span>
+            <h2>Controle sua arena em todos os dispositivos.</h2>
+            <p>Mesas, eventos, inscrições e indicadores conectados em uma operação visual.</p>
+            <a className="landingButton" href="/inscreva-se">{page.cta}</a>
+          </div>
+        </section>
+      )}
 
       <LandingFooter />
     </div>
