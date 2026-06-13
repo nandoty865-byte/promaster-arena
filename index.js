@@ -30,28 +30,42 @@ app.use(express.json())
 const JWT_SECRET = process.env.JWT_SECRET || 'playfinal_dev_secret'
 const APP_URL = process.env.APP_URL || 'https://www.playfinal.com.br'
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
-const EMAIL_FROM = process.env.EMAIL_FROM || 'PlayFinal Arena <contato@playfinal.com.br>'
+const EMAIL_PROVIDER = process.env.EMAIL_PROVIDER || 'resend'
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'suporte@playfinal.com.br'
+const EMAIL_FROM = process.env.EMAIL_FROM || 'PlayFinal <avisos@notificacoes.playfinal.com.br>'
+const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || SUPPORT_EMAIL
 const EVOLUTION_API_URL = (process.env.EVOLUTION_API_URL || '').replace(/\/$/, '')
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || ''
 const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE || ''
 const PAYMENT_CONFIRM_SECRET = process.env.PAYMENT_CONFIRM_SECRET || ''
 
 async function sendEmail({ to, subject, html, text }) {
+  if (EMAIL_PROVIDER !== 'resend') {
+    console.warn(`E-mail não enviado para ${to}: provedor ${EMAIL_PROVIDER} não suportado`)
+    return { skipped: true, reason: 'Provedor de e-mail não suportado' }
+  }
+
   if (!RESEND_API_KEY) {
     console.warn(`E-mail não enviado para ${to}: RESEND_API_KEY não configurada`)
     return { skipped: true }
   }
 
   try {
+    const payload = {
+      from: EMAIL_FROM,
+      to: Array.isArray(to) ? to : [to],
+      subject,
+      html,
+      text,
+    }
+
+    if (EMAIL_REPLY_TO) {
+      payload.reply_to = EMAIL_REPLY_TO
+    }
+
     const response = await axios.post(
       'https://api.resend.com/emails',
-      {
-        from: EMAIL_FROM,
-        to: Array.isArray(to) ? to : [to],
-        subject,
-        html,
-        text,
-      },
+      payload,
       {
         headers: {
           Authorization: `Bearer ${RESEND_API_KEY}`,
