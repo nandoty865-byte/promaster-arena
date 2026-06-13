@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 app.use(express.json())
 
 app.get('/', (req, res) => {
-  res.send('ProMaster Arena API online 🚀')
+  res.send('PlayFinal Arena API online 🚀')
 })
 
 // Criar torneio automático de sinuca
@@ -97,7 +97,7 @@ app.get('/tournaments/:id/matches', async (req, res) => {
 
 // Health check
 app.get('/', (req, res) => {
-  res.send('ProMaster Arena API online 🚀')
+  res.send('PlayFinal Arena API online 🚀')
 })
 
 app.listen(3000, () => {

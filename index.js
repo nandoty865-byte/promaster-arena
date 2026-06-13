@@ -27,10 +27,10 @@ const prisma = new PrismaClient({
 const app = express()
 app.use(cors())
 app.use(express.json())
-const JWT_SECRET = process.env.JWT_SECRET || 'promaster_dev_secret'
-const APP_URL = process.env.APP_URL || 'https://www.promasterarena.com.br'
+const JWT_SECRET = process.env.JWT_SECRET || 'playfinal_dev_secret'
+const APP_URL = process.env.APP_URL || 'https://www.playfinal.com.br'
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
-const EMAIL_FROM = process.env.EMAIL_FROM || 'ProMaster Arena <noreply@promasterarena.com.br>'
+const EMAIL_FROM = process.env.EMAIL_FROM || 'PlayFinal Arena <contato@playfinal.com.br>'
 const EVOLUTION_API_URL = (process.env.EVOLUTION_API_URL || '').replace(/\/$/, '')
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || ''
 const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE || ''
@@ -275,7 +275,7 @@ async function sendRegistrationConfirmation(tournament, registration) {
 
   const whatsAppResult = await sendWhatsApp({
     to: registration.phone,
-    text: `ProMaster Arena: recebemos sua inscrição no torneio ${tournament.name}. Confirme sua participação aqui: ${confirmUrl}. ${paymentText}`,
+    text: `PlayFinal Arena: recebemos sua inscrição no torneio ${tournament.name}. Confirme sua participação aqui: ${confirmUrl}. ${paymentText}`,
   })
 
   return { emailResult, whatsAppResult }
@@ -896,7 +896,7 @@ function manualRegistrationEmail(tournamentId, playerData, index) {
     .digest('hex')
     .slice(0, 12)
 
-  return `manual-${tournamentId}-${hash}@promaster.local`
+  return `manual-${tournamentId}-${hash}@playfinal.local`
 }
 
 async function ensureRegistrationForManualPlayer(tournamentId, playerData, index) {
@@ -1155,7 +1155,7 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
 
       if (nextFormat === 'round_robin' && organization?.plan === 'pro' && nextPlayerCount > 64) {
         return res.status(403).json({
-          error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou Circuito ProMaster em etapas, use o plano Master.'
+          error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou Circuito PlayFinal em etapas, use o plano Master.'
         })
       }
     }
@@ -1580,7 +1580,7 @@ const uploadKyc = multer({
 })
 
 app.get('/', (req, res) => {
-  res.send('ProMaster Arena API online 🚀')
+  res.send('PlayFinal Arena API online 🚀')
 })
 
 async function ensureTemplate(sportId, template) {
@@ -2049,7 +2049,7 @@ app.post('/matches/:id/call', auth, requireRole('admin', 'operator'), async (req
       },
     })
 
-    const message = `ProMaster Arena: sua partida no torneio ${match.tournament.name} foi chamada. Jogo #${match.id}, mesa ${match.tableNumber || '-'}. Compareça à mesa.`
+    const message = `PlayFinal Arena: sua partida no torneio ${match.tournament.name} foi chamada. Jogo #${match.id}, mesa ${match.tableNumber || '-'}. Compareça à mesa.`
     const results = []
 
     for (const player of players) {
@@ -2986,7 +2986,7 @@ app.post('/seasons', auth, requireRole('admin'), async (req, res) => {
     }
 
     if (org.plan !== 'master' && org.plan !== 'free') {
-      return res.status(403).json({ error: 'Circuito ProMaster disponível apenas no plano Master' })
+      return res.status(403).json({ error: 'Circuito PlayFinal disponível apenas no plano Master' })
     }
 
     const { name, tournamentCount, playerCount, startDate, endDate, locations, rules, prize } = req.body
@@ -3282,7 +3282,7 @@ if (requestedPlayerCount > effectiveLimits.maxPlayers) {
 
 if (requestedFormat === 'round_robin' && currentPlan === 'pro' && requestedPlayerCount > 64) {
   return res.status(403).json({
-    error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou Circuito ProMaster em etapas, use o plano Master.'
+    error: 'No plano Pro, torneios todos contra todos são permitidos até 64 jogadores. Para acima de 64 ou Circuito PlayFinal em etapas, use o plano Master.'
   })
 }
 
@@ -3313,7 +3313,7 @@ if (seasonId) {
   }
 
   if (org.plan !== 'master' && org.plan !== 'free') {
-    return res.status(403).json({ error: 'Circuito ProMaster disponível apenas no plano Master' })
+    return res.status(403).json({ error: 'Circuito PlayFinal disponível apenas no plano Master' })
   }
 
   const seasonTournamentsCount = await prisma.tournament.count({
@@ -3409,7 +3409,7 @@ for (const playerData of parsedPlayers.slice(0, requestedPlayerCount)) {
     res.json({
       ok: true,
       tournament,
-      publicUrl: `https://www.promasterarena.com.br/telao/${tournament.id}`,
+      publicUrl: `${APP_URL}/telao/${tournament.id}`,
       publicSlug,
       playersCreated: players.length,
       matchesCreated: 0,
@@ -3962,10 +3962,10 @@ app.post('/auth/register', async (req, res) => {
 
     await sendEmail({
       to: email,
-      subject: 'Confirme seu cadastro no ProMaster Arena',
-      text: `Bem-vindo ao ProMaster Arena. Confirme seu e-mail acessando: ${verifyUrl}`,
+      subject: 'Confirme seu cadastro no PlayFinal Arena',
+      text: `Bem-vindo ao PlayFinal Arena. Confirme seu e-mail acessando: ${verifyUrl}`,
       html: `
-        <h2>Bem-vindo ao ProMaster Arena</h2>
+        <h2>Bem-vindo ao PlayFinal Arena</h2>
         <p>Sua arena <strong>${escapeHtml(organizationName)}</strong> foi criada com plano Trial Free.</p>
         <p>Confirme seu e-mail para manter a comunicação ativa na plataforma.</p>
         <p><a href="${verifyUrl}">Confirmar e-mail</a></p>
@@ -3974,7 +3974,7 @@ app.post('/auth/register', async (req, res) => {
 
     await sendWhatsApp({
       to: phone,
-      text: `Olá ${name || organizationName}! Sua conta no ProMaster Arena foi criada. Confirme seu e-mail e acesse: ${APP_URL}/login`,
+      text: `Olá ${name || organizationName}! Sua conta no PlayFinal Arena foi criada. Confirme seu e-mail e acesse: ${APP_URL}/login`,
     })
 
     res.json({
@@ -4111,7 +4111,7 @@ app.post('/auth/register-organizer', (req, res) => {
 
       await sendEmail({
         to: email,
-        subject: 'Confirme seu cadastro de organizador - ProMaster Arena',
+        subject: 'Confirme seu cadastro de organizador - PlayFinal Arena',
         text: `Seu cadastro de organizador foi recebido. Confirme seu e-mail: ${verifyUrl}`,
         html: `
           <h2>Cadastro de organizador recebido</h2>
@@ -4122,7 +4122,7 @@ app.post('/auth/register-organizer', (req, res) => {
 
       await sendWhatsApp({
         to: phone,
-        text: `ProMaster Arena: cadastro de organizador recebido para ${organizationName}. Valide seu cadastro por este link: ${verifyUrl}`,
+        text: `PlayFinal Arena: cadastro de organizador recebido para ${organizationName}. Valide seu cadastro por este link: ${verifyUrl}`,
       })
 
       res.json({
@@ -4225,18 +4225,18 @@ app.post('/players/register', async (req, res) => {
 
     await sendEmail({
       to: email,
-      subject: 'Valide seu cadastro de jogador - ProMaster Arena',
+      subject: 'Valide seu cadastro de jogador - PlayFinal Arena',
       text: `Seu perfil de jogador foi criado. Valide seu cadastro: ${verifyUrl}`,
       html: `
         <h2>Valide seu cadastro de jogador</h2>
-        <p>Olá <strong>${escapeHtml(fullName)}</strong>, confirme seu cadastro para ativar seu perfil no ProMaster Arena.</p>
+        <p>Olá <strong>${escapeHtml(fullName)}</strong>, confirme seu cadastro para ativar seu perfil no PlayFinal Arena.</p>
         <p><a href="${verifyUrl}">Validar cadastro</a></p>
       `,
     })
 
     await sendWhatsApp({
       to: phone,
-      text: `ProMaster Arena: valide seu cadastro de jogador por este link: ${verifyUrl}`,
+      text: `PlayFinal Arena: valide seu cadastro de jogador por este link: ${verifyUrl}`,
     })
 
     res.json({
@@ -4440,11 +4440,11 @@ app.post('/auth/forgot-password', async (req, res) => {
 
       await sendEmail({
         to: user.email,
-        subject: 'Recuperação de senha - ProMaster Arena',
+        subject: 'Recuperação de senha - PlayFinal Arena',
         text: `Para redefinir sua senha, acesse: ${resetUrl}`,
         html: `
           <h2>Recuperação de senha</h2>
-          <p>Recebemos uma solicitação para redefinir a senha da sua conta no ProMaster Arena.</p>
+          <p>Recebemos uma solicitação para redefinir a senha da sua conta no PlayFinal Arena.</p>
           <p><a href="${resetUrl}">Redefinir senha</a></p>
           <p>Este link expira em 1 hora.</p>
         `,
@@ -4453,7 +4453,7 @@ app.post('/auth/forgot-password', async (req, res) => {
       if (user.phone) {
         await sendWhatsApp({
           to: user.phone,
-          text: `ProMaster Arena: recebemos uma solicitação de recuperação de senha. Redefina por este link: ${resetUrl}`,
+          text: `PlayFinal Arena: recebemos uma solicitação de recuperação de senha. Redefina por este link: ${resetUrl}`,
         })
       }
     }
@@ -4531,7 +4531,7 @@ app.post('/auth/login', async (req, res) => {
     }
 
     if (user.role !== 'superadmin' && ['blocked', 'deleted'].includes(user.organization?.status)) {
-      return res.status(403).json({ error: 'Acesso bloqueado. Entre em contato com o suporte ProMaster Arena.' })
+      return res.status(403).json({ error: 'Acesso bloqueado. Entre em contato com o suporte PlayFinal Arena.' })
     }
 
     const token = jwt.sign(
@@ -5584,15 +5584,15 @@ app.post('/billing/create-pix', auth, requireRole('admin'), async (req, res) => 
 
     const plans = {
       pro: {
-        title: 'Plano PRO - ProMaster Arena',
+        title: 'Plano PRO - PlayFinal Arena',
         price: 59.90
       },
       master: {
-        title: 'Plano MASTER - ProMaster Arena',
+        title: 'Plano MASTER - PlayFinal Arena',
         price: 89.90
       },
       avulso: {
-        title: 'Torneio Avulso - ProMaster Arena',
+        title: 'Torneio Avulso - PlayFinal Arena',
         price: 21.90
       }
     }
@@ -5883,21 +5883,21 @@ app.post('/me/users/create', auth, requireRole('admin'), async (req, res) => {
 
     await sendEmail({
       to: email,
-      subject: 'Seu acesso ao ProMaster Arena',
-      text: `Olá ${name}. Seu acesso ao ProMaster Arena foi criado. Login: ${email}. Senha inicial: ${password}. Acesse: ${APP_URL}/login`,
+      subject: 'Seu acesso ao PlayFinal Arena',
+      text: `Olá ${name}. Seu acesso ao PlayFinal Arena foi criado. Login: ${email}. Senha inicial: ${password}. Acesse: ${APP_URL}/login`,
       html: `
         <h2>Seu acesso foi criado</h2>
-        <p>Olá <strong>${escapeHtml(name)}</strong>, você recebeu acesso ao ProMaster Arena.</p>
+        <p>Olá <strong>${escapeHtml(name)}</strong>, você recebeu acesso ao PlayFinal Arena.</p>
         <p><strong>Login:</strong> ${escapeHtml(email)}</p>
         <p><strong>Senha inicial:</strong> ${escapeHtml(password)}</p>
-        <p><a href="${APP_URL}/login">Entrar no ProMaster Arena</a></p>
+        <p><a href="${APP_URL}/login">Entrar no PlayFinal Arena</a></p>
       `,
     })
 
     if (phone) {
       await sendWhatsApp({
         to: phone,
-        text: `Olá ${name}! Seu acesso ao ProMaster Arena foi criado. Login: ${email}. Senha inicial: ${password}. Acesse: ${APP_URL}/login`,
+        text: `Olá ${name}! Seu acesso ao PlayFinal Arena foi criado. Login: ${email}. Senha inicial: ${password}. Acesse: ${APP_URL}/login`,
       })
     }
 
@@ -5938,5 +5938,5 @@ app.get('/auth/verify-email/:token', async (req, res) => {
 const PORT = Number(process.env.PORT || 3000)
 
 app.listen(PORT, () => {
-  console.log(`ProMaster Arena API rodando na porta ${PORT} 🚀`)
+  console.log(`PlayFinal Arena API rodando na porta ${PORT} 🚀`)
 })

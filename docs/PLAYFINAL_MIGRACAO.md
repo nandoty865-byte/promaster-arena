@@ -1,0 +1,74 @@
+# Migracao PlayFinal
+
+## Estado da marca
+
+- Marca nova: PlayFinal Arena.
+- Dominio contratado: `www.playfinal.com.br`.
+- E-mail operacional contratado: `contato@playfinal.com.br`.
+- Provedor de e-mail: Google Workspace.
+
+## Principio de migracao segura
+
+1. Publicar primeiro em homologacao.
+2. Validar links de cadastro, login, WhatsApp, e-mail e pagamentos.
+3. So depois promover para producao.
+4. Nao remover a estrutura antiga de VPS antes de confirmar rollback.
+
+## Etapa 1 - Aplicacao
+
+- Atualizar marca visual do frontend.
+- Atualizar textos publicos, telao, paginas de cadastro e paineis.
+- Atualizar favicon e assets visuais.
+- Atualizar mensagens da API, e-mails e WhatsApp para PlayFinal Arena.
+- Manter nomes internos de banco, PM2 e pastas de deploy ate a etapa de infraestrutura.
+
+## Etapa 2 - Variaveis de ambiente na VPS
+
+Atualizar nos ambientes correspondentes, sem versionar segredos:
+
+```text
+APP_URL=https://www.playfinal.com.br
+EMAIL_FROM=PlayFinal Arena <contato@playfinal.com.br>
+```
+
+Homologacao deve usar dominio proprio de teste quando definido. Se ainda nao houver subdominio PlayFinal de homologacao, manter o dominio atual de teste ate o DNS novo ser criado.
+
+## Etapa 3 - DNS e Nginx
+
+- Apontar `www.playfinal.com.br` para a VPS.
+- Criar/ajustar `server_name` no Nginx para o novo dominio.
+- Emitir certificado TLS para `www.playfinal.com.br`.
+- Validar `nginx -t`.
+- Recarregar Nginx.
+
+## Etapa 4 - Integracoes
+
+- Resend ou provedor de e-mail: validar remetente `contato@playfinal.com.br`.
+- Google Workspace: validar SPF, DKIM e DMARC.
+- Evolution/WhatsApp: revisar nome da instancia, mensagens e links enviados.
+- Mercado Pago: revisar nome dos itens, URLs de retorno e webhooks.
+
+## Etapa 5 - Validacao
+
+- `npm run build` no frontend.
+- `node --check index.js`.
+- Login.
+- Cadastro de organizador.
+- Cadastro de jogador.
+- Link de validacao por e-mail.
+- Link de validacao por WhatsApp.
+- Criacao de torneio.
+- Pagina publica.
+- Telao.
+- Modo arbitro.
+
+## Pontos mantidos temporariamente
+
+Os nomes abaixo podem continuar antigos durante a primeira publicacao para reduzir risco operacional:
+
+- Pastas `/opt/promaster-arena` e `/var/www/promaster`.
+- Processo PM2 `promaster-api`.
+- Banco `promaster`.
+- Backups em `/opt/promaster-backups`.
+
+Esses nomes devem ser migrados somente em janela propria, com backup e plano de rollback.

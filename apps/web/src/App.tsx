@@ -426,7 +426,7 @@ function SignupChoice() {
     <div className="onboardingPage signupChoicePage">
       <section className="onboardingHero">
         <span>Inscreva-se</span>
-        <h1>Escolha como você quer entrar no ProMaster Arena.</h1>
+        <h1>Escolha como você quer entrar no PlayFinal Arena.</h1>
         <p>Organizadores criam e operam torneios. Jogadores acompanham histórico, ranking, estatísticas e avisos dos eventos.</p>
       </section>
 
@@ -640,7 +640,7 @@ function OrganizerSignup() {
       <section className="onboardingHero">
         <span>Cadastro de organizador</span>
         <h1>Crie sua conta para organizar torneios.</h1>
-        <p>Informe seu perfil, modalidades, dados cadastrais e crie seu acesso ao ProMaster Arena.</p>
+        <p>Informe seu perfil, modalidades, dados cadastrais e crie seu acesso ao PlayFinal Arena.</p>
         <div className="onboardingSwitch">
           <a className="active" href="/cadastro-organizador">Sou organizador</a>
           <a href="/cadastro-jogador">Sou jogador</a>
@@ -1305,7 +1305,7 @@ function Login() {
     <div className="app">
       <div className="panel" style={{ maxWidth: 420, margin: '80px auto' }}>
         <h1>Login</h1>
-        <p>ProMaster Arena</p>
+        <p>PlayFinal Arena</p>
 
         <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Usuário ou e-mail" />
         <input
@@ -1422,7 +1422,7 @@ function ResetPassword() {
     <div className="app">
       <div className="panel" style={{ maxWidth: 420, margin: '80px auto' }}>
         <h1>Nova senha</h1>
-        <p>Crie uma nova senha para acessar o ProMaster Arena.</p>
+        <p>Crie uma nova senha para acessar o PlayFinal Arena.</p>
 
         <input
           type="password"
@@ -1481,7 +1481,7 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
 
   return (
     <aside className="sidebar">
-      <div className="sidebarLogo">ProMaster</div>
+      <div className="sidebarLogo">PlayFinal</div>
       <button onClick={() => navigate('/app')}>Dashboard</button>
 
       <details className="sidebarGroup">
@@ -1527,7 +1527,7 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
 
       {showMasterLinks && (
         <details className="sidebarGroup">
-          <summary>Circuito ProMaster</summary>
+          <summary>Circuito PlayFinal</summary>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Dashboard Geral</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Circuito</button>
           <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/etapas')}>Etapas</button>
@@ -2368,7 +2368,7 @@ function Dashboard({ user }: any) {
     👤 {user?.name || 'Perfil'}
   </button>
 </div>
-          <div className="badge">🎱 ProMaster Arena</div>
+          <div className="badge">🎱 PlayFinal Arena</div>
 
           {user?.organization?.logoUrl && (
             <img src={user.organization.logoUrl} className="logo" />
@@ -3346,7 +3346,7 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
   return (
     <div className="tournamentPageLayout">
       <aside className="tournamentMainSidebar">
-        <div className="sidebarBrand">🎱 ProMaster</div>
+        <div className="sidebarBrand">🎱 PlayFinal</div>
         <button className="backDashboardButton" onClick={() => navigate('/app')}>
           Voltar ao painel principal
         </button>
@@ -3507,7 +3507,7 @@ function Upgrade() {
 
       <main className="saasMain">
         <header className="hero">
-          <div className="badge">💳 ProMaster Arena</div>
+          <div className="badge">💳 PlayFinal Arena</div>
           <h1>Planos e pagamentos</h1>
           <p>Consulte seu plano, vencimento, alterações e histórico financeiro.</p>
         </header>
@@ -3569,7 +3569,7 @@ function Upgrade() {
       {showCancel && (
         <div className="panel cancelPanel">
           <h2>Confirmar cancelamento</h2>
-          <p>Antes de cancelar, selecione o motivo principal. Isso ajuda a melhorar o ProMaster Arena.</p>
+          <p>Antes de cancelar, selecione o motivo principal. Isso ajuda a melhorar o PlayFinal Arena.</p>
 
           <div className="cancelReasons">
             {[
@@ -3934,7 +3934,7 @@ function TournamentSettings() {
   return (
     <div className="tournamentPageLayout">
       <aside className="tournamentMainSidebar">
-        <div className="sidebarBrand">🎱 ProMaster</div>
+        <div className="sidebarBrand">🎱 PlayFinal</div>
         <button className="backDashboardButton" onClick={() => navigate('/app')}>
           Voltar ao painel principal
         </button>
@@ -4079,7 +4079,7 @@ function TournamentSettings() {
               </select>
               {form.format === 'round_robin' && (
                 <p className="helperText">
-                  Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou Circuito ProMaster com várias etapas/dias e ranking acumulado, use o plano Master.
+                  Todos contra todos: no plano Pro o limite é 64 jogadores. Para torneios acima de 64 ou Circuito PlayFinal com várias etapas/dias e ranking acumulado, use o plano Master.
                 </p>
               )}
               <p className="helperText">Quantidade e modelo só podem ser alterados antes de gerar a chave.</p>
@@ -4379,7 +4379,7 @@ function Financeiro() {
 
       <main className="saasMain">
         <header className="hero">
-          <div className="badge">💰 ProMaster Arena</div>
+          <div className="badge">💰 PlayFinal Arena</div>
           <h1>Painel Financeiro</h1>
           <p>Resumo de cobranças Pix e faturamento</p>
         </header>
@@ -4486,7 +4486,7 @@ const personaLandingContent: Record<PersonaLandingType, {
     ],
     showcaseTitle: 'Menos planilha, mais espetáculo.',
     showcaseText: 'O organizador acompanha tudo em uma operação visual, com dados claros e recursos pensados para evento presencial e transmissão.',
-    image: '/promaster-telao-reference.png',
+    image: '/playfinal-telao-reference.png',
   },
   jogador: {
     badge: 'Para jogadores',
@@ -4511,7 +4511,7 @@ const personaLandingContent: Record<PersonaLandingType, {
     ],
     showcaseTitle: 'Ranking vivo, perfil forte e histórico real.',
     showcaseText: 'O jogador deixa de ser apenas um nome na chave e passa a ter dados, conquistas, calendário e evolução dentro da plataforma.',
-    image: '/promaster-hero-broadcast.png',
+    image: '/playfinal-hero-broadcast.png',
   },
   arena: {
     badge: 'Para arenas e clubes',
@@ -4551,7 +4551,7 @@ const landingLiveHeadlines = [
 function LandingTopHeadline() {
   return (
     <section className="landingTopHeadline" aria-label="Atualizações ao vivo">
-      <strong><span className="landingTopHeadlinePro">Pro</span>Master Live</strong>
+      <strong><span className="landingTopHeadlinePro">Play</span>Final Live</strong>
       <div className="landingTopHeadlineViewport">
         <div className="landingTopHeadlineTrack">
           {[...landingLiveHeadlines, ...landingLiveHeadlines].map(([title, text], index) => (
@@ -4572,10 +4572,10 @@ function LandingHeader() {
       <a className="skipLink" href="#conteudo-principal">Pular para o conteúdo</a>
       <header className="landingHeader">
         <a href="/" className="landingLogo">
-          <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
-          <span className="brandLogoText" aria-label="ProMaster Arena">
-            <span className="brandLogoPro">Pro</span>
-            <span className="brandLogoMaster">Master</span>
+          <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+          <span className="brandLogoText" aria-label="PlayFinal Arena">
+            <span className="brandLogoPro">Play</span>
+            <span className="brandLogoMaster">Final</span>
             <span className="brandLogoArena">Arena</span>
           </span>
         </a>
@@ -4613,7 +4613,7 @@ const staticPublicPages: Record<StaticPublicPageType, {
 }> = {
   sobre: {
     eyebrow: 'Sobre a plataforma',
-    title: 'O ProMaster Arena transforma torneios em experiências profissionais.',
+    title: 'O PlayFinal Arena transforma torneios em experiências profissionais.',
     description: 'Criamos uma estrutura para organizadores, arenas e jogadores acompanharem eventos, rankings, pagamentos, telão e comunicação em tempo real.',
     blocks: [
       ['Missão', 'Profissionalizar torneios e circuitos esportivos com tecnologia acessível, visual premium e operação simples.'],
@@ -4623,7 +4623,7 @@ const staticPublicPages: Record<StaticPublicPageType, {
   },
   contato: {
     eyebrow: 'Contato',
-    title: 'Fale com o ProMaster Arena.',
+    title: 'Fale com o PlayFinal Arena.',
     description: 'Use este canal para dúvidas comerciais, suporte, parcerias, demonstrações e implantação da plataforma na sua arena.',
     blocks: [
       ['Comercial', 'Solicite demonstração para arenas, clubes, bares, salões e organizadores de eventos esportivos.'],
@@ -4654,7 +4654,7 @@ const staticPublicPages: Record<StaticPublicPageType, {
   termos: {
     eyebrow: 'Termos de uso',
     title: 'Regras gerais de uso da plataforma.',
-    description: 'Esta página resume as bases de uso do ProMaster Arena. A versão jurídica final deve ser revisada antes da operação comercial plena.',
+    description: 'Esta página resume as bases de uso do PlayFinal Arena. A versão jurídica final deve ser revisada antes da operação comercial plena.',
     blocks: [
       ['Uso responsável', 'Organizadores e usuários devem manter dados corretos, respeitar regras dos eventos e atuar com boa-fé.'],
       ['Eventos e pagamentos', 'Cada organizador é responsável por regras, premiações, inscrições, cancelamentos e comunicação com participantes.'],
@@ -4664,7 +4664,7 @@ const staticPublicPages: Record<StaticPublicPageType, {
   privacidade: {
     eyebrow: 'Privacidade',
     title: 'Proteção dos dados dos usuários.',
-    description: 'O ProMaster Arena deve tratar dados pessoais com transparência, segurança e finalidade clara para operação de eventos e comunicação.',
+    description: 'O PlayFinal Arena deve tratar dados pessoais com transparência, segurança e finalidade clara para operação de eventos e comunicação.',
     blocks: [
       ['Dados coletados', 'Podem ser usados dados de cadastro, contato, inscrições, pagamentos, rankings e participação em torneios.'],
       ['Finalidade', 'Os dados apoiam login, inscrições, avisos, rankings, suporte, segurança e operação dos eventos.'],
@@ -4689,10 +4689,10 @@ function LandingFooter() {
       <div className="landingFooterInner">
         <div className="footerBrand">
           <a href="/" className="landingLogo">
-            <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
-            <span className="brandLogoText" aria-label="ProMaster Arena">
-              <span className="brandLogoPro">Pro</span>
-              <span className="brandLogoMaster">Master</span>
+            <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+            <span className="brandLogoText" aria-label="PlayFinal Arena">
+              <span className="brandLogoPro">Play</span>
+              <span className="brandLogoMaster">Final</span>
               <span className="brandLogoArena">Arena</span>
             </span>
           </a>
@@ -4725,16 +4725,16 @@ function LandingFooter() {
         <nav className="footerLinks footerSocials" aria-label="Redes sociais">
           <strong>Redes sociais</strong>
           <div>
-            <a href="/contato" aria-label="Instagram da ProMaster Arena">IG</a>
-            <a href="/contato" aria-label="YouTube da ProMaster Arena">YT</a>
-            <a href="/contato" aria-label="WhatsApp da ProMaster Arena">WA</a>
-            <a href="/contato" aria-label="LinkedIn da ProMaster Arena">IN</a>
+            <a href="/contato" aria-label="Instagram da PlayFinal Arena">IG</a>
+            <a href="/contato" aria-label="YouTube da PlayFinal Arena">YT</a>
+            <a href="/contato" aria-label="WhatsApp da PlayFinal Arena">WA</a>
+            <a href="/contato" aria-label="LinkedIn da PlayFinal Arena">IN</a>
           </div>
         </nav>
       </div>
 
       <div className="landingFooterBottom">
-        <span>© 2026 ProMaster Arena. Todos os direitos reservados.</span>
+        <span>© 2026 PlayFinal Arena. Todos os direitos reservados.</span>
         <span>Torneios em tempo real.</span>
       </div>
     </footer>
@@ -4786,7 +4786,7 @@ function OrganizerLanding() {
   ]
 
   const testimonials = [
-    ['/organizer/photos/avatar-organizador-1.webp', 'Fabio Martins', 'Arena 147 - São Paulo/SP', 'O ProMaster Arena mudou a forma como organizamos nossos torneios. Muito mais profissional e fácil.'],
+    ['/organizer/photos/avatar-organizador-1.webp', 'Fabio Martins', 'Arena 147 - São Paulo/SP', 'O PlayFinal Arena mudou a forma como organizamos nossos torneios. Muito mais profissional e fácil.'],
     ['/organizer/photos/avatar-organizador-2.webp', 'André Souza', 'Sinuca Club - Curitiba/PR', 'A plataforma é completa e o suporte sempre nos ajuda quando precisamos. Recomendo demais.'],
     ['/organizer/photos/avatar-organizador-3.webp', 'Lucas Pereira', 'Bola 8 Snooker Bar - BH/MG', 'A transmissão integrada é um show à parte. Nossos eventos viraram referência.'],
   ]
@@ -4816,7 +4816,7 @@ function OrganizerLanding() {
           </div>
 
           <div className="organizerHeroMockup" aria-label="Prévia do painel do organizador">
-            <img src="/organizer/photos/dashboard-hero-mockup-recriado.webp" alt="Dashboard do organizador ProMaster Arena" />
+            <img src="/organizer/photos/dashboard-hero-mockup-recriado.webp" alt="Dashboard do organizador PlayFinal Arena" />
           </div>
         </section>
 
@@ -4878,7 +4878,7 @@ function OrganizerLanding() {
             <p>Crie agora mesmo seu torneio gratuitamente e descubra por que somos a plataforma número 1 do Brasil.</p>
             <a className="landingButton" href="/cadastro-organizador">Criar torneio gratuitamente</a>
           </div>
-          <img src="/organizer/photos/trofeu-cta-recriado.webp" alt="Troféu ProMaster Arena" />
+          <img src="/organizer/photos/trofeu-cta-recriado.webp" alt="Troféu PlayFinal Arena" />
         </section>
       </main>
 
@@ -4898,7 +4898,7 @@ function PlayerLanding() {
   const upcomingTournaments = [
     ['/player/icons/torneio-sinuca.svg', 'Campinas Open de Sinuca', 'Campinas/SP', '25 MAI', 'R$ 5.000'],
     ['/player/icons/calendario-torneio.svg', 'Santos 8 Ball Cup', 'Santos/SP', '08 JUN', 'R$ 3.000'],
-    ['/player/icons/premiacao.svg', 'Masters ProMaster 2027', 'São Paulo/SP', '20 JUL', 'R$ 20.000'],
+    ['/player/icons/premiacao.svg', 'Masters PlayFinal 2027', 'São Paulo/SP', '20 JUL', 'R$ 20.000'],
   ]
 
   const achievements = [
@@ -4940,7 +4940,7 @@ function PlayerLanding() {
 
         <section className="playerProfilePanel" aria-label="Resumo de carreira do jogador">
           <article className="playerProfileCard">
-            <img className="playerAvatar" src="/player/photos/avatar-jogador-generico-recriado.webp" alt="Avatar de jogador ProMaster Arena" />
+            <img className="playerAvatar" src="/player/photos/avatar-jogador-generico-recriado.webp" alt="Avatar de jogador PlayFinal Arena" />
             <div>
               <strong>Fernando Toyomoto</strong>
               <span>São Paulo/SP</span>
@@ -5029,7 +5029,7 @@ function PlayerLanding() {
 
         <section className="playerCommunityCta">
           <div>
-            <h2>Entre para a comunidade ProMaster Arena</h2>
+            <h2>Entre para a comunidade PlayFinal Arena</h2>
             <p>Crie seu perfil gratuito e comece sua jornada rumo ao topo do ranking.</p>
             <a className="landingButton playerPrimaryButton" href="/inscreva-se">Criar meu perfil</a>
           </div>
@@ -5108,7 +5108,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
 
       <section className="personaShowcase">
         <div>
-          <span className="landingBadge">ProMaster Arena</span>
+          <span className="landingBadge">PlayFinal Arena</span>
           <h2>{page.showcaseTitle}</h2>
           <p>{page.showcaseText}</p>
           <a className="landingButton" href="/inscreva-se">Começar agora</a>
@@ -5174,7 +5174,7 @@ function Landing() {
 
       <section id="conteudo-principal" className="landingHero arenaLandingHero">
         <div className="arenaHeroCopy">
-          <img className="arenaHeroLogo" src="/promaster-logo-novo.png" alt="ProMaster Arena" />
+          <img className="arenaHeroLogo" src="/playfinal-logo-symbol.png" alt="PlayFinal Arena" />
 
           <h1 className="arenaHeroTitle">
             <span className="arenaHeroTitleTop">A plataforma completa</span>
@@ -5193,10 +5193,10 @@ function Landing() {
           </div>
         </div>
 
-        <div className="arenaHeroVisual" aria-label="Prévia visual da plataforma ProMaster Arena">
+        <div className="arenaHeroVisual" aria-label="Prévia visual da plataforma PlayFinal Arena">
           <div className="arenaDeviceStage">
-            <img className="arenaNotebookMockup" src="/landing-notebook-mockup.png" alt="Painel ProMaster Arena em notebook" />
-            <img className="arenaPhoneMockupImage" src="/landing-phone-mockup.png" alt="Aplicação ProMaster Arena em celular" />
+            <img className="arenaNotebookMockup" src="/landing-notebook-mockup-playfinal.png" alt="Painel PlayFinal Arena em notebook" />
+            <img className="arenaPhoneMockupImage" src="/landing-phone-mockup-playfinal.png" alt="Aplicação PlayFinal Arena em celular" />
           </div>
         </div>
       </section>
@@ -5352,10 +5352,10 @@ function PlansComparison() {
     <div className="plansPage">
       <header className="plansPageHeader">
         <a href="/" className="landingLogo">
-          <img src="/promaster-logo-novo.png" alt="ProMaster Arena" />
-          <span className="brandLogoText" aria-label="ProMaster Arena">
-            <span className="brandLogoPro">Pro</span>
-            <span className="brandLogoMaster">Master</span>
+          <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+          <span className="brandLogoText" aria-label="PlayFinal Arena">
+            <span className="brandLogoPro">Play</span>
+            <span className="brandLogoMaster">Final</span>
             <span className="brandLogoArena">Arena</span>
           </span>
         </a>
@@ -5548,7 +5548,7 @@ function PublicTournament() {
   return (
     <div className="publicPage">
       <header className="publicHero">
-        <span>{tournament.liveStarted ? 'AO VIVO • ProMaster Arena' : 'ProMaster Arena'}</span>
+        <span>{tournament.liveStarted ? 'AO VIVO • PlayFinal Arena' : 'PlayFinal Arena'}</span>
       </header>
 
       <main>
@@ -5791,7 +5791,7 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
   const [showCreateSeason, setShowCreateSeason] = useState(false)
   const [circuitDashboardOpen, setCircuitDashboardOpen] = useState(false)
   const [form, setForm] = useState<any>({
-    name: 'Circuito ProMaster São Paulo 2027',
+    name: 'Circuito PlayFinal São Paulo 2027',
     tournamentCount: 8,
     playerCount: 128,
     startDate: '',
@@ -5926,7 +5926,7 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
 
   function createSeason() {
     if (!isMasterPlan) {
-      alert('Circuito ProMaster disponível apenas no plano Master.')
+      alert('Circuito PlayFinal disponível apenas no plano Master.')
       return
     }
 
@@ -6101,7 +6101,7 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
 
       <main className="saasMain">
         <header className="hero">
-          <div className="badge">🏆 Circuito ProMaster</div>
+          <div className="badge">🏆 Circuito PlayFinal</div>
           <h1>
             {defaultPanel === 'etapas'
               ? 'Etapas'
@@ -6124,14 +6124,14 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
                 ? 'Selecione um circuito para abrir o dashboard individual com ranking, etapas, calendário e status.'
                 : defaultPanel === 'arenas'
                   ? 'Cadastre arenas, salões, bares e demais locais onde as etapas e jogos acontecem.'
-              : 'Operação do Circuito ProMaster separada por etapas, pagamentos e participantes.'}
+              : 'Operação do Circuito PlayFinal separada por etapas, pagamentos e participantes.'}
           </p>
         </header>
 
         {!isMasterPlan && (
           <div className="panel cancelPanel">
             <h2>Recurso Master</h2>
-            <p>O Circuito ProMaster está disponível para o plano Master.</p>
+            <p>O Circuito PlayFinal está disponível para o plano Master.</p>
             <button onClick={() => navigate('/upgrade')}>Ver planos</button>
           </div>
         )}
@@ -6316,7 +6316,7 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
               <h3>Ranking dos Organizadores</h3>
               <div className="seasonSimpleTable organizer">
                 <div><span>Organizador</span><span>Eventos</span></div>
-                <div><strong>{user?.organization?.name || 'ProMaster Arena'}</strong><span>{executiveOrganizerEvents}</span></div>
+                <div><strong>{user?.organization?.name || 'PlayFinal Arena'}</strong><span>{executiveOrganizerEvents}</span></div>
               </div>
             </div>
           </div>
@@ -6328,7 +6328,7 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
             <div className="detailsContent seasonCreateModal" onClick={e => e.stopPropagation()}>
               <div className="detailsHeader">
                 <div>
-                  <h2>Novo Circuito ProMaster</h2>
+                  <h2>Novo Circuito PlayFinal</h2>
                   <p>Configure a temporada, etapas previstas, regras de pontuação e premiação total.</p>
                 </div>
                 <button className="modalCloseButton" onClick={() => setShowCreateSeason(false)}>Fechar</button>
@@ -6556,7 +6556,7 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
               <div className="circuitSideStack">
                 <div className="circuitPanelCard">
                   <h3>Race to Masters</h3>
-                  <p>Os 16 melhores do ano classificam para o Masters ProMaster.</p>
+                  <p>Os 16 melhores do ano classificam para o Masters PlayFinal.</p>
                   <div className="raceList">
                     {raceToMasters.slice(0, 6).map((item: any, index: number) => (
                       <span key={item.name}>{index + 1}. {item.name} <strong>{item.points}</strong></span>
@@ -7114,7 +7114,7 @@ function CreateTournament({ user }: any) {
             )}
             {tournamentFormat === 'round_robin' && (
               <p className="helperText">
-                Todos contra todos: plano Pro permite até 64 jogadores. Plano Master permite torneios acima de 64 e também Circuito ProMaster em várias etapas/dias com ranking acumulado.
+                Todos contra todos: plano Pro permite até 64 jogadores. Plano Master permite torneios acima de 64 e também Circuito PlayFinal em várias etapas/dias com ranking acumulado.
               </p>
             )}
 
@@ -7190,7 +7190,7 @@ function CreateTournament({ user }: any) {
 
             {seasons.length > 0 && (
               <>
-                <label>Circuito ProMaster</label>
+                <label>Circuito PlayFinal</label>
                 <select value={seasonId} onChange={e => setSeasonId(e.target.value)}>
                   <option value="">Torneio avulso fora de circuito</option>
                   {seasons.map(season => (
@@ -7437,7 +7437,7 @@ function CreateTournament({ user }: any) {
               {broadcastType === 'youtube' && youtubeUrl && <p>Transmissão: YouTube</p>}
               {broadcastType === 'obs' && <p>Transmissão: OBS</p>}
               <p>Cobrança: {paymentCollectionMode === 'platform' ? 'Automática pela plataforma' : paymentCollectionMode === 'both' ? 'Manual e automática' : 'Manual pelo organizador'}</p>
-              {seasonId && <p>Vinculado ao Circuito ProMaster</p>}
+              {seasonId && <p>Vinculado ao Circuito PlayFinal</p>}
             </div>
 
             <button className="primaryButton" onClick={createTournament}>
@@ -7867,7 +7867,7 @@ function TournamentBracket() {
   return (
     <div className="tournamentPageLayout">
       <aside className="tournamentMainSidebar">
-        <div className="sidebarBrand">🎱 ProMaster</div>
+        <div className="sidebarBrand">🎱 PlayFinal</div>
         <button className="backDashboardButton" onClick={() => navigate('/app')}>
           Voltar ao painel principal
         </button>
@@ -8542,7 +8542,7 @@ function RefereeMode() {
   return (
     <div className="tournamentPageLayout">
       <aside className="tournamentMainSidebar">
-        <div className="sidebarBrand">🎱 ProMaster</div>
+        <div className="sidebarBrand">🎱 PlayFinal</div>
         <button className="backDashboardButton" onClick={() => navigate('/app')}>
           Voltar ao painel principal
         </button>
@@ -8802,7 +8802,7 @@ function TelaoTV() {
     <div className="tvMode">
       <div className="tvHeader">
         <div>
-          <span className="tvBadge">🎱 ProMaster Arena</span>
+          <span className="tvBadge">🎱 PlayFinal Arena</span>
 
           {tournament?.organization?.logoUrl && (
             <img src={tournament.organization.logoUrl} className="tvLogo" />
@@ -9150,7 +9150,7 @@ function AdminClientes() {
       return
     }
 
-    window.location.href = `mailto:${adminUser.email}?subject=${encodeURIComponent('ProMaster Arena')}`
+    window.location.href = `mailto:${adminUser.email}?subject=${encodeURIComponent('PlayFinal Arena')}`
   }
 
  useEffect(() => {
@@ -9689,7 +9689,7 @@ function Admin() {
         <header className="hero">
           <div className="badge">👑 Superadmin</div>
           <h1>Painel Master</h1>
-          <p>Gestão da plataforma ProMaster Arena</p>
+          <p>Gestão da plataforma PlayFinal Arena</p>
         </header>
 
         <div className="financeGrid adminStatsGrid">
