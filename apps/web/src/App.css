@@ -3618,6 +3618,7 @@ button:hover {
 }
 
 .landingLogo {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -3628,11 +3629,22 @@ button:hover {
 }
 
 .landingLogo img {
-  width: 64px;
-  height: 64px;
+  width: 168px;
+  height: auto;
+  max-height: 58px;
   border-radius: 0;
   object-fit: contain;
   filter: drop-shadow(0 0 12px rgba(134, 239, 172, .22));
+}
+
+.landingLogo .brandLogoText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .brandLogoText {
@@ -3778,7 +3790,7 @@ button:hover {
   padding: clamp(28px, 6vw, 64px);
   background:
     linear-gradient(90deg, rgba(2, 6, 23, .96) 0%, rgba(2, 6, 23, .72) 42%, rgba(2, 6, 23, .36) 100%),
-    url('/promaster-hero-broadcast.png') center / cover no-repeat;
+    url('/playfinal-hero-broadcast.png') center / cover no-repeat;
   box-shadow: 0 34px 120px rgba(0, 0, 0, .46);
 }
 
@@ -4350,10 +4362,10 @@ button:hover {
 }
 
 .arenaHeroLogo {
-  width: 238px;
+  width: 196px;
   max-width: 48vw;
   display: block;
-  margin: 0 auto 16px;
+  margin: 0 auto 14px;
   filter: drop-shadow(0 0 22px rgba(157, 255, 0, .38));
 }
 
@@ -4392,7 +4404,7 @@ button:hover {
 }
 
 .arenaHeroTitleTop {
-  font-size: clamp(32px, 3.5vw, 44px);
+  font-size: clamp(30px, 3.1vw, 38px);
   font-weight: 700;
   line-height: .95;
   text-align: center;
@@ -4400,7 +4412,7 @@ button:hover {
 }
 
 .arenaHeroTitleBottom {
-  font-size: clamp(34px, 4vw, 46px);
+  font-size: clamp(32px, 3.5vw, 40px);
   font-weight: 700;
   line-height: .95;
   text-align: center;
@@ -4412,7 +4424,7 @@ button:hover {
   background: none;
   -webkit-background-clip: initial;
   background-clip: initial;
-  font-size: clamp(52px, 6vw, 74px);
+  font-size: clamp(46px, 5.1vw, 62px);
   font-style: italic;
   font-weight: 800;
   line-height: .9;
@@ -5077,7 +5089,7 @@ button:hover {
   border-radius: 34px;
   background:
     linear-gradient(90deg, rgba(2, 6, 23, .94), rgba(2, 6, 23, .62)),
-    url('/promaster-hero-broadcast.png') center / cover no-repeat;
+    url('/playfinal-hero-broadcast.png') center / cover no-repeat;
   box-shadow: 0 34px 120px rgba(0, 0, 0, .42);
 }
 
@@ -5085,14 +5097,14 @@ button:hover {
   background:
     linear-gradient(90deg, rgba(2, 6, 23, .95), rgba(15, 23, 42, .58)),
     radial-gradient(circle at 80% 42%, rgba(37, 99, 235, .42), transparent 28%),
-    url('/promaster-hero-broadcast.png') center / cover no-repeat;
+    url('/playfinal-hero-broadcast.png') center / cover no-repeat;
 }
 
 .personaLanding-arena .personaHero {
   background:
     linear-gradient(90deg, rgba(2, 6, 23, .94), rgba(2, 6, 23, .58)),
     radial-gradient(circle at 82% 35%, rgba(245, 158, 11, .28), transparent 28%),
-    url('/promaster-hero-broadcast.png') center / cover no-repeat;
+    url('/playfinal-hero-broadcast.png') center / cover no-repeat;
 }
 
 .personaHeroCopy,
@@ -6205,8 +6217,9 @@ button:hover {
 }
 
 .footerBrand .landingLogo img {
-  width: 92px;
-  height: 92px;
+  width: 210px;
+  height: auto;
+  max-height: 78px;
   border-radius: 0;
 }
 
@@ -7097,7 +7110,7 @@ button:hover {
     padding: 28px;
     background:
       linear-gradient(180deg, rgba(2, 6, 23, .94) 0%, rgba(2, 6, 23, .78) 100%),
-      url('/promaster-hero-broadcast.png') center / cover no-repeat;
+      url('/playfinal-hero-broadcast.png') center / cover no-repeat;
   }
 
   .landingHeroContent {
