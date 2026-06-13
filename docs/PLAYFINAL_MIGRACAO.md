@@ -30,7 +30,7 @@ Atualizar nos ambientes correspondentes, sem versionar segredos:
 APP_URL=https://www.playfinal.com.br
 EMAIL_PROVIDER=resend
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxx
-EMAIL_FROM=PlayFinal <avisos@notificacoes.playfinal.com.br>
+EMAIL_FROM=PlayFinal <avisos@email.playfinal.com.br>
 EMAIL_REPLY_TO=suporte@playfinal.com.br
 SUPPORT_EMAIL=suporte@playfinal.com.br
 ```
@@ -55,7 +55,7 @@ Caixas humanas no Google Workspace:
 Remetente automatico recomendado:
 
 ```text
-From: PlayFinal <avisos@notificacoes.playfinal.com.br>
+From: PlayFinal <avisos@email.playfinal.com.br>
 Reply-To: suporte@playfinal.com.br
 ```
 
@@ -72,7 +72,7 @@ Assim, a plataforma envia por API pelo Resend, mas qualquer resposta do usuario 
 ## Etapa 4 - Integracoes
 
 - Google Workspace: manter MX principal do dominio para recebimento humano.
-- Resend: validar dominio/subdominio de envio `notificacoes.playfinal.com.br`.
+- Resend: validar dominio/subdominio de envio `email.playfinal.com.br`.
 - DNS: nao misturar o MX do Google com o subdominio de envio transacional.
 - Google Workspace: validar SPF, DKIM e DMARC do dominio principal.
 - Resend: validar SPF/DKIM/DMARC ou registros equivalentes exigidos pelo painel do Resend para o subdominio.
