@@ -998,23 +998,26 @@ function PlayerSignup() {
           return
         }
 
-        setCreatedPlayer(data.player)
+        setCreatedPlayer(data)
       })
       .finally(() => setLoading(false))
   }
 
   if (createdPlayer) {
+    const player = createdPlayer.player || createdPlayer
+    const deliveryMessage = createdPlayer.message || 'Cadastro criado. Confira seus canais de contato para validar o perfil.'
+
     return (
       <div className="onboardingPage">
         <section className="onboardingHero playerHero">
           <span>Validação pendente</span>
           <h1>Confirme seu cadastro de jogador.</h1>
-          <p>Enviamos um link de validação para o e-mail e WhatsApp informados. Depois de validar, seu perfil ficará ativo.</p>
+          <p>{deliveryMessage}</p>
         </section>
 
         <section className="onboardingCard">
-          <h2>{createdPlayer.name}</h2>
-          <p>Confira sua caixa de entrada e suas mensagens do WhatsApp.</p>
+          <h2>{player.name}</h2>
+          <p>Depois de validar o cadastro, seu perfil ficará ativo.</p>
           <a href="/login">Ir para login</a>
         </section>
       </div>

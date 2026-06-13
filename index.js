@@ -154,6 +154,29 @@ async function sendWhatsApp({ to, text }) {
   }
 }
 
+function deliveryLabel(result) {
+  if (result?.ok) return 'sent'
+  if (result?.skipped) return 'skipped'
+  return 'failed'
+}
+
+function buildDeliveryResponse(emailResult, whatsAppResult) {
+  const email = deliveryLabel(emailResult)
+  const whatsapp = deliveryLabel(whatsAppResult)
+  const delivered = [email, whatsapp].some(status => status === 'sent')
+
+  return {
+    delivered,
+    delivery: {
+      email,
+      whatsapp,
+    },
+    message: delivered
+      ? 'Cadastro criado. Enviamos o link de confirmação pelos canais disponíveis.'
+      : 'Cadastro criado, mas não conseguimos enviar o link de confirmação. Entre em contato com o suporte.',
+  }
+}
+
 async function createRegistrationPixPayment(tournament, registration) {
   const amount = Number(tournament.registrationFee || 0)
 
@@ -3960,7 +3983,7 @@ app.post('/auth/register', async (req, res) => {
 
     const verifyUrl = `${APP_URL}/api/auth/verify-email/${emailVerifyToken}`
 
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: email,
       subject: 'Confirme seu cadastro no PlayFinal Arena',
       text: `Bem-vindo ao PlayFinal Arena. Confirme seu e-mail acessando: ${verifyUrl}`,
@@ -3972,14 +3995,16 @@ app.post('/auth/register', async (req, res) => {
       `,
     })
 
-    await sendWhatsApp({
+    const whatsAppResult = await sendWhatsApp({
       to: phone,
       text: `Olá ${name || organizationName}! Sua conta no PlayFinal Arena foi criada. Confirme seu e-mail e acesse: ${APP_URL}/login`,
     })
 
+    const delivery = buildDeliveryResponse(emailResult, whatsAppResult)
+
     res.json({
       ok: true,
-      message: 'Conta criada. Enviamos um e-mail de confirmação.'
+      ...delivery,
     })
 
   } catch (error) {
@@ -4109,7 +4134,7 @@ app.post('/auth/register-organizer', (req, res) => {
 
       const verifyUrl = `${APP_URL}/api/auth/verify-email/${emailVerifyToken}`
 
-      await sendEmail({
+      const emailResult = await sendEmail({
         to: email,
         subject: 'Confirme seu cadastro de organizador - PlayFinal Arena',
         text: `Seu cadastro de organizador foi recebido. Confirme seu e-mail: ${verifyUrl}`,
@@ -4120,15 +4145,17 @@ app.post('/auth/register-organizer', (req, res) => {
         `,
       })
 
-      await sendWhatsApp({
+      const whatsAppResult = await sendWhatsApp({
         to: phone,
         text: `PlayFinal Arena: cadastro de organizador recebido para ${organizationName}. Valide seu cadastro por este link: ${verifyUrl}`,
       })
 
+      const delivery = buildDeliveryResponse(emailResult, whatsAppResult)
+
       res.json({
         ok: true,
         organizationId: organization.id,
-        message: 'Cadastro criado. Enviamos confirmação por e-mail e WhatsApp.',
+        ...delivery,
       })
     } catch (error) {
       console.error(error)
@@ -4223,7 +4250,7 @@ app.post('/players/register', async (req, res) => {
 
     const verifyUrl = `${APP_URL}/api/players/verify/${verifyToken}`
 
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: email,
       subject: 'Valide seu cadastro de jogador - PlayFinal Arena',
       text: `Seu perfil de jogador foi criado. Valide seu cadastro: ${verifyUrl}`,
@@ -4234,15 +4261,17 @@ app.post('/players/register', async (req, res) => {
       `,
     })
 
-    await sendWhatsApp({
+    const whatsAppResult = await sendWhatsApp({
       to: phone,
       text: `PlayFinal Arena: valide seu cadastro de jogador por este link: ${verifyUrl}`,
     })
 
+    const delivery = buildDeliveryResponse(emailResult, whatsAppResult)
+
     res.json({
       ok: true,
       player: { id: player.id, name: player.name, email: player.email },
-      message: 'Cadastro criado. Enviamos o link de validação por e-mail e WhatsApp.',
+      ...delivery,
     })
   } catch (error) {
     console.error(error)
@@ -4528,6 +4557,10 @@ app.post('/auth/login', async (req, res) => {
 
     if (!validPassword) {
       return res.status(401).json({ error: 'Usuário ou senha inválidos' })
+    }
+
+    if (user.role !== 'superadmin' && !user.emailVerified && user.emailVerifyToken) {
+      return res.status(403).json({ error: 'Confirme seu cadastro pelo link enviado por e-mail ou WhatsApp antes de entrar.' })
     }
 
     if (user.role !== 'superadmin' && ['blocked', 'deleted'].includes(user.organization?.status)) {
