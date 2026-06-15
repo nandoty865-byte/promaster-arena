@@ -482,6 +482,7 @@ function OrganizerSignup() {
   })
   const [sports, setSports] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const [createdOrganizer, setCreatedOrganizer] = useState<any>(null)
   const isIndividualOrganizer = form.organizerType === 'organizador'
   const organizerTypes = [
     { value: 'organizador', title: 'Organizador', text: 'Pessoa física que organiza torneios sem representar uma empresa.' },
@@ -628,11 +629,33 @@ function OrganizerSignup() {
         return
       }
 
-      alert(data.message || 'Cadastro criado. Enviamos confirmação por e-mail e WhatsApp.')
-      window.location.href = '/login'
+      setCreatedOrganizer({
+        ...data,
+        name: organizationNameForPayload,
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (createdOrganizer) {
+    const deliveryMessage = createdOrganizer.message || 'Cadastro criado. Enviamos o link de confirmação pelos canais disponíveis.'
+
+    return (
+      <div className="onboardingPage">
+        <section className="onboardingHero">
+          <span>Validação pendente</span>
+          <h1>Confirme seu cadastro de organizador.</h1>
+          <p>{deliveryMessage}</p>
+        </section>
+
+        <section className="onboardingCard">
+          <h2>{createdOrganizer.name}</h2>
+          <p>Depois de validar o cadastro, seu acesso ao painel ficará ativo.</p>
+          <a href="/login">Ir para login</a>
+        </section>
+      </div>
+    )
   }
 
   return (
