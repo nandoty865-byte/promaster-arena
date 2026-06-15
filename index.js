@@ -191,6 +191,33 @@ function buildDeliveryResponse(emailResult, whatsAppResult) {
   }
 }
 
+function renderVerificationPage({ title, description, buttonText }) {
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: Arial, sans-serif; background: #0f1115; color: #f7f7f7; }
+    main { width: min(420px, calc(100% - 32px)); padding: 28px; border: 1px solid #2a2f3a; border-radius: 8px; background: #171b22; }
+    h1 { margin: 0 0 12px; font-size: 24px; }
+    p { color: #c8ced8; line-height: 1.5; }
+    button { margin-top: 12px; border: 0; border-radius: 6px; padding: 12px 16px; background: #b7ff00; color: #101010; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>${escapeHtml(title)}</h1>
+    <p>${escapeHtml(description)}</p>
+    <form method="post">
+      <button type="submit">${escapeHtml(buttonText)}</button>
+    </form>
+  </main>
+</body>
+</html>`
+}
+
 async function createRegistrationPixPayment(tournament, registration) {
   const amount = Number(tournament.registrationFee || 0)
 
@@ -4305,6 +4332,29 @@ app.get('/players/verify/:token', async (req, res) => {
       return res.status(400).send('Link de validação inválido ou expirado.')
     }
 
+    res.send(renderVerificationPage({
+      title: 'Validar cadastro de jogador',
+      description: `Olá ${player.name}, confirme abaixo para ativar seu perfil no PlayFinal Arena.`,
+      buttonText: 'Validar cadastro',
+    }))
+  } catch (error) {
+    console.error(error)
+    res.status(500).send('Erro ao carregar validação de jogador')
+  }
+})
+
+app.post('/players/verify/:token', async (req, res) => {
+  try {
+    const { token } = req.params
+
+    const player = await prisma.playerAccount.findFirst({
+      where: { verifyToken: token },
+    })
+
+    if (!player) {
+      return res.status(400).send('Link de validação inválido ou expirado.')
+    }
+
     await prisma.playerAccount.update({
       where: { id: player.id },
       data: {
@@ -4329,6 +4379,10 @@ app.get('/players/:id/dashboard', async (req, res) => {
 
     if (!player) {
       return res.status(404).json({ error: 'Jogador não encontrado' })
+    }
+
+    if (!player.emailVerified) {
+      return res.status(403).json({ error: 'Valide seu cadastro pelo link enviado por e-mail ou WhatsApp antes de acessar o painel.' })
     }
 
     const identityFilters = [
@@ -4573,7 +4627,7 @@ app.post('/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Usuário ou senha inválidos' })
     }
 
-    if (user.role !== 'superadmin' && !user.emailVerified && user.emailVerifyToken) {
+    if (user.role !== 'superadmin' && !user.emailVerified) {
       return res.status(403).json({ error: 'Confirme seu cadastro pelo link enviado por e-mail ou WhatsApp antes de entrar.' })
     }
 
@@ -5956,6 +6010,29 @@ app.post('/me/users/create', auth, requireRole('admin'), async (req, res) => {
 })
 
 app.get('/auth/verify-email/:token', async (req, res) => {
+  try {
+    const { token } = req.params
+
+    const user = await prisma.user.findFirst({
+      where: { emailVerifyToken: token }
+    })
+
+    if (!user) {
+      return res.status(400).send('Token inválido')
+    }
+
+    res.send(renderVerificationPage({
+      title: 'Confirmar cadastro',
+      description: `Olá ${user.name}, confirme abaixo para liberar seu acesso ao PlayFinal Arena.`,
+      buttonText: 'Confirmar cadastro',
+    }))
+  } catch (error) {
+    console.error(error)
+    res.status(500).send('Erro ao carregar validação de e-mail')
+  }
+})
+
+app.post('/auth/verify-email/:token', async (req, res) => {
   try {
     const { token } = req.params
 
