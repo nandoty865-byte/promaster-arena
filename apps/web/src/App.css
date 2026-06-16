@@ -3323,6 +3323,25 @@ button:hover {
   color: #86efac;
 }
 
+.sidebarMenu {
+  display: grid;
+  gap: 18px;
+}
+
+.sidebarMenuSection {
+  display: grid;
+  gap: 0;
+}
+
+.sidebarSectionTitle {
+  display: block;
+  margin: 0 0 8px 4px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+
 .sidebar button {
   width: 100%;
   margin-bottom: 10px;
