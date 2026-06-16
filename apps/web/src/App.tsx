@@ -4598,7 +4598,7 @@ function LandingHeader() {
       <a className="skipLink" href="#conteudo-principal">Pular para o conteúdo</a>
       <header className="landingHeader">
         <a href="/" className="landingLogo">
-          <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+          <img src="/playfinal-wordmark.png" alt="PlayFinal Arena" />
           <span className="brandLogoText" aria-label="PlayFinal Arena">
             <span className="brandLogoPro">Play</span>
             <span className="brandLogoMaster">Final</span>
@@ -4616,7 +4616,7 @@ function LandingHeader() {
             </div>
           </details>
           <a href="/agenda">Agenda</a>
-          <a href="/planos">Plano</a>
+          <a href="/planos">Planos</a>
           <a href="/contato">Contato</a>
         </nav>
 
@@ -4715,7 +4715,7 @@ function LandingFooter() {
       <div className="landingFooterInner">
         <div className="footerBrand">
           <a href="/" className="landingLogo">
-            <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+            <img src="/playfinal-wordmark.png" alt="PlayFinal Arena" />
             <span className="brandLogoText" aria-label="PlayFinal Arena">
               <span className="brandLogoPro">Play</span>
               <span className="brandLogoMaster">Final</span>
@@ -5377,7 +5377,7 @@ function PlansComparison() {
     <div className="plansPage">
       <header className="plansPageHeader">
         <a href="/" className="landingLogo">
-          <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+          <img src="/playfinal-wordmark.png" alt="PlayFinal Arena" />
           <span className="brandLogoText" aria-label="PlayFinal Arena">
             <span className="brandLogoPro">Play</span>
             <span className="brandLogoMaster">Final</span>
