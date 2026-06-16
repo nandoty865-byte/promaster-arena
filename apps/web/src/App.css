@@ -3629,9 +3629,9 @@ button:hover {
 }
 
 .landingLogo img {
-  width: 168px;
+  width: 238px;
   height: auto;
-  max-height: 58px;
+  max-height: 82px;
   border-radius: 0;
   object-fit: contain;
   filter: drop-shadow(0 0 12px rgba(134, 239, 172, .22));
