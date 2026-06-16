@@ -28,10 +28,38 @@ Atualizar nos ambientes correspondentes, sem versionar segredos:
 
 ```text
 APP_URL=https://www.playfinal.com.br
-EMAIL_FROM=PlayFinal Arena <contato@playfinal.com.br>
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxx
+EMAIL_FROM=PlayFinal <avisos@email.playfinal.com.br>
+EMAIL_REPLY_TO=suporte@playfinal.com.br
+SUPPORT_EMAIL=suporte@playfinal.com.br
 ```
 
 Homologacao deve usar dominio proprio de teste quando definido. Se ainda nao houver subdominio PlayFinal de homologacao, manter o dominio atual de teste ate o DNS novo ser criado.
+
+## Etapa 2.1 - E-mail humano e e-mail transacional
+
+A arquitetura de e-mail da PlayFinal deve ser hibrida:
+
+- Google Workspace / Gmail: caixas humanas, atendimento e respostas.
+- Resend: envio automatico transacional da plataforma.
+
+Caixas humanas no Google Workspace:
+
+- `contato@playfinal.com.br`
+- `suporte@playfinal.com.br`
+- `financeiro@playfinal.com.br`
+- `admin@playfinal.com.br`
+- `comercial@playfinal.com.br`
+
+Remetente automatico recomendado:
+
+```text
+From: PlayFinal <avisos@email.playfinal.com.br>
+Reply-To: suporte@playfinal.com.br
+```
+
+Assim, a plataforma envia por API pelo Resend, mas qualquer resposta do usuario cai na caixa humana do suporte no Google Workspace.
 
 ## Etapa 3 - DNS e Nginx
 
@@ -43,10 +71,27 @@ Homologacao deve usar dominio proprio de teste quando definido. Se ainda nao hou
 
 ## Etapa 4 - Integracoes
 
-- Resend ou provedor de e-mail: validar remetente `contato@playfinal.com.br`.
-- Google Workspace: validar SPF, DKIM e DMARC.
+- Google Workspace: manter MX principal do dominio para recebimento humano.
+- Resend: validar dominio/subdominio de envio `email.playfinal.com.br`.
+- DNS: nao misturar o MX do Google com o subdominio de envio transacional.
+- Google Workspace: validar SPF, DKIM e DMARC do dominio principal.
+- Resend: validar SPF/DKIM/DMARC ou registros equivalentes exigidos pelo painel do Resend para o subdominio.
 - Evolution/WhatsApp: revisar nome da instancia, mensagens e links enviados.
 - Mercado Pago: revisar nome dos itens, URLs de retorno e webhooks.
+
+Eventos transacionais previstos para Resend:
+
+- Confirmacao de cadastro.
+- Recuperacao de senha.
+- Confirmacao de inscricao no torneio.
+- Pagamento aprovado ou recusado.
+- Jogo agendado.
+- Chamada de jogador.
+- Aviso de WO.
+- Resultado de partida.
+- Atualizacao de chaveamento.
+- Convite para organizador, operador ou arbitro.
+- Comunicados automaticos da plataforma.
 
 ## Etapa 5 - Validacao
 

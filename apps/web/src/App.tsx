@@ -482,6 +482,7 @@ function OrganizerSignup() {
   })
   const [sports, setSports] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const [createdOrganizer, setCreatedOrganizer] = useState<any>(null)
   const isIndividualOrganizer = form.organizerType === 'organizador'
   const organizerTypes = [
     { value: 'organizador', title: 'Organizador', text: 'Pessoa física que organiza torneios sem representar uma empresa.' },
@@ -628,11 +629,33 @@ function OrganizerSignup() {
         return
       }
 
-      alert(data.message || 'Cadastro criado. Enviamos confirmação por e-mail e WhatsApp.')
-      window.location.href = '/login'
+      setCreatedOrganizer({
+        ...data,
+        name: organizationNameForPayload,
+      })
     } finally {
       setLoading(false)
     }
+  }
+
+  if (createdOrganizer) {
+    const deliveryMessage = createdOrganizer.message || 'Cadastro criado. Enviamos o link de confirmação pelos canais disponíveis.'
+
+    return (
+      <div className="onboardingPage">
+        <section className="onboardingHero">
+          <span>Validação pendente</span>
+          <h1>Confirme seu cadastro de organizador.</h1>
+          <p>{deliveryMessage}</p>
+        </section>
+
+        <section className="onboardingCard">
+          <h2>{createdOrganizer.name}</h2>
+          <p>Depois de validar o cadastro, seu acesso ao painel ficará ativo.</p>
+          <a href="/login">Ir para login</a>
+        </section>
+      </div>
+    )
   }
 
   return (
@@ -998,23 +1021,26 @@ function PlayerSignup() {
           return
         }
 
-        setCreatedPlayer(data.player)
+        setCreatedPlayer(data)
       })
       .finally(() => setLoading(false))
   }
 
   if (createdPlayer) {
+    const player = createdPlayer.player || createdPlayer
+    const deliveryMessage = createdPlayer.message || 'Cadastro criado. Confira seus canais de contato para validar o perfil.'
+
     return (
       <div className="onboardingPage">
         <section className="onboardingHero playerHero">
           <span>Validação pendente</span>
           <h1>Confirme seu cadastro de jogador.</h1>
-          <p>Enviamos um link de validação para o e-mail e WhatsApp informados. Depois de validar, seu perfil ficará ativo.</p>
+          <p>{deliveryMessage}</p>
         </section>
 
         <section className="onboardingCard">
-          <h2>{createdPlayer.name}</h2>
-          <p>Confira sua caixa de entrada e suas mensagens do WhatsApp.</p>
+          <h2>{player.name}</h2>
+          <p>Depois de validar o cadastro, seu perfil ficará ativo.</p>
           <a href="/login">Ir para login</a>
         </section>
       </div>
@@ -4696,15 +4722,14 @@ function LandingFooter() {
               <span className="brandLogoArena">Arena</span>
             </span>
           </a>
-          <p>Torneios em Tempo Real</p>
         </div>
 
         <nav className="footerLinks" aria-label="Mapa do site">
-          <strong>Mapa do site</strong>
-          <a href="/sobre">Sobre</a>
-          <a href="/planos">Plano</a>
+          <strong>Mapa do Site</strong>
+          <a href="/planos">Planos</a>
           <a href="/agenda">Agenda</a>
           <a href="/contato">Contato</a>
+          <a href="/sobre">Sobre</a>
         </nav>
 
         <nav className="footerLinks" aria-label="Experiências">
@@ -4735,7 +4760,7 @@ function LandingFooter() {
 
       <div className="landingFooterBottom">
         <span>© 2026 PlayFinal Arena. Todos os direitos reservados.</span>
-        <span>Torneios em tempo real.</span>
+        <span>Torneios em Tempo Real</span>
       </div>
     </footer>
   )
