@@ -4932,21 +4932,23 @@ const agendaTableRows = [
 function AgendaPage() {
   return (
     <div className="landing agendaPage">
+      <LandingTopHeadline />
       <LandingHeader />
 
       <main id="conteudo-principal" className="agendaMain">
         <section className="agendaHero">
           <div className="agendaHeroCopy">
-            <span className="landingBadge">Agenda pública</span>
-            <h1>Torneios agendados</h1>
+            <span className="agendaEyebrow">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 2v4M17 2v4M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+              </svg>
+              Agenda
+            </span>
+            <h1>Agenda Torneios</h1>
             <p>
               Descubra os próximos torneios e competições em tempo real.
               Confira horários de abertura, locais, modalidades e status das inscrições.
             </p>
-            <div className="agendaHeroActions">
-              <a className="landingButton" href="/inscreva-se">Inscrever-se</a>
-              <a className="landingSecondary" href="/organizador">Sou organizador</a>
-            </div>
           </div>
           <img src="/playfinal-logo-symbol.png" alt="PlayFinal Arena" />
         </section>

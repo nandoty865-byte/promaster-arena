@@ -6449,15 +6449,24 @@ button:hover {
 }
 
 .agendaPage {
+  padding-top: 66px;
   background:
     radial-gradient(circle at 76% 4%, rgba(157, 255, 0, .18), transparent 28%),
     radial-gradient(circle at 10% 28%, rgba(14, 165, 233, .12), transparent 30%),
     #020403;
 }
 
+.agendaPage .landingHeader {
+  top: 50px;
+  border-radius: 0;
+  border-color: rgba(157, 255, 0, .24);
+  background: rgba(0, 0, 0, .8);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, .32);
+}
+
 .agendaMain {
   max-width: 1180px;
-  margin: 28px auto 0;
+  margin: 0 auto;
 }
 
 .agendaHero {
@@ -6473,16 +6482,42 @@ button:hover {
     url('/landing-arena-bg.png') center / cover;
 }
 
+.agendaEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #9dff00;
+  font-size: 15px;
+  font-weight: 1000;
+  letter-spacing: .02em;
+  line-height: 1;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.agendaEyebrow svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
 .agendaHeroCopy h1 {
-  max-width: 760px;
+  max-width: none;
   margin: 16px 0 14px;
   color: #f8fafc;
   font-family: var(--font-title);
-  font-size: clamp(56px, 8vw, 104px);
+  font-size: clamp(50px, 7.4vw, 96px);
   line-height: .84;
   letter-spacing: 0;
+  text-align: left;
   text-transform: uppercase;
   text-shadow: 0 16px 34px rgba(0, 0, 0, .5);
+  white-space: nowrap;
 }
 
 .agendaHeroCopy p {
@@ -6490,14 +6525,8 @@ button:hover {
   margin: 0;
   color: #dbe4ef;
   font-size: 18px;
+  text-align: justify;
   line-height: 1.65;
-}
-
-.agendaHeroActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 24px;
 }
 
 .agendaHero > img {
@@ -7725,13 +7754,17 @@ button:hover {
     padding: 16px;
   }
 
+  .agendaPage {
+    padding: 66px 16px 16px;
+  }
+
   .agendaMain {
     width: 100%;
     margin-top: 18px;
   }
 
   .agendaHeroCopy h1 {
-    font-size: 52px;
+    font-size: clamp(36px, 11vw, 52px);
   }
 
   .agendaSectionHeader {
@@ -10742,6 +10775,10 @@ button:hover {
   }
 
   .landingArenaPage .landingHeader {
+    top: 46px;
+  }
+
+  .agendaPage .landingHeader {
     top: 46px;
   }
 
