@@ -1003,6 +1003,64 @@ body {
   color: #86efac;
 }
 
+.integrationSettingsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.integrationSettingsCard {
+  align-self: start;
+}
+
+.integrationSettingsHeader,
+.integrationSettingsFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.integrationSettingsHeader {
+  margin-bottom: 18px;
+}
+
+.integrationSettingsHeader h2 {
+  margin: 0 0 6px;
+}
+
+.integrationSettingsHeader p,
+.integrationSettingsFooter span {
+  margin: 0;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.integrationToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #dbeafe;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.panel .integrationToggle input {
+  width: auto;
+  margin: 0;
+}
+
+.integrationFieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 12px;
+}
+
+.integrationSettingsFooter {
+  align-items: center;
+  margin-top: 8px;
+}
+
 .dashboardStatsGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3541,6 +3599,11 @@ button:hover {
 
 @media (max-width: 900px) {
   .saasLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .integrationSettingsGrid,
+  .integrationFieldGrid {
     grid-template-columns: 1fr;
   }
 
@@ -6306,6 +6369,12 @@ button:hover {
   background: rgba(15, 23, 42, .86);
   color: #d9f99d;
   font-size: 12px;
+}
+
+.footerSocials img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .landingFooterBottom {

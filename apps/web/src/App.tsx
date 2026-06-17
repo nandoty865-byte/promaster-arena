@@ -406,6 +406,7 @@ export default function App() {
       <Route path="/telao/:id" element={<TelaoTV />} />
       <Route path="/register" element={<Register />} />
       <Route path="/admin/financeiro" element={<Financeiro />} />
+      <Route path="/admin/configuracoes/integracoes" element={<AdminIntegrations />} />
       <Route path="/admin/clientes" element={<AdminClientes />} />
       <Route path="/admin/clientes/:id" element={<AdminClientPage defaultPanel="dashboard" />} />
       <Route path="/admin/clientes/:id/financeiro" element={<AdminClientPage defaultPanel="financeiro" />} />
@@ -1317,14 +1318,17 @@ function Login() {
 
   localStorage.setItem('token', data.token)
 
-  if (data.user?.role === 'superadmin') {
-    window.location.href = appUrlWithFreshVersion('/admin')
-  } else if (safeRedirect) {
+  if (safeRedirect) {
     window.location.href = appUrlWithFreshVersion(safeRedirect)
+  } else if (data.user?.role === 'superadmin') {
+    window.location.href = appUrlWithFreshVersion('/admin')
   } else {
     window.location.href = appUrlWithFreshVersion('/app')
   }
 })
+      .catch(() => {
+        alert('Não foi possível conectar à API. Verifique se o servidor local está rodando.')
+      })
   }
 
   return (
@@ -1740,7 +1744,7 @@ function AdminSidebar() {
       <details className="sidebarGroup">
         <summary>Configurações</summary>
         {adminMenuItem('Sistema')}
-        {adminMenuItem('Integrações')}
+        {adminMenuItem('Integrações', '/admin/configuracoes/integracoes')}
         {adminMenuItem('Pagamentos')}
         {adminMenuItem('WhatsApp')}
         {adminMenuItem('Email')}
@@ -4732,6 +4736,34 @@ const staticPublicPages: Record<StaticPublicPageType, {
 }
 
 function LandingFooter() {
+  const [socialLinks, setSocialLinks] = useState<any[]>([])
+  const fallbackSocialLinks = [
+    { provider: 'instagram', label: 'Instagram', url: '/contato' },
+    { provider: 'facebook', label: 'Facebook', url: '/contato' },
+    { provider: 'tiktok', label: 'TikTok', url: '/contato' },
+    { provider: 'youtube', label: 'YouTube', url: '/contato' },
+  ]
+  const visibleSocialLinks = socialLinks.length ? socialLinks : fallbackSocialLinks
+  const socialIconLabels: Record<string, string> = {
+    instagram: 'IG',
+    facebook: 'FB',
+    tiktok: 'TK',
+    youtube: 'YT',
+  }
+  const socialIconSrc: Record<string, string> = {
+    instagram: '/arena/icons/instagram.svg',
+    facebook: '/arena/icons/facebook.svg',
+    tiktok: '/arena/icons/tiktok.svg',
+    youtube: '/arena/icons/youtube.svg',
+  }
+
+  useEffect(() => {
+    fetch(`${API}/public/social-links`)
+      .then(res => res.json())
+      .then(data => setSocialLinks(Array.isArray(data) ? data : []))
+      .catch(() => setSocialLinks([]))
+  }, [])
+
   return (
     <footer className="landingFooter">
       <div className="landingFooterInner">
@@ -4772,10 +4804,21 @@ function LandingFooter() {
         <nav className="footerLinks footerSocials" aria-label="Redes sociais">
           <strong>Redes sociais</strong>
           <div>
-            <a href="/contato" aria-label="Instagram da PlayFinal Arena">IG</a>
-            <a href="/contato" aria-label="YouTube da PlayFinal Arena">YT</a>
-            <a href="/contato" aria-label="WhatsApp da PlayFinal Arena">WA</a>
-            <a href="/contato" aria-label="LinkedIn da PlayFinal Arena">IN</a>
+            {visibleSocialLinks.map(link => (
+              <a
+                key={link.provider}
+                href={link.url}
+                aria-label={`${link.label} da PlayFinal Arena`}
+                target={link.url.startsWith('http') ? '_blank' : undefined}
+                rel={link.url.startsWith('http') ? 'noreferrer' : undefined}
+              >
+                {socialIconSrc[link.provider] ? (
+                  <img src={socialIconSrc[link.provider]} alt="" />
+                ) : (
+                  socialIconLabels[link.provider] || link.label?.slice(0, 2) || 'RS'
+                )}
+              </a>
+            ))}
           </div>
         </nav>
       </div>
@@ -9098,6 +9141,281 @@ function TelaoTV() {
   )
 }
 
+const ADMIN_INTEGRATION_FORMS = [
+  {
+    provider: 'evolution',
+    label: 'Evolution API',
+    description: 'WhatsApp, mensagens automáticas e avisos de torneio.',
+    fields: [
+      { key: 'apiUrl', label: 'URL da API', placeholder: 'https://evolution.seudominio.com' },
+      { key: 'apiKey', label: 'API key', type: 'password' },
+      { key: 'instance', label: 'Instância' },
+      { key: 'webhookUrl', label: 'Webhook' },
+    ],
+  },
+  {
+    provider: 'resend',
+    label: 'Resend',
+    description: 'E-mails transacionais, remetente e resposta.',
+    fields: [
+      { key: 'apiKey', label: 'API key', type: 'password' },
+      { key: 'fromEmail', label: 'Remetente', placeholder: 'PlayFinal <avisos@email.playfinal.com.br>' },
+      { key: 'replyTo', label: 'Responder para' },
+      { key: 'audienceId', label: 'Audience ID' },
+    ],
+  },
+  {
+    provider: 'gmail',
+    label: 'Gmail',
+    description: 'Google Workspace, OAuth e caixa de envio.',
+    fields: [
+      { key: 'clientId', label: 'Client ID' },
+      { key: 'clientSecret', label: 'Client secret', type: 'password' },
+      { key: 'refreshToken', label: 'Refresh token', type: 'password' },
+      { key: 'senderEmail', label: 'E-mail remetente' },
+    ],
+  },
+  {
+    provider: 'instagram',
+    label: 'Instagram',
+    description: 'Publicações, conta comercial e webhooks Meta.',
+    fields: [
+      { key: 'profileUrl', label: 'Link público do Instagram', placeholder: 'https://instagram.com/playfinal' },
+      { key: 'appId', label: 'App ID' },
+      { key: 'appSecret', label: 'App secret', type: 'password' },
+      { key: 'accessToken', label: 'Access token', type: 'password' },
+    ],
+  },
+  {
+    provider: 'facebook',
+    label: 'Facebook',
+    description: 'Páginas, eventos e webhooks Meta.',
+    fields: [
+      { key: 'pageUrl', label: 'Link público do Facebook', placeholder: 'https://facebook.com/playfinal' },
+      { key: 'appId', label: 'App ID' },
+      { key: 'appSecret', label: 'App secret', type: 'password' },
+      { key: 'pageId', label: 'Page ID' },
+    ],
+  },
+  {
+    provider: 'tiktok',
+    label: 'TikTok',
+    description: 'Conta, posts, anúncios e pixel.',
+    fields: [
+      { key: 'profileUrl', label: 'Link público do TikTok', placeholder: 'https://www.tiktok.com/@playfinal' },
+      { key: 'clientKey', label: 'Client key' },
+      { key: 'clientSecret', label: 'Client secret', type: 'password' },
+      { key: 'accessToken', label: 'Access token', type: 'password' },
+    ],
+  },
+  {
+    provider: 'youtube',
+    label: 'YouTube',
+    description: 'Canal, transmissões e vídeos públicos.',
+    fields: [
+      { key: 'channelUrl', label: 'Link público do YouTube', placeholder: 'https://youtube.com/@playfinal' },
+      { key: 'channelId', label: 'Channel ID' },
+      { key: 'apiKey', label: 'API key', type: 'password' },
+      { key: 'webhookUrl', label: 'Webhook' },
+    ],
+  },
+  {
+    provider: 'mercado_pago',
+    label: 'Mercado Pago',
+    description: 'Pix, cartões, webhooks e repasses.',
+    fields: [
+      { key: 'accessToken', label: 'Access token', type: 'password' },
+      { key: 'publicKey', label: 'Public key' },
+      { key: 'webhookSecret', label: 'Webhook secret', type: 'password' },
+      { key: 'notificationUrl', label: 'URL de notificação' },
+    ],
+  },
+  {
+    provider: 'outros',
+    label: 'Demais integrações',
+    description: 'Espaço para qualquer serviço ainda não listado.',
+    fields: [
+      { key: 'serviceName', label: 'Nome do serviço' },
+      { key: 'baseUrl', label: 'URL base' },
+      { key: 'apiKey', label: 'Chave/token', type: 'password' },
+      { key: 'webhookUrl', label: 'Webhook' },
+    ],
+  },
+]
+
+function AdminIntegrations() {
+  const [integrations, setIntegrations] = useState<any[]>([])
+  const [savingProvider, setSavingProvider] = useState('')
+  const [loading, setLoading] = useState(true)
+  const integrationMap = integrations.reduce((acc: any, item: any) => {
+    acc[item.provider] = item
+    return acc
+  }, {})
+
+  function loadIntegrations() {
+    setLoading(true)
+
+    fetch(`${API}/admin/integrations`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setIntegrations(Array.isArray(data) ? data : [])
+      })
+      .finally(() => setLoading(false))
+  }
+
+  function updateIntegration(provider: string, patch: any) {
+    setIntegrations(current => {
+      const exists = current.some(item => item.provider === provider)
+      const nextItem = (item: any) => item.provider === provider ? { ...item, ...patch } : item
+
+      if (exists) {
+        return current.map(nextItem)
+      }
+
+      return [...current, { provider, enabled: false, config: {}, notes: '', ...patch }]
+    })
+  }
+
+  function updateConfig(provider: string, key: string, value: string) {
+    const current = integrationMap[provider] || { config: {} }
+    updateIntegration(provider, {
+      config: {
+        ...(current.config || {}),
+        [key]: value,
+      },
+    })
+  }
+
+  function saveIntegration(provider: string) {
+    const current = integrationMap[provider] || { enabled: false, config: {}, notes: '' }
+    setSavingProvider(provider)
+
+    fetch(`${API}/admin/integrations/${provider}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        enabled: Boolean(current.enabled),
+        config: current.config || {},
+        notes: current.notes || '',
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        alert('Integração salva.')
+        loadIntegrations()
+      })
+      .finally(() => setSavingProvider(''))
+  }
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      goHome()
+      return
+    }
+
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        if (data.user?.role !== 'superadmin') {
+          goHome()
+          return
+        }
+
+        loadIntegrations()
+      })
+  }, [])
+
+  return (
+    <div className="saasLayout">
+      <AdminSidebar />
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">Conexões</div>
+          <h1>Integrações</h1>
+          <p>Parâmetros globais para serviços externos da plataforma.</p>
+        </header>
+
+        {loading && <div className="panel">Carregando integrações...</div>}
+
+        {!loading && (
+          <div className="integrationSettingsGrid">
+            {ADMIN_INTEGRATION_FORMS.map(form => {
+              const integration = integrationMap[form.provider] || { enabled: false, config: {}, notes: '' }
+
+              return (
+                <section className="panel integrationSettingsCard" key={form.provider}>
+                  <div className="integrationSettingsHeader">
+                    <div>
+                      <h2>{form.label}</h2>
+                      <p>{form.description}</p>
+                    </div>
+
+                    <label className="integrationToggle">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(integration.enabled)}
+                        onChange={e => updateIntegration(form.provider, { enabled: e.target.checked })}
+                      />
+                      <span>{integration.enabled ? 'Ativa' : 'Inativa'}</span>
+                    </label>
+                  </div>
+
+                  <div className="integrationFieldGrid">
+                    {form.fields.map(field => (
+                      <div key={field.key}>
+                        <label>{field.label}</label>
+                        <input
+                          type={field.type || 'text'}
+                          value={integration.config?.[field.key] || ''}
+                          placeholder={field.placeholder || ''}
+                          onChange={e => updateConfig(form.provider, field.key, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <label>Observações</label>
+                  <textarea
+                    value={integration.notes || ''}
+                    onChange={e => updateIntegration(form.provider, { notes: e.target.value })}
+                    placeholder="Ambiente, responsáveis, pendências ou instruções de uso."
+                  />
+
+                  <div className="integrationSettingsFooter">
+                    <span>
+                      {integration.updatedAt
+                        ? `Atualizada em ${new Date(integration.updatedAt).toLocaleString()}`
+                        : 'Ainda não salva'}
+                    </span>
+                    <button
+                      className="primaryButton"
+                      disabled={savingProvider === form.provider}
+                      onClick={() => saveIntegration(form.provider)}
+                    >
+                      {savingProvider === form.provider ? 'Salvando...' : 'Salvar'}
+                    </button>
+                  </div>
+                </section>
+              )
+            })}
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}
+
 function adminPlanLabel(plan: string) {
   if (plan === 'free') return 'Acesso gratuito'
   if (plan === 'trial') return 'Trial'
@@ -9766,6 +10084,7 @@ function Admin() {
           <div className="tournamentActions">
             <button onClick={() => navigate('/admin/clientes')}>Gerenciar clientes</button>
             <button onClick={() => navigate('/admin/financeiro')}>Ver financeiro</button>
+            <button onClick={() => navigate('/admin/configuracoes/integracoes')}>Configurar integrações</button>
           </div>
         </div>
       </main>

@@ -38,6 +38,40 @@ const EVOLUTION_API_URL = (process.env.EVOLUTION_API_URL || '').replace(/\/$/, '
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || ''
 const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE || ''
 const PAYMENT_CONFIRM_SECRET = process.env.PAYMENT_CONFIRM_SECRET || ''
+const INTEGRATION_DEFINITIONS = [
+  { provider: 'evolution', label: 'Evolution API / WhatsApp' },
+  { provider: 'resend', label: 'Resend / E-mail transacional' },
+  { provider: 'gmail', label: 'Gmail / Google Workspace' },
+  { provider: 'instagram', label: 'Instagram' },
+  { provider: 'facebook', label: 'Facebook' },
+  { provider: 'tiktok', label: 'TikTok' },
+  { provider: 'youtube', label: 'YouTube' },
+  { provider: 'mercado_pago', label: 'Mercado Pago' },
+  { provider: 'outros', label: 'Outras integrações' },
+]
+const INTEGRATION_LABELS = INTEGRATION_DEFINITIONS.reduce((acc, item) => {
+  acc[item.provider] = item.label
+  return acc
+}, {})
+
+function sanitizeIntegrationConfig(config = {}) {
+  if (!config || typeof config !== 'object' || Array.isArray(config)) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    Object.entries(config)
+      .filter(([key]) => /^[a-zA-Z0-9_]+$/.test(key))
+      .map(([key, value]) => [key, String(value || '').slice(0, 2000)])
+  )
+}
+
+function normalizePublicUrl(value) {
+  const url = String(value || '').trim()
+  if (!url) return ''
+  if (/^https?:\/\//i.test(url)) return url
+  return `https://${url.replace(/^\/+/, '')}`
+}
 
 async function sendEmail({ to, subject, html, text }) {
   if (EMAIL_PROVIDER !== 'resend') {
@@ -3487,6 +3521,43 @@ for (const playerData of parsedPlayers.slice(0, requestedPlayerCount)) {
   }
 })
 
+app.get('/public/social-links', async (req, res) => {
+  try {
+    const providers = ['instagram', 'facebook', 'tiktok', 'youtube']
+    const settings = await prisma.integrationSetting.findMany({
+      where: {
+        provider: { in: providers },
+        enabled: true,
+      },
+    })
+
+    res.json(
+      settings
+        .map(setting => {
+          const config = setting.config || {}
+          const url = normalizePublicUrl(
+            config.profileUrl ||
+            config.pageUrl ||
+            config.channelUrl ||
+            config.url
+          )
+
+          return url
+            ? {
+                provider: setting.provider,
+                label: setting.label,
+                url,
+              }
+            : null
+        })
+        .filter(Boolean)
+    )
+  } catch (error) {
+    console.error(error)
+    res.json([])
+  }
+})
+
 app.get('/public/:slug', async (req, res) => {
   try {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
@@ -5883,6 +5954,72 @@ app.get('/admin/finance/monthly', auth, requireRole('superadmin'), async (req, r
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Erro ao carregar faturamento mensal' })
+  }
+})
+
+app.get('/admin/integrations', auth, requireRole('superadmin'), async (req, res) => {
+  try {
+    const savedSettings = await prisma.integrationSetting.findMany({
+      orderBy: { provider: 'asc' },
+    })
+    const savedByProvider = savedSettings.reduce((acc, item) => {
+      acc[item.provider] = item
+      return acc
+    }, {})
+
+    res.json(
+      INTEGRATION_DEFINITIONS.map(definition => {
+        const saved = savedByProvider[definition.provider]
+
+        return {
+          provider: definition.provider,
+          label: saved?.label || definition.label,
+          enabled: saved?.enabled || false,
+          config: saved?.config || {},
+          notes: saved?.notes || '',
+          updatedAt: saved?.updatedAt || null,
+        }
+      })
+    )
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar integrações' })
+  }
+})
+
+app.put('/admin/integrations/:provider', auth, requireRole('superadmin'), async (req, res) => {
+  try {
+    const provider = String(req.params.provider || '').trim()
+
+    if (!INTEGRATION_LABELS[provider]) {
+      return res.status(400).json({ error: 'Integração inválida' })
+    }
+
+    const config = sanitizeIntegrationConfig(req.body?.config || {})
+    const notes = String(req.body?.notes || '').slice(0, 4000)
+    const enabled = Boolean(req.body?.enabled)
+
+    const setting = await prisma.integrationSetting.upsert({
+      where: { provider },
+      create: {
+        provider,
+        label: INTEGRATION_LABELS[provider],
+        enabled,
+        config,
+        notes,
+      },
+      update: {
+        label: INTEGRATION_LABELS[provider],
+        enabled,
+        config,
+        notes,
+      },
+    })
+
+    res.json({ ok: true, integration: setting })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao salvar integração' })
   }
 })
 
