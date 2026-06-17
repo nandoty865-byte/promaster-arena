@@ -6290,18 +6290,17 @@ button:hover {
 }
 
 .footerBrand .landingLogo {
-  display: grid;
-  grid-template-columns: 92px max-content;
-  gap: 10px;
+  display: inline-flex;
   align-items: center;
-  width: max-content;
-  font-size: 20px;
+  width: min(280px, 100%);
+  font-size: 24px;
 }
 
 .footerBrand .landingLogo img {
-  width: 210px;
+  width: 260px;
   height: auto;
-  max-height: 78px;
+  max-width: 100%;
+  max-height: 96px;
   border-radius: 0;
 }
 
@@ -6354,26 +6353,27 @@ button:hover {
 }
 
 .footerSocials div {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 44px);
   gap: 10px;
+  align-items: center;
 }
 
 .footerSocials a {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   display: inline-grid;
   place-items: center;
-  border: 1px solid rgba(190, 242, 100, .28);
-  border-radius: 12px;
-  background: rgba(15, 23, 42, .86);
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
   color: #d9f99d;
   font-size: 12px;
 }
 
 .footerSocials img {
-  width: 20px;
-  height: 20px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
 }
 

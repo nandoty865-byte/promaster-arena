@@ -4737,13 +4737,18 @@ const staticPublicPages: Record<StaticPublicPageType, {
 
 function LandingFooter() {
   const [socialLinks, setSocialLinks] = useState<any[]>([])
-  const fallbackSocialLinks = [
-    { provider: 'instagram', label: 'Instagram', url: '/contato' },
-    { provider: 'facebook', label: 'Facebook', url: '/contato' },
-    { provider: 'tiktok', label: 'TikTok', url: '/contato' },
-    { provider: 'youtube', label: 'YouTube', url: '/contato' },
-  ]
-  const visibleSocialLinks = socialLinks.length ? socialLinks : fallbackSocialLinks
+  const socialOrder = ['instagram', 'facebook', 'tiktok', 'youtube']
+  const fallbackSocialLinks: Record<string, any> = {
+    instagram: { provider: 'instagram', label: 'Instagram', url: '/contato' },
+    facebook: { provider: 'facebook', label: 'Facebook', url: '/contato' },
+    tiktok: { provider: 'tiktok', label: 'TikTok', url: '/contato' },
+    youtube: { provider: 'youtube', label: 'YouTube', url: '/contato' },
+  }
+  const configuredSocialLinks = socialLinks.reduce((acc: Record<string, any>, link: any) => {
+    acc[link.provider] = link
+    return acc
+  }, {})
+  const visibleSocialLinks = socialOrder.map(provider => configuredSocialLinks[provider] || fallbackSocialLinks[provider])
   const socialIconLabels: Record<string, string> = {
     instagram: 'IG',
     facebook: 'FB',
@@ -4751,10 +4756,10 @@ function LandingFooter() {
     youtube: 'YT',
   }
   const socialIconSrc: Record<string, string> = {
-    instagram: '/arena/icons/instagram.svg',
-    facebook: '/arena/icons/facebook.svg',
-    tiktok: '/arena/icons/tiktok.svg',
-    youtube: '/arena/icons/youtube.svg',
+    instagram: '/social-icons/playfinal-instagram-64.png',
+    facebook: '/social-icons/playfinal-facebook-64.png',
+    tiktok: '/social-icons/playfinal-tiktok-64.png',
+    youtube: '/social-icons/playfinal-youtube-64.png',
   }
 
   useEffect(() => {
