@@ -371,7 +371,7 @@ export default function App() {
       <Route path="/organizador" element={<PersonaLanding type="organizador" />} />
       <Route path="/jogador" element={<PersonaLanding type="jogador" />} />
       <Route path="/arena" element={<PersonaLanding type="arena" />} />
-      <Route path="/agenda" element={<StaticPublicPage type="agenda" />} />
+      <Route path="/agenda" element={<AgendaPage />} />
       <Route path="/sobre" element={<StaticPublicPage type="sobre" />} />
       <Route path="/contato" element={<StaticPublicPage type="contato" />} />
       <Route path="/blog" element={<StaticPublicPage type="blog" />} />
@@ -4856,6 +4856,220 @@ function StaticPublicPage({ type }: { type: StaticPublicPageType }) {
             </article>
           ))}
         </div>
+      </main>
+
+      <LandingFooter />
+    </div>
+  )
+}
+
+const featuredAgendaTournaments = [
+  {
+    title: 'Copa Arena Pro de Sinuca',
+    modality: 'Sinuca',
+    date: 'Hoje, 17 de junho',
+    time: '19:30',
+    arena: 'Arena Central SP',
+    city: 'São Paulo, SP',
+    spots: '32/32',
+    price: 'R$ 60,00',
+    status: 'Começa em 15 min',
+    tone: 'live',
+    image: '/landing-sport-sinuca.png',
+  },
+  {
+    title: 'Open Futebol Society Night',
+    modality: 'Futebol society',
+    date: 'Hoje, 17 de junho',
+    time: '20:00',
+    arena: 'Arena PlayFinal',
+    city: 'Guarulhos, SP',
+    spots: '16/16',
+    price: 'R$ 120,00',
+    status: 'Inscrições encerradas',
+    tone: 'closed',
+    image: '/landing-sport-futebol.png',
+  },
+  {
+    title: 'Desafio Tênis de Mesa Masters',
+    modality: 'Tênis de mesa',
+    date: 'Hoje, 17 de junho',
+    time: '20:15',
+    arena: 'Clube Prime',
+    city: 'Campinas, SP',
+    spots: '24/28',
+    price: 'R$ 40,00',
+    status: 'Próximo',
+    tone: 'soon',
+    image: '/landing-sport-tenis.png',
+  },
+  {
+    title: 'Basket Street Cup',
+    modality: 'Basquete',
+    date: 'Amanhã, 18 de junho',
+    time: '10:00',
+    arena: 'Arena Zona Sul',
+    city: 'São Paulo, SP',
+    spots: '20/24',
+    price: 'R$ 80,00',
+    status: 'Amanhã',
+    tone: 'tomorrow',
+    image: '/landing-sport-basquete.png',
+  },
+]
+
+const agendaTableRows = [
+  ['17/06/2026', '21:00', 'Night Futsal Cup', 'Futsal', 'Arena PlayFinal', 'Guarulhos, SP', 'Quase iniciando', '10/12', 'R$ 100,00'],
+  ['18/06/2026', '10:30', 'Vôlei Arena Challenge', 'Vôlei', 'Arena Central SP', 'São Paulo, SP', 'Amanhã', '14/16', 'R$ 70,00'],
+  ['18/06/2026', '14:00', 'Copa Society Master', 'Futebol Society', 'Clube Prime', 'Campinas, SP', 'Abertas', '18/20', 'R$ 120,00'],
+  ['18/06/2026', '16:00', 'Dupla de Beach Tennis', 'Beach Tennis', 'Arena Beach Club', 'Riviera, SP', 'Abertas', '22/32', 'R$ 60,00'],
+  ['18/06/2026', '19:30', 'Fight Night Amateur', 'MMA', 'Arena Combat', 'São Paulo, SP', 'Lotado', '24/24', 'R$ 90,00'],
+  ['19/06/2026', '08:30', 'Corrida PlayFinal 5K', 'Corrida', 'Parque Villa Lobos', 'São Paulo, SP', 'Abertas', '45/60', 'R$ 50,00'],
+  ['19/06/2026', '20:00', 'Liga de Basquete 3x3', 'Basquete 3x3', 'Arena Zona Sul', 'São Paulo, SP', 'Abertas', '16/16', 'R$ 80,00'],
+  ['20/06/2026', '19:00', 'Masters de Sinuca 9 Bolas', 'Sinuca', 'Arena Billiards', 'São José, SP', 'Encerradas', '32/32', 'R$ 60,00'],
+]
+
+function AgendaPage() {
+  return (
+    <div className="landing agendaPage">
+      <LandingHeader />
+
+      <main id="conteudo-principal" className="agendaMain">
+        <section className="agendaHero">
+          <div className="agendaHeroCopy">
+            <span className="landingBadge">Agenda pública</span>
+            <h1>Torneios agendados</h1>
+            <p>
+              Descubra os próximos torneios e competições em tempo real.
+              Confira horários de abertura, locais, modalidades e status das inscrições.
+            </p>
+            <div className="agendaHeroActions">
+              <a className="landingButton" href="/inscreva-se">Inscrever-se</a>
+              <a className="landingSecondary" href="/organizador">Sou organizador</a>
+            </div>
+          </div>
+          <img src="/playfinal-logo-symbol.png" alt="PlayFinal Arena" />
+        </section>
+
+        <section className="agendaSection">
+          <div className="agendaSectionHeader">
+            <div>
+              <span>Começando agora</span>
+              <h2>Próximos de iniciar</h2>
+            </div>
+            <a href="/organizador">Publicar torneio</a>
+          </div>
+
+          <div className="agendaFeaturedGrid">
+            {featuredAgendaTournaments.map(tournament => (
+              <article className="agendaTournamentCard" key={tournament.title}>
+                <div className="agendaCardMedia">
+                  <img src={tournament.image} alt="" />
+                  <span className={`agendaStatus ${tournament.tone}`}>{tournament.status}</span>
+                </div>
+                <div className="agendaCardBody">
+                  <h3>{tournament.title}</h3>
+                  <span>{tournament.modality}</span>
+                  <dl>
+                    <div><dt>Data</dt><dd>{tournament.date}</dd></div>
+                    <div><dt>Horário</dt><dd>{tournament.time}</dd></div>
+                    <div><dt>Local</dt><dd>{tournament.arena}</dd></div>
+                    <div><dt>Cidade</dt><dd>{tournament.city}</dd></div>
+                    <div><dt>Vagas</dt><dd>{tournament.spots}</dd></div>
+                    <div><dt>Inscrição</dt><dd>{tournament.price}</dd></div>
+                  </dl>
+                  <div className="agendaCardActions">
+                    <a href="/agenda">Ver torneio</a>
+                    <a href="/inscreva-se">Inscrever-se</a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="agendaFilters" aria-label="Filtros de torneios">
+            <label>
+              <span>Buscar torneios</span>
+              <input placeholder="Buscar torneios..." />
+            </label>
+            <label>
+              <span>Modalidade</span>
+              <select defaultValue="Todas"><option>Todas</option><option>Sinuca</option><option>Futebol</option><option>Basquete</option></select>
+            </label>
+            <label>
+              <span>Cidade</span>
+              <select defaultValue="Todas"><option>Todas</option><option>São Paulo</option><option>Campinas</option><option>Guarulhos</option></select>
+            </label>
+            <label>
+              <span>Data</span>
+              <select defaultValue="Todos"><option>Todos</option><option>Hoje</option><option>Amanhã</option><option>Semana</option></select>
+            </label>
+            <label>
+              <span>Status</span>
+              <select defaultValue="Todos"><option>Todos</option><option>Abertas</option><option>Lotado</option><option>Encerradas</option></select>
+            </label>
+            <button type="button">Limpar filtros</button>
+          </div>
+        </section>
+
+        <section className="agendaSection">
+          <div className="agendaSectionHeader">
+            <div>
+              <span>Calendário completo</span>
+              <h2>Demais torneios agendados</h2>
+            </div>
+          </div>
+
+          <div className="agendaTableWrap">
+            <table className="agendaTable">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Horário</th>
+                  <th>Torneio</th>
+                  <th>Modalidade</th>
+                  <th>Arena / Local</th>
+                  <th>Cidade</th>
+                  <th>Status</th>
+                  <th>Vagas</th>
+                  <th>Inscrição</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agendaTableRows.map(row => (
+                  <tr key={`${row[0]}-${row[2]}`}>
+                    {row.map((cell, index) => (
+                      <td key={`${row[2]}-${cell}-${index}`}>
+                        {index === 6 ? <span className="agendaTableStatus">{cell}</span> : cell}
+                      </td>
+                    ))}
+                    <td><a href="/agenda">Ver</a></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="agendaStats" aria-label="Resumo dos torneios agendados">
+          <div><span>28</span><strong>Torneios agendados</strong><small>Nos próximos 7 dias</small></div>
+          <div><span>12</span><strong>Inscrições abertas</strong><small>Participe e garanta sua vaga</small></div>
+          <div><span>5</span><strong>Iniciando hoje</strong><small>Não perca os próximos</small></div>
+          <div><span>8</span><strong>Arenas participantes</strong><small>Em várias cidades</small></div>
+        </section>
+
+        <section className="agendaOrganizerCta">
+          <div>
+            <span className="landingBadge">Para organizadores</span>
+            <h2>Publique seus torneios na agenda PlayFinal.</h2>
+            <p>
+              Crie a página pública, receba inscrições e conecte seu evento à experiência
+              de ranking, telão, pagamentos e comunicação da plataforma.
+            </p>
+          </div>
+          <a className="landingButton" href="/cadastro-organizador">Criar torneio gratuitamente</a>
+        </section>
       </main>
 
       <LandingFooter />
