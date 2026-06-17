@@ -6465,21 +6465,27 @@ button:hover {
 }
 
 .agendaMain {
-  max-width: 1180px;
+  max-width: none;
   margin: 0 auto;
 }
 
 .agendaHero {
   min-height: 300px;
+  width: calc(100% + 56px);
+  margin: 0 -28px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
   gap: 32px;
   align-items: center;
-  padding: 42px;
+  padding: 42px max(42px, calc((100vw - 1180px) / 2 + 28px));
   border-bottom: 1px solid rgba(157, 255, 0, .22);
   background:
-    linear-gradient(90deg, rgba(2, 6, 23, .98), rgba(2, 6, 23, .7)),
+    linear-gradient(180deg, rgba(0, 0, 0, .18) 0%, rgba(0, 0, 0, .36) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, .92) 0%, rgba(0, 0, 0, .58) 48%, rgba(0, 0, 0, .18) 100%),
     url('/landing-arena-bg.png') center / cover;
+  box-shadow:
+    inset 0 -52px 70px rgba(0, 0, 0, .72),
+    inset 0 1px 0 rgba(157, 255, 0, .22);
 }
 
 .agendaEyebrow {
@@ -6495,15 +6501,12 @@ button:hover {
   text-transform: uppercase;
 }
 
-.agendaEyebrow svg {
-  width: 22px;
-  height: 22px;
+.agendaEyebrow img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
   flex: 0 0 auto;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
+  filter: drop-shadow(0 0 10px rgba(157, 255, 0, .72));
 }
 
 .agendaHeroCopy h1 {
@@ -6512,11 +6515,14 @@ button:hover {
   color: #f8fafc;
   font-family: var(--font-title);
   font-size: clamp(50px, 7.4vw, 96px);
+  font-style: italic;
   line-height: .84;
   letter-spacing: 0;
   text-align: left;
   text-transform: uppercase;
   text-shadow: 0 16px 34px rgba(0, 0, 0, .5);
+  transform: skewX(-7deg);
+  transform-origin: left center;
   white-space: nowrap;
 }
 
@@ -6530,12 +6536,14 @@ button:hover {
 }
 
 .agendaHero > img {
-  width: min(280px, 100%);
+  width: min(310px, 100%);
   justify-self: center;
-  filter: drop-shadow(0 0 34px rgba(157, 255, 0, .34));
+  filter: drop-shadow(0 0 42px rgba(157, 255, 0, .5));
 }
 
 .agendaSection {
+  max-width: 1180px;
+  margin: 0 auto;
   padding: 30px 0;
   border-bottom: 1px solid rgba(148, 163, 184, .14);
 }
@@ -6556,20 +6564,28 @@ button:hover {
 }
 
 .agendaSectionHeader h2 {
-  margin: 6px 0 0;
+  margin: 0;
   color: #f8fafc;
   font-family: var(--font-title);
   font-size: clamp(32px, 4vw, 48px);
+  font-style: italic;
   line-height: 1;
+  letter-spacing: .02em;
   text-transform: uppercase;
+  text-shadow: 0 10px 28px rgba(0, 0, 0, .56);
 }
 
-.agendaSectionHeader > a {
-  color: #9dff00;
-  font-size: 13px;
-  font-weight: 900;
-  text-decoration: none;
-  text-transform: uppercase;
+.agendaSectionTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.agendaSectionTitle img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(157, 255, 0, .76));
 }
 
 .agendaFeaturedGrid {
@@ -6580,10 +6596,13 @@ button:hover {
 
 .agendaTournamentCard {
   overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, .22);
+  border: 1px solid rgba(157, 255, 0, .2);
   border-radius: 8px;
-  background: linear-gradient(180deg, rgba(15, 23, 42, .92), rgba(2, 6, 23, .98));
-  box-shadow: 0 18px 44px rgba(0, 0, 0, .28);
+  background:
+    linear-gradient(180deg, rgba(8, 13, 12, .96), rgba(2, 5, 4, .98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .04),
+    0 18px 44px rgba(0, 0, 0, .34);
 }
 
 .agendaCardMedia {
@@ -6637,11 +6656,15 @@ button:hover {
   color: #f8fafc;
   font-family: var(--font-title);
   font-size: 30px;
+  font-style: italic;
   line-height: .98;
+  text-transform: none;
 }
 
-.agendaCardBody > span {
-  display: block;
+.agendaModality {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   margin-bottom: 14px;
   color: #9dff00;
   font-size: 12px;
@@ -6649,11 +6672,58 @@ button:hover {
   text-transform: uppercase;
 }
 
+.agendaModality img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(157, 255, 0, .58));
+}
+
 .agendaCardBody dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px 12px;
   margin: 0 0 16px;
+}
+
+.agendaCardBody dl div {
+  position: relative;
+  padding-left: 25px;
+}
+
+.agendaCardBody dl div::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 17px;
+  height: 17px;
+  background: center / contain no-repeat;
+  filter: drop-shadow(0 0 8px rgba(157, 255, 0, .48));
+}
+
+.agendaCardBody dl div:nth-child(1)::before {
+  background-image: url('/agenda-icons/calendar.png');
+}
+
+.agendaCardBody dl div:nth-child(2)::before {
+  background-image: url('/agenda-icons/clock.png');
+}
+
+.agendaCardBody dl div:nth-child(3)::before {
+  background-image: url('/agenda-icons/arena.png');
+}
+
+.agendaCardBody dl div:nth-child(4)::before {
+  background-image: url('/agenda-icons/location.png');
+}
+
+.agendaCardBody dl div:nth-child(5)::before {
+  background-image: url('/agenda-icons/players.png');
+}
+
+.agendaCardBody dl div:nth-child(6)::before {
+  background-image: url('/agenda-icons/lightning.png');
 }
 
 .agendaCardBody dt {
@@ -6738,8 +6808,9 @@ button:hover {
 
 .agendaTableWrap {
   overflow-x: auto;
-  border: 1px solid rgba(148, 163, 184, .18);
+  border: 1px solid rgba(157, 255, 0, .2);
   border-radius: 8px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .24);
 }
 
 .agendaTable {
@@ -6777,21 +6848,34 @@ button:hover {
 }
 
 .agendaStats {
+  max-width: 1180px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 30px 0;
+  margin: 30px auto;
   border: 1px solid rgba(157, 255, 0, .22);
   border-radius: 8px;
   background: rgba(2, 6, 23, .78);
 }
 
 .agendaStats div {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  column-gap: 16px;
+  align-items: center;
   padding: 22px;
   border-right: 1px solid rgba(157, 255, 0, .18);
 }
 
 .agendaStats div:last-child {
   border-right: 0;
+}
+
+.agendaStats img {
+  grid-row: span 3;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(157, 255, 0, .58));
 }
 
 .agendaStats span {
@@ -6817,11 +6901,12 @@ button:hover {
 }
 
 .agendaOrganizerCta {
+  max-width: 1180px;
   display: flex;
   justify-content: space-between;
   gap: 22px;
   align-items: center;
-  margin-bottom: 36px;
+  margin: 0 auto 36px;
   padding: 28px;
   border: 1px solid rgba(157, 255, 0, .22);
   border-radius: 8px;
@@ -7532,6 +7617,12 @@ button:hover {
 
 @media (max-width: 1180px) {
   .agendaMain {
+    width: 100%;
+  }
+
+  .agendaSection,
+  .agendaStats,
+  .agendaOrganizerCta {
     width: calc(100% - 32px);
   }
 
@@ -7763,8 +7854,25 @@ button:hover {
     margin-top: 18px;
   }
 
+  .agendaHero {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 28px 18px;
+  }
+
   .agendaHeroCopy h1 {
     font-size: clamp(36px, 11vw, 52px);
+  }
+
+  .agendaHeroCopy p {
+    text-align: left;
+  }
+
+  .agendaSection,
+  .agendaStats,
+  .agendaOrganizerCta {
+    width: 100%;
   }
 
   .agendaSectionHeader {

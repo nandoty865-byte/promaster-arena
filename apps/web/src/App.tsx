@@ -4876,6 +4876,7 @@ const featuredAgendaTournaments = [
     status: 'Começa em 15 min',
     tone: 'live',
     image: '/landing-sport-sinuca.png',
+    icon: '/agenda-icons/sinuca.png',
   },
   {
     title: 'Open Futebol Society Night',
@@ -4889,6 +4890,7 @@ const featuredAgendaTournaments = [
     status: 'Inscrições encerradas',
     tone: 'closed',
     image: '/landing-sport-futebol.png',
+    icon: '/agenda-icons/football.png',
   },
   {
     title: 'Desafio Tênis de Mesa Masters',
@@ -4902,6 +4904,7 @@ const featuredAgendaTournaments = [
     status: 'Próximo',
     tone: 'soon',
     image: '/landing-sport-tenis.png',
+    icon: '/agenda-icons/tennis.png',
   },
   {
     title: 'Basket Street Cup',
@@ -4915,6 +4918,7 @@ const featuredAgendaTournaments = [
     status: 'Amanhã',
     tone: 'tomorrow',
     image: '/landing-sport-basquete.png',
+    icon: '/agenda-icons/basketball.png',
   },
 ]
 
@@ -4939,15 +4943,13 @@ function AgendaPage() {
         <section className="agendaHero">
           <div className="agendaHeroCopy">
             <span className="agendaEyebrow">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 2v4M17 2v4M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
-              </svg>
+              <img src="/agenda-icons/calendar.png" alt="" />
               Agenda
             </span>
             <h1>Agenda Torneios</h1>
             <p>
-              Descubra os próximos torneios e competições em tempo real.
-              Confira horários de abertura, locais, modalidades e status das inscrições.
+              Descubra os próximos torneios e competições em tempo real.<br />
+              Confira horários de abertura, locais, modalidades e inscrições.
             </p>
           </div>
           <img src="/playfinal-logo-symbol.png" alt="PlayFinal Arena" />
@@ -4955,11 +4957,10 @@ function AgendaPage() {
 
         <section className="agendaSection">
           <div className="agendaSectionHeader">
-            <div>
-              <span>Começando agora</span>
-              <h2>Próximos de iniciar</h2>
-            </div>
-            <a href="/organizador">Publicar torneio</a>
+            <h2 className="agendaSectionTitle">
+              <img src="/agenda-icons/lightning.png" alt="" />
+              Torneios
+            </h2>
           </div>
 
           <div className="agendaFeaturedGrid">
@@ -4971,7 +4972,10 @@ function AgendaPage() {
                 </div>
                 <div className="agendaCardBody">
                   <h3>{tournament.title}</h3>
-                  <span>{tournament.modality}</span>
+                  <span className="agendaModality">
+                    <img src={tournament.icon} alt="" />
+                    {tournament.modality}
+                  </span>
                   <dl>
                     <div><dt>Data</dt><dd>{tournament.date}</dd></div>
                     <div><dt>Horário</dt><dd>{tournament.time}</dd></div>
@@ -5016,10 +5020,10 @@ function AgendaPage() {
 
         <section className="agendaSection">
           <div className="agendaSectionHeader">
-            <div>
-              <span>Calendário completo</span>
-              <h2>Demais torneios agendados</h2>
-            </div>
+            <h2 className="agendaSectionTitle">
+              <img src="/agenda-icons/calendar.png" alt="" />
+              Próximos torneios
+            </h2>
           </div>
 
           <div className="agendaTableWrap">
@@ -5055,10 +5059,10 @@ function AgendaPage() {
         </section>
 
         <section className="agendaStats" aria-label="Resumo dos torneios agendados">
-          <div><span>28</span><strong>Torneios agendados</strong><small>Nos próximos 7 dias</small></div>
-          <div><span>12</span><strong>Inscrições abertas</strong><small>Participe e garanta sua vaga</small></div>
-          <div><span>5</span><strong>Iniciando hoje</strong><small>Não perca os próximos</small></div>
-          <div><span>8</span><strong>Arenas participantes</strong><small>Em várias cidades</small></div>
+          <div><img src="/agenda-icons/calendar.png" alt="" /><span>28</span><strong>Torneios agendados</strong><small>Nos próximos 7 dias</small></div>
+          <div><img src="/agenda-icons/players.png" alt="" /><span>12</span><strong>Inscrições abertas</strong><small>Participe e garanta sua vaga</small></div>
+          <div><img src="/agenda-icons/clock.png" alt="" /><span>5</span><strong>Iniciando hoje</strong><small>Não perca os próximos</small></div>
+          <div><img src="/agenda-icons/arena.png" alt="" /><span>8</span><strong>Arenas participantes</strong><small>Em várias cidades</small></div>
         </section>
 
         <section className="agendaOrganizerCta">
