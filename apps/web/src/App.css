@@ -6492,6 +6492,7 @@ button:hover {
   display: inline-flex;
   align-items: center;
   gap: 9px;
+  margin-left: 0;
   color: #9dff00;
   font-size: 15px;
   font-weight: 1000;
@@ -6499,6 +6500,12 @@ button:hover {
   line-height: 1;
   text-align: left;
   text-transform: uppercase;
+  transform: none;
+}
+
+.agendaHeroCopy {
+  justify-self: start;
+  text-align: left;
 }
 
 .agendaEyebrow img {
@@ -6521,8 +6528,6 @@ button:hover {
   text-align: left;
   text-transform: uppercase;
   text-shadow: 0 16px 34px rgba(0, 0, 0, .5);
-  transform: skewX(-7deg);
-  transform-origin: left center;
   white-space: nowrap;
 }
 
@@ -6688,7 +6693,10 @@ button:hover {
 
 .agendaCardBody dl div {
   position: relative;
+  min-height: 22px;
   padding-left: 25px;
+  display: flex;
+  align-items: center;
 }
 
 .agendaCardBody dl div::before {
@@ -6727,6 +6735,7 @@ button:hover {
 }
 
 .agendaCardBody dt {
+  display: none;
   color: #94a3b8;
   font-size: 10px;
   font-weight: 900;
@@ -6734,7 +6743,7 @@ button:hover {
 }
 
 .agendaCardBody dd {
-  margin: 2px 0 0;
+  margin: 0;
   color: #e2e8f0;
   font-size: 13px;
   line-height: 1.25;
@@ -6815,7 +6824,7 @@ button:hover {
 
 .agendaTable {
   width: 100%;
-  min-width: 980px;
+  min-width: 900px;
   border-collapse: collapse;
   background: rgba(2, 6, 23, .82);
 }
@@ -6833,6 +6842,50 @@ button:hover {
   color: #e2e8f0;
   font-size: 11px;
   font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.agendaTable th:first-child {
+  text-align: center;
+}
+
+.agendaDateCell {
+  width: 96px;
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+.agendaDateCell span {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  color: #f8fafc;
+  font-family: var(--font-title);
+  line-height: 1;
+}
+
+.agendaDateCell strong {
+  font-size: 30px;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.agendaDateCell b {
+  color: #cbd5e1;
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.agendaDateCell small {
+  display: block;
+  margin-top: 4px;
+  color: #aab4c0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .02em;
   text-transform: uppercase;
 }
 

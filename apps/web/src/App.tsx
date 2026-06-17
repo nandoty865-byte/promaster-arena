@@ -4933,6 +4933,20 @@ const agendaTableRows = [
   ['20/06/2026', '19:00', 'Masters de Sinuca 9 Bolas', 'Sinuca', 'Arena Billiards', 'São José, SP', 'Encerradas', '32/32', 'R$ 60,00'],
 ]
 
+const agendaMonthLabels = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']
+const agendaWeekdayLabels = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']
+
+function formatAgendaDate(date: string, time: string) {
+  const [day, month, year] = date.split('/').map(Number)
+  const dateValue = new Date(year, month - 1, day)
+  return {
+    day: String(day).padStart(2, '0'),
+    month: agendaMonthLabels[month - 1] || '',
+    weekday: agendaWeekdayLabels[dateValue.getDay()] || '',
+    time,
+  }
+}
+
 function AgendaPage() {
   return (
     <div className="landing agendaPage">
@@ -4977,12 +4991,12 @@ function AgendaPage() {
                     {tournament.modality}
                   </span>
                   <dl>
-                    <div><dt>Data</dt><dd>{tournament.date}</dd></div>
-                    <div><dt>Horário</dt><dd>{tournament.time}</dd></div>
-                    <div><dt>Local</dt><dd>{tournament.arena}</dd></div>
-                    <div><dt>Cidade</dt><dd>{tournament.city}</dd></div>
-                    <div><dt>Vagas</dt><dd>{tournament.spots}</dd></div>
-                    <div><dt>Inscrição</dt><dd>{tournament.price}</dd></div>
+                    <div><dd>{tournament.date}</dd></div>
+                    <div><dd>{tournament.time}</dd></div>
+                    <div><dd>{tournament.arena}</dd></div>
+                    <div><dd>{tournament.city}</dd></div>
+                    <div><dd>{tournament.spots}</dd></div>
+                    <div><dd>{tournament.price}</dd></div>
                   </dl>
                   <div className="agendaCardActions">
                     <a href="/agenda">Ver torneio</a>
@@ -5031,7 +5045,6 @@ function AgendaPage() {
               <thead>
                 <tr>
                   <th>Data</th>
-                  <th>Horário</th>
                   <th>Torneio</th>
                   <th>Modalidade</th>
                   <th>Arena / Local</th>
@@ -5043,16 +5056,25 @@ function AgendaPage() {
                 </tr>
               </thead>
               <tbody>
-                {agendaTableRows.map(row => (
-                  <tr key={`${row[0]}-${row[2]}`}>
-                    {row.map((cell, index) => (
-                      <td key={`${row[2]}-${cell}-${index}`}>
-                        {index === 6 ? <span className="agendaTableStatus">{cell}</span> : cell}
+                {agendaTableRows.map(row => {
+                  const date = formatAgendaDate(row[0], row[1])
+                  return (
+                    <tr key={`${row[0]}-${row[2]}`}>
+                      <td className="agendaDateCell">
+                        <span><strong>{date.day}</strong><b>{date.month}</b></span>
+                        <small>{date.weekday} {date.time}</small>
                       </td>
-                    ))}
-                    <td><a href="/agenda">Ver</a></td>
-                  </tr>
-                ))}
+                      <td>{row[2]}</td>
+                      <td>{row[3]}</td>
+                      <td>{row[4]}</td>
+                      <td>{row[5]}</td>
+                      <td><span className="agendaTableStatus">{row[6]}</span></td>
+                      <td>{row[7]}</td>
+                      <td>{row[8]}</td>
+                      <td><a href="/agenda">Ver</a></td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
