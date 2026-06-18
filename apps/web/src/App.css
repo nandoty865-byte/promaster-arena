@@ -363,6 +363,97 @@ body {
   cursor: not-allowed;
 }
 
+.profileProfilesPanel {
+  grid-column: 2;
+  display: grid;
+  gap: 18px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.3);
+}
+
+.profileGrid .settingsPanel {
+  grid-column: 2;
+}
+
+.profileProfilesHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+}
+
+.profileProfilesHeader h2 {
+  margin: 0 0 6px;
+}
+
+.profileProfilesHeader p {
+  margin: 0;
+  color: #94a3b8;
+}
+
+.profileProfilesHeader .secondaryButton {
+  width: auto;
+  min-width: 150px;
+  margin-top: 0;
+}
+
+.profileStatusList {
+  display: grid;
+  gap: 10px;
+}
+
+.profileStatusRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  background: #020617;
+}
+
+.profileStatusRow.active {
+  border-color: rgba(34, 197, 94, 0.48);
+  background: rgba(20, 83, 45, 0.18);
+}
+
+.profileStatusRow strong,
+.profileStatusRow span {
+  display: block;
+}
+
+.profileStatusRow span {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.profileStatusRow.active span {
+  color: #86efac;
+}
+
+.profileStatusRow button {
+  width: auto;
+  min-width: 140px;
+  padding: 10px 12px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #bfdbfe;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.profileStatusRow button:hover {
+  border-color: #60a5fa;
+  background: rgba(96, 165, 250, .12);
+}
+
 .loginLinks {
   display: flex;
   justify-content: space-between;
@@ -3377,8 +3468,35 @@ button:hover {
 .sidebarLogo {
   font-size: 22px;
   font-weight: 900;
-  margin-bottom: 28px;
+  margin-bottom: 14px;
   color: #86efac;
+}
+
+.sidebarProfileSelector {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 20px;
+  padding: 12px;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  background: #020617;
+}
+
+.sidebarProfileSelector label {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.sidebarProfileSelector select {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #fff;
+  font-weight: 900;
 }
 
 .sidebarMenu {
@@ -7772,6 +7890,21 @@ button:hover {
     grid-template-columns: 1fr;
   }
 
+  .profileProfilesPanel,
+  .profileGrid .settingsPanel {
+    grid-column: auto;
+  }
+
+  .profileProfilesHeader,
+  .profileStatusRow {
+    grid-template-columns: 1fr;
+  }
+
+  .profileProfilesHeader .secondaryButton,
+  .profileStatusRow button {
+    width: 100%;
+  }
+
   .adminEditGrid,
   .addRegistrationGrid,
   .adminModalActions,
@@ -10592,8 +10725,32 @@ button:hover {
   color: #fff;
 }
 
+.onboardingGrid input[aria-invalid="true"],
+.onboardingGrid select[aria-invalid="true"] {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+}
+
 .onboardingGrid .fullSpan {
   grid-column: 1 / -1;
+}
+
+.formError {
+  margin: 14px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 12px;
+  background: rgba(127, 29, 29, 0.28);
+  color: #fecaca;
+  font-weight: 800;
+}
+
+.fieldError {
+  display: block;
+  margin-top: 6px;
+  color: #fecaca;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .sportsPicker {
@@ -10617,6 +10774,11 @@ button:hover {
 
 .termsLine {
   margin: 18px 0;
+}
+
+.termsLine[aria-invalid="true"] {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
 }
 
 .onboardingActions {

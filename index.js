@@ -140,6 +140,18 @@ function isValidBrazilCellphone(value) {
   return /^[1-9]{2}9\d{8}$/.test(local)
 }
 
+function normalizeText(value) {
+  return String(value || '').trim()
+}
+
+function normalizeEmail(value) {
+  return normalizeText(value).toLowerCase()
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeText(value))
+}
+
 function normalizeCpf(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 11)
 }
@@ -147,6 +159,14 @@ function normalizeCpf(value) {
 function isValidCpf(value) {
   const digits = normalizeCpf(value)
   return digits.length === 11
+}
+
+function normalizeCnpj(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 14)
+}
+
+function isValidCnpj(value) {
+  return normalizeCnpj(value).length === 14
 }
 
 function maskPhone(value) {
@@ -4167,15 +4187,45 @@ app.post('/public/registrations/confirm/:token', async (req, res) => {
 
 app.post('/auth/register', async (req, res) => {
   try {
-    const { name, email, phone, address, password, organizationName } = req.body
+    const {
+      name: rawName,
+      email: rawEmail,
+      phone: rawPhone,
+      address: rawAddress,
+      password: rawPassword,
+      organizationName: rawOrganizationName,
+    } = req.body
 
-    if (!organizationName || !email || !phone || !password) {
-      return res.status(400).json({
-        error: 'Nome da organização, e-mail, telefone e senha são obrigatórios'
-      })
+    const organizationName = normalizeText(rawOrganizationName)
+    const name = normalizeText(rawName)
+    const email = normalizeEmail(rawEmail)
+    const phone = normalizeWhatsAppNumber(rawPhone)
+    const address = normalizeText(rawAddress)
+    const password = typeof rawPassword === 'string' ? rawPassword : ''
+
+    if (organizationName.length < 2) {
+      return res.status(400).json({ error: 'Informe o nome da organização' })
     }
 
-    const exists = await prisma.user.findUnique({ where: { email } })
+    if (name && name.length < 2) {
+      return res.status(400).json({ error: 'Informe um nome válido ou deixe em branco' })
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: 'Informe um e-mail válido' })
+    }
+
+    if (!isValidBrazilCellphone(phone)) {
+      return res.status(400).json({ error: 'Informe um WhatsApp celular com DDD' })
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres' })
+    }
+
+    const exists = await prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    })
 
     if (exists) {
       return res.status(400).json({ error: 'E-mail já cadastrado' })
@@ -4187,6 +4237,7 @@ app.post('/auth/register', async (req, res) => {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'organizacao'
 
     // 🔹 criar organização
     const organization = await prisma.organization.create({
@@ -4258,46 +4309,112 @@ app.post('/auth/register-organizer', (req, res) => {
       }
 
       const {
-        name,
-        email,
-        phone,
-        address,
-        password,
-        organizerType = 'organizador',
-        organizationName,
-        documentType,
-        documentNumber,
-        organizationZipCode,
-        organizationStreet,
-        organizationNeighborhood,
-        organizationCity,
-        organizationState,
-        organizationCountry,
-        organizationNumber,
-        organizationComplement,
-        responsibleCpf,
-        responsibleZipCode,
-        responsibleStreet,
-        responsibleNeighborhood,
-        responsibleCity,
-        responsibleState,
-        responsibleCountry,
-        responsibleNumber,
-        responsibleComplement,
-        supportedSports = '',
+        name: rawName,
+        email: rawEmail,
+        phone: rawPhone,
+        address: rawAddress,
+        password: rawPassword,
+        organizerType: rawOrganizerType = 'organizador',
+        organizationName: rawOrganizationName,
+        documentType: rawDocumentType,
+        documentNumber: rawDocumentNumber,
+        organizationZipCode: rawOrganizationZipCode,
+        organizationStreet: rawOrganizationStreet,
+        organizationNeighborhood: rawOrganizationNeighborhood,
+        organizationCity: rawOrganizationCity,
+        organizationState: rawOrganizationState,
+        organizationCountry: rawOrganizationCountry,
+        organizationNumber: rawOrganizationNumber,
+        organizationComplement: rawOrganizationComplement,
+        responsibleCpf: rawResponsibleCpf,
+        responsibleZipCode: rawResponsibleZipCode,
+        responsibleStreet: rawResponsibleStreet,
+        responsibleNeighborhood: rawResponsibleNeighborhood,
+        responsibleCity: rawResponsibleCity,
+        responsibleState: rawResponsibleState,
+        responsibleCountry: rawResponsibleCountry,
+        responsibleNumber: rawResponsibleNumber,
+        responsibleComplement: rawResponsibleComplement,
+        supportedSports: rawSupportedSports = '',
         termsAccepted,
       } = req.body
 
-      if (!organizationName || !email || !phone || !password) {
-        return res.status(400).json({ error: 'Organização, e-mail, telefone e senha são obrigatórios' })
+      const organizerType = normalizeText(rawOrganizerType) || 'organizador'
+      const organizationName = normalizeText(rawOrganizationName)
+      const name = normalizeText(rawName)
+      const email = normalizeEmail(rawEmail)
+      const rawPhoneDigits = String(rawPhone || '').replace(/\D/g, '')
+      const address = normalizeText(rawAddress)
+      const password = typeof rawPassword === 'string' ? rawPassword : ''
+      const documentType = normalizeText(rawDocumentType)
+      const organizationCountry = normalizeText(rawOrganizationCountry)
+      const responsibleCountry = normalizeText(rawResponsibleCountry)
+      const isIndividualOrganizer = organizerType === 'organizador'
+      const documentNumber = isIndividualOrganizer && String(responsibleCountry || '').toLowerCase() === 'brasil'
+        ? normalizeCpf(rawDocumentNumber)
+        : !isIndividualOrganizer && String(organizationCountry || '').toLowerCase() === 'brasil'
+          ? normalizeCnpj(rawDocumentNumber)
+          : normalizeText(rawDocumentNumber)
+      const responsibleCpf = String(responsibleCountry || '').toLowerCase() === 'brasil'
+        ? normalizeCpf(rawResponsibleCpf)
+        : normalizeText(rawResponsibleCpf)
+      const organizationZipCode = normalizeText(rawOrganizationZipCode)
+      const organizationStreet = normalizeText(rawOrganizationStreet)
+      const organizationNeighborhood = normalizeText(rawOrganizationNeighborhood)
+      const organizationCity = normalizeText(rawOrganizationCity)
+      const organizationState = normalizeText(rawOrganizationState)
+      const organizationNumber = normalizeText(rawOrganizationNumber)
+      const organizationComplement = normalizeText(rawOrganizationComplement)
+      const responsibleZipCode = normalizeText(rawResponsibleZipCode)
+      const responsibleStreet = normalizeText(rawResponsibleStreet)
+      const responsibleNeighborhood = normalizeText(rawResponsibleNeighborhood)
+      const responsibleCity = normalizeText(rawResponsibleCity)
+      const responsibleState = normalizeText(rawResponsibleState)
+      const responsibleNumber = normalizeText(rawResponsibleNumber)
+      const responsibleComplement = normalizeText(rawResponsibleComplement)
+      const supportedSports = normalizeText(rawSupportedSports)
+      const phoneCountry = isIndividualOrganizer ? responsibleCountry : organizationCountry
+      const phone = String(phoneCountry || '').toLowerCase() === 'brasil'
+        ? normalizeWhatsAppNumber(rawPhone)
+        : rawPhoneDigits
+
+      if (organizationName.length < 2) {
+        return res.status(400).json({ error: 'Informe o nome da organização' })
+      }
+
+      if (name.length < 2) {
+        return res.status(400).json({ error: 'Informe o nome do responsável' })
+      }
+
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ error: 'Informe um e-mail válido' })
+      }
+
+      if (
+        (String(phoneCountry || '').toLowerCase() === 'brasil' && !isValidBrazilCellphone(phone)) ||
+        (String(phoneCountry || '').toLowerCase() !== 'brasil' && String(phone || '').replace(/\D/g, '').length < 8)
+      ) {
+        return res.status(400).json({ error: 'Informe um WhatsApp válido' })
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres' })
       }
 
       if (termsAccepted !== 'true' && termsAccepted !== true) {
         return res.status(400).json({ error: 'Aceite os termos de uso para continuar' })
       }
 
+      if (!isIndividualOrganizer && String(organizationCountry || '').toLowerCase() === 'brasil' && !isValidCnpj(documentNumber)) {
+        return res.status(400).json({ error: 'Informe um CNPJ válido' })
+      }
+
+      if (String(responsibleCountry || '').toLowerCase() === 'brasil' && !isValidCpf(responsibleCpf)) {
+        return res.status(400).json({ error: 'Informe um CPF válido para o responsável' })
+      }
+
       if (String(organizationCountry || responsibleCountry || '').toLowerCase() === 'brasil') {
-        const hasBrazilAddress = organizerType === 'organizador'
+        const hasBrazilAddress = isIndividualOrganizer
           ? responsibleZipCode && responsibleStreet && responsibleNumber && responsibleNeighborhood && responsibleCity && responsibleState
           : organizationZipCode && organizationStreet && organizationNumber && organizationNeighborhood && organizationCity && organizationState
 
@@ -4306,7 +4423,9 @@ app.post('/auth/register-organizer', (req, res) => {
         }
       }
 
-      const exists = await prisma.user.findUnique({ where: { email } })
+      const exists = await prisma.user.findFirst({
+        where: { email: { equals: email, mode: 'insensitive' } },
+      })
 
       if (exists) {
         return res.status(400).json({ error: 'E-mail já cadastrado' })
@@ -4317,6 +4436,7 @@ app.post('/auth/register-organizer', (req, res) => {
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'organizacao'
 
       const organization = await prisma.organization.create({
         data: {

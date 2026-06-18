@@ -247,6 +247,24 @@ function isValidCpf(value: string) {
   return onlyDigits(value).length === 11
 }
 
+function isValidCnpj(value: string) {
+  return onlyDigits(value).length === 14
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim())
+}
+
+function isValidPhoneForCountry(value: string, country: string) {
+  const digits = onlyDigits(value)
+  if (isBrazilCountry(country)) return isValidBrazilCellphone(value)
+  return digits.length >= 8
+}
+
+function normalizePhoneForCountry(value: string, country: string) {
+  return isBrazilCountry(country) ? normalizeBrazilPhone(value) : onlyDigits(value)
+}
+
 function formatCpf(value: string) {
   const digits = onlyDigits(value).slice(0, 11)
   if (digits.length <= 3) return digits
@@ -547,6 +565,8 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
   })
   const [sports, setSports] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const [validationMessage, setValidationMessage] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [createdOrganizer, setCreatedOrganizer] = useState<any>(null)
   const isIndividualOrganizer = form.organizerType === 'organizador'
   const organizerTypes = [
@@ -560,6 +580,13 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
 
   function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
+    setValidationMessage('')
+    setFieldErrors(current => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
   }
 
   function formatCep(value: string) {
@@ -597,45 +624,134 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
         ? current.filter(item => item !== sport)
         : [...current, sport]
     ))
+    setValidationMessage('')
+  }
+
+  function showValidation(message: string, errors: Record<string, string> = {}) {
+    setValidationMessage(message)
+    setFieldErrors(errors)
+  }
+
+  function getOrganizerStep3Errors() {
+    const errors: Record<string, string> = {}
+    const phoneCountry = isIndividualOrganizer ? form.responsibleCountry : form.organizationCountry
+
+    if (!isIndividualOrganizer) {
+      if (String(form.organizationName || '').trim().length < 2) {
+        errors.organizationName = 'Informe o nome da organização.'
+      }
+
+      if (!form.organizationDocument) {
+        errors.organizationDocument = 'Informe o documento da organização.'
+      } else if (isBrazilCountry(form.organizationCountry) && !isValidCnpj(form.organizationDocument)) {
+        errors.organizationDocument = 'Informe um CNPJ com 14 dígitos.'
+      }
+
+      if (!form.organizationCountry) {
+        errors.organizationCountry = 'Selecione o país da organização.'
+      }
+
+      if (isBrazilCountry(form.organizationCountry)) {
+        if (onlyDigits(form.organizationZipCode).length !== 8) errors.organizationZipCode = 'Informe um CEP válido.'
+        if (!String(form.organizationStreet || '').trim()) errors.organizationStreet = 'Informe o endereço.'
+        if (!String(form.organizationNumber || '').trim()) errors.organizationNumber = 'Informe o número.'
+        if (!String(form.organizationNeighborhood || '').trim()) errors.organizationNeighborhood = 'Informe o bairro.'
+        if (!String(form.organizationCity || '').trim()) errors.organizationCity = 'Informe a cidade.'
+        if (!String(form.organizationState || '').trim()) errors.organizationState = 'Informe o estado.'
+      }
+    }
+
+    if (String(form.responsibleName || '').trim().length < 2) {
+      errors.responsibleName = 'Informe o nome do responsável.'
+    }
+
+    if (String(form.responsibleLastName || '').trim().length < 2) {
+      errors.responsibleLastName = 'Informe o sobrenome do responsável.'
+    }
+
+    if (!form.responsibleCountry) {
+      errors.responsibleCountry = 'Selecione o país do responsável.'
+    }
+
+    if (!form.responsibleCpf) {
+      errors.responsibleCpf = 'Informe o documento do responsável.'
+    } else if (isBrazilCountry(form.responsibleCountry) && !isValidCpf(form.responsibleCpf)) {
+      errors.responsibleCpf = 'Informe um CPF com 11 dígitos.'
+    }
+
+    if (!isValidEmail(form.email)) {
+      errors.email = 'Informe um e-mail válido.'
+    }
+
+    if (!isValidPhoneForCountry(form.phone, phoneCountry)) {
+      errors.phone = isBrazilCountry(phoneCountry)
+        ? 'Informe um WhatsApp celular com DDD.'
+        : 'Informe um WhatsApp válido.'
+    }
+
+    if (isBrazilCountry(form.responsibleCountry)) {
+      if (onlyDigits(form.responsibleZipCode).length !== 8) errors.responsibleZipCode = 'Informe um CEP válido.'
+      if (!String(form.responsibleStreet || '').trim()) errors.responsibleStreet = 'Informe o endereço.'
+      if (!String(form.responsibleNumber || '').trim()) errors.responsibleNumber = 'Informe o número.'
+      if (!String(form.responsibleNeighborhood || '').trim()) errors.responsibleNeighborhood = 'Informe o bairro.'
+      if (!String(form.responsibleCity || '').trim()) errors.responsibleCity = 'Informe a cidade.'
+      if (!String(form.responsibleState || '').trim()) errors.responsibleState = 'Informe o estado.'
+    } else if ((form.responsibleStreet || form.responsibleCity || form.responsibleState) && !form.responsibleNumber) {
+      errors.responsibleNumber = 'Informe o número do endereço.'
+    }
+
+    return errors
+  }
+
+  function getOrganizerStep4Errors() {
+    const errors: Record<string, string> = {}
+
+    if (!isValidEmail(form.email)) {
+      errors.email = 'Informe um e-mail válido.'
+    }
+
+    if (String(form.password || '').length < 6) {
+      errors.password = 'Use pelo menos 6 caracteres.'
+    }
+
+    if (!form.confirmPassword) {
+      errors.confirmPassword = 'Confirme sua senha.'
+    } else if (form.password !== form.confirmPassword) {
+      errors.confirmPassword = 'As senhas não conferem.'
+    }
+
+    if (!form.termsAccepted) {
+      errors.termsAccepted = 'Aceite os termos de uso para continuar.'
+    }
+
+    return errors
+  }
+
+  function fieldError(field: string) {
+    if (!fieldErrors[field]) return null
+    return <span className="fieldError">{fieldErrors[field]}</span>
   }
 
   function nextStep() {
     if (step === 1 && !form.organizerType) {
-      alert('Selecione o tipo de organizador.')
+      showValidation('Selecione o tipo de organizador.', { organizerType: 'Selecione uma opção.' })
       return
     }
 
     if (step === 2 && sports.length === 0) {
-      alert('Selecione pelo menos um esporte.')
+      showValidation('Selecione pelo menos um esporte.')
       return
     }
 
     if (step === 3) {
-      if (!isIndividualOrganizer && (!form.organizationName || !form.organizationDocument || !form.email || !form.phone || !form.organizationCountry)) {
-        alert('Preencha os dados principais da organização.')
+      const errors = getOrganizerStep3Errors()
+      if (Object.keys(errors).length > 0) {
+        showValidation('Revise os campos destacados para continuar.', errors)
         return
-      }
-
-      if (!isIndividualOrganizer && isBrazilCountry(form.organizationCountry)) {
-        if (!form.organizationZipCode || !form.organizationStreet || !form.organizationNumber || !form.organizationNeighborhood || !form.organizationCity || !form.organizationState) {
-          alert('Preencha CEP, logradouro, número, bairro, cidade e estado da organização.')
-          return
-        }
-      }
-
-      if (!form.responsibleName || !form.responsibleLastName || !form.responsibleCpf || !form.responsibleCountry) {
-        alert('Preencha os dados do responsável.')
-        return
-      }
-
-      if (isBrazilCountry(form.responsibleCountry)) {
-        if (!form.responsibleZipCode || !form.responsibleStreet || !form.responsibleNumber || !form.responsibleNeighborhood || !form.responsibleCity || !form.responsibleState) {
-          alert('Preencha CEP, logradouro, número, bairro, cidade e estado do responsável.')
-          return
-        }
       }
     }
 
+    showValidation('')
     setStep(current => Math.min(current + 1, 4))
   }
 
@@ -644,28 +760,33 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
   }
 
   async function register() {
-    if (!form.email || !form.phone || !form.password) {
-      alert('Preencha e-mail, WhatsApp e senha.')
+    const step3Errors = getOrganizerStep3Errors()
+    if (Object.keys(step3Errors).length > 0) {
+      setStep(3)
+      showValidation('Revise os campos destacados para continuar.', step3Errors)
       return
     }
 
-    if (!isIndividualOrganizer && (!form.organizationName || !form.organizationDocument)) {
-      alert('Preencha nome e CNPJ da organização.')
+    const step4Errors = getOrganizerStep4Errors()
+    if (Object.keys(step4Errors).length > 0) {
+      showValidation('Revise os campos destacados para criar a conta.', step4Errors)
       return
     }
 
-    if (!form.termsAccepted) {
-      alert('Aceite os termos de uso para continuar.')
-      return
-    }
-
-    if (form.password !== form.confirmPassword) {
-      alert('As senhas não conferem.')
-      return
-    }
-
-    const organizationNameForPayload = isIndividualOrganizer ? `${form.responsibleName} ${form.responsibleLastName}`.trim() : form.organizationName
+    const normalizedEmail = String(form.email || '').trim().toLowerCase()
+    const phoneCountry = isIndividualOrganizer ? form.responsibleCountry : form.organizationCountry
+    const normalizedPhone = normalizePhoneForCountry(form.phone, phoneCountry)
+    const organizationNameForPayload = isIndividualOrganizer ? `${form.responsibleName} ${form.responsibleLastName}`.trim() : String(form.organizationName || '').trim()
     const responsibleNameForPayload = `${form.responsibleName} ${form.responsibleLastName}`.trim()
+    const documentTypeForPayload = isIndividualOrganizer
+      ? isBrazilCountry(form.responsibleCountry) ? 'CPF' : 'ID'
+      : isBrazilCountry(form.organizationCountry) ? 'CNPJ' : 'ID'
+    const documentNumberForPayload = isIndividualOrganizer
+      ? isBrazilCountry(form.responsibleCountry) ? onlyDigits(form.responsibleCpf) : String(form.responsibleCpf || '').trim()
+      : isBrazilCountry(form.organizationCountry) ? onlyDigits(form.organizationDocument) : String(form.organizationDocument || '').trim()
+    const responsibleDocumentForPayload = isBrazilCountry(form.responsibleCountry)
+      ? onlyDigits(form.responsibleCpf)
+      : String(form.responsibleCpf || '').trim()
     const addressForPayload = isIndividualOrganizer
       ? [form.responsibleStreet, form.responsibleNumber, form.responsibleComplement, form.responsibleNeighborhood, form.responsibleCity, form.responsibleState, form.responsibleCountry].filter(Boolean).join(', ')
       : [form.organizationStreet, form.organizationNumber, form.organizationComplement, form.organizationNeighborhood, form.organizationCity, form.organizationState, form.organizationCountry].filter(Boolean).join(', ')
@@ -674,13 +795,17 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
       ...form,
       organizationName: organizationNameForPayload,
       name: responsibleNameForPayload,
-      documentType: isIndividualOrganizer ? 'CPF' : 'CNPJ',
-      documentNumber: isIndividualOrganizer ? form.responsibleCpf : form.organizationDocument,
+      email: normalizedEmail,
+      phone: normalizedPhone,
+      documentType: documentTypeForPayload,
+      documentNumber: documentNumberForPayload,
+      responsibleCpf: responsibleDocumentForPayload,
       address: addressForPayload,
       supportedSports: sports.join(', '),
     }).forEach(([key, value]) => payload.append(key, String(value)))
 
     setLoading(true)
+    showValidation('')
 
     try {
       const response = await fetch(`${API}/auth/register-organizer`, {
@@ -690,7 +815,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
       const data = await response.json()
 
       if (data.error) {
-        alert(data.error)
+        showValidation(data.error)
         return
       }
 
@@ -698,6 +823,8 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
         ...data,
         name: organizationNameForPayload,
       })
+    } catch {
+      showValidation('Não foi possível criar a conta agora. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -743,6 +870,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
             <span key={item} className={step === item ? 'active' : step > item ? 'done' : ''}>{item}</span>
           ))}
         </div>
+        {validationMessage && <div className="formError">{validationMessage}</div>}
 
         {step === 1 && (
           <>
@@ -785,27 +913,32 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
                 <div className="onboardingGrid">
                   <div>
                     <label>Nome da organização *</label>
-                    <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
+                    <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} aria-invalid={!!fieldErrors.organizationName} />
+                    {fieldError('organizationName')}
                   </div>
                   <div>
                     <label>E-mail *</label>
-                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} />
+                    {fieldError('email')}
                   </div>
                   <div>
                     <label>WhatsApp *</label>
-                    <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+                    <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} aria-invalid={!!fieldErrors.phone} />
+                    {fieldError('phone')}
                   </div>
                   <div>
                     <label>País *</label>
-                    <select value={form.organizationCountry} onChange={e => updateField('organizationCountry', e.target.value)}>
+                    <select value={form.organizationCountry} onChange={e => updateField('organizationCountry', e.target.value)} aria-invalid={!!fieldErrors.organizationCountry}>
                       {COUNTRY_OPTIONS.map(country => (
                         <option key={country} value={country}>{country}</option>
                       ))}
                     </select>
+                    {fieldError('organizationCountry')}
                   </div>
                   <div>
                     <label>{isBrazilCountry(form.organizationCountry) ? 'CNPJ *' : 'ID *'}</label>
-                    <input value={form.organizationDocument} onChange={e => updateField('organizationDocument', e.target.value)} />
+                    <input value={form.organizationDocument} onChange={e => updateField('organizationDocument', e.target.value)} aria-invalid={!!fieldErrors.organizationDocument} />
+                    {fieldError('organizationDocument')}
                   </div>
                   <div>
                     <label>CEP{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
@@ -813,15 +946,19 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
                       value={form.organizationZipCode}
                       onChange={e => updateField('organizationZipCode', formatCep(e.target.value))}
                       onBlur={e => lookupCep(e.target.value, 'organization')}
+                      aria-invalid={!!fieldErrors.organizationZipCode}
                     />
+                    {fieldError('organizationZipCode')}
                   </div>
                   <div>
                     <label>Endereço{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
-                    <input value={form.organizationStreet} onChange={e => updateField('organizationStreet', e.target.value)} />
+                    <input value={form.organizationStreet} onChange={e => updateField('organizationStreet', e.target.value)} aria-invalid={!!fieldErrors.organizationStreet} />
+                    {fieldError('organizationStreet')}
                   </div>
                   <div>
                     <label>Número{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
-                    <input value={form.organizationNumber} onChange={e => updateField('organizationNumber', e.target.value)} />
+                    <input value={form.organizationNumber} onChange={e => updateField('organizationNumber', e.target.value)} aria-invalid={!!fieldErrors.organizationNumber} />
+                    {fieldError('organizationNumber')}
                   </div>
                   <div>
                     <label>Complemento</label>
@@ -829,15 +966,18 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
                   </div>
                   <div>
                     <label>Bairro{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
-                    <input value={form.organizationNeighborhood} onChange={e => updateField('organizationNeighborhood', e.target.value)} />
+                    <input value={form.organizationNeighborhood} onChange={e => updateField('organizationNeighborhood', e.target.value)} aria-invalid={!!fieldErrors.organizationNeighborhood} />
+                    {fieldError('organizationNeighborhood')}
                   </div>
                   <div>
                     <label>Cidade{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
-                    <input value={form.organizationCity} onChange={e => updateField('organizationCity', e.target.value)} />
+                    <input value={form.organizationCity} onChange={e => updateField('organizationCity', e.target.value)} aria-invalid={!!fieldErrors.organizationCity} />
+                    {fieldError('organizationCity')}
                   </div>
                   <div>
                     <label>Estado{isBrazilCountry(form.organizationCountry) ? ' *' : ''}</label>
-                    <input value={form.organizationState} onChange={e => updateField('organizationState', e.target.value)} />
+                    <input value={form.organizationState} onChange={e => updateField('organizationState', e.target.value)} aria-invalid={!!fieldErrors.organizationState} />
+                    {fieldError('organizationState')}
                   </div>
                 </div>
               </>
@@ -847,35 +987,41 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
             <div className="onboardingGrid">
               <div>
                 <label>Nome *</label>
-                <input value={form.responsibleName} onChange={e => updateField('responsibleName', e.target.value)} />
+                <input value={form.responsibleName} onChange={e => updateField('responsibleName', e.target.value)} aria-invalid={!!fieldErrors.responsibleName} />
+                {fieldError('responsibleName')}
               </div>
               <div>
                 <label>Sobrenome *</label>
-                <input value={form.responsibleLastName} onChange={e => updateField('responsibleLastName', e.target.value)} />
+                <input value={form.responsibleLastName} onChange={e => updateField('responsibleLastName', e.target.value)} aria-invalid={!!fieldErrors.responsibleLastName} />
+                {fieldError('responsibleLastName')}
               </div>
               {isIndividualOrganizer && (
                 <>
                   <div>
                     <label>E-mail *</label>
-                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} />
+                    {fieldError('email')}
                   </div>
                   <div>
                     <label>WhatsApp *</label>
-                    <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} />
+                    <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} aria-invalid={!!fieldErrors.phone} />
+                    {fieldError('phone')}
                   </div>
                 </>
               )}
               <div>
                 <label>País *</label>
-                <select value={form.responsibleCountry} onChange={e => updateField('responsibleCountry', e.target.value)}>
+                <select value={form.responsibleCountry} onChange={e => updateField('responsibleCountry', e.target.value)} aria-invalid={!!fieldErrors.responsibleCountry}>
                   {COUNTRY_OPTIONS.map(country => (
                     <option key={country} value={country}>{country}</option>
                   ))}
                 </select>
+                {fieldError('responsibleCountry')}
               </div>
               <div>
                 <label>{isBrazilCountry(form.responsibleCountry) ? 'CPF *' : 'ID *'}</label>
-                <input value={form.responsibleCpf} onChange={e => updateField('responsibleCpf', e.target.value)} />
+                <input value={form.responsibleCpf} onChange={e => updateField('responsibleCpf', e.target.value)} aria-invalid={!!fieldErrors.responsibleCpf} />
+                {fieldError('responsibleCpf')}
               </div>
               <div>
                 <label>CEP{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
@@ -883,15 +1029,19 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
                   value={form.responsibleZipCode}
                   onChange={e => updateField('responsibleZipCode', formatCep(e.target.value))}
                   onBlur={e => lookupCep(e.target.value, 'responsible')}
+                  aria-invalid={!!fieldErrors.responsibleZipCode}
                 />
+                {fieldError('responsibleZipCode')}
               </div>
               <div>
                 <label>Endereço{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
-                <input value={form.responsibleStreet} onChange={e => updateField('responsibleStreet', e.target.value)} />
+                <input value={form.responsibleStreet} onChange={e => updateField('responsibleStreet', e.target.value)} aria-invalid={!!fieldErrors.responsibleStreet} />
+                {fieldError('responsibleStreet')}
               </div>
               <div>
                 <label>Número{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
-                <input value={form.responsibleNumber} onChange={e => updateField('responsibleNumber', e.target.value)} />
+                <input value={form.responsibleNumber} onChange={e => updateField('responsibleNumber', e.target.value)} aria-invalid={!!fieldErrors.responsibleNumber} />
+                {fieldError('responsibleNumber')}
               </div>
               <div>
                 <label>Complemento</label>
@@ -899,15 +1049,18 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
               </div>
               <div>
                 <label>Bairro{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
-                <input value={form.responsibleNeighborhood} onChange={e => updateField('responsibleNeighborhood', e.target.value)} />
+                <input value={form.responsibleNeighborhood} onChange={e => updateField('responsibleNeighborhood', e.target.value)} aria-invalid={!!fieldErrors.responsibleNeighborhood} />
+                {fieldError('responsibleNeighborhood')}
               </div>
               <div>
                 <label>Cidade{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
-                <input value={form.responsibleCity} onChange={e => updateField('responsibleCity', e.target.value)} />
+                <input value={form.responsibleCity} onChange={e => updateField('responsibleCity', e.target.value)} aria-invalid={!!fieldErrors.responsibleCity} />
+                {fieldError('responsibleCity')}
               </div>
               <div>
                 <label>Estado{isBrazilCountry(form.responsibleCountry) ? ' *' : ''}</label>
-                <input value={form.responsibleState} onChange={e => updateField('responsibleState', e.target.value)} />
+                <input value={form.responsibleState} onChange={e => updateField('responsibleState', e.target.value)} aria-invalid={!!fieldErrors.responsibleState} />
+                {fieldError('responsibleState')}
               </div>
             </div>
           </>
@@ -919,19 +1072,22 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
             <div className="onboardingGrid">
               <div>
                 <label>E-mail de acesso</label>
-                <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
+                <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} />
+                {fieldError('email')}
               </div>
               <div>
                 <label>Senha *</label>
-                <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} />
+                <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} aria-invalid={!!fieldErrors.password} />
+                {fieldError('password')}
               </div>
               <div>
                 <label>Confirmar senha *</label>
-                <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} />
+                <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} aria-invalid={!!fieldErrors.confirmPassword} />
+                {fieldError('confirmPassword')}
               </div>
             </div>
 
-            <label className="termsLine">
+            <label className="termsLine" aria-invalid={!!fieldErrors.termsAccepted}>
               <input
                 type="checkbox"
                 checked={form.termsAccepted}
@@ -939,6 +1095,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
               />
               Aceito os termos de uso e a política de comunicação da plataforma.
             </label>
+            {fieldError('termsAccepted')}
           </>
         )}
 
@@ -1555,9 +1712,10 @@ const PROFILE_ROLE_LABELS: Record<string, string> = {
   ORGANIZER: 'Organizador',
   ARENA_OWNER: 'Arena',
   REFEREE: 'Árbitro',
-  ADMIN: 'Admin',
-  SUPERADMIN: 'SuperAdmin',
 }
+
+const PROFILE_ROLE_ORDER = ['PLAYER', 'ORGANIZER', 'ARENA_OWNER', 'REFEREE']
+const ACTIVE_PROFILE_STORAGE_KEY = 'playfinal_active_profile'
 
 function profileRoles(user: any) {
   const roles = new Set<string>(Array.isArray(user?.roles) ? user.roles : [])
@@ -1565,10 +1723,36 @@ function profileRoles(user: any) {
   if (user?.role === 'player' || user?.playerProfile) roles.add('PLAYER')
   if (user?.organizationId && ['admin', 'operator', 'viewer'].includes(user?.role)) roles.add('ORGANIZER')
   if (user?.organizationId && user?.role === 'admin') roles.add('ARENA_OWNER')
-  if (user?.role === 'admin') roles.add('ADMIN')
-  if (user?.role === 'superadmin') roles.add('SUPERADMIN')
 
-  return Array.from(roles).filter(role => PROFILE_ROLE_LABELS[role])
+  return PROFILE_ROLE_ORDER.filter(role => roles.has(role))
+}
+
+function availableProfileOptions(user: any) {
+  const roles = profileRoles(user)
+  return PROFILE_ROLE_ORDER.map(role => ({
+    role,
+    label: PROFILE_ROLE_LABELS[role],
+    active: roles.includes(role),
+    path: profilePath(role, user),
+  }))
+}
+
+function profilePath(role: string, user: any) {
+  if (role === 'PLAYER') return user?.playerProfile?.id ? `/jogador/${user.playerProfile.id}` : '/onboarding/jogador'
+  if (role === 'ORGANIZER') return '/app'
+  if (role === 'ARENA_OWNER') return '/campeonatos/arenas'
+  if (role === 'REFEREE') return '/onboarding/arbitro'
+  return '/app/perfil'
+}
+
+function initialActiveProfile(user: any) {
+  const roles = profileRoles(user)
+  if (roles.length === 0) return 'PLAYER'
+
+  const savedRole = localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY) || ''
+  if (roles.includes(savedRole)) return savedRole
+
+  return roles[0]
 }
 
 function ProfileSwitcher({ user }: { user: any }) {
@@ -1577,29 +1761,8 @@ function ProfileSwitcher({ user }: { user: any }) {
   if (roles.length === 0) return null
 
   function openRole(role: string) {
-    if (role === 'PLAYER') {
-      navigate(user?.playerProfile?.id ? `/jogador/${user.playerProfile.id}` : '/onboarding/jogador')
-      return
-    }
-
-    if (role === 'ORGANIZER') {
-      navigate('/app')
-      return
-    }
-
-    if (role === 'ARENA_OWNER') {
-      navigate('/campeonatos/arenas')
-      return
-    }
-
-    if (role === 'REFEREE') {
-      navigate('/onboarding/arbitro')
-      return
-    }
-
-    if (role === 'SUPERADMIN') {
-      navigate('/admin')
-    }
+    localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, role)
+    navigate(profilePath(role, user))
   }
 
   return (
@@ -1617,13 +1780,15 @@ function ProfileSwitcher({ user }: { user: any }) {
 function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, isMasterPlan?: boolean, onLogout?: () => void }) {
   const navigate = useNavigate()
   const [currentPlan, setCurrentPlan] = useState('')
+  const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
   const showMasterLinks = isMasterPlan || currentPlan === 'master' || currentPlan === 'free'
   const roles = profileRoles(user)
-  const hasRole = (role: string) => roles.includes(role)
-  const isPlayerOnly = hasRole('PLAYER') && !hasRole('ORGANIZER') && !hasRole('ARENA_OWNER') && !hasRole('ADMIN')
-  const showOrganizerMenu = hasRole('ORGANIZER') || hasRole('ARENA_OWNER') || hasRole('ADMIN')
-  const showArenaMenu = hasRole('ARENA_OWNER') || hasRole('ADMIN')
-  const showPlayerMenu = hasRole('PLAYER') || roles.length === 0
+  const profileOptions = availableProfileOptions(user)
+  const missingProfiles = profileOptions.filter(profile => !profile.active)
+  const showOrganizerMenu = activeProfile === 'ORGANIZER'
+  const showArenaMenu = activeProfile === 'ARENA_OWNER'
+  const showRefereeMenu = activeProfile === 'REFEREE'
+  const showPlayerMenu = activeProfile === 'PLAYER' || roles.length === 0
 
   useEffect(() => {
     if (!isLoggedIn()) return
@@ -1634,9 +1799,23 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
       .catch(() => setCurrentPlan(''))
   }, [isMasterPlan])
 
+  useEffect(() => {
+    const nextProfile = initialActiveProfile(user)
+    if (!roles.includes(activeProfile) && roles.length > 0) {
+      setActiveProfile(nextProfile)
+      localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, nextProfile)
+    }
+  }, [roles.join('|'), activeProfile, user])
+
   function goToTournamentFilter(filter: string) {
     navigate(`/app?torneios=${filter}`)
     setTimeout(() => document.getElementById('meus-torneios')?.scrollIntoView({ behavior: 'smooth' }), 80)
+  }
+
+  function changeActiveProfile(role: string) {
+    setActiveProfile(role)
+    localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, role)
+    navigate(profilePath(role, user))
   }
 
   function logout() {
@@ -1652,14 +1831,28 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
   return (
     <aside className="sidebar">
       <div className="sidebarLogo">PlayFinal</div>
+      {roles.length > 0 && (
+        <div className="sidebarProfileSelector">
+          <label htmlFor="sidebarActiveProfile">Acessando como</label>
+          <select
+            id="sidebarActiveProfile"
+            value={activeProfile}
+            onChange={event => changeActiveProfile(event.target.value)}
+          >
+            {roles.map(role => (
+              <option key={role} value={role}>{PROFILE_ROLE_LABELS[role]}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <nav className="sidebarMenu" aria-label="Menu da conta">
         <section className="sidebarMenuSection">
           <span className="sidebarSectionTitle">Principal</span>
-          <button onClick={() => isPlayerOnly && user?.playerProfile?.id ? navigate(`/jogador/${user.playerProfile.id}`) : navigate('/app')}>
+          <button onClick={() => navigate(profilePath(activeProfile, user))}>
             Dashboard
           </button>
 
-          {showOrganizerMenu ? (
+          {(showOrganizerMenu || showArenaMenu) ? (
             <details className="sidebarGroup">
               <summary>Meus Torneios</summary>
               <button className="sidebarSubButton" onClick={() => goToTournamentFilter('todos')}>Todos os Torneios</button>
@@ -1753,6 +1946,21 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
           </section>
         )}
 
+        {showRefereeMenu && (
+          <section className="sidebarMenuSection">
+            <span className="sidebarSectionTitle">Árbitro</span>
+            <details className="sidebarGroup">
+              <summary>Arbitragem</summary>
+              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Modo Árbitro</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Minhas Partidas</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Chamada de Jogadores</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Resultados</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Ocorrências</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Histórico</button>
+            </details>
+          </section>
+        )}
+
         <section className="sidebarMenuSection">
           <span className="sidebarSectionTitle">Conta</span>
           <details className="sidebarGroup">
@@ -1768,9 +1976,20 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
           <details className="sidebarGroup">
             <summary>Perfil</summary>
             <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Meu Perfil</button>
+            <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Meus Perfis</button>
             <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Segurança</button>
             <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Assinatura</button>
           </details>
+          {missingProfiles.length > 0 && (
+            <details className="sidebarGroup">
+              <summary>Adicionar perfil</summary>
+              {missingProfiles.map(profile => (
+                <button className="sidebarSubButton" key={profile.role} onClick={() => navigate(profile.path)}>
+                  {profile.label}
+                </button>
+              ))}
+            </details>
+          )}
           <button className="sidebarFooterButton" onClick={logout}>Sair</button>
         </section>
       </nav>
@@ -1950,6 +2169,7 @@ function AdminSidebar() {
 }
 
 function ProfilePage() {
+  const navigate = useNavigate()
   const [user, setUser] = useState<any>(null)
   const [form, setForm] = useState<any>({
     name: '',
@@ -2137,6 +2357,26 @@ function ProfilePage() {
     }
   }
 
+  function profileStatus(profile: any) {
+    if (profile.active) return 'Ativo'
+    if (profile.role === 'REFEREE') return 'Convite/aprovação necessária'
+    return 'Não configurado'
+  }
+
+  function profileActionLabel(profile: any) {
+    if (profile.active) return 'Acessar painel'
+    if (profile.role === 'REFEREE') return 'Ver solicitações'
+    return 'Completar cadastro'
+  }
+
+  function openProfile(profile: any) {
+    if (profile.active) {
+      localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profile.role)
+    }
+
+    navigate(profile.path)
+  }
+
   useEffect(() => {
     if (!isLoggedIn()) {
       goHome()
@@ -2190,6 +2430,32 @@ function ProfilePage() {
               {logoUploading ? 'Enviando...' : 'Salvar logo'}
             </button>
           </div>
+
+          <section className="profileProfilesPanel" id="meus-perfis">
+            <div className="profileProfilesHeader">
+              <div>
+                <h2>Meus Perfis</h2>
+                <p>Use a mesma conta para acessar perfis ativos ou completar um novo perfil.</p>
+              </div>
+              <button className="secondaryButton" type="button" onClick={() => navigate('/cadastro')}>
+                Adicionar perfil
+              </button>
+            </div>
+
+            <div className="profileStatusList">
+              {availableProfileOptions(user).map(profile => (
+                <div className={profile.active ? 'profileStatusRow active' : 'profileStatusRow'} key={profile.role}>
+                  <div>
+                    <strong>{profile.label}</strong>
+                    <span>{profileStatus(profile)}</span>
+                  </div>
+                  <button type="button" onClick={() => openProfile(profile)}>
+                    {profileActionLabel(profile)}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
 
           <div className="panel settingsPanel">
             <h2>Dados do cliente</h2>
