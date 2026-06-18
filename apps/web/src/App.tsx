@@ -188,9 +188,11 @@ function isPublicPath(path: string) {
     path === '/register' ||
     path === '/forgot-password' ||
     path === '/reset-password' ||
+    path === '/cadastro' ||
     path === '/inscreva-se' ||
     path === '/cadastro-organizador' ||
     path === '/cadastro-jogador' ||
+    path.startsWith('/onboarding/') ||
     path === '/organizador' ||
     path === '/jogador' ||
     path === '/arena' ||
@@ -360,9 +362,14 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/cadastro" element={<SignupChoice />} />
       <Route path="/inscreva-se" element={<SignupChoice />} />
-      <Route path="/cadastro-organizador" element={<OrganizerSignup />} />
-      <Route path="/cadastro-jogador" element={<PlayerSignup />} />
+      <Route path="/onboarding/organizador" element={<OrganizerSignup />} />
+      <Route path="/onboarding/jogador" element={<PlayerSignup />} />
+      <Route path="/onboarding/arena" element={<OrganizerSignup mode="arena" />} />
+      <Route path="/onboarding/arbitro" element={<RefereeOnboarding />} />
+      <Route path="/cadastro-organizador" element={<Navigate to="/onboarding/organizador" />} />
+      <Route path="/cadastro-jogador" element={<Navigate to="/onboarding/jogador" />} />
       <Route path="/organizador" element={<PersonaLanding type="organizador" />} />
       <Route path="/jogador" element={<PersonaLanding type="jogador" />} />
       <Route path="/arena" element={<PersonaLanding type="arena" />} />
@@ -414,41 +421,103 @@ export default function App() {
 }
 
 function Register() {
-  return <OrganizerSignup />
+  return <SignupChoice />
 }
 
 function SignupChoice() {
+  const redirectParam = new URLSearchParams(window.location.search).get('redirect')
+  const redirectQuery = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
+    ? `?redirect=${encodeURIComponent(redirectParam)}`
+    : ''
+  const cards = [
+    {
+      icon: '🎱',
+      title: 'Sou jogador',
+      text: 'Crie sua conta única e complete o perfil esportivo para participar de torneios, ranking e histórico.',
+      href: `/onboarding/jogador${redirectQuery}`,
+      action: 'Completar perfil de jogador',
+    },
+    {
+      icon: '🏆',
+      title: 'Sou organizador',
+      text: 'Crie sua conta única e complete os dados para criar, operar e divulgar torneios.',
+      href: `/onboarding/organizador${redirectQuery}`,
+      action: 'Completar perfil de organizador',
+    },
+    {
+      icon: '🏟️',
+      title: 'Tenho uma arena',
+      text: 'Crie a conta do responsável e prepare o cadastro da arena, clube, salão ou casa de eventos.',
+      href: `/onboarding/arena${redirectQuery}`,
+      action: 'Completar perfil da arena',
+    },
+    {
+      icon: '🧑‍⚖️',
+      title: 'Sou árbitro',
+      text: 'Use sua conta única para atuar por convite ou aprovação em torneios vinculados.',
+      href: `/onboarding/arbitro${redirectQuery}`,
+      action: 'Ver fluxo de árbitro',
+    },
+  ]
+
   return (
     <div className="onboardingPage signupChoicePage">
       <section className="onboardingHero">
-        <span>Inscreva-se</span>
-        <h1>Escolha como você quer entrar no PlayFinal Arena.</h1>
-        <p>Organizadores criam e operam torneios. Jogadores acompanham histórico, ranking, estatísticas e avisos dos eventos.</p>
+        <span>Cadastro único</span>
+        <h1>Crie sua conta e escolha como deseja usar o PlayFinal Arena.</h1>
+        <p>A mesma conta pode ter perfil de jogador, organizador, arena e árbitro. Você começa por um perfil e pode completar outros depois.</p>
       </section>
 
       <section className="signupChoiceGrid">
-        <a className="signupChoiceCard" href="/cadastro-organizador">
-          <span>🏆</span>
-          <h2>Sou organizador</h2>
-          <p>Cadastre sua arena, clube, bar ou associação para criar torneios, abrir inscrições e controlar pagamentos por evento.</p>
-          <strong>Cadastrar organizador</strong>
-        </a>
-
-        <a className="signupChoiceCard" href="/cadastro-jogador">
-          <span>🎱</span>
-          <h2>Sou jogador</h2>
-          <p>Crie seu perfil para acompanhar inscrições, ranking, histórico de torneios, resultados e conquistas.</p>
-          <strong>Cadastrar jogador</strong>
-        </a>
+        {cards.map(card => (
+          <a className="signupChoiceCard" href={card.href} key={card.title}>
+            <span>{card.icon}</span>
+            <h2>{card.title}</h2>
+            <p>{card.text}</p>
+            <strong>{card.action}</strong>
+          </a>
+        ))}
       </section>
     </div>
   )
 }
 
-function OrganizerSignup() {
+function RefereeOnboarding() {
+  return (
+    <div className="onboardingPage">
+      <section className="onboardingHero">
+        <span>Onboarding de árbitro</span>
+        <h1>Árbitro entra por convite ou aprovação.</h1>
+        <p>Crie uma conta única no PlayFinal Arena. Depois, um organizador pode vincular seu acesso a torneios e partidas específicas.</p>
+      </section>
+
+      <section className="onboardingCard">
+        <h2>Como funciona</h2>
+        <div className="signupChoiceGrid">
+          <a className="signupChoiceCard" href="/login">
+            <span>🔐</span>
+            <h2>Já tenho conta</h2>
+            <p>Entre para aceitar convites e acessar partidas liberadas para arbitragem.</p>
+            <strong>Entrar</strong>
+          </a>
+
+          <a className="signupChoiceCard" href="/cadastro">
+            <span>👤</span>
+            <h2>Criar conta</h2>
+            <p>Comece pela conta única e mantenha seus dados básicos prontos para convites.</p>
+            <strong>Criar conta única</strong>
+          </a>
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function OrganizerSignup({ mode = 'organizador' }: any) {
+  const isArenaOnboarding = mode === 'arena'
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<any>({
-    organizerType: '',
+    organizerType: isArenaOnboarding ? 'salao' : '',
     organizationName: '',
     organizationZipCode: '',
     organizationStreet: '',
@@ -641,7 +710,7 @@ function OrganizerSignup() {
       <div className="onboardingPage">
         <section className="onboardingHero">
           <span>Validação pendente</span>
-          <h1>Confirme seu cadastro de organizador.</h1>
+          <h1>Confirme sua conta e perfil.</h1>
           <p>{deliveryMessage}</p>
         </section>
 
@@ -657,12 +726,14 @@ function OrganizerSignup() {
   return (
     <div className="onboardingPage">
       <section className="onboardingHero">
-        <span>Cadastro de organizador</span>
-        <h1>Crie sua conta para organizar torneios.</h1>
-        <p>Informe seu perfil, modalidades, dados cadastrais e crie seu acesso ao PlayFinal Arena.</p>
+        <span>{isArenaOnboarding ? 'Onboarding da arena' : 'Onboarding de organizador'}</span>
+        <h1>{isArenaOnboarding ? 'Complete os dados da sua arena.' : 'Complete seu perfil para organizar torneios.'}</h1>
+        <p>Este fluxo usa a conta única do PlayFinal Arena e adiciona os dados necessários para este perfil.</p>
         <div className="onboardingSwitch">
-          <a className="active" href="/cadastro-organizador">Sou organizador</a>
-          <a href="/cadastro-jogador">Sou jogador</a>
+          <a className={!isArenaOnboarding ? 'active' : ''} href="/onboarding/organizador">Organizador</a>
+          <a className={isArenaOnboarding ? 'active' : ''} href="/onboarding/arena">Arena</a>
+          <a href="/onboarding/jogador">Jogador</a>
+          <a href="/onboarding/arbitro">Árbitro</a>
         </div>
       </section>
 
@@ -1046,12 +1117,14 @@ function PlayerSignup() {
   return (
     <div className="onboardingPage">
       <section className="onboardingHero playerHero">
-        <span>Cadastro de jogador</span>
-        <h1>Seu histórico competitivo em um só lugar.</h1>
-        <p>Acompanhe torneios, ranking Elo, últimas partidas, conquistas e avisos dos organizadores.</p>
+        <span>Onboarding de jogador</span>
+        <h1>Complete seu perfil esportivo.</h1>
+        <p>Este fluxo usa a conta única do PlayFinal Arena e adiciona dados de jogador para inscrições, ranking, histórico e avisos.</p>
         <div className="onboardingSwitch">
-          <a href="/cadastro-organizador">Sou organizador</a>
-          <a className="active" href="/cadastro-jogador">Sou jogador</a>
+          <a href="/onboarding/organizador">Organizador</a>
+          <a href="/onboarding/arena">Arena</a>
+          <a className="active" href="/onboarding/jogador">Jogador</a>
+          <a href="/onboarding/arbitro">Árbitro</a>
         </div>
       </section>
 
@@ -1296,7 +1369,7 @@ function Login() {
   const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//') && redirectParam !== '/login'
     ? redirectParam
     : ''
-  const signupHref = `/inscreva-se${safeRedirect ? `?redirect=${encodeURIComponent(safeRedirect)}` : ''}`
+  const signupHref = `/cadastro${safeRedirect ? `?redirect=${encodeURIComponent(safeRedirect)}` : ''}`
 
   function login() {
     fetch(`${API}/auth/login`, {
@@ -1477,10 +1550,80 @@ function ResetPassword() {
   )
 }
 
-function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: boolean, onLogout?: () => void }) {
+const PROFILE_ROLE_LABELS: Record<string, string> = {
+  PLAYER: 'Jogador',
+  ORGANIZER: 'Organizador',
+  ARENA_OWNER: 'Arena',
+  REFEREE: 'Árbitro',
+  ADMIN: 'Admin',
+  SUPERADMIN: 'SuperAdmin',
+}
+
+function profileRoles(user: any) {
+  const roles = new Set<string>(Array.isArray(user?.roles) ? user.roles : [])
+
+  if (user?.role === 'player' || user?.playerProfile) roles.add('PLAYER')
+  if (user?.organizationId && ['admin', 'operator', 'viewer'].includes(user?.role)) roles.add('ORGANIZER')
+  if (user?.organizationId && user?.role === 'admin') roles.add('ARENA_OWNER')
+  if (user?.role === 'admin') roles.add('ADMIN')
+  if (user?.role === 'superadmin') roles.add('SUPERADMIN')
+
+  return Array.from(roles).filter(role => PROFILE_ROLE_LABELS[role])
+}
+
+function ProfileSwitcher({ user }: { user: any }) {
+  const navigate = useNavigate()
+  const roles = profileRoles(user)
+  if (roles.length <= 1) return null
+
+  function openRole(role: string) {
+    if (role === 'PLAYER') {
+      navigate(user?.playerProfile?.id ? `/jogador/${user.playerProfile.id}` : '/onboarding/jogador')
+      return
+    }
+
+    if (role === 'ORGANIZER') {
+      navigate('/app')
+      return
+    }
+
+    if (role === 'ARENA_OWNER') {
+      navigate('/campeonatos/arenas')
+      return
+    }
+
+    if (role === 'REFEREE') {
+      navigate('/onboarding/arbitro')
+      return
+    }
+
+    if (role === 'SUPERADMIN') {
+      navigate('/admin')
+    }
+  }
+
+  return (
+    <div className="profileMenu" aria-label="Trocar perfil">
+      <span>Você está acessando como:</span>
+      {roles.map(role => (
+        <button key={role} onClick={() => openRole(role)}>
+          {PROFILE_ROLE_LABELS[role]}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, isMasterPlan?: boolean, onLogout?: () => void }) {
   const navigate = useNavigate()
   const [currentPlan, setCurrentPlan] = useState('')
   const showMasterLinks = isMasterPlan || currentPlan === 'master' || currentPlan === 'free'
+  const roles = profileRoles(user)
+  const hasRole = (role: string) => roles.includes(role)
+  const isPlayerOnly = hasRole('PLAYER') && !hasRole('ORGANIZER') && !hasRole('ARENA_OWNER') && !hasRole('ADMIN')
+  const showOrganizerMenu = hasRole('ORGANIZER') || hasRole('ARENA_OWNER') || hasRole('ADMIN')
+  const showArenaMenu = hasRole('ARENA_OWNER') || hasRole('ADMIN')
+  const showPlayerMenu = hasRole('PLAYER') || roles.length === 0
 
   useEffect(() => {
     if (!isLoggedIn()) return
@@ -1512,76 +1655,103 @@ function ClientSidebar({ isMasterPlan = false, onLogout }: { isMasterPlan?: bool
       <nav className="sidebarMenu" aria-label="Menu da conta">
         <section className="sidebarMenuSection">
           <span className="sidebarSectionTitle">Principal</span>
-          <button onClick={() => navigate('/app')}>Dashboard</button>
+          <button onClick={() => isPlayerOnly && user?.playerProfile?.id ? navigate(`/jogador/${user.playerProfile.id}`) : navigate('/app')}>
+            Dashboard
+          </button>
 
-          <details className="sidebarGroup">
-            <summary>Meus Torneios</summary>
-            <button className="sidebarSubButton" onClick={() => goToTournamentFilter('todos')}>Todos os Torneios</button>
-            <button className="sidebarSubButton" onClick={() => goToTournamentFilter('andamento')}>Em Andamento</button>
-            <button className="sidebarSubButton" onClick={() => goToTournamentFilter('inscricoes')}>Inscrições Abertas</button>
-            <button className="sidebarSubButton" onClick={() => goToTournamentFilter('encerrados')}>Encerrados</button>
-            <button className="sidebarSubButton" onClick={() => goToTournamentFilter('arquivados')}>Arquivados</button>
-          </details>
-        </section>
-
-        <section className="sidebarMenuSection">
-          <span className="sidebarSectionTitle">Organizador</span>
-          <details className="sidebarGroup">
-            <summary>Financeiro</summary>
-            <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Dashboard Financeiro</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Receitas</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições Recebidas</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Repasses</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Premiações</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Saques</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Relatórios</button>
-          </details>
-
-          <details className="sidebarGroup">
-            <summary>Usuários</summary>
-            <button className="sidebarSubButton" onClick={() => navigate('/app/usuarios')}>Usuários da Organização</button>
-          </details>
-
-          {showMasterLinks && (
+          {showOrganizerMenu ? (
             <details className="sidebarGroup">
-              <summary>Circuito PlayFinal</summary>
-              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Dashboard Geral</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Circuito</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/etapas')}>Etapas</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Pagamentos</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Cadastro de Arenas</button>
+              <summary>Meus Torneios</summary>
+              <button className="sidebarSubButton" onClick={() => goToTournamentFilter('todos')}>Todos os Torneios</button>
+              <button className="sidebarSubButton" onClick={() => goToTournamentFilter('andamento')}>Em Andamento</button>
+              <button className="sidebarSubButton" onClick={() => goToTournamentFilter('inscricoes')}>Inscrições Abertas</button>
+              <button className="sidebarSubButton" onClick={() => goToTournamentFilter('encerrados')}>Encerrados</button>
+              <button className="sidebarSubButton" onClick={() => goToTournamentFilter('arquivados')}>Arquivados</button>
+            </details>
+          ) : (
+            <details className="sidebarGroup">
+              <summary>Torneios</summary>
+              <button className="sidebarSubButton" onClick={() => navigate('/agenda')}>Agenda de Torneios</button>
+              <button className="sidebarSubButton" onClick={() => user?.playerProfile?.id ? navigate(`/jogador/${user.playerProfile.id}`) : navigate('/onboarding/jogador')}>Minhas Inscrições</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking</button>
             </details>
           )}
         </section>
 
-        <section className="sidebarMenuSection">
-          <span className="sidebarSectionTitle">Jogador</span>
-          <details className="sidebarGroup">
-            <summary>Jogadores</summary>
-            <button className="sidebarSubButton" onClick={() => navigate('/cadastro-jogador')}>Cadastro</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Estatísticas</button>
-          </details>
+        {showOrganizerMenu && (
+          <section className="sidebarMenuSection">
+            <span className="sidebarSectionTitle">Organizador</span>
+            <details className="sidebarGroup">
+              <summary>Financeiro</summary>
+              <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Dashboard Financeiro</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Receitas</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições Recebidas</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Repasses</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Premiações</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Saques</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Relatórios</button>
+            </details>
 
-          <details className="sidebarGroup">
-            <summary>Rankings</summary>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking Geral</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Ranking por Circuito</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking por Categoria</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Race to Master</button>
-          </details>
-        </section>
+            <details className="sidebarGroup">
+              <summary>Operação</summary>
+              <button className="sidebarSubButton" onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Jogadores</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Árbitros</button>
+            </details>
 
-        <section className="sidebarMenuSection">
-          <span className="sidebarSectionTitle">Arena</span>
-          <details className="sidebarGroup">
-            <summary>Arenas</summary>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Lista de Arenas</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Nova Arena</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Minha Arena</button>
-          </details>
-        </section>
+            <details className="sidebarGroup">
+              <summary>Usuários</summary>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/usuarios')}>Usuários da Organização</button>
+            </details>
+
+            {showMasterLinks && (
+              <details className="sidebarGroup">
+                <summary>Circuito PlayFinal</summary>
+                <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Dashboard Geral</button>
+                <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Circuito</button>
+                <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/etapas')}>Etapas</button>
+                <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/pagamentos')}>Pagamentos</button>
+                <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições</button>
+                <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Cadastro de Arenas</button>
+              </details>
+            )}
+          </section>
+        )}
+
+        {showPlayerMenu && (
+          <section className="sidebarMenuSection">
+            <span className="sidebarSectionTitle">Jogador</span>
+            <details className="sidebarGroup">
+              <summary>Minha carreira</summary>
+              <button className="sidebarSubButton" onClick={() => user?.playerProfile?.id ? navigate(`/jogador/${user.playerProfile.id}`) : navigate('/onboarding/jogador')}>Dashboard</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/agenda')}>Agenda de Torneios</button>
+              <button className="sidebarSubButton" onClick={() => user?.playerProfile?.id ? navigate(`/jogador/${user.playerProfile.id}`) : navigate('/onboarding/jogador')}>Minhas Inscrições</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Estatísticas</button>
+            </details>
+
+            <details className="sidebarGroup">
+              <summary>Rankings</summary>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking Geral</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/circuito')}>Ranking por Circuito</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking por Categoria</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Race to Master</button>
+            </details>
+          </section>
+        )}
+
+        {showArenaMenu && (
+          <section className="sidebarMenuSection">
+            <span className="sidebarSectionTitle">Arena</span>
+            <details className="sidebarGroup">
+              <summary>Arenas</summary>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Lista de Arenas</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Nova Arena</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Minha Arena</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/usuarios')}>Usuários da Arena</button>
+            </details>
+          </section>
+        )}
 
         <section className="sidebarMenuSection">
           <span className="sidebarSectionTitle">Conta</span>
@@ -1978,7 +2148,7 @@ function ProfilePage() {
 
   return (
     <div className="saasLayout">
-      <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+      <ClientSidebar user={user} isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
 
       <main className="saasMain">
         <header className="hero">
@@ -2229,7 +2399,7 @@ function UsersPage() {
 
   return (
     <div className="saasLayout">
-      <ClientSidebar isMasterPlan={isMasterPlan} />
+      <ClientSidebar user={user} isMasterPlan={isMasterPlan} />
 
       <main className="saasMain">
         <header className="hero">
@@ -2407,15 +2577,16 @@ function Dashboard({ user }: any) {
 
   return (
     <div className="saasLayout">
-      <ClientSidebar isMasterPlan={isMasterPlan} onLogout={logout} />
+      <ClientSidebar user={user} isMasterPlan={isMasterPlan} onLogout={logout} />
 
       <main className="saasMain">
         <header className="hero">
-	  <div className="profileMenu">
-  <button onClick={() => navigate('/app/perfil')}>
-    👤 {user?.name || 'Perfil'}
-  </button>
-</div>
+          <ProfileSwitcher user={user} />
+          <div className="profileMenu">
+            <button onClick={() => navigate('/app/perfil')}>
+              👤 {user?.name || 'Perfil'}
+            </button>
+          </div>
           <div className="badge">🎱 PlayFinal Arena</div>
 
           {user?.organization?.logoUrl && (
@@ -3551,7 +3722,7 @@ function Upgrade() {
 
   return (
     <div className="saasLayout">
-      <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+      <ClientSidebar user={user} isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
 
       <main className="saasMain">
         <header className="hero">
@@ -4644,7 +4815,7 @@ function LandingHeader() {
 
         <div className="landingActions">
           <a href="/login">Entrar</a>
-          <a className="landingButton" href="/inscreva-se">Começar agora</a>
+          <a className="landingButton" href="/cadastro">Começar agora</a>
         </div>
       </header>
     </>
@@ -4792,7 +4963,7 @@ function LandingFooter() {
           <a href="/organizador">Organizador</a>
           <a href="/jogador">Jogador</a>
           <a href="/arena">Arena</a>
-          <a href="/inscreva-se">Inscreva-se</a>
+          <a href="/cadastro">Inscreva-se</a>
         </nav>
 
         <nav className="footerLinks" aria-label="Links legais">
@@ -4996,7 +5167,7 @@ function AgendaPage() {
                   </dl>
                   <div className="agendaCardActions">
                     <a href="/agenda">Ver torneio</a>
-                    <a href="/inscreva-se">Inscrever-se</a>
+                    <a href="/cadastro">Inscrever-se</a>
                   </div>
                 </div>
               </article>
@@ -5092,7 +5263,7 @@ function AgendaPage() {
               de ranking, telão, pagamentos e comunicação da plataforma.
             </p>
           </div>
-          <a className="landingButton" href="/cadastro-organizador">Criar torneio gratuitamente</a>
+          <a className="landingButton" href="/onboarding/organizador">Criar torneio gratuitamente</a>
         </section>
       </main>
 
@@ -5143,7 +5314,7 @@ function OrganizerLanding() {
               rankings e transmissões ao vivo.
             </p>
             <div className="organizerHeroActions">
-              <a className="landingButton" href="/cadastro-organizador">Criar torneio gratuitamente</a>
+              <a className="landingButton" href="/onboarding/organizador">Criar torneio gratuitamente</a>
               <a className="landingSecondary" href="/#recursos">Ver demonstração</a>
             </div>
           </div>
@@ -5209,7 +5380,7 @@ function OrganizerLanding() {
           <div>
             <h2>Pronto para levar seus torneios ao próximo nível?</h2>
             <p>Crie agora mesmo seu torneio gratuitamente e descubra por que somos a plataforma número 1 do Brasil.</p>
-            <a className="landingButton" href="/cadastro-organizador">Criar torneio gratuitamente</a>
+            <a className="landingButton" href="/onboarding/organizador">Criar torneio gratuitamente</a>
           </div>
           <img src="/organizer/photos/trofeu-cta-recriado.webp" alt="Troféu PlayFinal Arena" />
         </section>
@@ -5263,7 +5434,7 @@ function PlayerLanding() {
               Participe de torneios, acompanhe rankings, melhore seu desempenho
               e construa sua história nas mesas.
             </p>
-            <a className="landingButton playerPrimaryButton" href="/inscreva-se">Criar meu perfil gratuitamente</a>
+            <a className="landingButton playerPrimaryButton" href="/onboarding/jogador">Criar meu perfil gratuitamente</a>
           </div>
 
           <div className="playerHeroVisual" aria-label="Jogador de sinuca em ação">
@@ -5334,7 +5505,7 @@ function PlayerLanding() {
                   </div>
                   <time>{date}</time>
                   <b>{prize}</b>
-                  <a href="/inscreva-se">Inscrever-se</a>
+                  <a href="/cadastro">Inscrever-se</a>
                 </div>
               ))}
             </div>
@@ -5364,7 +5535,7 @@ function PlayerLanding() {
           <div>
             <h2>Entre para a comunidade PlayFinal Arena</h2>
             <p>Crie seu perfil gratuito e comece sua jornada rumo ao topo do ranking.</p>
-            <a className="landingButton playerPrimaryButton" href="/inscreva-se">Criar meu perfil</a>
+            <a className="landingButton playerPrimaryButton" href="/onboarding/jogador">Criar meu perfil</a>
           </div>
         </section>
       </main>
@@ -5384,6 +5555,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
   }
 
   const page = personaLandingContent[type]
+  const signupHref = type === 'arena' ? '/onboarding/arena' : '/cadastro'
 
   return (
     <div className={`landing personaLanding personaLanding-${type}`}>
@@ -5395,7 +5567,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
           <h1>{page.title}</h1>
           <p>{page.description}</p>
           <div className="landingCtas">
-            <a className="landingButton" href="/inscreva-se">{page.cta}</a>
+            <a className="landingButton" href={signupHref}>{page.cta}</a>
             <a className="landingSecondary" href={type === 'arena' ? '/planos' : '/'}>{page.secondary}</a>
           </div>
         </div>
@@ -5444,7 +5616,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
           <span className="landingBadge">PlayFinal Arena</span>
           <h2>{page.showcaseTitle}</h2>
           <p>{page.showcaseText}</p>
-          <a className="landingButton" href="/inscreva-se">Começar agora</a>
+          <a className="landingButton" href={signupHref}>Começar agora</a>
         </div>
         <img src={page.showcaseImage || page.image} alt={page.showcaseTitle} />
       </section>
@@ -5456,7 +5628,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
             <span className="landingBadge">Gestão em tempo real</span>
             <h2>Controle sua arena em todos os dispositivos.</h2>
             <p>Mesas, eventos, inscrições e indicadores conectados em uma operação visual.</p>
-            <a className="landingButton" href="/inscreva-se">{page.cta}</a>
+            <a className="landingButton" href={signupHref}>{page.cta}</a>
           </div>
         </section>
       )}
@@ -5521,7 +5693,7 @@ function Landing() {
           </p>
 
           <div className="landingCtas">
-            <a className="landingButton landingButtonGlow" href="/inscreva-se">Começar agora</a>
+            <a className="landingButton landingButtonGlow" href="/cadastro">Começar agora</a>
             <a className="landingSecondary" href="/#recursos">Ver demonstração</a>
           </div>
         </div>
@@ -5618,7 +5790,7 @@ function Landing() {
         </div>
         <div>
           <span>Junte-se a milhares de jogadores<br />e organizadores hoje mesmo.</span>
-          <a className="landingButton landingButtonGlow" href="/inscreva-se">Começar agora</a>
+          <a className="landingButton landingButtonGlow" href="/cadastro">Começar agora</a>
         </div>
       </section>
 
@@ -5636,7 +5808,7 @@ function PlansComparison() {
       description: 'Para testar a plataforma com acesso aos principais recursos.',
       featured: false,
       cta: 'Começar grátis',
-      href: '/inscreva-se',
+      href: '/onboarding/organizador',
       features: ['1 torneio', 'Até 16 jogadores', 'Chave e painel do torneio', 'Página pública', 'Login após expirar'],
     },
     {
@@ -5646,7 +5818,7 @@ function PlansComparison() {
       description: 'Para arenas e organizadores com torneios recorrentes.',
       featured: true,
       cta: 'Escolher Pro',
-      href: '/inscreva-se',
+      href: '/onboarding/arena',
       features: ['Torneios ilimitados', 'Até 64 jogadores', 'Telão e página pública', 'Ranking e histórico', 'Recursos principais'],
     },
     {
@@ -5656,7 +5828,7 @@ function PlansComparison() {
       description: 'Para operações maiores, equipe e torneios acima de 64 jogadores.',
       featured: false,
       cta: 'Escolher Master',
-      href: '/inscreva-se',
+      href: '/onboarding/arena',
       features: ['Torneios acima de 64 jogadores', 'Usuários/equipe', 'Recursos avançados', 'Gestão ampliada', 'Acesso completo'],
     },
     {
@@ -5666,7 +5838,7 @@ function PlansComparison() {
       description: 'Para quem precisa organizar apenas um evento pontual.',
       featured: false,
       cta: 'Comprar avulso',
-      href: '/inscreva-se',
+      href: '/onboarding/organizador',
       features: ['Crédito de 1 torneio', 'Ideal para evento único', 'Chave e painel do torneio', 'Página pública', 'Sem mensalidade'],
     },
   ]
@@ -5694,7 +5866,7 @@ function PlansComparison() {
         </a>
         <div className="landingActions">
           <a href="/login">Entrar</a>
-          <a className="landingButton" href="/inscreva-se">Inscreva-se</a>
+          <a className="landingButton" href="/cadastro">Inscreva-se</a>
         </div>
       </header>
 
@@ -5838,7 +6010,7 @@ function PublicTournament({ user, loadingUser }: any) {
   const waitingRegistrations = registrations.filter((registration: any) => registration.status === 'waiting')
   const publicSignupPath = `/public/${slug}`
   const publicSignupLoginUrl = `/login?redirect=${encodeURIComponent(publicSignupPath)}`
-  const publicSignupRegisterUrl = `/inscreva-se?redirect=${encodeURIComponent(publicSignupPath)}`
+  const publicSignupRegisterUrl = `/cadastro?redirect=${encodeURIComponent(publicSignupPath)}`
   const playerProfile = user?.playerProfile || user?.playerAccount
   const isPlayerLogged = user?.role === 'player' && playerProfile?.id
 
@@ -6122,7 +6294,7 @@ function PublicTournament({ user, loadingUser }: any) {
                     <>
                       <h2>Use um perfil de jogador</h2>
                       <p>Esta conta não possui perfil de jogador ativo para inscrição.</p>
-                      <a className="publicSignupButton" href="/cadastro-jogador">
+                      <a className="publicSignupButton" href="/onboarding/jogador">
                         Criar perfil de jogador
                       </a>
                     </>
@@ -6525,7 +6697,7 @@ function SeasonsPage({ user, defaultPanel = 'dashboard' }: any) {
 
   return (
     <div className="saasLayout">
-      <ClientSidebar isMasterPlan={isMasterPlan} />
+      <ClientSidebar user={user} isMasterPlan={isMasterPlan} />
 
       <main className="saasMain">
         <header className="hero">
@@ -7422,7 +7594,7 @@ function CreateTournament({ user }: any) {
   if (!sportSelectionDone) {
     return (
       <div className="saasLayout">
-        <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+        <ClientSidebar user={user} isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
 
         <main className="saasMain">
           <header className="hero">
@@ -7469,7 +7641,7 @@ function CreateTournament({ user }: any) {
 
   return (
     <div className="saasLayout">
-      <ClientSidebar isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+      <ClientSidebar user={user} isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
 
       <main className="saasMain">
         <header className="hero">

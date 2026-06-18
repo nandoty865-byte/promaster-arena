@@ -271,6 +271,19 @@ organizationId Int?
 organization   Organization? @relation(fields: [organizationId], references: [id])
 playerProfile PlayerProfile?
 registrations TournamentRegistration[]
+roles UserRole[]
+}
+
+model UserRole {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  role      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@index([role])
 }
 
 model Organization {

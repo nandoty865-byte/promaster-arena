@@ -407,11 +407,67 @@ async function optionalAuthUser(req) {
     const payload = jwt.verify(token, JWT_SECRET)
     return prisma.user.findUnique({
       where: { id: payload.id },
-      include: { playerProfile: true, organization: true },
+      include: { playerProfile: true, organization: true, roles: true },
     })
   } catch {
     return null
   }
+}
+
+function normalizeAppRole(role) {
+  const normalized = String(role || '').trim().toUpperCase()
+  const aliases = {
+    PLAYER: 'PLAYER',
+    ORGANIZER: 'ORGANIZER',
+    ARENA_OWNER: 'ARENA_OWNER',
+    REFEREE: 'REFEREE',
+    ADMIN: 'ADMIN',
+    SUPERADMIN: 'SUPERADMIN',
+    OPERATOR: 'ORGANIZER',
+    VIEWER: 'ORGANIZER',
+  }
+
+  return aliases[normalized] || null
+}
+
+function serializeUserRoles(user) {
+  const roles = new Set()
+
+  if (user?.role === 'superadmin') roles.add('SUPERADMIN')
+  if (user?.role === 'player' || user?.playerProfile) roles.add('PLAYER')
+  if (user?.organizationId && ['admin', 'operator', 'viewer'].includes(user.role)) roles.add('ORGANIZER')
+  if (user?.organizationId && user.role === 'admin') roles.add('ARENA_OWNER')
+  if (user?.role === 'admin') roles.add('ADMIN')
+
+  for (const item of user?.roles || []) {
+    const normalized = normalizeAppRole(item.role)
+    if (normalized) roles.add(normalized)
+  }
+
+  return Array.from(roles)
+}
+
+async function ensureUserRole(userId, role) {
+  const normalized = normalizeAppRole(role)
+  if (!userId || !normalized) return null
+
+  return prisma.userRole.upsert({
+    where: {
+      userId_role: {
+        userId,
+        role: normalized,
+      },
+    },
+    update: {},
+    create: {
+      userId,
+      role: normalized,
+    },
+  })
+}
+
+async function ensureUserRoles(userId, roles) {
+  await Promise.all((roles || []).map(role => ensureUserRole(userId, role)))
 }
 
 function getPlanLimits(plan) {
@@ -4160,6 +4216,8 @@ app.post('/auth/register', async (req, res) => {
       }
     })
 
+    await ensureUserRoles(user.id, ['ORGANIZER', 'ARENA_OWNER', 'ADMIN'])
+
     const verifyUrl = `${APP_URL}/api/auth/verify-email/${emailVerifyToken}`
 
     const emailResult = await sendEmail({
@@ -4298,7 +4356,7 @@ app.post('/auth/register-organizer', (req, res) => {
       const hashedPassword = await bcrypt.hash(password, 10)
       const emailVerifyToken = randomUUID()
 
-      await prisma.user.create({
+      const user = await prisma.user.create({
         data: {
           name: name || organizationName,
           email,
@@ -4310,6 +4368,8 @@ app.post('/auth/register-organizer', (req, res) => {
           emailVerifyToken,
         },
       })
+
+      await ensureUserRoles(user.id, ['ORGANIZER', 'ARENA_OWNER', 'ADMIN'])
 
       const verifyUrl = `${APP_URL}/api/auth/verify-email/${emailVerifyToken}`
 
@@ -4494,11 +4554,13 @@ app.post('/players/register', async (req, res) => {
       player = created.player
     }
 
+    await ensureUserRole(user.id, 'PLAYER')
+
     if (!verifyToken) {
       return res.json({
         ok: true,
         player: { id: player.id, name: player.name, email: player.email },
-        user: { id: user.id, name: user.name, email: user.email, role: user.role },
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, roles: serializeUserRoles({ ...user, playerProfile: player, roles: [{ role: 'PLAYER' }] }) },
         delivered: true,
         delivery: { email: 'skipped', whatsapp: 'skipped' },
         message: 'Perfil de jogador criado. Use sua conta existente para entrar.',
@@ -4528,7 +4590,7 @@ app.post('/players/register', async (req, res) => {
     res.json({
       ok: true,
       player: { id: player.id, name: player.name, email: player.email },
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, roles: serializeUserRoles({ ...user, playerProfile: player, roles: [{ role: 'PLAYER' }] }) },
       ...delivery,
     })
   } catch (error) {
@@ -4588,6 +4650,7 @@ app.post('/players/verify/:token', async (req, res) => {
           emailVerifyToken: null,
         },
       })
+      await ensureUserRole(player.userId, 'PLAYER')
     } else if (player.password) {
       const existingUser = await prisma.user.findFirst({
         where: { email: { equals: player.email, mode: 'insensitive' } },
@@ -4605,6 +4668,7 @@ app.post('/players/verify/:token', async (req, res) => {
           where: { id: player.id },
           data: { userId: existingUser.id },
         })
+        await ensureUserRole(existingUser.id, 'PLAYER')
       } else {
         const createdUser = await prisma.user.create({
           data: {
@@ -4621,6 +4685,7 @@ app.post('/players/verify/:token', async (req, res) => {
           where: { id: player.id },
           data: { userId: createdUser.id },
         })
+        await ensureUserRole(createdUser.id, 'PLAYER')
       }
     }
 
@@ -4884,7 +4949,7 @@ app.post('/auth/login', async (req, res) => {
 
     const user = await prisma.user.findFirst({
       where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
-      include: { organization: true, playerProfile: true }
+      include: { organization: true, playerProfile: true, roles: true }
     })
 
     if (!user) {
@@ -4910,6 +4975,7 @@ app.post('/auth/login', async (req, res) => {
         id: user.id,
         email: user.email,
         role: user.role,
+        roles: serializeUserRoles(user),
         organizationId: user.organizationId,
         playerProfileId: user.playerProfile?.id || null
       },
@@ -4925,6 +4991,7 @@ app.post('/auth/login', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        roles: serializeUserRoles(user),
         organizationId: user.organizationId,
         organization: user.organization,
         playerProfile: user.playerProfile ? {
@@ -4950,7 +5017,7 @@ app.post('/auth/login', async (req, res) => {
 app.get('/me', auth, async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
-    include: { organization: true, playerProfile: true }
+    include: { organization: true, playerProfile: true, roles: true }
   })
 
   if (!user) {
@@ -4958,6 +5025,7 @@ app.get('/me', auth, async (req, res) => {
   }
 
   const { password, ...safeUser } = user
+  safeUser.roles = serializeUserRoles(user)
   if (safeUser.playerProfile) {
     const { password: playerPassword, verifyToken, ...safePlayerProfile } = safeUser.playerProfile
     safeUser.playerProfile = safePlayerProfile
@@ -6335,6 +6403,8 @@ app.post('/me/users/create', auth, requireRole('admin'), async (req, res) => {
         organizationId: true
       }
     })
+
+    await ensureUserRoles(user.id, role === 'admin' ? ['ORGANIZER', 'ARENA_OWNER', 'ADMIN'] : ['ORGANIZER'])
 
     await sendEmail({
       to: email,
