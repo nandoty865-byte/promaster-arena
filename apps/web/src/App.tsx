@@ -1574,7 +1574,7 @@ function profileRoles(user: any) {
 function ProfileSwitcher({ user }: { user: any }) {
   const navigate = useNavigate()
   const roles = profileRoles(user)
-  if (roles.length <= 1) return null
+  if (roles.length === 0) return null
 
   function openRole(role: string) {
     if (role === 'PLAYER') {
@@ -2152,9 +2152,10 @@ function ProfilePage() {
 
       <main className="saasMain">
         <header className="hero">
-          <div className="badge">👤 Perfil do cliente</div>
-          <h1>Perfil da Arena</h1>
-          <p>Atualize os dados do cliente, contato e logo exibida no sistema.</p>
+          <ProfileSwitcher user={user} />
+          <div className="badge">👤 Conta única</div>
+          <h1>Meu Perfil</h1>
+          <p>Atualize seus dados de conta, contatos e informações dos perfis vinculados.</p>
         </header>
 
         <div className="profileGrid">
