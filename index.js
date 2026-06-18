@@ -140,13 +140,13 @@ function isValidBrazilCellphone(value) {
   return /^[1-9]{2}9\d{8}$/.test(local)
 }
 
-function normalizeRg(value) {
-  return String(value || '').replace(/[^0-9A-Za-z.-]/g, '').toUpperCase().slice(0, 14)
+function normalizeCpf(value) {
+  return String(value || '').replace(/\D/g, '').slice(0, 11)
 }
 
-function isValidRg(value) {
-  const clean = String(value || '').replace(/[^0-9A-Za-z]/g, '')
-  return clean.length >= 5 && clean.length <= 12
+function isValidCpf(value) {
+  const digits = normalizeCpf(value)
+  return digits.length === 11
 }
 
 function maskPhone(value) {
@@ -393,6 +393,24 @@ function auth(req, res, next) {
     next()
   } catch {
     return res.status(401).json({ error: 'Token inválido' })
+  }
+}
+
+async function optionalAuthUser(req) {
+  const header = req.headers.authorization
+
+  if (!header) return null
+
+  const token = header.replace('Bearer ', '')
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET)
+    return prisma.user.findUnique({
+      where: { id: payload.id },
+      include: { playerProfile: true, organization: true },
+    })
+  } catch {
+    return null
   }
 }
 
@@ -1013,7 +1031,7 @@ async function ensureRegistrationForManualPlayer(tournamentId, playerData, index
 
   const data = {
     name: playerData.name,
-    rg: existing?.rg || 'manual',
+    cpf: existing?.cpf || 'manual',
     email: existing?.email || manualRegistrationEmail(tournamentId, playerData, index),
     phone: playerData.phone || existing?.phone || 'manual',
     status: 'confirmed',
@@ -3702,24 +3720,38 @@ app.get('/public/:slug', async (req, res) => {
 app.post('/public/:slug/register', async (req, res) => {
   try {
     const { slug } = req.params
+    const authUser = await optionalAuthUser(req)
+    const playerProfile = authUser?.playerProfile || null
     const {
       name,
-      rg,
+      cpf,
       email,
       phone,
+      category,
+      modality,
+      sportName,
+      rulesAccepted,
       representsOrganization = false,
       representedOrganizationName,
       representedOrganizationType,
       representedOrganizationDocument,
     } = req.body
 
-    if (!name || !rg || !email || !phone) {
-      return res.status(400).json({ error: 'Nome, RG, e-mail e WhatsApp são obrigatórios' })
+    if (authUser && !playerProfile) {
+      return res.status(403).json({ error: 'Complete seu perfil de jogador antes de se inscrever neste torneio' })
+    }
+
+    if (playerProfile && rulesAccepted !== true && rulesAccepted !== 'true') {
+      return res.status(400).json({ error: 'Aceite o regulamento do torneio para confirmar a inscrição' })
+    }
+
+    if (!playerProfile && (!name || !cpf || !email || !phone)) {
+      return res.status(400).json({ error: 'Nome, CPF, e-mail e WhatsApp são obrigatórios' })
     }
 
     const tournament = await prisma.tournament.findUnique({
       where: { publicSlug: slug },
-      include: { registrations: true, organization: true },
+      include: { registrations: true, organization: true, sport: true },
     })
 
     if (!tournament) {
@@ -3730,16 +3762,28 @@ app.post('/public/:slug/register', async (req, res) => {
       return res.status(403).json({ error: 'Inscrições encerradas pelo organizador' })
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase()
-    const normalizedPhone = normalizeWhatsAppNumber(phone)
-    const normalizedRg = normalizeRg(rg)
+    const registrationName = playerProfile
+      ? String(sportName || playerProfile.nickname || playerProfile.name).trim()
+      : String(name).trim()
+    const registrationEmail = playerProfile
+      ? playerProfile.email
+      : email
+    const registrationPhone = playerProfile
+      ? (phone || playerProfile.phone || authUser.phone)
+      : phone
+    const registrationCpf = playerProfile
+      ? (playerProfile.cpf || cpf || '')
+      : cpf
+    const normalizedEmail = String(registrationEmail || '').trim().toLowerCase()
+    const normalizedPhone = normalizeWhatsAppNumber(registrationPhone)
+    const normalizedCpf = registrationCpf ? normalizeCpf(registrationCpf) : null
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return res.status(400).json({ error: 'Informe um e-mail válido' })
     }
 
-    if (!isValidRg(normalizedRg)) {
-      return res.status(400).json({ error: 'Informe um RG válido com 5 a 12 caracteres' })
+    if (normalizedCpf && !isValidCpf(normalizedCpf)) {
+      return res.status(400).json({ error: 'Informe um CPF válido com 11 dígitos' })
     }
 
     if (!isValidBrazilCellphone(normalizedPhone)) {
@@ -3748,14 +3792,34 @@ app.post('/public/:slug/register', async (req, res) => {
 
     const confirmationToken = randomUUID()
     const representsOrg = representsOrganization === true || representsOrganization === 'true'
+    const existingRegistration = await prisma.tournamentRegistration.findFirst({
+      where: {
+        tournamentId: tournament.id,
+        OR: [
+          playerProfile ? { playerProfileId: playerProfile.id } : null,
+          authUser ? { userId: authUser.id } : null,
+          { email: normalizedEmail },
+        ].filter(Boolean),
+      },
+    })
+
+    if (existingRegistration) {
+      return res.status(400).json({ error: 'Você já está inscrito neste torneio' })
+    }
 
     const registration = await prisma.tournamentRegistration.create({
       data: {
         tournamentId: tournament.id,
-        name: String(name).trim(),
-        rg: normalizedRg,
+        userId: authUser?.id || null,
+        playerProfileId: playerProfile?.id || null,
+        name: registrationName,
+        cpf: normalizedCpf,
         email: normalizedEmail,
         phone: normalizedPhone,
+        category: String(category || '').trim() || null,
+        modality: String(modality || tournament.sport?.name || '').trim() || null,
+        sportName: String(sportName || '').trim() || null,
+        rulesAcceptedAt: playerProfile ? new Date() : null,
         status: 'pending',
         paymentStatus: 'pending',
         paymentMethod: null,
@@ -3792,6 +3856,9 @@ app.post('/public/:slug/register', async (req, res) => {
         paymentStatus: currentRegistration.paymentStatus,
         checkedIn: currentRegistration.checkedIn,
         automaticPayment: currentRegistration.automaticPayment,
+        category: currentRegistration.category,
+        modality: currentRegistration.modality,
+        sportName: currentRegistration.sportName,
       },
       paymentLink: tournament.paymentLink,
       payment,
@@ -4323,47 +4390,125 @@ app.post('/players/register', async (req, res) => {
       return res.status(400).json({ error: 'Aceite o recebimento de avisos por e-mail e WhatsApp para participar dos torneios' })
     }
 
-    const exists = await prisma.playerAccount.findUnique({ where: { email } })
+    const normalizedEmail = String(email).trim().toLowerCase()
+    const existingPlayer = await prisma.playerProfile.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
+    })
 
-    if (exists) {
+    if (existingPlayer) {
       return res.status(400).json({ error: 'Já existe perfil de jogador com este e-mail' })
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10)
-    const verifyToken = randomUUID()
-    const player = await prisma.playerAccount.create({
-      data: {
-        name: fullName,
-        firstName: firstName || null,
-        lastName: lastName || null,
-        nickname: nickname || null,
-        email,
-        password: hashedPassword,
-        phone: phone || null,
-        rg: rg || null,
-        cpf: cpf || null,
-        gender: gender || null,
-        birthDate: birthDate ? new Date(birthDate) : null,
-        zipCode: zipCode || null,
-        street: street || null,
-        addressNumber: addressNumber || null,
-        complement: complement || null,
-        neighborhood: neighborhood || null,
-        city: city || null,
-        state: state || null,
-        country: country || null,
-        favoriteSports: Array.isArray(favoriteSports) ? favoriteSports.join(', ') : favoriteSports || null,
-        termsAcceptedAt: new Date(),
-        noticesAcceptedAt: new Date(),
-        emailVerified: false,
-        verifyToken,
-      },
+    const existingUser = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
+      include: { playerProfile: true },
     })
+
+    if (existingUser?.playerProfile) {
+      return res.status(400).json({ error: 'Esta conta já possui perfil de jogador' })
+    }
+
+    if (existingUser) {
+      const validPassword = await bcrypt.compare(password, existingUser.password)
+
+      if (!validPassword) {
+        return res.status(400).json({ error: 'Este e-mail já possui conta. Entre com a senha atual para adicionar o perfil de jogador.' })
+      }
+    }
+
+    const hashedPassword = existingUser?.password || await bcrypt.hash(password, 10)
+    const verifyToken = existingUser?.emailVerified ? null : randomUUID()
+    const favoriteSportsValue = Array.isArray(favoriteSports) ? favoriteSports.join(', ') : favoriteSports || null
+    const playerData = {
+      name: fullName,
+      firstName: firstName || null,
+      lastName: lastName || null,
+      nickname: nickname || null,
+      email: normalizedEmail,
+      password: hashedPassword,
+      phone: phone || null,
+      rg: rg || null,
+      cpf: cpf || null,
+      gender: gender || null,
+      birthDate: birthDate ? new Date(birthDate) : null,
+      zipCode: zipCode || null,
+      street: street || null,
+      addressNumber: addressNumber || null,
+      complement: complement || null,
+      neighborhood: neighborhood || null,
+      city: city || null,
+      state: state || null,
+      country: country || null,
+      favoriteSports: favoriteSportsValue,
+      termsAcceptedAt: new Date(),
+      noticesAcceptedAt: new Date(),
+      emailVerified: Boolean(existingUser?.emailVerified),
+      verifyToken,
+    }
+
+    let user = existingUser
+    let player = null
+
+    if (existingUser) {
+      player = await prisma.playerProfile.create({
+        data: {
+          ...playerData,
+          userId: existingUser.id,
+        },
+      })
+
+      if (verifyToken) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            emailVerified: false,
+            emailVerifyToken: verifyToken,
+          },
+        })
+      }
+    } else {
+      const created = await prisma.$transaction(async tx => {
+        const createdUser = await tx.user.create({
+          data: {
+            name: fullName,
+            email: normalizedEmail,
+            phone: phone || null,
+            password: hashedPassword,
+            role: 'player',
+            emailVerified: false,
+            emailVerifyToken: verifyToken,
+          },
+        })
+
+        const createdPlayer = await tx.playerProfile.create({
+          data: {
+            ...playerData,
+            userId: createdUser.id,
+          },
+        })
+
+        return { user: createdUser, player: createdPlayer }
+      })
+
+      user = created.user
+      player = created.player
+    }
+
+    if (!verifyToken) {
+      return res.json({
+        ok: true,
+        player: { id: player.id, name: player.name, email: player.email },
+        user: { id: user.id, name: user.name, email: user.email, role: user.role },
+        delivered: true,
+        delivery: { email: 'skipped', whatsapp: 'skipped' },
+        message: 'Perfil de jogador criado. Use sua conta existente para entrar.',
+      })
+    }
 
     const verifyUrl = `${APP_URL}/api/players/verify/${verifyToken}`
 
     const emailResult = await sendEmail({
-      to: email,
+      to: normalizedEmail,
       subject: 'Valide seu cadastro de jogador - PlayFinal Arena',
       text: `Seu perfil de jogador foi criado. Valide seu cadastro: ${verifyUrl}`,
       html: `
@@ -4383,6 +4528,7 @@ app.post('/players/register', async (req, res) => {
     res.json({
       ok: true,
       player: { id: player.id, name: player.name, email: player.email },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
       ...delivery,
     })
   } catch (error) {
@@ -4395,7 +4541,7 @@ app.get('/players/verify/:token', async (req, res) => {
   try {
     const { token } = req.params
 
-    const player = await prisma.playerAccount.findFirst({
+    const player = await prisma.playerProfile.findFirst({
       where: { verifyToken: token },
     })
 
@@ -4418,7 +4564,7 @@ app.post('/players/verify/:token', async (req, res) => {
   try {
     const { token } = req.params
 
-    const player = await prisma.playerAccount.findFirst({
+    const player = await prisma.playerProfile.findFirst({
       where: { verifyToken: token },
     })
 
@@ -4426,13 +4572,57 @@ app.post('/players/verify/:token', async (req, res) => {
       return res.status(400).send('Link de validação inválido ou expirado.')
     }
 
-    await prisma.playerAccount.update({
+    await prisma.playerProfile.update({
       where: { id: player.id },
       data: {
         emailVerified: true,
         verifyToken: null,
       },
     })
+
+    if (player.userId) {
+      await prisma.user.update({
+        where: { id: player.userId },
+        data: {
+          emailVerified: true,
+          emailVerifyToken: null,
+        },
+      })
+    } else if (player.password) {
+      const existingUser = await prisma.user.findFirst({
+        where: { email: { equals: player.email, mode: 'insensitive' } },
+      })
+
+      if (existingUser) {
+        await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            emailVerified: true,
+            emailVerifyToken: null,
+          },
+        })
+        await prisma.playerProfile.update({
+          where: { id: player.id },
+          data: { userId: existingUser.id },
+        })
+      } else {
+        const createdUser = await prisma.user.create({
+          data: {
+            name: player.name,
+            email: player.email,
+            phone: player.phone || null,
+            password: player.password,
+            role: 'player',
+            emailVerified: true,
+            emailVerifyToken: null,
+          },
+        })
+        await prisma.playerProfile.update({
+          where: { id: player.id },
+          data: { userId: createdUser.id },
+        })
+      }
+    }
 
     res.redirect(`/jogador/${player.id}?verified=1`)
   } catch (error) {
@@ -4444,7 +4634,7 @@ app.post('/players/verify/:token', async (req, res) => {
 app.get('/players/:id/dashboard', async (req, res) => {
   try {
     const id = Number(req.params.id)
-    const player = await prisma.playerAccount.findUnique({
+    const player = await prisma.playerProfile.findUnique({
       where: { id },
     })
 
@@ -4457,6 +4647,8 @@ app.get('/players/:id/dashboard', async (req, res) => {
     }
 
     const identityFilters = [
+      { playerProfileId: player.id },
+      player.userId ? { userId: player.userId } : null,
       { email: player.email },
       player.phone ? { phone: player.phone } : null,
     ].filter(Boolean)
@@ -4582,13 +4774,14 @@ app.get('/players/:id/dashboard', async (req, res) => {
 app.post('/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body
+    const normalizedEmail = String(email || '').trim().toLowerCase()
 
     if (!email) {
       return res.status(400).json({ error: 'Informe o e-mail cadastrado' })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
       include: { organization: true },
     })
 
@@ -4672,6 +4865,11 @@ app.post('/auth/reset-password', async (req, res) => {
       },
     })
 
+    await prisma.playerProfile.updateMany({
+      where: { userId: user.id },
+      data: { password: hashedPassword },
+    })
+
     res.json({ ok: true, message: 'Senha alterada com sucesso' })
   } catch (error) {
     console.error(error)
@@ -4682,10 +4880,11 @@ app.post('/auth/reset-password', async (req, res) => {
 app.post('/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body
+    const normalizedEmail = String(email || '').trim().toLowerCase()
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { organization: true }
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: normalizedEmail, mode: 'insensitive' } },
+      include: { organization: true, playerProfile: true }
     })
 
     if (!user) {
@@ -4711,7 +4910,8 @@ app.post('/auth/login', async (req, res) => {
         id: user.id,
         email: user.email,
         role: user.role,
-        organizationId: user.organizationId
+        organizationId: user.organizationId,
+        playerProfileId: user.playerProfile?.id || null
       },
       JWT_SECRET,
       { expiresIn: '7d' }
@@ -4726,7 +4926,19 @@ app.post('/auth/login', async (req, res) => {
         email: user.email,
         role: user.role,
         organizationId: user.organizationId,
-        organization: user.organization
+        organization: user.organization,
+        playerProfile: user.playerProfile ? {
+          id: user.playerProfile.id,
+          name: user.playerProfile.name,
+          nickname: user.playerProfile.nickname,
+          email: user.playerProfile.email,
+        } : null,
+        playerAccount: user.playerProfile ? {
+          id: user.playerProfile.id,
+          name: user.playerProfile.name,
+          nickname: user.playerProfile.nickname,
+          email: user.playerProfile.email,
+        } : null,
       }
     })
   } catch (error) {
@@ -4738,7 +4950,7 @@ app.post('/auth/login', async (req, res) => {
 app.get('/me', auth, async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
-    include: { organization: true }
+    include: { organization: true, playerProfile: true }
   })
 
   if (!user) {
@@ -4746,6 +4958,11 @@ app.get('/me', auth, async (req, res) => {
   }
 
   const { password, ...safeUser } = user
+  if (safeUser.playerProfile) {
+    const { password: playerPassword, verifyToken, ...safePlayerProfile } = safeUser.playerProfile
+    safeUser.playerProfile = safePlayerProfile
+    safeUser.playerAccount = safePlayerProfile
+  }
 
   res.json({ user: safeUser })
 })
@@ -5229,10 +5446,10 @@ app.patch('/registrations/:id/payment', auth, requireRole('admin', 'operator'), 
 app.post('/tournaments/:id/registrations', auth, requireRole('admin', 'operator'), async (req, res) => {
   try {
     const id = Number(req.params.id)
-    const { name, rg, email, phone } = req.body
+    const { name, cpf, email, phone } = req.body
 
-    if (!name || !rg || !email || !phone) {
-      return res.status(400).json({ error: 'Nome, RG, e-mail e WhatsApp são obrigatórios' })
+    if (!name || !cpf || !email || !phone) {
+      return res.status(400).json({ error: 'Nome, CPF, e-mail e WhatsApp são obrigatórios' })
     }
 
     const tournament = await prisma.tournament.findUnique({
@@ -5257,14 +5474,14 @@ app.post('/tournaments/:id/registrations', auth, requireRole('admin', 'operator'
 
     const normalizedEmail = String(email).trim().toLowerCase()
     const normalizedPhone = normalizeWhatsAppNumber(phone)
-    const normalizedRg = normalizeRg(rg)
+    const normalizedCpf = normalizeCpf(cpf)
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       return res.status(400).json({ error: 'Informe um e-mail válido' })
     }
 
-    if (!isValidRg(normalizedRg)) {
-      return res.status(400).json({ error: 'Informe um RG válido com 5 a 12 caracteres' })
+    if (!isValidCpf(normalizedCpf)) {
+      return res.status(400).json({ error: 'Informe um CPF válido com 11 dígitos' })
     }
 
     if (!isValidBrazilCellphone(normalizedPhone)) {
@@ -5275,7 +5492,7 @@ app.post('/tournaments/:id/registrations', auth, requireRole('admin', 'operator'
       data: {
         tournamentId: id,
         name: String(name).trim(),
-        rg: normalizedRg,
+        cpf: normalizedCpf,
         email: normalizedEmail,
         phone: normalizedPhone,
         status: 'pending',

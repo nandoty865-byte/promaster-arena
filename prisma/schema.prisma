@@ -105,8 +105,9 @@ model Player {
   bingoCards BingoCard[]
 }
 
-model PlayerAccount {
+model PlayerProfile {
   id              Int      @id @default(autoincrement())
+  userId          Int?     @unique
   name            String
   firstName       String?
   lastName        String?
@@ -132,6 +133,11 @@ model PlayerAccount {
   emailVerified   Boolean  @default(false)
   verifyToken     String?  @unique
   createdAt       DateTime @default(now())
+
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  registrations   TournamentRegistration[]
+
+  @@map("PlayerAccount")
 }
 
 model Match {
@@ -159,10 +165,16 @@ model Match {
 model TournamentRegistration {
   id           Int      @id @default(autoincrement())
   tournamentId Int
+  userId       Int?
+  playerProfileId Int?
   name         String
-  rg           String
+  cpf          String?
   email        String
   phone        String
+  category     String?
+  modality     String?
+  sportName    String?
+  rulesAcceptedAt DateTime?
   status       String   @default("confirmed")
   paymentStatus String  @default("pending")
   paymentMethod String?
@@ -182,6 +194,8 @@ model TournamentRegistration {
   createdAt    DateTime @default(now())
 
   tournament Tournament @relation(fields: [tournamentId], references: [id])
+  user       User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  playerProfile PlayerProfile? @relation(fields: [playerProfileId], references: [id], onDelete: SetNull)
 
   @@unique([tournamentId, email])
 }
@@ -255,6 +269,8 @@ passwordResetToken String?
 passwordResetExpiresAt DateTime?
 organizationId Int?
 organization   Organization? @relation(fields: [organizationId], references: [id])
+playerProfile PlayerProfile?
+registrations TournamentRegistration[]
 }
 
 model Organization {

@@ -241,13 +241,8 @@ function formatBrazilCellphone(value: string) {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
 }
 
-function formatRg(value: string) {
-  return String(value || '').replace(/[^0-9A-Za-z.-]/g, '').toUpperCase().slice(0, 14)
-}
-
-function isValidRg(value: string) {
-  const clean = String(value || '').replace(/[^0-9A-Za-z]/g, '')
-  return clean.length >= 5 && clean.length <= 12
+function isValidCpf(value: string) {
+  return onlyDigits(value).length === 11
 }
 
 function formatCpf(value: string) {
@@ -401,7 +396,7 @@ export default function App() {
       <Route path="/tournament/:id/publico" element={<TournamentOverview defaultPanel="publico" />} />
       <Route path="/tournament/:id/chaveamento" element={<TournamentBracket />} />
       <Route path="/tournament/:id/settings" element={<TournamentSettings />} />
-      <Route path="/public/:slug" element={<PublicTournament />} />
+      <Route path="/public/:slug" element={<PublicTournament user={user} loadingUser={loadingUser} />} />
       <Route path="/arbitro/:id" element={<RefereeMode />} />
       <Route path="/telao/:id" element={<TelaoTV />} />
       <Route path="/register" element={<Register />} />
@@ -982,7 +977,7 @@ function PlayerSignup() {
     setStep(current => Math.max(current - 1, 1))
   }
 
-  function registerPlayerAccount() {
+  function registerPlayerProfile() {
     if (!form.password) {
       alert('Informe uma senha.')
       return
@@ -1203,7 +1198,7 @@ function PlayerSignup() {
           {step > 1 && <button type="button" onClick={previousPlayerStep}>Voltar</button>}
           {step < 3 && <button type="button" className="primaryButton" onClick={nextPlayerStep}>Próximo</button>}
           {step === 3 && (
-            <button className="primaryButton" onClick={registerPlayerAccount} disabled={loading}>
+            <button className="primaryButton" onClick={registerPlayerProfile} disabled={loading}>
               {loading ? 'Criando...' : 'Criar perfil de jogador'}
             </button>
           )}
@@ -1322,6 +1317,8 @@ function Login() {
     window.location.href = appUrlWithFreshVersion(safeRedirect)
   } else if (data.user?.role === 'superadmin') {
     window.location.href = appUrlWithFreshVersion('/admin')
+  } else if (data.user?.role === 'player' && data.user?.playerProfile?.id) {
+    window.location.href = appUrlWithFreshVersion(`/jogador/${data.user.playerProfile.id}`)
   } else {
     window.location.href = appUrlWithFreshVersion('/app')
   }
@@ -2044,7 +2041,6 @@ function ProfilePage() {
                 <select value={form.documentType} onChange={e => updateField('documentType', e.target.value)}>
                   <option value="CNPJ">CNPJ</option>
                   <option value="CPF">CPF</option>
-                  <option value="RG">RG</option>
                 </select>
               </div>
 
@@ -2645,7 +2641,7 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
   const [bingoState, setBingoState] = useState<any>(null)
   const [addRegistrationForm, setAddRegistrationForm] = useState({
     name: '',
-    rg: '',
+    cpf: '',
     email: '',
     phone: '',
   })
@@ -2843,13 +2839,13 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
   }
 
   async function addOverviewRegistrationFromOrganizer() {
-    if (!addRegistrationForm.name || !addRegistrationForm.rg || !addRegistrationForm.email || !addRegistrationForm.phone) {
-      alert('Preencha nome, RG, e-mail e WhatsApp.')
+    if (!addRegistrationForm.name || !addRegistrationForm.cpf || !addRegistrationForm.email || !addRegistrationForm.phone) {
+      alert('Preencha nome, CPF, e-mail e WhatsApp.')
       return
     }
 
-    if (!isValidRg(addRegistrationForm.rg)) {
-      alert('Informe um RG válido. Use apenas números/letras, com 5 a 12 caracteres.')
+    if (!isValidCpf(addRegistrationForm.cpf)) {
+      alert('Informe um CPF válido com 11 dígitos.')
       return
     }
 
@@ -2865,7 +2861,7 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
       headers: authHeaders(),
       body: JSON.stringify({
         ...addRegistrationForm,
-        rg: formatRg(addRegistrationForm.rg),
+        cpf: onlyDigits(addRegistrationForm.cpf),
         phone: normalizeBrazilPhone(addRegistrationForm.phone),
       }),
     })
@@ -2874,7 +2870,7 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
     setAddRegistrationLoading(false)
     if (!data) return
 
-    setAddRegistrationForm({ name: '', rg: '', email: '', phone: '' })
+    setAddRegistrationForm({ name: '', cpf: '', email: '', phone: '' })
     setShowAddRegistration(false)
     loadTournamentOverview()
     alert('Inscrição criada. O jogador receberá o link de confirmação por e-mail e WhatsApp.')
@@ -2908,7 +2904,7 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
       `Jogador: ${registration.name}`,
       `E-mail: ${registration.email || 'não informado'}`,
       `WhatsApp: ${registration.phone || 'não informado'}`,
-      `RG: ${registration.rg || 'não informado'}`,
+      `CPF: ${registration.cpf || 'não informado'}`,
     ].join('\n'))
   }
 
@@ -3166,10 +3162,10 @@ function TournamentOverview({ defaultPanel = 'overview' }: { defaultPanel?: stri
                   </div>
 
                   <div>
-                    <label>RG</label>
+                    <label>CPF</label>
                     <input
-                      value={addRegistrationForm.rg}
-                      onChange={e => updateAddRegistrationField('rg', formatRg(e.target.value))}
+                      value={addRegistrationForm.cpf}
+                      onChange={e => updateAddRegistrationField('cpf', formatCpf(e.target.value))}
                       disabled={addRegistrationLoading}
                     />
                   </div>
@@ -5764,12 +5760,19 @@ function PlansComparison() {
   )
 }
 
-function PublicTournament() {
+function PublicTournament({ user, loadingUser }: any) {
   const { slug } = useParams()
   const [data, setData] = useState<any>(null)
   const [error, setError] = useState('')
   const [bingoBuyer, setBingoBuyer] = useState({ name: '', email: '', whatsapp: '', quantity: 1 })
   const [bingoMessage, setBingoMessage] = useState('')
+  const [registrationForm, setRegistrationForm] = useState({
+    category: '',
+    sportName: '',
+    rulesAccepted: false,
+  })
+  const [registrationMessage, setRegistrationMessage] = useState('')
+  const [registrationLoading, setRegistrationLoading] = useState(false)
 
   function loadPublicTournament() {
     fetch(`${API}/public/${slug}`, { cache: 'no-store' })
@@ -5836,6 +5839,48 @@ function PublicTournament() {
   const publicSignupPath = `/public/${slug}`
   const publicSignupLoginUrl = `/login?redirect=${encodeURIComponent(publicSignupPath)}`
   const publicSignupRegisterUrl = `/inscreva-se?redirect=${encodeURIComponent(publicSignupPath)}`
+  const playerProfile = user?.playerProfile || user?.playerAccount
+  const isPlayerLogged = user?.role === 'player' && playerProfile?.id
+
+  function updateRegistrationField(field: string, value: string | boolean) {
+    setRegistrationForm(current => ({ ...current, [field]: value }))
+  }
+
+  function submitProfileRegistration() {
+    if (!registrationForm.rulesAccepted) {
+      setRegistrationMessage('Aceite o regulamento para confirmar a inscrição.')
+      return
+    }
+
+    setRegistrationLoading(true)
+    setRegistrationMessage('')
+
+    fetch(`${API}/public/${slug}/register`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        category: registrationForm.category,
+        sportName: registrationForm.sportName,
+        modality: tournament.sport?.name || '',
+        rulesAccepted: registrationForm.rulesAccepted,
+      }),
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          setRegistrationMessage(result.error)
+          return
+        }
+
+        setRegistrationMessage(result.payment?.ticketUrl
+          ? 'Inscrição enviada. Use o pagamento gerado para confirmar sua vaga.'
+          : 'Inscrição enviada. Confira seu e-mail ou WhatsApp para confirmar a participação.')
+        setRegistrationForm({ category: '', sportName: '', rulesAccepted: false })
+        loadPublicTournament()
+      })
+      .catch(() => setRegistrationMessage('Não foi possível concluir a inscrição agora.'))
+      .finally(() => setRegistrationLoading(false))
+  }
 
   function reserveBingoCard() {
     setBingoMessage('')
@@ -6039,14 +6084,60 @@ function PublicTournament() {
               ) : (
                 <div className="publicSignupCta">
                   <span className="publicSignupBurst">Vagas abertas</span>
-                  <h2>Participe deste torneio</h2>
-                  <p>Entre na sua conta para iniciar a inscrição.</p>
-                  <a className="publicSignupButton" href={publicSignupLoginUrl}>
-                    Inscreva-se
-                  </a>
-                  <a className="publicSignupSecondary" href={publicSignupRegisterUrl}>
-                    Não sou cadastrado
-                  </a>
+                  {loadingUser && isLoggedIn() ? (
+                    <>
+                      <h2>Carregando sua conta</h2>
+                      <p>Aguarde um instante para continuar a inscrição.</p>
+                    </>
+                  ) : isPlayerLogged ? (
+                    <>
+                      <h2>Inscrição rápida</h2>
+                      <p>{playerProfile.nickname || playerProfile.name}</p>
+                      <div className="publicBingoForm">
+                        <input
+                          value={registrationForm.sportName}
+                          onChange={e => updateRegistrationField('sportName', e.target.value)}
+                          placeholder="Nome esportivo"
+                        />
+                        <input
+                          value={registrationForm.category}
+                          onChange={e => updateRegistrationField('category', e.target.value)}
+                          placeholder="Categoria"
+                        />
+                        <label className="termsLine">
+                          <input
+                            type="checkbox"
+                            checked={registrationForm.rulesAccepted}
+                            onChange={e => updateRegistrationField('rulesAccepted', e.target.checked)}
+                          />
+                          Aceito o regulamento deste torneio.
+                        </label>
+                        <button onClick={submitProfileRegistration} disabled={registrationLoading}>
+                          {registrationLoading ? 'Enviando...' : 'Confirmar inscrição'}
+                        </button>
+                        {registrationMessage && <p>{registrationMessage}</p>}
+                      </div>
+                    </>
+                  ) : user ? (
+                    <>
+                      <h2>Use um perfil de jogador</h2>
+                      <p>Esta conta não possui perfil de jogador ativo para inscrição.</p>
+                      <a className="publicSignupButton" href="/cadastro-jogador">
+                        Criar perfil de jogador
+                      </a>
+                    </>
+                  ) : (
+                    <>
+                      <h2>Participe deste torneio</h2>
+                      <p>Entre na sua conta para iniciar a inscrição.</p>
+                      <a className="publicSignupButton" href={publicSignupLoginUrl}>
+                        Inscreva-se
+                      </a>
+                      <a className="publicSignupSecondary" href={publicSignupRegisterUrl}>
+                        Não sou cadastrado
+                      </a>
+                    </>
+                  )}
                 </div>
               )}
             </div>
