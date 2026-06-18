@@ -568,6 +568,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
   const [validationMessage, setValidationMessage] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [createdOrganizer, setCreatedOrganizer] = useState<any>(null)
+  const addingProfileToExistingAccount = isLoggedIn()
   const isIndividualOrganizer = form.organizerType === 'organizador'
   const organizerTypes = [
     { value: 'organizador', title: 'Organizador', text: 'Pessoa física que organiza torneios sem representar uma empresa.' },
@@ -577,6 +578,26 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
     { value: 'bar', title: 'Bar', text: 'Bar, pub ou local com eventos.' },
     { value: 'salao', title: 'Salão', text: 'Salão, arena ou espaço de jogos.' },
   ]
+
+  useEffect(() => {
+    if (!addingProfileToExistingAccount) return
+
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.user) return
+
+        const [firstName = '', ...lastNameParts] = String(data.user.name || '').split(' ')
+        setForm((current: any) => ({
+          ...current,
+          email: data.user.email || current.email,
+          phone: data.user.phone || current.phone,
+          responsibleName: current.responsibleName || firstName,
+          responsibleLastName: current.responsibleLastName || lastNameParts.join(' '),
+        }))
+      })
+      .catch(() => {})
+  }, [addingProfileToExistingAccount])
 
   function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
@@ -710,13 +731,13 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
       errors.email = 'Informe um e-mail válido.'
     }
 
-    if (String(form.password || '').length < 6) {
+    if (!addingProfileToExistingAccount && String(form.password || '').length < 6) {
       errors.password = 'Use pelo menos 6 caracteres.'
     }
 
-    if (!form.confirmPassword) {
+    if (!addingProfileToExistingAccount && !form.confirmPassword) {
       errors.confirmPassword = 'Confirme sua senha.'
-    } else if (form.password !== form.confirmPassword) {
+    } else if (!addingProfileToExistingAccount && form.password !== form.confirmPassword) {
       errors.confirmPassword = 'As senhas não conferem.'
     }
 
@@ -810,6 +831,9 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
     try {
       const response = await fetch(`${API}/auth/register-organizer`, {
         method: 'POST',
+        headers: addingProfileToExistingAccount
+          ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          : undefined,
         body: payload,
       })
       const data = await response.json()
@@ -817,6 +841,10 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
       if (data.error) {
         showValidation(data.error)
         return
+      }
+
+      if (data.token) {
+        localStorage.setItem('token', data.token)
       }
 
       setCreatedOrganizer({
@@ -831,20 +859,21 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
   }
 
   if (createdOrganizer) {
+    const profileAdded = Boolean(createdOrganizer.token)
     const deliveryMessage = createdOrganizer.message || 'Cadastro criado. Enviamos o link de confirmação pelos canais disponíveis.'
 
     return (
       <div className="onboardingPage">
         <section className="onboardingHero">
-          <span>Validação pendente</span>
-          <h1>Confirme sua conta e perfil.</h1>
+          <span>{profileAdded ? 'Perfil adicionado' : 'Validação pendente'}</span>
+          <h1>{profileAdded ? 'Seu novo perfil já está na sua conta.' : 'Confirme sua conta e perfil.'}</h1>
           <p>{deliveryMessage}</p>
         </section>
 
         <section className="onboardingCard">
           <h2>{createdOrganizer.name}</h2>
-          <p>Depois de validar o cadastro, seu acesso ao painel ficará ativo.</p>
-          <a href="/login">Ir para login</a>
+          <p>{profileAdded ? 'Você pode voltar para Meus Perfis e trocar o acesso pelo seletor do painel.' : 'Depois de validar o cadastro, seu acesso ao painel ficará ativo.'}</p>
+          <a href={profileAdded ? '/app/perfil' : '/login'}>{profileAdded ? 'Ver meus perfis' : 'Ir para login'}</a>
         </section>
       </div>
     )
@@ -855,7 +884,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
       <section className="onboardingHero">
         <span>{isArenaOnboarding ? 'Onboarding da arena' : 'Onboarding de organizador'}</span>
         <h1>{isArenaOnboarding ? 'Complete os dados da sua arena.' : 'Complete seu perfil para organizar torneios.'}</h1>
-        <p>Este fluxo usa a conta única do PlayFinal Arena e adiciona os dados necessários para este perfil.</p>
+        <p>{addingProfileToExistingAccount ? 'Você está adicionando este perfil à conta única já conectada.' : 'Este fluxo usa a conta única do PlayFinal Arena e adiciona os dados necessários para este perfil.'}</p>
         <div className="onboardingSwitch">
           <a className={!isArenaOnboarding ? 'active' : ''} href="/onboarding/organizador">Organizador</a>
           <a className={isArenaOnboarding ? 'active' : ''} href="/onboarding/arena">Arena</a>
@@ -918,7 +947,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
                   </div>
                   <div>
                     <label>E-mail *</label>
-                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} />
+                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} disabled={addingProfileToExistingAccount} />
                     {fieldError('email')}
                   </div>
                   <div>
@@ -999,7 +1028,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
                 <>
                   <div>
                     <label>E-mail *</label>
-                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} />
+                    <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} disabled={addingProfileToExistingAccount} />
                     {fieldError('email')}
                   </div>
                   <div>
@@ -1068,23 +1097,27 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
 
         {step === 4 && (
           <>
-            <h2>Criação de login</h2>
+            <h2>{addingProfileToExistingAccount ? 'Confirmar inclusão do perfil' : 'Criação de login'}</h2>
             <div className="onboardingGrid">
               <div>
                 <label>E-mail de acesso</label>
-                <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} />
+                <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} disabled={addingProfileToExistingAccount} />
                 {fieldError('email')}
               </div>
-              <div>
-                <label>Senha *</label>
-                <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} aria-invalid={!!fieldErrors.password} />
-                {fieldError('password')}
-              </div>
-              <div>
-                <label>Confirmar senha *</label>
-                <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} aria-invalid={!!fieldErrors.confirmPassword} />
-                {fieldError('confirmPassword')}
-              </div>
+              {!addingProfileToExistingAccount && (
+                <>
+                  <div>
+                    <label>Senha *</label>
+                    <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} aria-invalid={!!fieldErrors.password} />
+                    {fieldError('password')}
+                  </div>
+                  <div>
+                    <label>Confirmar senha *</label>
+                    <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} aria-invalid={!!fieldErrors.confirmPassword} />
+                    {fieldError('confirmPassword')}
+                  </div>
+                </>
+              )}
             </div>
 
             <label className="termsLine" aria-invalid={!!fieldErrors.termsAccepted}>
@@ -1102,11 +1135,11 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
         <div className="onboardingActions">
           {step > 1 && <button type="button" onClick={previousStep}>Voltar</button>}
           {step < 4 && <button type="button" className="primaryButton" onClick={nextStep}>Próximo</button>}
-          {step === 4 && (
-            <button className="primaryButton" onClick={register} disabled={loading}>
-              {loading ? 'Enviando...' : 'Criar conta do organizador'}
-            </button>
-          )}
+            {step === 4 && (
+              <button className="primaryButton" onClick={register} disabled={loading}>
+                {loading ? 'Enviando...' : addingProfileToExistingAccount ? 'Adicionar perfil à minha conta' : 'Criar conta do organizador'}
+              </button>
+            )}
         </div>
       </section>
     </div>
@@ -1722,7 +1755,6 @@ function profileRoles(user: any) {
 
   if (user?.role === 'player' || user?.playerProfile) roles.add('PLAYER')
   if (user?.organizationId && ['admin', 'operator', 'viewer'].includes(user?.role)) roles.add('ORGANIZER')
-  if (user?.organizationId && user?.role === 'admin') roles.add('ARENA_OWNER')
 
   return PROFILE_ROLE_ORDER.filter(role => roles.has(role))
 }

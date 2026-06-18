@@ -456,7 +456,6 @@ function serializeUserRoles(user) {
   if (user?.role === 'superadmin') roles.add('SUPERADMIN')
   if (user?.role === 'player' || user?.playerProfile) roles.add('PLAYER')
   if (user?.organizationId && ['admin', 'operator', 'viewer'].includes(user.role)) roles.add('ORGANIZER')
-  if (user?.organizationId && user.role === 'admin') roles.add('ARENA_OWNER')
   if (user?.role === 'admin') roles.add('ADMIN')
 
   for (const item of user?.roles || []) {
@@ -465,6 +464,45 @@ function serializeUserRoles(user) {
   }
 
   return Array.from(roles)
+}
+
+function buildUserToken(user) {
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      roles: serializeUserRoles(user),
+      organizationId: user.organizationId,
+      playerProfileId: user.playerProfile?.id || null
+    },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  )
+}
+
+function serializeAuthUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    roles: serializeUserRoles(user),
+    organizationId: user.organizationId,
+    organization: user.organization,
+    playerProfile: user.playerProfile ? {
+      id: user.playerProfile.id,
+      name: user.playerProfile.name,
+      nickname: user.playerProfile.nickname,
+      email: user.playerProfile.email,
+    } : null,
+    playerAccount: user.playerProfile ? {
+      id: user.playerProfile.id,
+      name: user.playerProfile.name,
+      nickname: user.playerProfile.nickname,
+      email: user.playerProfile.email,
+    } : null,
+  }
 }
 
 async function ensureUserRole(userId, role) {
@@ -4339,6 +4377,8 @@ app.post('/auth/register-organizer', (req, res) => {
         termsAccepted,
       } = req.body
 
+      const authUser = await optionalAuthUser(req)
+      const isExistingAccountFlow = Boolean(authUser)
       const organizerType = normalizeText(rawOrganizerType) || 'organizador'
       const organizationName = normalizeText(rawOrganizationName)
       const name = normalizeText(rawName)
@@ -4377,6 +4417,8 @@ app.post('/auth/register-organizer', (req, res) => {
       const phone = String(phoneCountry || '').toLowerCase() === 'brasil'
         ? normalizeWhatsAppNumber(rawPhone)
         : rawPhoneDigits
+      const accountEmail = isExistingAccountFlow ? normalizeEmail(authUser.email) : email
+      const isArenaProfile = ['salao', 'clube', 'bar'].includes(organizerType)
 
       if (organizationName.length < 2) {
         return res.status(400).json({ error: 'Informe o nome da organização' })
@@ -4386,8 +4428,12 @@ app.post('/auth/register-organizer', (req, res) => {
         return res.status(400).json({ error: 'Informe o nome do responsável' })
       }
 
-      if (!isValidEmail(email)) {
+      if (!isValidEmail(accountEmail)) {
         return res.status(400).json({ error: 'Informe um e-mail válido' })
+      }
+
+      if (isExistingAccountFlow && email && email !== accountEmail) {
+        return res.status(400).json({ error: 'Use o mesmo e-mail da conta logada para adicionar este perfil' })
       }
 
       if (
@@ -4397,7 +4443,7 @@ app.post('/auth/register-organizer', (req, res) => {
         return res.status(400).json({ error: 'Informe um WhatsApp válido' })
       }
 
-      if (password.length < 6) {
+      if (!isExistingAccountFlow && password.length < 6) {
         return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres' })
       }
 
@@ -4423,12 +4469,14 @@ app.post('/auth/register-organizer', (req, res) => {
         }
       }
 
-      const exists = await prisma.user.findFirst({
-        where: { email: { equals: email, mode: 'insensitive' } },
-      })
+      if (!isExistingAccountFlow) {
+        const exists = await prisma.user.findFirst({
+          where: { email: { equals: accountEmail, mode: 'insensitive' } },
+        })
 
-      if (exists) {
-        return res.status(400).json({ error: 'E-mail já cadastrado' })
+        if (exists) {
+          return res.status(400).json({ error: 'E-mail já cadastrado. Entre na sua conta e use Meu Perfil > Adicionar perfil.' })
+        }
       }
 
       const slug = organizationName
@@ -4438,63 +4486,135 @@ app.post('/auth/register-organizer', (req, res) => {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '') || 'organizacao'
 
-      const organization = await prisma.organization.create({
-        data: {
-          name: organizationName,
-          slug: `${slug}-${Date.now()}`,
-          address: address || null,
-          street: organizationStreet || responsibleStreet || null,
-          number: organizationNumber || responsibleNumber || null,
-          complement: organizationComplement || responsibleComplement || null,
-          zipCode: organizationZipCode || responsibleZipCode || null,
-          neighborhood: organizationNeighborhood || responsibleNeighborhood || null,
-          country: organizationCountry || responsibleCountry || null,
-          city: organizationCity || responsibleCity || null,
-          state: organizationState || responsibleState || null,
-          documentType: documentType || (organizerType === 'organizador' ? 'CPF' : 'CNPJ'),
-          documentNumber: documentNumber || null,
-          responsibleCpf: responsibleCpf || null,
-          responsibleZipCode: responsibleZipCode || null,
-          responsibleStreet: responsibleStreet || null,
-          responsibleNumber: responsibleNumber || null,
-          responsibleComplement: responsibleComplement || null,
-          responsibleNeighborhood: responsibleNeighborhood || null,
-          responsibleCity: responsibleCity || null,
-          responsibleState: responsibleState || null,
-          responsibleCountry: responsibleCountry || null,
-          kycStatus: 'not_required',
-          kycDocumentUrl: req.file ? `/api/uploads/kyc/${req.file.filename}` : null,
-          termsAcceptedAt: new Date(),
-          paymentCollectionMode: 'manual',
-          supportedSports: supportedSports || null,
-          plan: 'trial',
-          trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          maxUsers: 1,
-        },
+      const organizationData = {
+        name: organizationName,
+        slug: `${slug}-${Date.now()}`,
+        address: address || null,
+        street: organizationStreet || responsibleStreet || null,
+        number: organizationNumber || responsibleNumber || null,
+        complement: organizationComplement || responsibleComplement || null,
+        zipCode: organizationZipCode || responsibleZipCode || null,
+        neighborhood: organizationNeighborhood || responsibleNeighborhood || null,
+        country: organizationCountry || responsibleCountry || null,
+        city: organizationCity || responsibleCity || null,
+        state: organizationState || responsibleState || null,
+        documentType: documentType || (organizerType === 'organizador' ? 'CPF' : 'CNPJ'),
+        documentNumber: documentNumber || null,
+        responsibleCpf: responsibleCpf || null,
+        responsibleZipCode: responsibleZipCode || null,
+        responsibleStreet: responsibleStreet || null,
+        responsibleNumber: responsibleNumber || null,
+        responsibleComplement: responsibleComplement || null,
+        responsibleNeighborhood: responsibleNeighborhood || null,
+        responsibleCity: responsibleCity || null,
+        responsibleState: responsibleState || null,
+        responsibleCountry: responsibleCountry || null,
+        kycStatus: 'not_required',
+        kycDocumentUrl: req.file ? `/api/uploads/kyc/${req.file.filename}` : null,
+        termsAcceptedAt: new Date(),
+        paymentCollectionMode: 'manual',
+        supportedSports: supportedSports || null,
+        plan: 'trial',
+        trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        maxUsers: 1,
+      }
+
+      let organization = authUser?.organization || null
+
+      if (!organization) {
+        organization = await prisma.organization.create({ data: organizationData })
+      } else {
+        organization = await prisma.organization.update({
+          where: { id: organization.id },
+          data: {
+            supportedSports: supportedSports || organization.supportedSports,
+            termsAcceptedAt: organization.termsAcceptedAt || new Date(),
+            paymentCollectionMode: organization.paymentCollectionMode || 'manual',
+          },
+        })
+      }
+
+      let arena = null
+      if (isArenaProfile) {
+        arena = await prisma.arena.create({
+          data: {
+            organizationId: organization.id,
+            name: organizationName,
+            phone,
+            email: accountEmail,
+            country: organizationCountry || responsibleCountry || null,
+            zipCode: organizationZipCode || responsibleZipCode || null,
+            street: organizationStreet || responsibleStreet || null,
+            number: organizationNumber || responsibleNumber || null,
+            complement: organizationComplement || responsibleComplement || null,
+            neighborhood: organizationNeighborhood || responsibleNeighborhood || null,
+            city: organizationCity || responsibleCity || null,
+            state: organizationState || responsibleState || null,
+            responsibleName: name || authUser?.name || null,
+            responsibleCpf: responsibleCpf || null,
+            responsiblePhone: phone || null,
+          },
+        })
+      }
+
+      const rolesToEnsure = ['ORGANIZER', 'ADMIN']
+      if (isArenaProfile) rolesToEnsure.push('ARENA_OWNER')
+
+      let user = authUser
+      const emailVerifyToken = isExistingAccountFlow ? null : randomUUID()
+
+      if (isExistingAccountFlow) {
+        user = await prisma.user.update({
+          where: { id: authUser.id },
+          data: {
+            name: authUser.name || name || organizationName,
+            phone: authUser.phone || phone || null,
+            role: 'admin',
+            organizationId: organization.id,
+          },
+        })
+      } else {
+        const hashedPassword = await bcrypt.hash(password, 10)
+        user = await prisma.user.create({
+          data: {
+            name: name || organizationName,
+            email: accountEmail,
+            phone,
+            password: hashedPassword,
+            role: 'admin',
+            organizationId: organization.id,
+            emailVerified: false,
+            emailVerifyToken,
+          },
+        })
+      }
+
+      await ensureUserRoles(user.id, rolesToEnsure)
+
+      const refreshedUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: { organization: true, playerProfile: true, roles: true },
       })
 
-      const hashedPassword = await bcrypt.hash(password, 10)
-      const emailVerifyToken = randomUUID()
-
-      const user = await prisma.user.create({
-        data: {
-          name: name || organizationName,
-          email,
-          phone,
-          password: hashedPassword,
-          role: 'admin',
+      if (isExistingAccountFlow) {
+        return res.json({
+          ok: true,
           organizationId: organization.id,
-          emailVerified: false,
-          emailVerifyToken,
-        },
-      })
-
-      await ensureUserRoles(user.id, ['ORGANIZER', 'ARENA_OWNER', 'ADMIN'])
+          arenaId: arena?.id || null,
+          token: buildUserToken(refreshedUser),
+          user: serializeAuthUser(refreshedUser),
+          delivered: true,
+          delivery: { email: 'skipped', whatsapp: 'skipped' },
+          message: isArenaProfile
+            ? 'Perfil de arena adicionado à sua conta.'
+            : 'Perfil de organizador adicionado à sua conta.',
+        })
+      }
 
       const verifyUrl = `${APP_URL}/api/auth/verify-email/${emailVerifyToken}`
 
       const emailResult = await sendEmail({
-        to: email,
+        to: accountEmail,
         subject: 'Confirme seu cadastro de organizador - PlayFinal Arena',
         text: `Seu cadastro de organizador foi recebido. Confirme seu e-mail: ${verifyUrl}`,
         html: `
@@ -4514,6 +4634,7 @@ app.post('/auth/register-organizer', (req, res) => {
       res.json({
         ok: true,
         organizationId: organization.id,
+        arenaId: arena?.id || null,
         ...delivery,
       })
     } catch (error) {
@@ -5090,43 +5211,12 @@ app.post('/auth/login', async (req, res) => {
       return res.status(403).json({ error: 'Acesso bloqueado. Entre em contato com o suporte PlayFinal Arena.' })
     }
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        roles: serializeUserRoles(user),
-        organizationId: user.organizationId,
-        playerProfileId: user.playerProfile?.id || null
-      },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    )
+    const token = buildUserToken(user)
 
     res.json({
       ok: true,
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        roles: serializeUserRoles(user),
-        organizationId: user.organizationId,
-        organization: user.organization,
-        playerProfile: user.playerProfile ? {
-          id: user.playerProfile.id,
-          name: user.playerProfile.name,
-          nickname: user.playerProfile.nickname,
-          email: user.playerProfile.email,
-        } : null,
-        playerAccount: user.playerProfile ? {
-          id: user.playerProfile.id,
-          name: user.playerProfile.name,
-          nickname: user.playerProfile.nickname,
-          email: user.playerProfile.email,
-        } : null,
-      }
+      user: serializeAuthUser(user)
     })
   } catch (error) {
     console.error(error)
