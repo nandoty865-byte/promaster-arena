@@ -3576,7 +3576,7 @@ if (seasonId) {
         playerCount: requestedPlayerCount,
         format: requestedFormat,
         tableCount: Number(tableCount),
-        status: 'draft',
+        status: 'pending_confirmation',
         organizationId,
         seasonId: season ? season.id : null,
         publicSlug,
@@ -3589,7 +3589,7 @@ if (seasonId) {
         broadcastType: cleanBroadcastType,
         youtubeUrl: cleanBroadcastType === 'youtube' ? youtubeUrl || null : null,
         obsStreamUrl: cleanBroadcastType === 'obs' ? obsStreamUrl || null : null,
-        registrationOpen: registrationOpen !== undefined ? Boolean(registrationOpen) : true,
+        registrationOpen: false,
         registrationFee: registrationFee === '' || registrationFee === null || registrationFee === undefined ? null : Number(registrationFee),
         paymentCollectionMode: ['manual', 'platform', 'both'].includes(paymentCollectionMode)
           ? paymentCollectionMode

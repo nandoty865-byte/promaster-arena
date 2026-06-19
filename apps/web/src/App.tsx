@@ -155,6 +155,7 @@ function publicTournamentUrl(slug?: string) {
 function tournamentStatusLabel(status?: string) {
   const normalized = String(status || '').toLowerCase()
   const labels: Record<string, string> = {
+    pending_confirmation: 'Pendente de confirmação',
     draft: 'Rascunho',
     rascunho: 'Rascunho',
     rescheduled: 'Reagendado',
@@ -8090,7 +8091,7 @@ function CreateTournament({ user }: any) {
       }
 
       setShowTournamentReview(false)
-      alert('Torneio criado. A página pública já está disponível. Gere a chave após inscrições/check-in.')
+      alert('Torneio criado como pendente de confirmação. As inscrições ficarão fechadas até a liberação do responsável.')
       navigate(`/tournament/${data.tournament.id}/settings`)
     })
 }
@@ -8645,7 +8646,7 @@ function CreateTournament({ user }: any) {
                 </div>
                 <div>
                   <span>Inscrições</span>
-                  <strong>{registrationOpen ? 'Abertas após criação' : 'Fechadas'}</strong>
+                  <strong>Fechadas até confirmação</strong>
                 </div>
                 <div>
                   <span>Cobrança</span>
