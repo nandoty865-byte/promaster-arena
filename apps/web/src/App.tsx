@@ -445,7 +445,9 @@ function Register() {
 }
 
 function SignupChoice() {
-  const redirectParam = new URLSearchParams(window.location.search).get('redirect')
+  const searchParams = new URLSearchParams(window.location.search)
+  const redirectParam = searchParams.get('redirect')
+  const isVerifiedAccount = searchParams.get('verified') === '1'
   const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
     ? redirectParam
     : ''
@@ -465,6 +467,16 @@ function SignupChoice() {
   const [validationMessage, setValidationMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [createdAccount, setCreatedAccount] = useState<any>(null)
+
+  useEffect(() => {
+    if (!createdAccount) return
+
+    const timeout = window.setTimeout(() => {
+      window.location.href = appUrlWithFreshVersion('/login?registered=1')
+    }, 4500)
+
+    return () => window.clearTimeout(timeout)
+  }, [createdAccount])
 
   function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
@@ -558,37 +570,61 @@ function SignupChoice() {
     }
   }
 
+  function startOptions() {
+    return (
+      <section className="signupChoiceGrid">
+        <a className="signupChoiceCard" href={`/onboarding/jogador${redirectQuery}`}>
+          <span>🎱</span>
+          <h2>Participar de torneios</h2>
+          <p>Complete seu perfil de jogador para inscrições, ranking, histórico e avisos.</p>
+          <strong>Começar como jogador</strong>
+        </a>
+
+        <a className="signupChoiceCard" href={`/onboarding/organizador${redirectQuery}`}>
+          <span>🏆</span>
+          <h2>Criar um torneio</h2>
+          <p>Complete os dados de organizador para criar e administrar seus eventos.</p>
+          <strong>Abrir fluxo de torneio</strong>
+        </a>
+
+        <a className="signupChoiceCard" href={`/onboarding/arena${redirectQuery}`}>
+          <span>🏟️</span>
+          <h2>Cadastrar minha arena</h2>
+          <p>Complete o cadastro da arena, clube, salão ou casa de eventos.</p>
+          <strong>Abrir fluxo da arena</strong>
+        </a>
+      </section>
+    )
+  }
+
+  if (isVerifiedAccount) {
+    return (
+      <div className="onboardingPage signupChoicePage">
+        <section className="onboardingHero">
+          <span>Conta confirmada</span>
+          <h1>Sua conta foi criada com sucesso.</h1>
+          <p>Agora escolha como deseja começar:</p>
+        </section>
+
+        {startOptions()}
+      </div>
+    )
+  }
+
   if (createdAccount) {
     return (
       <div className="onboardingPage signupChoicePage">
         <section className="onboardingHero">
-          <span>Conta criada</span>
-          <h1>Sua conta foi criada com sucesso.</h1>
-          <p>Agora escolha como deseja começar:</p>
+          <span>Confirmação enviada</span>
+          <h1>Confirme sua conta para continuar.</h1>
+          <p>Enviamos o link de confirmação para seu e-mail e WhatsApp. Depois da confirmação, você poderá escolher como deseja começar.</p>
           {createdAccount.message && <p className="signupDeliveryMessage">{createdAccount.message}</p>}
         </section>
 
-        <section className="signupChoiceGrid">
-          <a className="signupChoiceCard" href={`/onboarding/jogador${redirectQuery}`}>
-            <span>🎱</span>
-            <h2>Participar de torneios</h2>
-            <p>Complete seu perfil de jogador para inscrições, ranking, histórico e avisos.</p>
-            <strong>Começar como jogador</strong>
-          </a>
-
-          <a className="signupChoiceCard" href={`/onboarding/organizador${redirectQuery}`}>
-            <span>🏆</span>
-            <h2>Criar um torneio</h2>
-            <p>Complete os dados de organizador para criar e administrar seus eventos.</p>
-            <strong>Abrir fluxo de torneio</strong>
-          </a>
-
-          <a className="signupChoiceCard" href={`/onboarding/arena${redirectQuery}`}>
-            <span>🏟️</span>
-            <h2>Cadastrar minha arena</h2>
-            <p>Complete o cadastro da arena, clube, salão ou casa de eventos.</p>
-            <strong>Abrir fluxo da arena</strong>
-          </a>
+        <section className="onboardingCard signupAccountCard">
+          <h2>Voltando para o login</h2>
+          <p>Você será direcionado para a tela de login em instantes.</p>
+          <a className="primaryButton" href="/login?registered=1">Ir para login</a>
         </section>
       </div>
     )

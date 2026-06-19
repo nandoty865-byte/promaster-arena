@@ -4301,14 +4301,14 @@ app.post('/auth/register', async (req, res) => {
       html: `
         <h2>Bem-vindo ao PlayFinal Arena</h2>
         <p>Sua conta foi criada com sucesso.</p>
-        <p>Confirme seu e-mail para manter a comunicação ativa na plataforma.</p>
+        <p>Confirme seu cadastro para liberar as próximas opções da plataforma.</p>
         <p><a href="${verifyUrl}">Confirmar e-mail</a></p>
       `,
     })
 
     const whatsAppResult = await sendWhatsApp({
       to: phone,
-      text: `Olá ${fullName}! Sua conta no PlayFinal Arena foi criada. Confirme seu e-mail e acesse: ${APP_URL}/login`,
+      text: `Olá ${fullName}! Sua conta no PlayFinal Arena foi criada. Confirme seu cadastro por este link: ${verifyUrl}`,
     })
 
     const delivery = buildDeliveryResponse(emailResult, whatsAppResult)
@@ -6713,7 +6713,7 @@ app.post('/auth/verify-email/:token', async (req, res) => {
       }
     })
 
-    res.redirect('/login?verified=1')
+    res.redirect('/cadastro?verified=1')
   } catch (error) {
     console.error(error)
     res.status(500).send('Erro ao validar e-mail')
