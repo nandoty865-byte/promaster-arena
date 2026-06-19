@@ -1803,13 +1803,21 @@ function PlayerDashboard() {
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const redirectParam = new URLSearchParams(window.location.search).get('redirect')
+  const loginParams = new URLSearchParams(window.location.search)
+  const redirectParam = loginParams.get('redirect')
   const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//') && redirectParam !== '/login'
     ? redirectParam
     : ''
   const signupHref = `/cadastro${safeRedirect ? `?redirect=${encodeURIComponent(safeRedirect)}` : ''}`
+  const loginNotice = loginParams.get('verified') === '1'
+    ? 'Cadastro confirmado. Entre para continuar.'
+    : loginParams.get('registered') === '1'
+      ? 'Conta criada. Confirme seu cadastro pelo link enviado antes de entrar.'
+      : ''
 
-  function login() {
+  function login(event?: any) {
+    event?.preventDefault?.()
+
     fetch(`${API}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1840,25 +1848,52 @@ function Login() {
   }
 
   return (
-    <div className="app">
-      <div className="panel" style={{ maxWidth: 420, margin: '80px auto' }}>
-        <h1>Login</h1>
-        <p>PlayFinal Arena</p>
+    <div className="loginArenaPage">
+      <form className="loginArenaCard" onSubmit={login}>
+        <img className="loginArenaLogo" src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+        <h1><span>PlayFinal</span> <strong>Arena</strong> Login</h1>
+        {loginNotice && <p className="loginArenaNotice">{loginNotice}</p>}
 
-        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Usuário ou e-mail" />
-        <input
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          placeholder="Senha"
-          type="password"
-        />
+        <label className="loginArenaField">
+          <span aria-hidden="true">✉</span>
+          <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Digite seu e-mail" type="email" />
+        </label>
 
-        <button className="primaryButton" onClick={login}>Entrar</button>
-        <div className="loginLinks">
-          <a href="/forgot-password">Esqueci minha senha</a>
-          <a href={signupHref}>Não sou cadastrado</a>
+        <label className="loginArenaField">
+          <span aria-hidden="true">🔒</span>
+          <input
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="Digite sua senha"
+            type="password"
+          />
+        </label>
+
+        <a className="loginArenaForgot" href="/forgot-password">Esqueceu sua senha?</a>
+
+        <button className="loginArenaSubmit" type="submit">
+          Entrar na Arena
+        </button>
+
+        <div className="loginArenaSocialTitle">Ou entre com redes sociais:</div>
+        <div className="loginArenaSocialGrid">
+          {['Google', 'Facebook', 'Twitter/X'].map(provider => (
+            <button
+              key={provider}
+              type="button"
+              className="loginArenaSocialButton"
+              onClick={() => alert('Login social em preparação. Use e-mail e senha por enquanto.')}
+            >
+              <span>{provider === 'Google' ? 'G' : provider === 'Facebook' ? 'f' : 'X'}</span>
+              {provider}
+            </button>
+          ))}
         </div>
-      </div>
+
+        <p className="loginArenaSignup">
+          Não é cadastrado? <a href={signupHref}>Cadastre-se agora</a>
+        </p>
+      </form>
     </div>
   )
 }
