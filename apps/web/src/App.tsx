@@ -7714,6 +7714,7 @@ function CreateTournament({ user }: any) {
   const [registrationFee, setRegistrationFee] = useState('')
   const [paymentCollectionMode, setPaymentCollectionMode] = useState('manual')
   const [paymentLink, setPaymentLink] = useState('')
+  const [showTournamentReview, setShowTournamentReview] = useState(false)
   const [matchQuantity, setMatchQuantity] = useState('')
   const [matchQuantityMode, setMatchQuantityMode] = useState('')
   const [scheduleMode, setScheduleMode] = useState('single_day')
@@ -7862,6 +7863,68 @@ function CreateTournament({ user }: any) {
         setArenaForm({ ...emptyArenaForm })
         setShowArenaModal(false)
       })
+  }
+
+  function paymentCollectionLabel() {
+    if (paymentCollectionMode === 'platform') return 'Automática pela plataforma'
+    if (paymentCollectionMode === 'both') return 'Manual e automática'
+    return 'Manual pelo organizador'
+  }
+
+  function broadcastLabel() {
+    if (broadcastType === 'youtube') return youtubeUrl ? `YouTube - ${youtubeUrl}` : 'YouTube'
+    if (broadcastType === 'obs') return obsStreamUrl ? `OBS - ${obsStreamUrl}` : 'OBS'
+    return 'Sem transmissão'
+  }
+
+  function matchRulesLabel() {
+    if (matchQuantityMode === 'all') {
+      return matchQuantity ? `${matchQuantity} partida(s) até o final` : 'Até o final - número a definir'
+    }
+
+    if (matchQuantityMode === 'by_phase') {
+      const configuredRules = phaseRules
+        .filter(rule => rule.matchQuantity)
+        .map(rule => {
+          const phase = tournamentPhases.find(item => Number(item.phase) === Number(rule.phase))
+          return `${phase?.label || `Fase ${rule.phase}`}: ${rule.matchQuantity} partida(s)`
+        })
+
+      return configuredRules.length > 0 ? configuredRules.join(' | ') : 'Por fase - regras a definir'
+    }
+
+    return 'Definir depois'
+  }
+
+  function scheduleLabel() {
+    if (scheduleMode !== 'multi_day') return eventDate || 'Data única a definir'
+
+    const configuredRows = scheduleRows
+      .filter(row => row.description || row.date || row.time)
+      .map(row => `Dia ${row.day}: ${[row.description, row.date, row.time].filter(Boolean).join(' - ')}`)
+
+    return configuredRows.length > 0 ? configuredRows.join(' | ') : `${scheduleDayCount} dia(s) a detalhar`
+  }
+
+  function reviewMissingItems() {
+    return [
+      !name ? 'Nome do torneio' : null,
+      !selectedSport?.name ? 'Esporte / modalidade' : null,
+      !location ? 'Local' : null,
+      !eventDate ? 'Data' : null,
+      !eventTime ? 'Horário' : null,
+      !prize ? 'Premiação' : null,
+      !rules ? 'Regras gerais' : null,
+    ].filter(Boolean)
+  }
+
+  function openTournamentReview() {
+    if (!name) {
+      alert('Informe o nome do torneio')
+      return
+    }
+
+    setShowTournamentReview(true)
   }
 
   function updatePhaseRule(phase: number, field: string, value: string) {
@@ -8026,6 +8089,7 @@ function CreateTournament({ user }: any) {
         return
       }
 
+      setShowTournamentReview(false)
       alert('Torneio criado. A página pública já está disponível. Gere a chave após inscrições/check-in.')
       navigate(`/tournament/${data.tournament.id}/settings`)
     })
@@ -8485,12 +8549,12 @@ function CreateTournament({ user }: any) {
               {eventTime && <p>Horário: {eventTime}</p>}
               {broadcastType === 'youtube' && youtubeUrl && <p>Transmissão: YouTube</p>}
               {broadcastType === 'obs' && <p>Transmissão: OBS</p>}
-              <p>Cobrança: {paymentCollectionMode === 'platform' ? 'Automática pela plataforma' : paymentCollectionMode === 'both' ? 'Manual e automática' : 'Manual pelo organizador'}</p>
+              <p>Cobrança: {paymentCollectionLabel()}</p>
               {seasonId && <p>Vinculado ao Circuito PlayFinal</p>}
             </div>
 
-            <button className="primaryButton" onClick={createTournament}>
-              Criar torneio e página pública
+            <button className="primaryButton" onClick={openTournamentReview}>
+              Revisar e confirmar torneio
             </button>
           </div>
           )}
@@ -8512,12 +8576,126 @@ function CreateTournament({ user }: any) {
                 {bingoCardPrice && <p>Cartela online: R$ {bingoCardPrice}</p>}
               </div>
 
-              <button className="primaryButton" onClick={createTournament}>
-                Criar Bingo
+              <button className="primaryButton" onClick={openTournamentReview}>
+                Revisar e confirmar Bingo
               </button>
             </div>
           )}
         </div>
+
+        {showTournamentReview && (
+          <div className="qrModal" onClick={() => setShowTournamentReview(false)}>
+            <div className="detailsContent tournamentReviewModal" onClick={e => e.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <h2>Checkout do torneio</h2>
+                  <p>Confira os dados principais antes de confirmar a criação.</p>
+                </div>
+                <button className="modalCloseButton" onClick={() => setShowTournamentReview(false)}>Cancelar</button>
+              </div>
+
+              <div className="tournamentReviewStatus">
+                <strong>Status inicial</strong>
+                <span>Aguardando confirmação dos dados</span>
+              </div>
+
+              {reviewMissingItems().length > 0 && (
+                <div className="tournamentReviewWarnings">
+                  <strong>Campos a revisar</strong>
+                  <span>{reviewMissingItems().join(', ')}</span>
+                </div>
+              )}
+
+              <div className="tournamentReviewGrid">
+                <div>
+                  <span>Nome</span>
+                  <strong>{name || 'A definir'}</strong>
+                </div>
+                <div>
+                  <span>Esporte</span>
+                  <strong>{selectedSport?.name || 'A definir'}</strong>
+                </div>
+                <div>
+                  <span>Formato</span>
+                  <strong>{isBingo ? `Bingo ${bingoMaxNumber} bolas` : tournamentFormatLabel(tournamentFormat)}</strong>
+                </div>
+                <div>
+                  <span>Participantes</span>
+                  <strong>{isBingo ? 'Bingo' : `${playerCount} inscritos`}</strong>
+                </div>
+                <div>
+                  <span>Local</span>
+                  <strong>{location || 'A definir'}</strong>
+                </div>
+                <div>
+                  <span>Endereço</span>
+                  <strong>{venueAddress || 'A definir'}</strong>
+                </div>
+                <div>
+                  <span>Data</span>
+                  <strong>{eventDate || 'A definir'}</strong>
+                </div>
+                <div>
+                  <span>Horário</span>
+                  <strong>{eventTime || 'A definir'}</strong>
+                </div>
+                <div>
+                  <span>Premiação</span>
+                  <strong>{prize || 'A definir'}</strong>
+                </div>
+                <div>
+                  <span>Inscrições</span>
+                  <strong>{registrationOpen ? 'Abertas após criação' : 'Fechadas'}</strong>
+                </div>
+                <div>
+                  <span>Cobrança</span>
+                  <strong>{paymentCollectionLabel()}</strong>
+                </div>
+                <div>
+                  <span>Valor inscrição</span>
+                  <strong>{registrationFee ? `R$ ${registrationFee}` : 'A definir'}</strong>
+                </div>
+                <div>
+                  <span>Regras das partidas</span>
+                  <strong>{matchRulesLabel()}</strong>
+                </div>
+                <div>
+                  <span>Programação</span>
+                  <strong>{scheduleLabel()}</strong>
+                </div>
+                <div>
+                  <span>Transmissão</span>
+                  <strong>{broadcastLabel()}</strong>
+                </div>
+                <div>
+                  <span>Circuito</span>
+                  <strong>{seasonId ? 'Vinculado ao Circuito PlayFinal' : 'Torneio avulso'}</strong>
+                </div>
+              </div>
+
+              <div className="tournamentReviewRules">
+                <span>Regras gerais</span>
+                <p>{rules || 'A definir'}</p>
+              </div>
+
+              {paymentLink && (
+                <div className="tournamentReviewRules">
+                  <span>Link de pagamento manual</span>
+                  <p>{paymentLink}</p>
+                </div>
+              )}
+
+              <div className="tournamentArenaModalActions">
+                <button className="secondaryButton" onClick={() => setShowTournamentReview(false)}>
+                  Voltar e editar
+                </button>
+                <button className="primaryButton" onClick={createTournament}>
+                  Confirmar e criar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showArenaModal && (
           <div className="qrModal" onClick={() => setShowArenaModal(false)}>

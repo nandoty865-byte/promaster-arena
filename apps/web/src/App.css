@@ -10199,6 +10199,78 @@ button:hover {
   width: min(920px, calc(100vw - 32px));
 }
 
+.tournamentReviewModal {
+  width: min(960px, calc(100vw - 32px));
+}
+
+.tournamentReviewStatus,
+.tournamentReviewWarnings,
+.tournamentReviewRules {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.tournamentReviewStatus {
+  border-color: rgba(96, 165, 250, .4);
+}
+
+.tournamentReviewWarnings {
+  border-color: rgba(251, 191, 36, .5);
+  background: rgba(251, 191, 36, .08);
+}
+
+.tournamentReviewStatus strong,
+.tournamentReviewWarnings strong,
+.tournamentReviewRules span {
+  display: block;
+  color: #dbeafe;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.tournamentReviewStatus span,
+.tournamentReviewWarnings span,
+.tournamentReviewRules p {
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.tournamentReviewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.tournamentReviewGrid div {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.tournamentReviewGrid span,
+.tournamentReviewGrid strong {
+  display: block;
+}
+
+.tournamentReviewGrid span {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.tournamentReviewGrid strong {
+  color: #f8fafc;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+}
+
 .tournamentArenaModalActions {
   display: flex;
   justify-content: flex-end;
@@ -10952,6 +11024,7 @@ button:hover {
   .seasonSimpleTable.organizer div,
   .arenaManagerGrid,
   .localSelectorRow,
+  .tournamentReviewGrid,
   .seasonLayout,
   .seasonFormGrid,
   .seasonInfoGrid,
