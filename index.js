@@ -1501,7 +1501,9 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
         youtubeUrl: cleanYoutubeUrl,
         obsStreamUrl: cleanObsStreamUrl,
         liveStarted: typeof liveStarted === 'boolean' ? liveStarted : undefined,
-        registrationOpen: typeof registrationOpen === 'boolean' ? registrationOpen : undefined,
+        registrationOpen: tournament.status === 'pending_confirmation'
+          ? false
+          : (typeof registrationOpen === 'boolean' ? registrationOpen : undefined),
         registrationFee: registrationFee === '' || registrationFee === null || registrationFee === undefined ? null : Number(registrationFee),
         paymentCollectionMode: ['manual', 'platform', 'both'].includes(paymentCollectionMode)
           ? paymentCollectionMode
@@ -4226,27 +4228,29 @@ app.post('/public/registrations/confirm/:token', async (req, res) => {
 app.post('/auth/register', async (req, res) => {
   try {
     const {
+      firstName: rawFirstName,
+      lastName: rawLastName,
       name: rawName,
       email: rawEmail,
       phone: rawPhone,
-      address: rawAddress,
       password: rawPassword,
-      organizationName: rawOrganizationName,
+      termsAccepted,
     } = req.body
 
-    const organizationName = normalizeText(rawOrganizationName)
+    const firstName = normalizeText(rawFirstName)
+    const lastName = normalizeText(rawLastName)
     const name = normalizeText(rawName)
     const email = normalizeEmail(rawEmail)
     const phone = normalizeWhatsAppNumber(rawPhone)
-    const address = normalizeText(rawAddress)
     const password = typeof rawPassword === 'string' ? rawPassword : ''
+    const fullName = name || `${firstName} ${lastName}`.trim()
 
-    if (organizationName.length < 2) {
-      return res.status(400).json({ error: 'Informe o nome da organização' })
+    if (firstName.length < 2) {
+      return res.status(400).json({ error: 'Informe o nome' })
     }
 
-    if (name && name.length < 2) {
-      return res.status(400).json({ error: 'Informe um nome válido ou deixe em branco' })
+    if (lastName.length < 2) {
+      return res.status(400).json({ error: 'Informe o sobrenome' })
     }
 
     if (!isValidEmail(email)) {
@@ -4261,6 +4265,10 @@ app.post('/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres' })
     }
 
+    if (termsAccepted !== true && termsAccepted !== 'true') {
+      return res.status(400).json({ error: 'Aceite os termos de uso para continuar' })
+    }
+
     const exists = await prisma.user.findFirst({
       where: { email: { equals: email, mode: 'insensitive' } },
     })
@@ -4269,43 +4277,20 @@ app.post('/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'E-mail já cadastrado' })
     }
 
-    // 🔹 gerar slug
-    const slug = organizationName
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'organizacao'
-
-    // 🔹 criar organização
-    const organization = await prisma.organization.create({
-      data: {
-        name: organizationName,
-        slug: `${slug}-${Date.now()}`,
-        address: address || null,
-        plan: 'trial',
-        trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        maxUsers: 1
-      }
-    })
-
     const hashedPassword = await bcrypt.hash(password, 10)
     const emailVerifyToken = randomUUID()
 
     const user = await prisma.user.create({
       data: {
-        name: name || organizationName,
+        name: fullName,
         email,
         phone,
         password: hashedPassword,
-        role: 'admin',
-        organizationId: organization.id,
+        role: 'user',
         emailVerified: false,
         emailVerifyToken
       }
     })
-
-    await ensureUserRoles(user.id, ['ORGANIZER', 'ARENA_OWNER', 'ADMIN'])
 
     const verifyUrl = `${APP_URL}/api/auth/verify-email/${emailVerifyToken}`
 
@@ -4315,7 +4300,7 @@ app.post('/auth/register', async (req, res) => {
       text: `Bem-vindo ao PlayFinal Arena. Confirme seu e-mail acessando: ${verifyUrl}`,
       html: `
         <h2>Bem-vindo ao PlayFinal Arena</h2>
-        <p>Sua arena <strong>${escapeHtml(organizationName)}</strong> foi criada com plano Trial Free.</p>
+        <p>Sua conta foi criada com sucesso.</p>
         <p>Confirme seu e-mail para manter a comunicação ativa na plataforma.</p>
         <p><a href="${verifyUrl}">Confirmar e-mail</a></p>
       `,
@@ -4323,7 +4308,7 @@ app.post('/auth/register', async (req, res) => {
 
     const whatsAppResult = await sendWhatsApp({
       to: phone,
-      text: `Olá ${name || organizationName}! Sua conta no PlayFinal Arena foi criada. Confirme seu e-mail e acesse: ${APP_URL}/login`,
+      text: `Olá ${fullName}! Sua conta no PlayFinal Arena foi criada. Confirme seu e-mail e acesse: ${APP_URL}/login`,
     })
 
     const delivery = buildDeliveryResponse(emailResult, whatsAppResult)
@@ -4469,13 +4454,23 @@ app.post('/auth/register-organizer', (req, res) => {
         }
       }
 
+      let existingAccount = null
       if (!isExistingAccountFlow) {
-        const exists = await prisma.user.findFirst({
+        existingAccount = await prisma.user.findFirst({
           where: { email: { equals: accountEmail, mode: 'insensitive' } },
+          include: { organization: true, playerProfile: true, roles: true },
         })
 
-        if (exists) {
-          return res.status(400).json({ error: 'E-mail já cadastrado. Entre na sua conta e use Meu Perfil > Adicionar perfil.' })
+        if (existingAccount) {
+          const validPassword = await bcrypt.compare(password, existingAccount.password)
+
+          if (!validPassword) {
+            return res.status(400).json({ error: 'Este e-mail já possui conta. Use a senha atual para continuar.' })
+          }
+
+          if (existingAccount.organizationId) {
+            return res.status(400).json({ error: 'Esta conta já possui organização. Entre na sua conta e use Meu Perfil > Adicionar perfil.' })
+          }
         }
       }
 
@@ -4519,7 +4514,7 @@ app.post('/auth/register-organizer', (req, res) => {
         maxUsers: 1,
       }
 
-      let organization = authUser?.organization || null
+      let organization = authUser?.organization || existingAccount?.organization || null
 
       if (!organization) {
         organization = await prisma.organization.create({ data: organizationData })
@@ -4560,8 +4555,10 @@ app.post('/auth/register-organizer', (req, res) => {
       const rolesToEnsure = ['ORGANIZER', 'ADMIN']
       if (isArenaProfile) rolesToEnsure.push('ARENA_OWNER')
 
-      let user = authUser
-      const emailVerifyToken = isExistingAccountFlow ? null : randomUUID()
+      let user = authUser || existingAccount
+      const emailVerifyToken = isExistingAccountFlow
+        ? null
+        : existingAccount?.emailVerified ? null : (existingAccount?.emailVerifyToken || randomUUID())
 
       if (isExistingAccountFlow) {
         user = await prisma.user.update({
@@ -4571,6 +4568,17 @@ app.post('/auth/register-organizer', (req, res) => {
             phone: authUser.phone || phone || null,
             role: 'admin',
             organizationId: organization.id,
+          },
+        })
+      } else if (existingAccount) {
+        user = await prisma.user.update({
+          where: { id: existingAccount.id },
+          data: {
+            name: existingAccount.name || name || organizationName,
+            phone: existingAccount.phone || phone || null,
+            role: 'admin',
+            organizationId: organization.id,
+            emailVerifyToken: existingAccount.emailVerified ? null : emailVerifyToken,
           },
         })
       } else {
@@ -4597,6 +4605,21 @@ app.post('/auth/register-organizer', (req, res) => {
       })
 
       if (isExistingAccountFlow) {
+        return res.json({
+          ok: true,
+          organizationId: organization.id,
+          arenaId: arena?.id || null,
+          token: buildUserToken(refreshedUser),
+          user: serializeAuthUser(refreshedUser),
+          delivered: true,
+          delivery: { email: 'skipped', whatsapp: 'skipped' },
+          message: isArenaProfile
+            ? 'Perfil de arena adicionado à sua conta.'
+            : 'Perfil de organizador adicionado à sua conta.',
+        })
+      }
+
+      if (!emailVerifyToken) {
         return res.json({
           ok: true,
           organizationId: organization.id,
@@ -5565,7 +5588,11 @@ app.patch('/tournaments/:id/status', auth, requireRole('admin', 'operator'), asy
     const data = {}
     let message = 'Status atualizado.'
 
-    if (action === 'close_registrations') {
+    if (action === 'confirm') {
+      data.status = 'confirmed'
+      data.registrationOpen = true
+      message = 'Torneio confirmado e inscrições liberadas.'
+    } else if (action === 'close_registrations') {
       data.registrationOpen = false
       message = 'Inscrições encerradas.'
     } else if (action === 'cancel') {

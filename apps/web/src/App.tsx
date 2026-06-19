@@ -156,6 +156,7 @@ function tournamentStatusLabel(status?: string) {
   const normalized = String(status || '').toLowerCase()
   const labels: Record<string, string> = {
     pending_confirmation: 'Pendente de confirmação',
+    confirmed: 'Confirmado',
     draft: 'Rascunho',
     rascunho: 'Rascunho',
     rescheduled: 'Reagendado',
@@ -445,57 +446,214 @@ function Register() {
 
 function SignupChoice() {
   const redirectParam = new URLSearchParams(window.location.search).get('redirect')
-  const redirectQuery = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
-    ? `?redirect=${encodeURIComponent(redirectParam)}`
+  const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
+    ? redirectParam
     : ''
-  const cards = [
-    {
-      icon: '🎱',
-      title: 'Sou jogador',
-      text: 'Crie sua conta única e complete o perfil esportivo para participar de torneios, ranking e histórico.',
-      href: `/onboarding/jogador${redirectQuery}`,
-      action: 'Completar perfil de jogador',
-    },
-    {
-      icon: '🏆',
-      title: 'Sou organizador',
-      text: 'Crie sua conta única e complete os dados para criar, operar e divulgar torneios.',
-      href: `/onboarding/organizador${redirectQuery}`,
-      action: 'Completar perfil de organizador',
-    },
-    {
-      icon: '🏟️',
-      title: 'Tenho uma arena',
-      text: 'Crie a conta do responsável e prepare o cadastro da arena, clube, salão ou casa de eventos.',
-      href: `/onboarding/arena${redirectQuery}`,
-      action: 'Completar perfil da arena',
-    },
-    {
-      icon: '🧑‍⚖️',
-      title: 'Sou árbitro',
-      text: 'Use sua conta única para atuar por convite ou aprovação em torneios vinculados.',
-      href: `/onboarding/arbitro${redirectQuery}`,
-      action: 'Ver fluxo de árbitro',
-    },
-  ]
+  const redirectQuery = safeRedirect
+    ? `?redirect=${encodeURIComponent(safeRedirect)}`
+    : ''
+  const [form, setForm] = useState<any>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    termsAccepted: false,
+  })
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [validationMessage, setValidationMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [createdAccount, setCreatedAccount] = useState<any>(null)
+
+  function updateField(field: string, value: string | boolean) {
+    setForm((current: any) => ({ ...current, [field]: value }))
+    setValidationMessage('')
+    setFieldErrors(current => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+  }
+
+  function fieldError(field: string) {
+    if (!fieldErrors[field]) return null
+    return <span className="fieldError">{fieldErrors[field]}</span>
+  }
+
+  function validateAccount() {
+    const errors: Record<string, string> = {}
+
+    if (String(form.firstName || '').trim().length < 2) {
+      errors.firstName = 'Informe o nome.'
+    }
+
+    if (String(form.lastName || '').trim().length < 2) {
+      errors.lastName = 'Informe o sobrenome.'
+    }
+
+    if (!isValidEmail(form.email)) {
+      errors.email = 'Informe um e-mail válido.'
+    }
+
+    if (!isValidBrazilCellphone(form.phone)) {
+      errors.phone = 'Informe um WhatsApp celular com DDD.'
+    }
+
+    if (String(form.password || '').length < 6) {
+      errors.password = 'Use pelo menos 6 caracteres.'
+    }
+
+    if (!form.confirmPassword) {
+      errors.confirmPassword = 'Confirme sua senha.'
+    } else if (form.password !== form.confirmPassword) {
+      errors.confirmPassword = 'As senhas não conferem.'
+    }
+
+    if (!form.termsAccepted) {
+      errors.termsAccepted = 'Aceite os termos de uso para continuar.'
+    }
+
+    return errors
+  }
+
+  async function registerAccount() {
+    const errors = validateAccount()
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      setValidationMessage('Revise os campos destacados para criar sua conta.')
+      return
+    }
+
+    setLoading(true)
+    setValidationMessage('')
+
+    try {
+      const response = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: String(form.firstName || '').trim(),
+          lastName: String(form.lastName || '').trim(),
+          name: `${String(form.firstName || '').trim()} ${String(form.lastName || '').trim()}`.trim(),
+          email: String(form.email || '').trim().toLowerCase(),
+          phone: normalizeBrazilPhone(form.phone),
+          password: form.password,
+          termsAccepted: form.termsAccepted,
+        }),
+      })
+      const data = await response.json()
+
+      if (!response.ok || data.error) {
+        setValidationMessage(data.error || 'Não foi possível criar a conta agora.')
+        return
+      }
+
+      setCreatedAccount(data)
+    } catch {
+      setValidationMessage('Não foi possível criar a conta agora. Tente novamente.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (createdAccount) {
+    return (
+      <div className="onboardingPage signupChoicePage">
+        <section className="onboardingHero">
+          <span>Conta criada</span>
+          <h1>Sua conta foi criada com sucesso.</h1>
+          <p>Agora escolha como deseja começar:</p>
+          {createdAccount.message && <p className="signupDeliveryMessage">{createdAccount.message}</p>}
+        </section>
+
+        <section className="signupChoiceGrid">
+          <a className="signupChoiceCard" href={`/onboarding/jogador${redirectQuery}`}>
+            <span>🎱</span>
+            <h2>Participar de torneios</h2>
+            <p>Complete seu perfil de jogador para inscrições, ranking, histórico e avisos.</p>
+            <strong>Começar como jogador</strong>
+          </a>
+
+          <a className="signupChoiceCard" href={`/onboarding/organizador${redirectQuery}`}>
+            <span>🏆</span>
+            <h2>Criar um torneio</h2>
+            <p>Complete os dados de organizador para criar e administrar seus eventos.</p>
+            <strong>Abrir fluxo de torneio</strong>
+          </a>
+
+          <a className="signupChoiceCard" href={`/onboarding/arena${redirectQuery}`}>
+            <span>🏟️</span>
+            <h2>Cadastrar minha arena</h2>
+            <p>Complete o cadastro da arena, clube, salão ou casa de eventos.</p>
+            <strong>Abrir fluxo da arena</strong>
+          </a>
+        </section>
+      </div>
+    )
+  }
 
   return (
     <div className="onboardingPage signupChoicePage">
       <section className="onboardingHero">
-        <span>Cadastro único</span>
-        <h1>Crie sua conta e escolha como deseja usar o PlayFinal Arena.</h1>
-        <p>A mesma conta pode ter perfil de jogador, organizador, arena e árbitro. Você começa por um perfil e pode completar outros depois.</p>
+        <span>Cadastro do responsável</span>
+        <h1>Crie primeiro sua conta no PlayFinal Arena.</h1>
+        <p>Depois da conta criada, você escolhe se deseja participar de torneios, criar um torneio ou cadastrar sua arena.</p>
       </section>
 
-      <section className="signupChoiceGrid">
-        {cards.map(card => (
-          <a className="signupChoiceCard" href={card.href} key={card.title}>
-            <span>{card.icon}</span>
-            <h2>{card.title}</h2>
-            <p>{card.text}</p>
-            <strong>{card.action}</strong>
-          </a>
-        ))}
+      <section className="onboardingCard signupAccountCard">
+        <h2>Dados mínimos</h2>
+        {validationMessage && <div className="formError">{validationMessage}</div>}
+
+        <div className="onboardingGrid">
+          <div>
+            <label>Nome *</label>
+            <input value={form.firstName} onChange={e => updateField('firstName', e.target.value)} aria-invalid={!!fieldErrors.firstName} />
+            {fieldError('firstName')}
+          </div>
+          <div>
+            <label>Sobrenome *</label>
+            <input value={form.lastName} onChange={e => updateField('lastName', e.target.value)} aria-invalid={!!fieldErrors.lastName} />
+            {fieldError('lastName')}
+          </div>
+          <div>
+            <label>E-mail *</label>
+            <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} />
+            {fieldError('email')}
+          </div>
+          <div>
+            <label>WhatsApp *</label>
+            <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} aria-invalid={!!fieldErrors.phone} />
+            {fieldError('phone')}
+          </div>
+          <div>
+            <label>Senha *</label>
+            <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} aria-invalid={!!fieldErrors.password} />
+            {fieldError('password')}
+          </div>
+          <div>
+            <label>Confirmar senha *</label>
+            <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} aria-invalid={!!fieldErrors.confirmPassword} />
+            {fieldError('confirmPassword')}
+          </div>
+        </div>
+
+        <label className="termsLine" aria-invalid={!!fieldErrors.termsAccepted}>
+          <input
+            type="checkbox"
+            checked={form.termsAccepted}
+            onChange={e => updateField('termsAccepted', e.target.checked)}
+          />
+          Aceito os termos de uso da plataforma.
+        </label>
+        {fieldError('termsAccepted')}
+
+        <div className="onboardingActions">
+          <button className="primaryButton" onClick={registerAccount} disabled={loading}>
+            {loading ? 'Criando...' : 'Criar conta'}
+          </button>
+        </div>
       </section>
     </div>
   )
@@ -890,7 +1048,6 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
           <a className={!isArenaOnboarding ? 'active' : ''} href="/onboarding/organizador">Organizador</a>
           <a className={isArenaOnboarding ? 'active' : ''} href="/onboarding/arena">Arena</a>
           <a href="/onboarding/jogador">Jogador</a>
-          <a href="/onboarding/arbitro">Árbitro</a>
         </div>
       </section>
 
@@ -1315,7 +1472,6 @@ function PlayerSignup() {
           <a href="/onboarding/organizador">Organizador</a>
           <a href="/onboarding/arena">Arena</a>
           <a className="active" href="/onboarding/jogador">Jogador</a>
-          <a href="/onboarding/arbitro">Árbitro</a>
         </div>
       </section>
 
@@ -4449,6 +4605,31 @@ function TournamentSettings() {
     .filter(registration => registration.status === 'confirmed')
     .sort((a, b) => Number(a.sortOrder || 9999) - Number(b.sortOrder || 9999))
   const isBingoSettings = tournament?.format === 'bingo' || tournament?.sport?.slug === 'bingo' || form.format === 'bingo'
+  const isPendingConfirmation = tournament?.status === 'pending_confirmation'
+
+  function confirmTournament() {
+    if (!confirm('Confirmar os dados do torneio e liberar inscrições públicas?')) return
+
+    fetch(`${API}/tournaments/${id}/status`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ action: 'confirm' }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        alert(data.message || 'Torneio confirmado.')
+        setTournament(data.tournament)
+        setForm((current: any) => ({
+          ...current,
+          registrationOpen: data.tournament?.registrationOpen !== false,
+        }))
+      })
+  }
 
   return (
     <div className="tournamentPageLayout">
@@ -4500,6 +4681,18 @@ function TournamentSettings() {
               <strong>{tournamentStatusLabel(tournament?.status)}</strong>
             </div>
           </div>
+
+          {isPendingConfirmation && (
+            <div className="pendingConfirmationPanel">
+              <div>
+                <strong>Torneio pendente de confirmação</strong>
+                <p>Revise os dados do evento. Ao confirmar, o torneio fica liberado e as inscrições públicas são abertas.</p>
+              </div>
+              <button className="primaryButton" onClick={confirmTournament}>
+                Confirmar e liberar inscrições
+              </button>
+            </div>
+          )}
 
           <label>Nome do torneio</label>
           <input value={form.name} onChange={e => updateField('name', e.target.value)} />
@@ -4683,9 +4876,12 @@ function TournamentSettings() {
             <input
               type="checkbox"
               checked={form.registrationOpen}
+              disabled={isPendingConfirmation}
               onChange={e => updateField('registrationOpen', e.target.checked)}
             />
-            {form.registrationOpen ? 'Inscrições públicas abertas' : 'Inscrições públicas encerradas'}
+            {isPendingConfirmation
+              ? 'Inscrições fechadas até confirmação'
+              : form.registrationOpen ? 'Inscrições públicas abertas' : 'Inscrições públicas encerradas'}
           </label>
 
           <label>Tipo de cobrança da inscrição</label>
@@ -5855,7 +6051,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
   }
 
   const page = personaLandingContent[type]
-  const signupHref = type === 'arena' ? '/onboarding/arena' : '/cadastro'
+  const signupHref = '/cadastro'
 
   return (
     <div className={`landing personaLanding personaLanding-${type}`}>

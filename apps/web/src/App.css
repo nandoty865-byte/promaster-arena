@@ -2138,6 +2138,35 @@ button:hover {
   font-size: 20px;
 }
 
+.pendingConfirmationPanel {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  background: rgba(251, 191, 36, .08);
+  border: 1px solid rgba(251, 191, 36, .45);
+  border-radius: 14px;
+  padding: 14px;
+  margin: 16px 0;
+}
+
+.pendingConfirmationPanel strong,
+.pendingConfirmationPanel p {
+  display: block;
+  margin: 0;
+}
+
+.pendingConfirmationPanel p {
+  color: #cbd5e1;
+  margin-top: 4px;
+}
+
+.pendingConfirmationPanel .primaryButton {
+  width: auto;
+  margin: 0;
+  white-space: nowrap;
+}
+
 .settingsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -7548,8 +7577,18 @@ button:hover {
 .signupChoiceGrid {
   width: min(980px, 100%);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
+}
+
+.signupAccountCard {
+  max-width: 860px;
+}
+
+.signupDeliveryMessage {
+  color: #bbf7d0 !important;
+  font-size: 15px !important;
+  margin-top: 10px;
 }
 
 .signupChoiceCard {
@@ -7870,6 +7909,7 @@ button:hover {
   .billingPlansGrid,
   .planSummaryWide,
   .cancelReasons,
+  .pendingConfirmationPanel,
   .settingsInfoGrid,
   .settingsGrid,
   .profileGrid,
@@ -7880,6 +7920,15 @@ button:hover {
   .publicRegistrationGrid,
   .publicMatchColumns {
     grid-template-columns: 1fr;
+  }
+
+  .pendingConfirmationPanel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pendingConfirmationPanel .primaryButton {
+    width: 100%;
   }
 
   .profilePasswordPanel {
