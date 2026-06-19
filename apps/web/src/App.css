@@ -7574,6 +7574,54 @@ button:hover {
   align-items: stretch;
 }
 
+.signupPremiumPage {
+  background:
+    linear-gradient(135deg, rgba(2, 6, 23, .96), rgba(8, 13, 24, .98)),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 72px);
+  overflow: hidden;
+}
+
+.signupPremiumHero {
+  width: min(1180px, 100%);
+  margin: 0 auto 24px;
+  padding: 34px 0 10px;
+}
+
+.signupPremiumHero img {
+  width: min(360px, 72vw);
+  height: auto;
+  display: block;
+  margin-bottom: 22px;
+  filter: drop-shadow(0 0 24px rgba(157, 255, 0, .28));
+}
+
+.signupPremiumHero span {
+  color: #9dff00;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.signupPremiumHero h1 {
+  max-width: 820px;
+  margin: 10px 0 8px;
+  color: #fff;
+  font-size: 44px;
+  line-height: 1.05;
+}
+
+.signupPremiumHero p {
+  max-width: 760px;
+  color: #dbeafe;
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.signupRegisterHero {
+  padding-bottom: 0;
+}
+
 .signupChoiceGrid {
   width: min(980px, 100%);
   display: grid;
@@ -7581,8 +7629,94 @@ button:hover {
   gap: 22px;
 }
 
+.signupPremiumGrid {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.signupPremiumCard {
+  min-height: 430px;
+  color: #fff;
+  text-decoration: none;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, .94), rgba(2, 6, 23, .98));
+  border: 1px solid rgba(148, 163, 184, .22);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .34);
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.signupPremiumCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-top: 3px solid #9dff00;
+  opacity: .75;
+  pointer-events: none;
+}
+
+.signupPremiumCard:hover {
+  transform: translateY(-6px);
+  border-color: rgba(157, 255, 0, .78);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .42), 0 0 36px rgba(157, 255, 0, .2);
+}
+
+.signupPremiumImage {
+  height: 170px;
+  border-radius: 12px;
+  background: #050912;
+  border: 1px solid rgba(157, 255, 0, .2);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.signupPremiumImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.signupPremiumCard span {
+  color: #9dff00;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.signupPremiumCard h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.signupPremiumCard p {
+  color: #cbd5e1;
+  line-height: 1.55;
+}
+
+.signupPremiumCard strong {
+  margin-top: auto;
+  color: #020617;
+  background: #9dff00;
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: center;
+  font-weight: 950;
+}
+
 .signupAccountCard {
   max-width: 860px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .38);
 }
 
 .signupDeliveryMessage {
@@ -7628,6 +7762,55 @@ button:hover {
 .signupChoiceCard strong {
   margin-top: auto;
   color: #86efac;
+}
+
+.signupLoginCta {
+  width: fit-content;
+  margin-top: 14px;
+}
+
+.socialLoginButton {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, .35);
+  background: #fff;
+  color: #0f172a;
+  font-weight: 950;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.socialLoginButton span {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #0f172a;
+  color: #9dff00;
+}
+
+.signupDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin: 16px 0 18px;
+}
+
+.signupDivider::before,
+.signupDivider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: #334155;
 }
 
 .landingPlans {
@@ -7903,6 +8086,7 @@ button:hover {
   .showcaseGrid,
   .plansGrid,
   .signupChoiceGrid,
+  .signupPremiumGrid,
   .plansCompareGrid,
   .staticPublicGrid,
   .landingFooterInner,
@@ -7929,6 +8113,14 @@ button:hover {
 
   .pendingConfirmationPanel .primaryButton {
     width: 100%;
+  }
+
+  .signupPremiumHero h1 {
+    font-size: 34px;
+  }
+
+  .signupPremiumCard {
+    min-height: 0;
   }
 
   .profilePasswordPanel {

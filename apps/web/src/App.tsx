@@ -444,16 +444,44 @@ function Register() {
   return <SignupChoice />
 }
 
+const SIGNUP_PROFILE_OPTIONS = [
+  {
+    key: 'player',
+    title: 'Jogador',
+    action: 'Participar de torneios',
+    text: 'Crie seu acesso para completar o perfil esportivo, entrar em torneios e acompanhar ranking.',
+    image: '/landing-role-player.png',
+    href: '/onboarding/jogador',
+  },
+  {
+    key: 'organizer',
+    title: 'Organizador',
+    action: 'Criar torneios',
+    text: 'Prepare sua conta para publicar eventos, gerenciar inscrições, pagamentos e chaveamentos.',
+    image: '/landing-role-organizer.png',
+    href: '/onboarding/organizador',
+  },
+  {
+    key: 'arena',
+    title: 'Arena',
+    action: 'Cadastrar minha arena',
+    text: 'Ative o cadastro do local para organizar agenda, modalidades, responsáveis e torneios próprios.',
+    image: '/landing-role-arena.png',
+    href: '/onboarding/arena',
+  },
+]
+
 function SignupChoice() {
   const searchParams = new URLSearchParams(window.location.search)
   const redirectParam = searchParams.get('redirect')
+  const profileParam = String(searchParams.get('profile') || searchParams.get('perfil') || '').toLowerCase()
   const isVerifiedAccount = searchParams.get('verified') === '1'
+  const selectedProfile = SIGNUP_PROFILE_OPTIONS.find(profile => profile.key === profileParam)
   const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
     ? redirectParam
     : ''
-  const redirectQuery = safeRedirect
-    ? `?redirect=${encodeURIComponent(safeRedirect)}`
-    : ''
+  const profileRedirect = selectedProfile?.href || safeRedirect || '/app/perfil'
+  const loginAfterRegisterHref = `/login?registered=1&redirect=${encodeURIComponent(profileRedirect)}`
   const [form, setForm] = useState<any>({
     firstName: '',
     lastName: '',
@@ -472,11 +500,18 @@ function SignupChoice() {
     if (!createdAccount) return
 
     const timeout = window.setTimeout(() => {
-      window.location.href = appUrlWithFreshVersion('/login?registered=1')
+      window.location.href = appUrlWithFreshVersion(loginAfterRegisterHref)
     }, 4500)
 
     return () => window.clearTimeout(timeout)
-  }, [createdAccount])
+  }, [createdAccount, loginAfterRegisterHref])
+
+  function profileRegisterHref(profile: any) {
+    const params = new URLSearchParams()
+    params.set('profile', profile.key)
+    if (safeRedirect) params.set('redirect', safeRedirect)
+    return `/cadastro?${params.toString()}`
+  }
 
   function updateField(field: string, value: string | boolean) {
     setForm((current: any) => ({ ...current, [field]: value }))
@@ -552,6 +587,7 @@ function SignupChoice() {
           email: String(form.email || '').trim().toLowerCase(),
           phone: normalizeBrazilPhone(form.phone),
           password: form.password,
+          signupProfile: selectedProfile?.key || '',
           termsAccepted: form.termsAccepted,
         }),
       })
@@ -572,38 +608,46 @@ function SignupChoice() {
 
   function startOptions() {
     return (
-      <section className="signupChoiceGrid">
-        <a className="signupChoiceCard" href={`/onboarding/jogador${redirectQuery}`}>
-          <span>🎱</span>
-          <h2>Participar de torneios</h2>
-          <p>Complete seu perfil de jogador para inscrições, ranking, histórico e avisos.</p>
-          <strong>Começar como jogador</strong>
-        </a>
-
-        <a className="signupChoiceCard" href={`/onboarding/organizador${redirectQuery}`}>
-          <span>🏆</span>
-          <h2>Criar um torneio</h2>
-          <p>Complete os dados de organizador para criar e administrar seus eventos.</p>
-          <strong>Abrir fluxo de torneio</strong>
-        </a>
-
-        <a className="signupChoiceCard" href={`/onboarding/arena${redirectQuery}`}>
-          <span>🏟️</span>
-          <h2>Cadastrar minha arena</h2>
-          <p>Complete o cadastro da arena, clube, salão ou casa de eventos.</p>
-          <strong>Abrir fluxo da arena</strong>
-        </a>
+      <section className="signupPremiumGrid" aria-label="Seleção de perfil">
+        {SIGNUP_PROFILE_OPTIONS.map(profile => (
+          <a className={`signupPremiumCard signupPremiumCard-${profile.key}`} href={profileRegisterHref(profile)} key={profile.key}>
+            <div className="signupPremiumImage">
+              <img src={profile.image} alt="" aria-hidden="true" />
+            </div>
+            <span>{profile.title}</span>
+            <h2>{profile.action}</h2>
+            <p>{profile.text}</p>
+            <strong>Selecionar perfil</strong>
+          </a>
+        ))}
       </section>
     )
   }
 
   if (isVerifiedAccount) {
     return (
-      <div className="onboardingPage signupChoicePage">
-        <section className="onboardingHero">
+      <div className="onboardingPage signupChoicePage signupPremiumPage">
+        <section className="signupPremiumHero">
+          <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
           <span>Conta confirmada</span>
           <h1>Sua conta foi criada com sucesso.</h1>
-          <p>Agora escolha como deseja começar:</p>
+          <p>Entre para continuar no painel do perfil escolhido e completar os dados necessários.</p>
+          <a className="primaryButton signupLoginCta" href={`/login?verified=1&redirect=${encodeURIComponent(profileRedirect)}`}>
+            Ir para login
+          </a>
+        </section>
+      </div>
+    )
+  }
+
+  if (!selectedProfile) {
+    return (
+      <div className="onboardingPage signupChoicePage signupPremiumPage">
+        <section className="signupPremiumHero">
+          <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+          <span>Escolha seu perfil</span>
+          <h1>Como deseja começar no PlayFinal Arena?</h1>
+          <p>Selecione uma opção para abrir o cadastro único. Depois da confirmação, você entra no painel certo para completar o perfil.</p>
         </section>
 
         {startOptions()}
@@ -613,33 +657,44 @@ function SignupChoice() {
 
   if (createdAccount) {
     return (
-      <div className="onboardingPage signupChoicePage">
-        <section className="onboardingHero">
+      <div className="onboardingPage signupChoicePage signupPremiumPage">
+        <section className="signupPremiumHero">
+          <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
           <span>Confirmação enviada</span>
           <h1>Confirme sua conta para continuar.</h1>
-          <p>Enviamos o link de confirmação para seu e-mail e WhatsApp. Depois da confirmação, você poderá escolher como deseja começar.</p>
+          <p>Enviamos o link para seu e-mail e WhatsApp. Após confirmar, você será levado ao login para acessar o painel de {selectedProfile.title.toLowerCase()}.</p>
           {createdAccount.message && <p className="signupDeliveryMessage">{createdAccount.message}</p>}
         </section>
 
         <section className="onboardingCard signupAccountCard">
           <h2>Voltando para o login</h2>
           <p>Você será direcionado para a tela de login em instantes.</p>
-          <a className="primaryButton" href="/login?registered=1">Ir para login</a>
+          <a className="primaryButton" href={loginAfterRegisterHref}>Ir para login</a>
         </section>
       </div>
     )
   }
 
   return (
-    <div className="onboardingPage signupChoicePage">
-      <section className="onboardingHero">
-        <span>Cadastro do responsável</span>
-        <h1>Crie primeiro sua conta no PlayFinal Arena.</h1>
-        <p>Depois da conta criada, você escolhe se deseja participar de torneios, criar um torneio ou cadastrar sua arena.</p>
+    <div className="onboardingPage signupChoicePage signupPremiumPage">
+      <section className="signupPremiumHero signupRegisterHero">
+        <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+        <span>Cadastro único</span>
+        <h1>{selectedProfile.action}</h1>
+        <p>Crie sua conta mínima. Após confirmar e-mail e WhatsApp, você entra pelo login para completar o perfil de {selectedProfile.title.toLowerCase()}.</p>
       </section>
 
       <section className="onboardingCard signupAccountCard">
         <h2>Dados mínimos</h2>
+        <button
+          type="button"
+          className="socialLoginButton"
+          onClick={() => alert('Login por rede social em preparação. Use o cadastro com e-mail e WhatsApp por enquanto.')}
+        >
+          <span>G</span>
+          Continuar com Google
+        </button>
+        <div className="signupDivider"><span>ou cadastre seus dados</span></div>
         {validationMessage && <div className="formError">{validationMessage}</div>}
 
         <div className="onboardingGrid">
@@ -659,7 +714,7 @@ function SignupChoice() {
             {fieldError('email')}
           </div>
           <div>
-            <label>WhatsApp *</label>
+            <label>Telefone / WhatsApp *</label>
             <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} aria-invalid={!!fieldErrors.phone} />
             {fieldError('phone')}
           </div>

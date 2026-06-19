@@ -152,6 +152,33 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeText(value))
 }
 
+function normalizeSignupProfile(value) {
+  const normalized = String(value || '').trim().toLowerCase()
+  const aliases = {
+    jogador: 'player',
+    player: 'player',
+    participante: 'player',
+    organizador: 'organizer',
+    organizer: 'organizer',
+    organizado: 'organizer',
+    torneio: 'organizer',
+    arena: 'arena',
+    local: 'arena',
+  }
+
+  return aliases[normalized] || ''
+}
+
+function signupProfileRedirect(profile) {
+  const redirects = {
+    player: '/onboarding/jogador',
+    organizer: '/onboarding/organizador',
+    arena: '/onboarding/arena',
+  }
+
+  return redirects[normalizeSignupProfile(profile)] || ''
+}
+
 function normalizeCpf(value) {
   return String(value || '').replace(/\D/g, '').slice(0, 11)
 }
@@ -4234,6 +4261,7 @@ app.post('/auth/register', async (req, res) => {
       email: rawEmail,
       phone: rawPhone,
       password: rawPassword,
+      signupProfile: rawSignupProfile,
       termsAccepted,
     } = req.body
 
@@ -4244,6 +4272,7 @@ app.post('/auth/register', async (req, res) => {
     const phone = normalizeWhatsAppNumber(rawPhone)
     const password = typeof rawPassword === 'string' ? rawPassword : ''
     const fullName = name || `${firstName} ${lastName}`.trim()
+    const signupProfile = normalizeSignupProfile(rawSignupProfile)
 
     if (firstName.length < 2) {
       return res.status(400).json({ error: 'Informe o nome' })
@@ -4278,7 +4307,7 @@ app.post('/auth/register', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
-    const emailVerifyToken = randomUUID()
+    const emailVerifyToken = signupProfile ? `${signupProfile}.${randomUUID()}` : randomUUID()
 
     const user = await prisma.user.create({
       data: {
@@ -6705,6 +6734,9 @@ app.post('/auth/verify-email/:token', async (req, res) => {
       return res.status(400).send('Token inválido')
     }
 
+    const signupProfile = normalizeSignupProfile(String(user.emailVerifyToken || token).split('.')[0])
+    const redirectPath = signupProfileRedirect(signupProfile)
+
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -6713,7 +6745,10 @@ app.post('/auth/verify-email/:token', async (req, res) => {
       }
     })
 
-    res.redirect('/cadastro?verified=1')
+    const loginParams = new URLSearchParams({ verified: '1' })
+    if (redirectPath) loginParams.set('redirect', redirectPath)
+
+    res.redirect(`/login?${loginParams.toString()}`)
   } catch (error) {
     console.error(error)
     res.status(500).send('Erro ao validar e-mail')
