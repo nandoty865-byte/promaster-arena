@@ -7682,6 +7682,27 @@ function CreateTournament({ user }: any) {
 
   const [location, setLocation] = useState('')
   const [venueAddress, setVenueAddress] = useState('')
+  const [selectedArenaOption, setSelectedArenaOption] = useState('')
+  const [arenas, setArenas] = useState<any[]>([])
+  const [showArenaModal, setShowArenaModal] = useState(false)
+  const emptyArenaForm = {
+    name: '',
+    website: '',
+    phone: '',
+    email: '',
+    country: 'Brasil',
+    zipCode: '',
+    street: '',
+    number: '',
+    complement: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+    responsibleName: '',
+    responsibleCpf: '',
+    responsiblePhone: '',
+  }
+  const [arenaForm, setArenaForm] = useState<any>(emptyArenaForm)
   const [eventDate, setEventDate] = useState('')
   const [eventTime, setEventTime] = useState('')
   const [prize, setPrize] = useState('')
@@ -7724,6 +7745,124 @@ function CreateTournament({ user }: any) {
   const selectedTemplate = templates.find(template => Number(template.id) === Number(templateId))
   const isBingo = tournamentFormat === 'bingo' || selectedTemplate?.format === 'bingo' || selectedTemplate?.sport?.slug === 'bingo'
   const selectedSport = sports.find((sport: any) => sport.slug === sportSlug)
+  const activeProfile = localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY) || initialActiveProfile(user)
+  const hasMyArenaOption = Boolean(
+    user?.organization?.name &&
+    profileRoles(user).includes('ARENA_OWNER') &&
+    ['ORGANIZER', 'ARENA_OWNER'].includes(activeProfile)
+  )
+
+  function formatArenaAddress(arena: any) {
+    return [
+      arena?.street,
+      arena?.number,
+      arena?.neighborhood,
+      arena?.city,
+      arena?.state,
+    ].filter(Boolean).join(', ') || arena?.address || ''
+  }
+
+  function loadTournamentArenas() {
+    fetch(`${API}/arenas`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setArenas(Array.isArray(data) ? data : []))
+      .catch(() => setArenas([]))
+  }
+
+  function updateTournamentArenaField(field: string, value: string) {
+    setArenaForm((current: any) => ({ ...current, [field]: value }))
+  }
+
+  async function lookupTournamentArenaCep(value: string) {
+    const cep = onlyDigits(value)
+    if (!isBrazilCountry(arenaForm.country) || cep.length !== 8) return
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      const data = await response.json()
+
+      if (data.erro) return
+
+      setArenaForm((current: any) => ({
+        ...current,
+        street: data.logradouro || current.street,
+        neighborhood: data.bairro || current.neighborhood,
+        city: data.localidade || current.city,
+        state: data.uf || current.state,
+      }))
+    } catch {
+      // O cadastro continua editável se a consulta externa falhar.
+    }
+  }
+
+  function selectTournamentArena(value: string) {
+    if (value === 'new-local') {
+      setShowArenaModal(true)
+      return
+    }
+
+    setSelectedArenaOption(value)
+
+    if (!value) {
+      setLocation('')
+      setVenueAddress('')
+      return
+    }
+
+    if (value === 'my-arena') {
+      const organization = user?.organization || {}
+      setLocation(organization.name || 'Minha Arena')
+      setVenueAddress(formatArenaAddress(organization))
+      return
+    }
+
+    const arenaId = value.replace('arena:', '')
+    const arena = arenas.find(item => String(item.id) === arenaId)
+    if (!arena) return
+
+    setLocation(arena.name || '')
+    setVenueAddress(formatArenaAddress(arena))
+  }
+
+  function createTournamentArena() {
+    if (!arenaForm.name) {
+      alert('Informe o nome do local.')
+      return
+    }
+
+    fetch(`${API}/arenas`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        ...arenaForm,
+        phone: normalizeBrazilPhone(arenaForm.phone),
+        responsiblePhone: normalizeBrazilPhone(arenaForm.responsiblePhone),
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        const createdArena = data.arena
+        if (createdArena) {
+          setArenas(current => [
+            ...current.filter(item => String(item.id) !== String(createdArena.id)),
+            createdArena,
+          ].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''))))
+          setSelectedArenaOption(`arena:${createdArena.id}`)
+          setLocation(createdArena.name || '')
+          setVenueAddress(formatArenaAddress(createdArena))
+        } else {
+          loadTournamentArenas()
+        }
+
+        setArenaForm({ ...emptyArenaForm })
+        setShowArenaModal(false)
+      })
+  }
 
   function updatePhaseRule(phase: number, field: string, value: string) {
     setPhaseRules(current => {
@@ -7803,6 +7942,8 @@ function CreateTournament({ user }: any) {
           }
         })
     }
+
+    loadTournamentArenas()
   }, [])
 
   function chooseSport(nextSport: string) {
@@ -8113,18 +8254,27 @@ function CreateTournament({ user }: any) {
             )}
 
             <label>Local</label>
-            <input
-              value={location}
-              onChange={e => setLocation(e.target.value)}
-              placeholder="Ex: Bar do João, Mesa 1..."
-            />
+            <div className="localSelectorRow">
+              <select value={selectedArenaOption} onChange={e => selectTournamentArena(e.target.value)}>
+                <option value="">Selecionar local</option>
+                {hasMyArenaOption && (
+                  <option value="my-arena">Minha Arena - {user?.organization?.name}</option>
+                )}
+                {arenas.map(arena => (
+                  <option key={arena.id} value={`arena:${arena.id}`}>
+                    {arena.name}
+                  </option>
+                ))}
+                <option value="new-local">+ Novo local</option>
+              </select>
+            </div>
 
-            <label>Endereço do local</label>
-            <input
-              value={venueAddress}
-              onChange={e => setVenueAddress(e.target.value)}
-              placeholder="Rua, número, bairro e cidade"
-            />
+            {selectedArenaOption && (
+              <div className="selectedArenaPreview">
+                <strong>{location || 'Local selecionado'}</strong>
+                <span>{venueAddress || 'Endereço ainda não informado'}</span>
+              </div>
+            )}
 
             <label>Data</label>
             <input
@@ -8368,6 +8518,100 @@ function CreateTournament({ user }: any) {
             </div>
           )}
         </div>
+
+        {showArenaModal && (
+          <div className="qrModal" onClick={() => setShowArenaModal(false)}>
+            <div className="detailsContent tournamentArenaModal" onClick={e => e.stopPropagation()}>
+              <div className="detailsHeader">
+                <div>
+                  <h2>Novo local</h2>
+                  <p>Cadastre uma arena para usar neste torneio e nos próximos eventos.</p>
+                </div>
+                <button className="modalCloseButton" onClick={() => setShowArenaModal(false)}>Cancelar</button>
+              </div>
+
+              <div className="onboardingGrid">
+                <div>
+                  <label>Nome do local *</label>
+                  <input value={arenaForm.name} onChange={e => updateTournamentArenaField('name', e.target.value)} />
+                </div>
+                <div>
+                  <label>Site</label>
+                  <input value={arenaForm.website} onChange={e => updateTournamentArenaField('website', e.target.value)} placeholder="https://..." />
+                </div>
+                <div>
+                  <label>Fone</label>
+                  <input value={arenaForm.phone} onChange={e => updateTournamentArenaField('phone', formatBrazilCellphone(e.target.value))} />
+                </div>
+                <div>
+                  <label>E-mail</label>
+                  <input type="email" value={arenaForm.email} onChange={e => updateTournamentArenaField('email', e.target.value)} />
+                </div>
+                <div>
+                  <label>País</label>
+                  <select value={arenaForm.country} onChange={e => updateTournamentArenaField('country', e.target.value)}>
+                    {COUNTRY_OPTIONS.map(country => (
+                      <option key={country} value={country}>{country}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label>CEP</label>
+                  <input
+                    value={arenaForm.zipCode}
+                    onChange={e => updateTournamentArenaField('zipCode', formatCep(e.target.value))}
+                    onBlur={e => lookupTournamentArenaCep(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label>Endereço</label>
+                  <input value={arenaForm.street} onChange={e => updateTournamentArenaField('street', e.target.value)} />
+                </div>
+                <div>
+                  <label>Número</label>
+                  <input value={arenaForm.number} onChange={e => updateTournamentArenaField('number', e.target.value)} />
+                </div>
+                <div>
+                  <label>Complemento</label>
+                  <input value={arenaForm.complement} onChange={e => updateTournamentArenaField('complement', e.target.value)} />
+                </div>
+                <div>
+                  <label>Bairro</label>
+                  <input value={arenaForm.neighborhood} onChange={e => updateTournamentArenaField('neighborhood', e.target.value)} />
+                </div>
+                <div>
+                  <label>Cidade</label>
+                  <input value={arenaForm.city} onChange={e => updateTournamentArenaField('city', e.target.value)} />
+                </div>
+                <div>
+                  <label>Estado</label>
+                  <input value={arenaForm.state} onChange={e => updateTournamentArenaField('state', e.target.value)} />
+                </div>
+                <div>
+                  <label>Responsável - nome completo</label>
+                  <input value={arenaForm.responsibleName} onChange={e => updateTournamentArenaField('responsibleName', e.target.value)} />
+                </div>
+                <div>
+                  <label>Responsável - CPF</label>
+                  <input value={arenaForm.responsibleCpf} onChange={e => updateTournamentArenaField('responsibleCpf', formatCpf(e.target.value))} />
+                </div>
+                <div>
+                  <label>Responsável - fone</label>
+                  <input value={arenaForm.responsiblePhone} onChange={e => updateTournamentArenaField('responsiblePhone', formatBrazilCellphone(e.target.value))} />
+                </div>
+              </div>
+
+              <div className="tournamentArenaModalActions">
+                <button className="secondaryButton" onClick={() => setShowArenaModal(false)}>
+                  Cancelar
+                </button>
+                <button className="primaryButton" onClick={createTournamentArena}>
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

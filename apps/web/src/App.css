@@ -10170,6 +10170,48 @@ button:hover {
   font-style: normal;
 }
 
+.localSelectorRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.selectedArenaPreview {
+  margin-top: 10px;
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.selectedArenaPreview strong,
+.selectedArenaPreview span {
+  display: block;
+}
+
+.selectedArenaPreview span {
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.tournamentArenaModal {
+  width: min(920px, calc(100vw - 32px));
+}
+
+.tournamentArenaModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.tournamentArenaModalActions .secondaryButton,
+.tournamentArenaModalActions .primaryButton {
+  width: auto;
+  margin-top: 0;
+}
+
 .seasonLayout {
   display: grid;
   grid-template-columns: minmax(360px, .95fr) minmax(320px, .65fr);
@@ -10909,6 +10951,7 @@ button:hover {
   .seasonSimpleTable div,
   .seasonSimpleTable.organizer div,
   .arenaManagerGrid,
+  .localSelectorRow,
   .seasonLayout,
   .seasonFormGrid,
   .seasonInfoGrid,
