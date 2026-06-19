@@ -449,24 +449,33 @@ const SIGNUP_PROFILE_OPTIONS = [
     key: 'player',
     title: 'Jogador',
     action: 'Participar de torneios',
-    text: 'Crie seu acesso para completar o perfil esportivo, entrar em torneios e acompanhar ranking.',
-    image: '/landing-role-player.png',
+    cardTitle: 'Jogador',
+    cardSubtitle: 'Quero participar de torneios',
+    badge: 'JP',
+    benefits: ['Inscrição rápida', 'Ranking pessoal', 'Histórico de partidas', 'Notificações de jogos'],
+    image: '/player/photos/hero-jogador-sinuca-recriado.webp',
     href: '/onboarding/jogador',
   },
   {
     key: 'organizer',
     title: 'Organizador',
     action: 'Criar torneios',
-    text: 'Prepare sua conta para publicar eventos, gerenciar inscrições, pagamentos e chaveamentos.',
-    image: '/landing-role-organizer.png',
+    cardTitle: 'Organizador',
+    cardSubtitle: 'Quero criar torneios',
+    badge: 'ORG',
+    benefits: ['Criar torneios', 'Gerenciar jogadores', 'Compartilhar resultados'],
+    image: '/organizer/photos/dashboard-hero-mockup-recriado.webp',
     href: '/onboarding/organizador',
   },
   {
     key: 'arena',
     title: 'Arena',
     action: 'Cadastrar minha arena',
-    text: 'Ative o cadastro do local para organizar agenda, modalidades, responsáveis e torneios próprios.',
-    image: '/landing-role-arena.png',
+    cardTitle: 'Cadastrar minha arena',
+    cardSubtitle: 'Quero gerenciar minha arena',
+    badge: 'ARE',
+    benefits: ['Gestão completa', 'Planos completos', 'Multiusuários', 'Marca personalizada'],
+    image: '/arena/photos/hero-arena-sinuca-premium-recriado.webp',
     href: '/onboarding/arena',
   },
 ]
@@ -613,11 +622,22 @@ function SignupChoice() {
           <a className={`signupPremiumCard signupPremiumCard-${profile.key}`} href={profileRegisterHref(profile)} key={profile.key}>
             <div className="signupPremiumImage">
               <img src={profile.image} alt="" aria-hidden="true" />
+              <span className="signupPremiumTopIcon" aria-hidden="true">{profile.badge}</span>
             </div>
-            <span>{profile.title}</span>
-            <h2>{profile.action}</h2>
-            <p>{profile.text}</p>
-            <strong>Selecionar perfil</strong>
+            <div className="signupPremiumPanel">
+              <span className="signupPremiumMidIcon" aria-hidden="true">{profile.badge}</span>
+              <h2>{profile.cardTitle}</h2>
+              <p>{profile.cardSubtitle}</p>
+              <ul>
+                {profile.benefits.map(benefit => (
+                  <li key={benefit}>
+                    <span aria-hidden="true">✓</span>
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+              <strong>Selecionar <span aria-hidden="true">&gt;</span></strong>
+            </div>
           </a>
         ))}
       </section>
@@ -645,9 +665,8 @@ function SignupChoice() {
       <div className="onboardingPage signupChoicePage signupPremiumPage">
         <section className="signupPremiumHero">
           <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
-          <span>Escolha seu perfil</span>
-          <h1>Como deseja começar no PlayFinal Arena?</h1>
-          <p>Selecione uma opção para abrir o cadastro único. Depois da confirmação, você entra no painel certo para completar o perfil.</p>
+          <h1>Como você deseja começar<span>?</span></h1>
+          <p>Escolha seu perfil.</p>
         </section>
 
         {startOptions()}
