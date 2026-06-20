@@ -7839,11 +7839,13 @@ button:hover {
 .signupPremiumPage {
   min-height: 100vh;
   position: relative;
-  padding: 26px 28px 54px;
+  padding: 22px 28px 44px;
+  font-family: Montserrat, Oswald, "Segoe UI", Arial, sans-serif;
   background:
-    radial-gradient(ellipse at 50% -8%, rgba(111, 255, 65, .28) 0%, rgba(111, 255, 65, .1) 22%, transparent 45%),
-    radial-gradient(ellipse at 50% 12%, rgba(255, 255, 255, .08) 0%, transparent 28%),
-    linear-gradient(180deg, rgba(5, 12, 10, .72) 0%, rgba(2, 7, 8, .96) 48%, #020505 100%),
+    linear-gradient(180deg, rgba(6, 7, 9, .82), rgba(6, 7, 9, .96)),
+    radial-gradient(ellipse at 50% -12%, rgba(204, 255, 0, .22) 0%, rgba(204, 255, 0, .08) 26%, transparent 48%),
+    radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, .07) 0%, transparent 38%),
+    url('/playfinal-hero-broadcast.png') center / cover no-repeat,
     repeating-linear-gradient(110deg, rgba(118, 255, 88, .06) 0 1px, transparent 1px 88px);
   overflow: hidden;
 }
@@ -7863,11 +7865,11 @@ button:hover {
 }
 
 .signupPremiumPage::before {
-  top: -175px;
+  top: -205px;
   box-shadow:
     inset 0 22px 0 rgba(255, 255, 255, .03),
-    inset 0 35px 0 rgba(99, 255, 74, .08),
-    0 0 80px rgba(99, 255, 74, .1);
+    inset 0 35px 0 rgba(204, 255, 0, .06),
+    0 0 80px rgba(204, 255, 0, .1);
 }
 
 .signupPremiumPage::after {
@@ -7879,20 +7881,22 @@ button:hover {
 }
 
 .signupPremiumHero {
-  width: min(1480px, 100%);
-  margin: 0 auto 26px;
-  padding: 0 0 8px;
+  width: min(1000px, 100%);
+  margin: 0 auto 20px;
+  padding: 0;
   position: relative;
   z-index: 1;
   text-align: center;
 }
 
 .signupPremiumHero img {
-  width: min(310px, 58vw);
-  height: auto;
+  width: auto;
+  max-width: min(360px, 70vw);
+  height: 150px;
+  object-fit: contain;
   display: block;
-  margin: 0 auto 28px;
-  filter: drop-shadow(0 0 28px rgba(132, 255, 55, .38));
+  margin: 0 auto 14px;
+  filter: drop-shadow(0 0 22px rgba(204, 255, 0, .38));
 }
 
 .signupPremiumHero > span {
@@ -7905,23 +7909,26 @@ button:hover {
 
 .signupPremiumHero h1 {
   max-width: 980px;
-  margin: 0 auto 12px;
+  margin: 0 auto 8px;
   color: #f8fafc;
-  font-size: 58px;
-  line-height: 1.02;
-  text-shadow: 0 6px 0 rgba(0, 0, 0, .32), 0 0 26px rgba(255, 255, 255, .18);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: 0;
+  text-shadow: 0 3px 0 rgba(0, 0, 0, .34), 0 0 20px rgba(255, 255, 255, .16);
 }
 
 .signupPremiumHero h1 span {
-  color: #64e34f;
+  color: #b8ff00;
 }
 
 .signupPremiumHero p {
   max-width: 760px;
   margin: 0 auto;
-  color: #cfd7d2;
-  font-size: 28px;
-  line-height: 1.24;
+  color: #a6a8b0;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.35;
 }
 
 .signupRegisterHero {
@@ -7936,28 +7943,31 @@ button:hover {
 }
 
 .signupPremiumGrid {
-  width: min(1510px, 100%);
+  width: min(1000px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(3, 320px);
+  justify-content: center;
+  gap: 20px;
   position: relative;
   z-index: 1;
 }
 
 .signupPremiumCard {
-  min-height: 680px;
+  width: 320px;
+  min-height: 620px;
   color: #fff;
   text-decoration: none;
   background:
-    linear-gradient(180deg, rgba(21, 27, 29, .92), rgba(4, 8, 10, .98));
-  border: 2px solid rgba(207, 221, 214, .72);
+    linear-gradient(180deg, rgba(24, 26, 32, .95), rgba(17, 18, 22, .98)),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, .045) 0 1px, transparent 1px 5px);
+  border: 1px solid #2f3242;
   border-radius: 18px;
   display: flex;
   flex-direction: column;
   box-shadow:
-    0 28px 70px rgba(0, 0, 0, .62),
-    0 0 24px rgba(102, 255, 72, .16);
+    0 26px 54px rgba(0, 0, 0, .58),
+    0 0 22px rgba(204, 255, 0, .14);
   position: relative;
   overflow: hidden;
   transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
@@ -7967,23 +7977,23 @@ button:hover {
   content: '';
   position: absolute;
   inset: 0;
-  border: 1px solid rgba(96, 255, 68, .52);
+  border: 1px solid rgba(204, 255, 0, .34);
   border-radius: 16px;
-  opacity: .9;
+  opacity: .75;
   pointer-events: none;
   z-index: 2;
 }
 
 .signupPremiumCard:hover {
   transform: translateY(-6px);
-  border-color: rgba(157, 255, 93, .92);
+  border-color: rgba(204, 255, 0, .86);
   box-shadow:
-    0 34px 90px rgba(0, 0, 0, .68),
-    0 0 42px rgba(107, 255, 80, .28);
+    0 32px 72px rgba(0, 0, 0, .66),
+    0 0 34px rgba(204, 255, 0, .24);
 }
 
 .signupPremiumImage {
-  height: 330px;
+  height: 300px;
   background: #050912;
   display: grid;
   place-items: center;
@@ -8009,32 +8019,40 @@ button:hover {
 
 .signupPremiumTopIcon,
 .signupPremiumMidIcon {
-  width: 58px;
-  height: 66px;
+  width: 46px;
+  height: 52px;
   display: grid;
   place-items: center;
-  color: #8dff73;
+  color: #ccff00;
   background:
     linear-gradient(180deg, rgba(27, 44, 32, .9), rgba(6, 14, 10, .96));
-  border: 2px solid #78ff58;
+  border: 1px solid #b8ff00;
   clip-path: polygon(25% 5%, 75% 5%, 100% 28%, 100% 72%, 50% 98%, 0 72%, 0 28%);
-  font-size: 13px;
-  font-weight: 950;
-  text-transform: uppercase;
-  box-shadow: 0 0 22px rgba(120, 255, 88, .34);
+  box-shadow: 0 0 18px rgba(204, 255, 0, .28);
 }
 
 .signupPremiumTopIcon {
   position: absolute;
-  top: 28px;
-  left: 28px;
+  top: 22px;
+  left: 22px;
   z-index: 1;
 }
 
+.signupPremiumIconSvg {
+  width: 24px;
+  height: 24px;
+  fill: rgba(204, 255, 0, .22);
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .signupPremiumPanel {
-  min-height: 350px;
+  flex: 1;
+  min-height: 320px;
   margin-top: -1px;
-  padding: 54px 38px 34px;
+  padding: 42px 24px 20px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -8046,7 +8064,7 @@ button:hover {
 
 .signupPremiumMidIcon {
   position: absolute;
-  top: -34px;
+  top: -27px;
   left: 50%;
   z-index: 3;
   transform: translateX(-50%);
@@ -8054,62 +8072,67 @@ button:hover {
 
 .signupPremiumCard h2 {
   margin: 0;
-  min-height: 58px;
+  min-height: 42px;
   color: #f8fafc;
-  font-size: 38px;
-  line-height: 1.1;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.16;
+  letter-spacing: 1px;
   text-align: center;
   text-transform: uppercase;
-  text-shadow: 0 4px 0 rgba(0, 0, 0, .34);
+  text-shadow: 0 3px 0 rgba(0, 0, 0, .34);
 }
 
 .signupPremiumCard p {
-  margin: 8px 0 24px;
+  margin: 6px 0 18px;
   color: #d7ddd9;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
   line-height: 1.35;
-  font-size: 22px;
+  font-size: 14px;
   text-align: center;
 }
 
 .signupPremiumCard ul {
-  margin: 0 0 28px;
+  margin: 0 0 18px;
   padding: 0;
   display: grid;
-  gap: 12px;
+  gap: 8px;
   list-style: none;
   color: #e5ebe7;
-  font-size: 22px;
-  line-height: 1.18;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .signupPremiumCard li {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 9px;
 }
 
 .signupPremiumCard li span {
-  color: #82ff66;
+  color: #b8ff00;
   font-weight: 950;
-  text-shadow: 0 0 14px rgba(130, 255, 102, .38);
+  text-shadow: 0 0 12px rgba(184, 255, 0, .38);
 }
 
 .signupPremiumCard strong {
   margin-top: auto;
-  min-height: 62px;
+  min-height: 45px;
   color: #050607;
   background:
     linear-gradient(180deg, #ffffff 0%, #d2d2d2 46%, #a8aba8 52%, #f3f3f3 100%);
   border: 2px solid rgba(255, 255, 255, .9);
-  border-radius: 12px;
-  padding: 13px 18px;
+  border-radius: 20px;
+  padding: 8px 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 18px;
   text-align: center;
   font-weight: 950;
-  font-size: 26px;
+  font-size: 14px;
+  font-style: italic;
   box-shadow:
     inset 0 2px 0 rgba(255, 255, 255, .75),
     inset 0 -4px 0 rgba(0, 0, 0, .14),
@@ -8117,7 +8140,7 @@ button:hover {
 }
 
 .signupPremiumCard strong span {
-  font-size: 34px;
+  font-size: 18px;
   line-height: 1;
 }
 
@@ -8523,11 +8546,37 @@ button:hover {
   }
 
   .signupPremiumHero h1 {
-    font-size: 34px;
+    font-size: 30px;
+  }
+
+  .signupPremiumPage {
+    padding: 18px;
+  }
+
+  .signupPremiumHero img {
+    height: 120px;
+  }
+
+  .signupPremiumHero p {
+    font-size: 15px;
   }
 
   .signupPremiumCard {
+    width: min(320px, 100%);
     min-height: 0;
+    justify-self: center;
+  }
+
+  .signupPremiumImage {
+    height: 250px;
+  }
+
+  .signupPremiumPanel {
+    min-height: 0;
+  }
+
+  .signupPremiumCard h2 {
+    font-size: 18px;
   }
 
   .profilePasswordPanel {

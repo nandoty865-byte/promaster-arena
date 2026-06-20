@@ -451,8 +451,7 @@ const SIGNUP_PROFILE_OPTIONS = [
     action: 'Participar de torneios',
     cardTitle: 'Jogador',
     cardSubtitle: 'Quero participar de torneios',
-    badge: 'JP',
-    benefits: ['Inscrição rápida', 'Ranking pessoal', 'Histórico de partidas', 'Notificações de jogos'],
+    benefits: ['Inscrição rápido', 'Ranking pessoal', 'Histórico de partidas', 'Notificações de jogos'],
     image: '/player/photos/hero-jogador-sinuca-recriado.webp',
     href: '/onboarding/jogador',
   },
@@ -473,12 +472,38 @@ const SIGNUP_PROFILE_OPTIONS = [
     action: 'Cadastrar minha arena',
     cardTitle: 'Cadastrar minha arena',
     cardSubtitle: 'Quero gerenciar minha arena',
-    badge: 'ARE',
-    benefits: ['Gestão completa', 'Planos completos', 'Multiusuários', 'Marca personalizada'],
+    benefits: ['Gestão completa', 'Planos completa', 'Multiusuários', 'Marca personalizada'],
     image: '/arena/photos/hero-arena-sinuca-premium-recriado.webp',
     href: '/onboarding/arena',
   },
 ]
+
+function SignupProfileIcon({ type }: { type: string }) {
+  if (type === 'organizer') {
+    return (
+      <svg className="signupPremiumIconSvg" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M11 6h10l1.4 3H26v18H6V9h3.6L11 6Z" />
+        <path d="M12 9h8M11 15h10M11 20h10M11 25h7" />
+      </svg>
+    )
+  }
+
+  if (type === 'arena') {
+    return (
+      <svg className="signupPremiumIconSvg" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M5 14h22v13H5V14Zm2-4 9-5 9 5v4H7v-4Z" />
+        <path d="M10 18h4v9M18 18h4v9M4 27h24" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg className="signupPremiumIconSvg" viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M9 13h14c3.2 0 5.5 2.6 5.5 5.8 0 3.4-2.3 6.2-5.3 6.2-1.6 0-2.6-.9-3.7-2.2h-7c-1.1 1.3-2.1 2.2-3.7 2.2-3 0-5.3-2.8-5.3-6.2C3.5 15.6 5.8 13 9 13Z" />
+      <path d="M10 17v5M7.5 19.5h5M21.5 18.1h.1M24.6 21.1h.1" />
+    </svg>
+  )
+}
 
 function SignupChoice() {
   const searchParams = new URLSearchParams(window.location.search)
@@ -622,10 +647,14 @@ function SignupChoice() {
           <a className={`signupPremiumCard signupPremiumCard-${profile.key}`} href={profileRegisterHref(profile)} key={profile.key}>
             <div className="signupPremiumImage">
               <img src={profile.image} alt="" aria-hidden="true" />
-              <span className="signupPremiumTopIcon" aria-hidden="true">{profile.badge}</span>
+              <span className="signupPremiumTopIcon" aria-hidden="true">
+                <SignupProfileIcon type={profile.key} />
+              </span>
             </div>
             <div className="signupPremiumPanel">
-              <span className="signupPremiumMidIcon" aria-hidden="true">{profile.badge}</span>
+              <span className="signupPremiumMidIcon" aria-hidden="true">
+                <SignupProfileIcon type={profile.key} />
+              </span>
               <h2>{profile.cardTitle}</h2>
               <p>{profile.cardSubtitle}</p>
               <ul>
