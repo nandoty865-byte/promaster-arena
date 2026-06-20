@@ -454,6 +454,66 @@ body {
   background: rgba(96, 165, 250, .12);
 }
 
+.profilePendingPanel {
+  grid-column: 2;
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  border-radius: 18px;
+  background: rgba(24, 18, 8, 0.76);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.24);
+}
+
+.profilePendingPanel h2 {
+  margin: 0 0 6px;
+}
+
+.profilePendingPanel p {
+  margin: 0;
+  color: #d6d3d1;
+}
+
+.profilePendingList {
+  display: grid;
+  gap: 10px;
+}
+
+.profilePendingItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.68);
+}
+
+.profilePendingItem strong,
+.profilePendingItem span {
+  display: block;
+}
+
+.profilePendingItem span {
+  margin-top: 4px;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.profilePendingItem button {
+  width: auto;
+  min-width: 142px;
+  padding: 10px 12px;
+  border: 1px solid rgba(212, 175, 55, 0.42);
+  border-radius: 12px;
+  background: #d4af37;
+  color: #111827;
+  cursor: pointer;
+  font-weight: 900;
+}
+
 .loginArenaPage {
   min-height: 100vh;
   padding: 120px 20px 34px;
@@ -8667,17 +8727,20 @@ button:hover {
   }
 
   .profileProfilesPanel,
+  .profilePendingPanel,
   .profileGrid .settingsPanel {
     grid-column: auto;
   }
 
   .profileProfilesHeader,
-  .profileStatusRow {
+  .profileStatusRow,
+  .profilePendingItem {
     grid-template-columns: 1fr;
   }
 
   .profileProfilesHeader .secondaryButton,
-  .profileStatusRow button {
+  .profileStatusRow button,
+  .profilePendingItem button {
     width: 100%;
   }
 

@@ -384,12 +384,12 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/cadastro" element={<SignupChoice />} />
       <Route path="/inscreva-se" element={<SignupChoice />} />
-      <Route path="/onboarding/organizador" element={<OrganizerSignup />} />
-      <Route path="/onboarding/jogador" element={<PlayerSignup />} />
-      <Route path="/onboarding/arena" element={<OrganizerSignup mode="arena" />} />
-      <Route path="/onboarding/arbitro" element={<RefereeOnboarding />} />
-      <Route path="/cadastro-organizador" element={<Navigate to="/onboarding/organizador" />} />
-      <Route path="/cadastro-jogador" element={<Navigate to="/onboarding/jogador" />} />
+      <Route path="/onboarding/organizador" element={ENABLE_LEGACY_ONBOARDING ? <OrganizerSignup /> : <Navigate to="/cadastro?profile=organizer" />} />
+      <Route path="/onboarding/jogador" element={ENABLE_LEGACY_ONBOARDING ? <PlayerSignup /> : <Navigate to="/cadastro?profile=player" />} />
+      <Route path="/onboarding/arena" element={ENABLE_LEGACY_ONBOARDING ? <OrganizerSignup mode="arena" /> : <Navigate to="/cadastro?profile=arena" />} />
+      <Route path="/onboarding/arbitro" element={ENABLE_LEGACY_ONBOARDING ? <RefereeOnboarding /> : <Navigate to="/app/perfil?perfil=referee" />} />
+      <Route path="/cadastro-organizador" element={<Navigate to="/cadastro?profile=organizer" />} />
+      <Route path="/cadastro-jogador" element={<Navigate to="/cadastro?profile=player" />} />
       <Route path="/organizador" element={<PersonaLanding type="organizador" />} />
       <Route path="/jogador" element={<PersonaLanding type="jogador" />} />
       <Route path="/arena" element={<PersonaLanding type="arena" />} />
@@ -453,7 +453,7 @@ const SIGNUP_PROFILE_OPTIONS = [
     cardSubtitle: 'Quero participar de torneios',
     benefits: ['Inscrição rápido', 'Ranking pessoal', 'Histórico de partidas', 'Notificações de jogos'],
     image: '/player/photos/hero-jogador-sinuca-recriado.webp',
-    href: '/onboarding/jogador',
+    href: '/app/perfil?perfil=player',
   },
   {
     key: 'organizer',
@@ -464,7 +464,7 @@ const SIGNUP_PROFILE_OPTIONS = [
     badge: 'ORG',
     benefits: ['Criar torneios', 'Gerenciar jogadores', 'Compartilhar resultados'],
     image: '/organizer/photos/dashboard-hero-mockup-recriado.webp',
-    href: '/onboarding/organizador',
+    href: '/app',
   },
   {
     key: 'arena',
@@ -474,7 +474,7 @@ const SIGNUP_PROFILE_OPTIONS = [
     cardSubtitle: 'Quero gerenciar minha arena',
     benefits: ['Gestão completa', 'Planos completa', 'Multiusuários', 'Marca personalizada'],
     image: '/arena/photos/hero-arena-sinuca-premium-recriado.webp',
-    href: '/onboarding/arena',
+    href: '/campeonatos/arenas',
   },
 ]
 
@@ -670,7 +670,7 @@ function SignupChoice() {
           <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
           <span>Conta confirmada</span>
           <h1>Sua conta foi criada com sucesso.</h1>
-          <p>Entre para continuar no painel do perfil escolhido e completar os dados necessários.</p>
+          <p>Estamos abrindo o painel do perfil escolhido. As informações pendentes aparecerão como avisos e ações dentro da plataforma.</p>
           <a className="primaryButton signupLoginCta" href={`/login?verified=1&redirect=${encodeURIComponent(profileRedirect)}`}>
             Ir para login
           </a>
@@ -700,14 +700,14 @@ function SignupChoice() {
           <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
           <span>Confirmação enviada</span>
           <h1>Confirme sua conta para continuar.</h1>
-          <p>Enviamos o link para seu e-mail e WhatsApp. Após confirmar, você será levado ao login para acessar o painel de {selectedProfile.title.toLowerCase()}.</p>
+          <p>Enviamos o link para seu e-mail e WhatsApp. Após confirmar, você será levado automaticamente para o painel de {selectedProfile.title.toLowerCase()}.</p>
           {createdAccount.message && <p className="signupDeliveryMessage">{createdAccount.message}</p>}
         </section>
 
         <section className="onboardingCard signupAccountCard">
           <h2>Próximo passo</h2>
-          <p>Confirme seu cadastro pelo link enviado. Depois disso, entre com seu e-mail e senha para continuar no perfil escolhido.</p>
-          <a className="primaryButton" href={loginAfterRegisterHref}>Ir para login após confirmar</a>
+          <p>Confirme seu cadastro pelo link enviado. A confirmação ativa seu acesso e abre a área correta sem tela de onboarding.</p>
+          <a className="primaryButton" href={loginAfterRegisterHref}>Ir para login, se já confirmou</a>
         </section>
       </div>
     )
@@ -719,7 +719,7 @@ function SignupChoice() {
         <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
         <span>Cadastro único</span>
         <h1>{selectedProfile.action}</h1>
-        <p>Crie sua conta mínima. Após confirmar e-mail e WhatsApp, você entra pelo login para completar o perfil de {selectedProfile.title.toLowerCase()}.</p>
+        <p>Crie sua conta mínima. Após confirmar o cadastro, você acessa o painel de {selectedProfile.title.toLowerCase()} e resolve pendências por avisos internos.</p>
       </section>
 
       <section className="onboardingCard signupAccountCard">
@@ -2273,6 +2273,7 @@ const PROFILE_ROLE_LABELS: Record<string, string> = {
 
 const PROFILE_ROLE_ORDER = ['PLAYER', 'ORGANIZER', 'ARENA_OWNER', 'REFEREE']
 const ACTIVE_PROFILE_STORAGE_KEY = 'playfinal_active_profile'
+const ENABLE_LEGACY_ONBOARDING = false
 
 function profileRoles(user: any) {
   const roles = new Set<string>(Array.isArray(user?.roles) ? user.roles : [])
@@ -2294,10 +2295,10 @@ function availableProfileOptions(user: any) {
 }
 
 function profilePath(role: string, user: any) {
-  if (role === 'PLAYER') return user?.playerProfile?.id ? `/jogador/${user.playerProfile.id}` : '/onboarding/jogador'
+  if (role === 'PLAYER') return user?.playerProfile?.id ? `/jogador/${user.playerProfile.id}` : '/app/perfil?perfil=player'
   if (role === 'ORGANIZER') return '/app'
   if (role === 'ARENA_OWNER') return '/campeonatos/arenas'
-  if (role === 'REFEREE') return '/onboarding/arbitro'
+  if (role === 'REFEREE') return '/app/perfil?perfil=referee'
   return '/app/perfil'
 }
 
@@ -2421,7 +2422,7 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
             <details className="sidebarGroup">
               <summary>Torneios</summary>
               <button className="sidebarSubButton" onClick={() => navigate('/agenda')}>Agenda de Torneios</button>
-              <button className="sidebarSubButton" onClick={() => user?.playerProfile?.id ? navigate(`/jogador/${user.playerProfile.id}`) : navigate('/onboarding/jogador')}>Minhas Inscrições</button>
+              <button className="sidebarSubButton" onClick={() => navigate(profilePath('PLAYER', user))}>Minhas Inscrições</button>
               <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Ranking</button>
             </details>
           )}
@@ -2446,7 +2447,7 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
               <button className="sidebarSubButton" onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
               <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições</button>
               <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Jogadores</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Árbitros</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Árbitros</button>
             </details>
 
             <details className="sidebarGroup">
@@ -2473,9 +2474,9 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
             <span className="sidebarSectionTitle">Jogador</span>
             <details className="sidebarGroup">
               <summary>Minha carreira</summary>
-              <button className="sidebarSubButton" onClick={() => user?.playerProfile?.id ? navigate(`/jogador/${user.playerProfile.id}`) : navigate('/onboarding/jogador')}>Dashboard</button>
+              <button className="sidebarSubButton" onClick={() => navigate(profilePath('PLAYER', user))}>Dashboard</button>
               <button className="sidebarSubButton" onClick={() => navigate('/agenda')}>Agenda de Torneios</button>
-              <button className="sidebarSubButton" onClick={() => user?.playerProfile?.id ? navigate(`/jogador/${user.playerProfile.id}`) : navigate('/onboarding/jogador')}>Minhas Inscrições</button>
+              <button className="sidebarSubButton" onClick={() => navigate(profilePath('PLAYER', user))}>Minhas Inscrições</button>
               <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Estatísticas</button>
             </details>
 
@@ -2507,12 +2508,12 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
             <span className="sidebarSectionTitle">Árbitro</span>
             <details className="sidebarGroup">
               <summary>Arbitragem</summary>
-              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Modo Árbitro</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Minhas Partidas</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Chamada de Jogadores</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Resultados</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Ocorrências</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/onboarding/arbitro')}>Histórico</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Modo Árbitro</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Minhas Partidas</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Chamada de Jogadores</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Resultados</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Ocorrências</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Histórico</button>
             </details>
           </section>
         )}
@@ -2922,7 +2923,7 @@ function ProfilePage() {
   function profileActionLabel(profile: any) {
     if (profile.active) return 'Acessar painel'
     if (profile.role === 'REFEREE') return 'Ver solicitações'
-    return 'Completar cadastro'
+    return 'Ver pendências'
   }
 
   function openProfile(profile: any) {
@@ -2933,6 +2934,49 @@ function ProfilePage() {
     navigate(profile.path)
   }
 
+  function profilePendingActions() {
+    if (!user) return []
+
+    const roles = profileRoles(user)
+    const pending: Array<{ title: string, description: string, action: string }> = []
+
+    if (roles.includes('PLAYER') && !user.playerProfile) {
+      pending.push({
+        title: 'Perfil de jogador',
+        description: 'Ative o perfil de jogador para inscrições, ranking e histórico de partidas.',
+        action: 'Ativar perfil',
+      })
+    }
+
+    if ((roles.includes('ORGANIZER') || roles.includes('ARENA_OWNER')) && user.organization) {
+      if (!user.organization.documentNumber) {
+        pending.push({
+          title: 'Documento da organização',
+          description: 'Informe CPF ou CNPJ para liberar validações operacionais e financeiras.',
+          action: 'Informar documento',
+        })
+      }
+
+      if (!user.organization.city || !user.organization.state) {
+        pending.push({
+          title: 'Localização',
+          description: 'Complete cidade e estado para exibir torneios e arenas corretamente.',
+          action: 'Completar endereço',
+        })
+      }
+
+      if (!user.organization.supportedSports) {
+        pending.push({
+          title: 'Modalidades atendidas',
+          description: 'Selecione os esportes que sua organização ou arena trabalha.',
+          action: 'Selecionar modalidades',
+        })
+      }
+    }
+
+    return pending
+  }
+
   useEffect(() => {
     if (!isLoggedIn()) {
       goHome()
@@ -2941,6 +2985,8 @@ function ProfilePage() {
 
     loadProfile()
   }, [])
+
+  const pendingActions = profilePendingActions()
 
   return (
     <div className="saasLayout">
@@ -3013,7 +3059,30 @@ function ProfilePage() {
             </div>
           </section>
 
-          <div className="panel settingsPanel">
+          {pendingActions.length > 0 && (
+            <section className="profilePendingPanel">
+              <div>
+                <h2>Pendências do perfil</h2>
+                <p>Finalize estes dados quando puder. O acesso principal já está liberado.</p>
+              </div>
+
+              <div className="profilePendingList">
+                {pendingActions.map(item => (
+                  <article className="profilePendingItem" key={item.title}>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <span>{item.description}</span>
+                    </div>
+                    <button type="button" onClick={() => document.getElementById('dados-perfil')?.scrollIntoView({ behavior: 'smooth' })}>
+                      {item.action}
+                    </button>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <div className="panel settingsPanel" id="dados-perfil">
             <h2>Dados do cliente</h2>
 
             <label>Nome do responsável</label>
@@ -7157,7 +7226,7 @@ function PublicTournament({ user, loadingUser }: any) {
                     <>
                       <h2>Use um perfil de jogador</h2>
                       <p>Esta conta não possui perfil de jogador ativo para inscrição.</p>
-                      <a className="publicSignupButton" href="/onboarding/jogador">
+                      <a className="publicSignupButton" href="/app/perfil?perfil=player">
                         Criar perfil de jogador
                       </a>
                     </>

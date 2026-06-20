@@ -171,12 +171,31 @@ function normalizeSignupProfile(value) {
 
 function signupProfileRedirect(profile) {
   const redirects = {
-    player: '/onboarding/jogador',
-    organizer: '/onboarding/organizador',
-    arena: '/onboarding/arena',
+    player: '/app/perfil?perfil=player&confirmed=1',
+    organizer: '/app?confirmed=1',
+    arena: '/campeonatos/arenas?confirmed=1',
   }
 
   return redirects[normalizeSignupProfile(profile)] || ''
+}
+
+function signupProfileActiveRole(profile) {
+  const roles = {
+    player: 'PLAYER',
+    organizer: 'ORGANIZER',
+    arena: 'ARENA_OWNER',
+  }
+
+  return roles[normalizeSignupProfile(profile)] || ''
+}
+
+function slugify(value, fallback = 'perfil') {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || fallback
 }
 
 function normalizeCpf(value) {
@@ -259,6 +278,13 @@ function buildDeliveryResponse(emailResult, whatsAppResult) {
   const email = deliveryLabel(emailResult)
   const whatsapp = deliveryLabel(whatsAppResult)
   const delivered = [email, whatsapp].some(status => status === 'sent')
+  const sentChannels = []
+  const failedChannels = []
+
+  if (email === 'sent') sentChannels.push('e-mail')
+  if (whatsapp === 'sent') sentChannels.push('WhatsApp')
+  if (email === 'failed') failedChannels.push('e-mail')
+  if (whatsapp === 'failed') failedChannels.push('WhatsApp')
 
   return {
     delivered,
@@ -267,7 +293,7 @@ function buildDeliveryResponse(emailResult, whatsAppResult) {
       whatsapp,
     },
     message: delivered
-      ? 'Cadastro criado. Enviamos o link de confirmação pelos canais disponíveis.'
+      ? `Cadastro criado. Link de confirmação enviado por ${sentChannels.join(' e ')}.${failedChannels.length ? ` Não conseguimos enviar por ${failedChannels.join(' e ')}.` : ''}`
       : 'Cadastro criado, mas não conseguimos enviar o link de confirmação. Entre em contato com o suporte.',
   }
 }
@@ -295,6 +321,60 @@ function renderVerificationPage({ title, description, buttonText }) {
       <button type="submit">${escapeHtml(buttonText)}</button>
     </form>
   </main>
+</body>
+</html>`
+}
+
+function safeScriptString(value) {
+  return JSON.stringify(String(value || '')).replace(/[<>&]/g, char => ({
+    '<': '\\u003c',
+    '>': '\\u003e',
+    '&': '\\u0026',
+  }[char]))
+}
+
+function renderVerifiedRedirectPage({ title, description, token, redirectPath, activeProfile }) {
+  const safeRedirect = redirectPath && redirectPath.startsWith('/') && !redirectPath.startsWith('//')
+    ? redirectPath
+    : '/app/perfil?confirmed=1'
+  const loginFallback = `/login?verified=1&redirect=${encodeURIComponent(safeRedirect)}`
+
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: Arial, sans-serif; background: #0b0d17; color: #f8fafc; }
+    main { width: min(460px, calc(100% - 32px)); padding: 30px; border: 1px solid rgba(212,175,55,.36); border-radius: 8px; background: #111827; box-shadow: 0 24px 70px rgba(0,0,0,.36); }
+    h1 { margin: 0 0 12px; font-size: 24px; }
+    p { color: #cbd5e1; line-height: 1.5; }
+    a { display: inline-block; margin-top: 12px; border: 0; border-radius: 6px; padding: 12px 16px; background: #d4af37; color: #101010; font-weight: 700; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>${escapeHtml(title)}</h1>
+    <p>${escapeHtml(description)}</p>
+    <p>Você será direcionado automaticamente.</p>
+    <a href="${escapeHtml(safeRedirect)}">Entrar agora</a>
+  </main>
+  <script>
+    (() => {
+      const token = ${safeScriptString(token)};
+      const redirectPath = ${safeScriptString(safeRedirect)};
+      const activeProfile = ${safeScriptString(activeProfile)};
+      if (token) window.localStorage.setItem('token', token);
+      if (activeProfile) window.localStorage.setItem('playfinal_active_profile', activeProfile);
+      window.setTimeout(() => {
+        window.location.href = redirectPath;
+      }, 1200);
+    })();
+  </script>
+  <noscript>
+    <meta http-equiv="refresh" content="2;url=${escapeHtml(loginFallback)}">
+  </noscript>
 </body>
 </html>`
 }
@@ -553,6 +633,141 @@ async function ensureUserRole(userId, role) {
 
 async function ensureUserRoles(userId, roles) {
   await Promise.all((roles || []).map(role => ensureUserRole(userId, role)))
+}
+
+async function loadAuthUser(userId) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    include: { organization: true, playerProfile: true, roles: true },
+  })
+}
+
+async function ensureSignupProfileResources(user, profile) {
+  const signupProfile = normalizeSignupProfile(profile)
+  let nextUser = await loadAuthUser(user.id)
+  const displayName = normalizeText(nextUser?.name) || normalizeEmail(nextUser?.email).split('@')[0] || 'PlayFinal'
+  const acceptedAt = new Date()
+
+  if (signupProfile === 'player') {
+    let playerProfile = nextUser.playerProfile
+
+    if (!playerProfile) {
+      const existingPlayer = await prisma.playerProfile.findUnique({
+        where: { email: nextUser.email },
+      })
+
+      if (existingPlayer && (!existingPlayer.userId || existingPlayer.userId === nextUser.id)) {
+        playerProfile = await prisma.playerProfile.update({
+          where: { id: existingPlayer.id },
+          data: {
+            userId: nextUser.id,
+            phone: existingPlayer.phone || nextUser.phone || null,
+            termsAcceptedAt: existingPlayer.termsAcceptedAt || acceptedAt,
+            emailVerified: true,
+            verifyToken: null,
+          },
+        })
+      } else if (!existingPlayer) {
+        playerProfile = await prisma.playerProfile.create({
+          data: {
+            userId: nextUser.id,
+            name: displayName,
+            email: nextUser.email,
+            phone: nextUser.phone || null,
+            termsAcceptedAt: acceptedAt,
+            emailVerified: true,
+          },
+        })
+      }
+    } else if (!playerProfile.emailVerified || playerProfile.verifyToken) {
+      await prisma.playerProfile.update({
+        where: { id: playerProfile.id },
+        data: {
+          emailVerified: true,
+          verifyToken: null,
+          termsAcceptedAt: playerProfile.termsAcceptedAt || acceptedAt,
+        },
+      })
+    }
+
+    if (nextUser.role === 'user') {
+      await prisma.user.update({
+        where: { id: nextUser.id },
+        data: { role: 'player' },
+      })
+    }
+
+    await ensureUserRoles(nextUser.id, ['PLAYER'])
+    nextUser = await loadAuthUser(nextUser.id)
+    return {
+      user: nextUser,
+      redirectPath: nextUser.playerProfile?.id ? `/jogador/${nextUser.playerProfile.id}?confirmed=1` : signupProfileRedirect(signupProfile),
+      activeProfile: 'PLAYER',
+    }
+  }
+
+  if (signupProfile === 'organizer' || signupProfile === 'arena') {
+    let organization = nextUser.organization
+
+    if (!organization) {
+      organization = await prisma.organization.create({
+        data: {
+          name: displayName,
+          slug: `${slugify(displayName, 'organizacao')}-${Date.now()}`,
+          kycStatus: 'pending',
+          termsAcceptedAt: acceptedAt,
+          paymentCollectionMode: 'manual',
+          plan: 'trial',
+          trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          maxUsers: 1,
+        },
+      })
+
+      await prisma.user.update({
+        where: { id: nextUser.id },
+        data: {
+          organizationId: organization.id,
+          role: nextUser.role === 'user' ? 'admin' : nextUser.role,
+        },
+      })
+    }
+
+    if (signupProfile === 'arena') {
+      const existingArena = await prisma.arena.findFirst({
+        where: { organizationId: organization.id },
+      })
+
+      if (!existingArena) {
+        await prisma.arena.create({
+          data: {
+            organizationId: organization.id,
+            name: `Arena ${displayName}`,
+            email: nextUser.email,
+            phone: nextUser.phone || null,
+            responsibleName: displayName,
+            responsiblePhone: nextUser.phone || null,
+          },
+        })
+      }
+    }
+
+    await ensureUserRoles(nextUser.id, signupProfile === 'arena'
+      ? ['ORGANIZER', 'ARENA_OWNER', 'ADMIN']
+      : ['ORGANIZER', 'ADMIN']
+    )
+    nextUser = await loadAuthUser(nextUser.id)
+    return {
+      user: nextUser,
+      redirectPath: signupProfileRedirect(signupProfile),
+      activeProfile: signupProfileActiveRole(signupProfile),
+    }
+  }
+
+  return {
+    user: nextUser,
+    redirectPath: '/app/perfil?confirmed=1',
+    activeProfile: '',
+  }
 }
 
 function getPlanLimits(plan) {
@@ -6740,20 +6955,26 @@ app.post('/auth/verify-email/:token', async (req, res) => {
     }
 
     const signupProfile = normalizeSignupProfile(String(user.emailVerifyToken || token).split('.')[0])
-    const redirectPath = signupProfileRedirect(signupProfile)
 
-    await prisma.user.update({
+    const verifiedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
         emailVerified: true,
         emailVerifyToken: null
-      }
+      },
+      include: { organization: true, playerProfile: true, roles: true },
     })
 
-    const loginParams = new URLSearchParams({ verified: '1' })
-    if (redirectPath) loginParams.set('redirect', redirectPath)
+    const profileResult = await ensureSignupProfileResources(verifiedUser, signupProfile)
+    const authToken = buildUserToken(profileResult.user)
 
-    res.redirect(`/login?${loginParams.toString()}`)
+    res.send(renderVerifiedRedirectPage({
+      title: 'Cadastro confirmado',
+      description: 'Seu acesso foi liberado. Estamos abrindo o painel do perfil escolhido.',
+      token: authToken,
+      redirectPath: profileResult.redirectPath,
+      activeProfile: profileResult.activeProfile,
+    }))
   } catch (error) {
     console.error(error)
     res.status(500).send('Erro ao validar e-mail')
