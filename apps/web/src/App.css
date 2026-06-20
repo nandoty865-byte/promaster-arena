@@ -456,17 +456,16 @@ body {
 
 .loginArenaPage {
   min-height: 100vh;
-  padding: 104px 20px 34px;
+  padding: 120px 20px 34px;
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: Inter, Arial, "Segoe UI", sans-serif;
-  background:
-    linear-gradient(90deg, rgba(5, 6, 8, .98), rgba(5, 6, 8, .58) 18%, rgba(5, 6, 8, .22) 50%, rgba(5, 6, 8, .58) 82%, rgba(5, 6, 8, .98)),
-    radial-gradient(ellipse at center, rgba(204, 255, 0, .16) 0%, rgba(204, 255, 0, .04) 24%, transparent 48%),
-    linear-gradient(135deg, rgba(204, 255, 0, .18) 0 1px, transparent 1px 26%, transparent 74%, rgba(204, 255, 0, .14) 74% 75%, transparent 75%),
-    url('/playfinal-hero-broadcast.png') center / cover no-repeat,
-    #060709;
+  background-image: url('/fundo_playfinal_arena_estadio.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   position: relative;
   overflow: hidden;
 }
@@ -482,24 +481,25 @@ body {
 .loginArenaPage::before {
   inset: 0;
   background:
-    linear-gradient(112deg, transparent 0 18%, rgba(204, 255, 0, .34) 18.2%, transparent 19.2% 80.8%, rgba(204, 255, 0, .34) 81%, transparent 82%),
-    linear-gradient(68deg, transparent 0 21%, rgba(255, 255, 255, .14) 21.2%, transparent 22.2% 77.8%, rgba(255, 255, 255, .13) 78%, transparent 79%);
-  filter: blur(.2px);
-  opacity: .55;
+    radial-gradient(ellipse at center, rgba(0, 0, 0, .18) 0%, rgba(0, 0, 0, .44) 42%, rgba(0, 0, 0, .72) 100%),
+    rgba(0, 0, 0, .48);
+  opacity: 1;
 }
 
 .loginArenaPage::after {
   left: 50%;
   top: 50%;
-  width: min(1300px, 120vw);
-  height: min(760px, 86vh);
+  width: min(1280px, 118vw);
+  height: min(720px, 82vh);
   background:
-    linear-gradient(90deg, rgba(204, 255, 0, .2), transparent 18% 82%, rgba(204, 255, 0, .2)),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, .08) 0 1px, transparent 1px 86px);
-  border: 1px solid rgba(204, 255, 0, .09);
-  transform: translate(-50%, -50%) perspective(700px) rotateX(62deg);
-  filter: blur(.4px);
-  opacity: .38;
+    radial-gradient(circle at 50% 42%, rgba(204, 255, 0, .38), transparent 18%),
+    radial-gradient(circle at 50% 50%, rgba(54, 255, 148, .24), transparent 32%),
+    linear-gradient(105deg, transparent 0 20%, rgba(184, 255, 0, .38) 20.2%, transparent 21.4% 78.6%, rgba(184, 255, 0, .32) 79%, transparent 80%),
+    linear-gradient(75deg, transparent 0 23%, rgba(255, 255, 255, .16) 23.2%, transparent 24.3% 75.7%, rgba(255, 255, 255, .14) 76%, transparent 77%);
+  transform: translate(-50%, -50%);
+  filter: blur(8px);
+  opacity: .55;
+  mix-blend-mode: screen;
 }
 
 .loginArenaContainer {
@@ -510,7 +510,7 @@ body {
 
 .loginArenaLogoWrapper {
   position: absolute;
-  top: -76px;
+  top: -112px;
   left: 50%;
   z-index: 3;
   width: 160px;
@@ -537,7 +537,7 @@ body {
 .loginArenaCard {
   width: 100%;
   max-width: 450px;
-  padding: 88px 35px 35px;
+  padding: 72px 35px 35px;
   position: relative;
   overflow: hidden;
   border-radius: 24px;
@@ -766,18 +766,19 @@ body {
 
 @media (max-width: 520px) {
   .loginArenaPage {
-    padding: 88px 16px 26px;
+    padding: 104px 16px 26px;
     align-items: flex-start;
+    background-attachment: scroll;
   }
 
   .loginArenaLogoWrapper {
-    top: -66px;
+    top: -88px;
     width: 138px;
     height: 132px;
   }
 
   .loginArenaCard {
-    padding: 78px 22px 28px;
+    padding: 64px 22px 28px;
     border-radius: 22px;
   }
 
