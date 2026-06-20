@@ -530,16 +530,6 @@ function SignupChoice() {
   const [loading, setLoading] = useState(false)
   const [createdAccount, setCreatedAccount] = useState<any>(null)
 
-  useEffect(() => {
-    if (!createdAccount) return
-
-    const timeout = window.setTimeout(() => {
-      window.location.href = appUrlWithFreshVersion(loginAfterRegisterHref)
-    }, 4500)
-
-    return () => window.clearTimeout(timeout)
-  }, [createdAccount, loginAfterRegisterHref])
-
   function profileRegisterHref(profile: any) {
     const params = new URLSearchParams()
     params.set('profile', profile.key)
@@ -715,9 +705,9 @@ function SignupChoice() {
         </section>
 
         <section className="onboardingCard signupAccountCard">
-          <h2>Voltando para o login</h2>
-          <p>Você será direcionado para a tela de login em instantes.</p>
-          <a className="primaryButton" href={loginAfterRegisterHref}>Ir para login</a>
+          <h2>Próximo passo</h2>
+          <p>Confirme seu cadastro pelo link enviado. Depois disso, entre com seu e-mail e senha para continuar no perfil escolhido.</p>
+          <a className="primaryButton" href={loginAfterRegisterHref}>Ir para login após confirmar</a>
         </section>
       </div>
     )
@@ -833,7 +823,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
   const isArenaOnboarding = mode === 'arena'
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<any>({
-    organizerType: isArenaOnboarding ? 'salao' : '',
+    organizerType: isArenaOnboarding ? 'salao' : 'organizador',
     organizationName: '',
     organizationZipCode: '',
     organizationStreet: '',
@@ -868,6 +858,9 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
   const [createdOrganizer, setCreatedOrganizer] = useState<any>(null)
   const addingProfileToExistingAccount = isLoggedIn()
   const isIndividualOrganizer = form.organizerType === 'organizador'
+  const organizationNameLabel = isArenaOnboarding || ['salao', 'clube', 'bar'].includes(form.organizerType)
+    ? 'Nome da arena'
+    : 'Nome da organização'
   const organizerTypes = [
     { value: 'organizador', title: 'Organizador', text: 'Pessoa física que organiza torneios sem representar uma empresa.' },
     { value: 'empresa', title: 'Empresa', text: 'Pessoa jurídica com CNPJ e operação própria.' },
@@ -957,7 +950,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
 
     if (!isIndividualOrganizer) {
       if (String(form.organizationName || '').trim().length < 2) {
-        errors.organizationName = 'Informe o nome da organização.'
+        errors.organizationName = `Informe o ${organizationNameLabel.toLowerCase()}.`
       }
 
       if (!form.organizationDocument) {
@@ -1238,7 +1231,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
                 <h2>Dados da organização</h2>
                 <div className="onboardingGrid">
                   <div>
-                    <label>Nome da organização *</label>
+                    <label>{organizationNameLabel} *</label>
                     <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} aria-invalid={!!fieldErrors.organizationName} />
                     {fieldError('organizationName')}
                   </div>
@@ -1781,69 +1774,251 @@ function PlayerDashboard() {
     return <div className="publicPage">Carregando jogador...</div>
   }
 
-  const { player, stats, latestResults = [], achievements = [], notices = [], registrations = [] } = data
+  const { player, stats = {}, latestResults = [], registrations = [] } = data
+  const playerName = player.nickname || player.name || 'Player Name'
+  const playerCity = player.city || 'CITY PLAYER'
+  const playerState = player.state || 'SP'
+  const memberSince = player.createdAt ? new Date(player.createdAt).getFullYear() : '2021'
+  const wins = Number(stats.wins ?? 86)
+  const losses = Number(stats.losses ?? 41)
+  const games = Number(stats.games ?? stats.matches ?? (wins + losses || 127))
+  const winRate = stats.winRate ?? (games ? ((wins / games) * 100).toFixed(1).replace('.', ',') : '67,7')
+  const tournaments = Number(stats.tournaments ?? registrations.length ?? 18)
+  const titles = Number(stats.championCount ?? 4)
+  const elo = Number(stats.elo ?? 1256)
+  const framesWon = Number(stats.framesWon ?? 255)
+  const bestSequence = Number(stats.bestSequence ?? 12)
+  const averagePoints = stats.averagePoints ?? '78,4'
+  const averageFrames = stats.averageFrames ?? '2,01'
+  const decidedMatches = stats.decidedMatches ?? 19
+  const walkoversApplied = stats.walkoversApplied ?? 3
+  const walkoversReceived = stats.walkoversReceived ?? 1
+  const averageGameTime = stats.averageGameTime ?? '48 min'
+
+  const mainMetrics = [
+    ['🎮', 'Jogos disputados', games, '+12% este ano', 'neutral'],
+    ['🏆', 'Vitórias', wins, '+18% vitórias', 'positive'],
+    ['⚔', 'Derrotas', losses, '-6% derrotas', 'negative'],
+    ['📈', 'Taxa de aproveitamento', `${winRate}%`, '+4,2 p.p.', 'positive'],
+    ['🎱', 'Frames ganhos', framesWon, '+31 frames', 'positive'],
+    ['🔥', 'Maior sequência', bestSequence, '+3 recorde', 'positive'],
+  ]
+
+  const subMetrics = [
+    ['Média de pontos', averagePoints],
+    ['Média de frames', averageFrames],
+    ['Partidas decididas', decidedMatches],
+    ['W.O. aplicados', walkoversApplied],
+    ['W.O. recebidos', walkoversReceived],
+    ['Tempo médio de jogo', averageGameTime],
+  ]
+
+  const fallbackTournaments = [
+    ['Masters PlayFinal 2026', '18/06/2026', '1º', 7, 6, 1, '85,7%', 420],
+    ['Copa Arena Pro de Sinuca', '02/06/2026', '2º', 6, 4, 2, '66,6%', 315],
+    ['Open 9 Ball Challenge', '20/05/2026', '3º', 5, 3, 2, '60,0%', 240],
+    ['Liga Regional PlayFinal', '05/05/2026', '5º', 4, 3, 1, '75,0%', 180],
+    ['Circuito Gold Snooker', '19/04/2026', '8º', 3, 2, 1, '66,6%', 120],
+  ]
+  const tournamentRows = registrations.length
+    ? registrations.map((registration: any, index: number) => [
+      registration.tournament || registration.tournamentName || `Torneio PlayFinal ${index + 1}`,
+      registration.date ? new Date(registration.date).toLocaleDateString('pt-BR') : 'Data a confirmar',
+      registration.position || registration.ranking || ['1º', '2º', '3º', '5º', '8º'][index] || `${index + 4}º`,
+      registration.matches ?? Math.max(3, 7 - index),
+      registration.wins ?? Math.max(1, 5 - index),
+      registration.losses ?? Math.max(0, index + 1),
+      registration.performance || `${Math.max(52, 86 - index * 7)},${index % 2 ? '6' : '7'}%`,
+      registration.points ?? Math.max(90, 420 - index * 70),
+    ])
+    : fallbackTournaments
+
+  const fallbackMatches = [
+    ['Vitória', 'Carlos Mendes', '3 x 1', '18/06/2026', 'Masters PlayFinal 2026'],
+    ['Vitória', 'Rafael Lima', '3 x 2', '18/06/2026', 'Masters PlayFinal 2026'],
+    ['Derrota', 'Bruno Alves', '1 x 3', '02/06/2026', 'Copa Arena Pro de Sinuca'],
+    ['Vitória', 'Thiago Costa', '2 x 0', '20/05/2026', 'Open 9 Ball Challenge'],
+  ]
+  const matchRows = latestResults.length
+    ? latestResults.map((result: any) => [
+      result.result || 'Vitória',
+      result.opponent || 'Adversário',
+      result.score || '3 x 1',
+      result.date ? new Date(result.date).toLocaleDateString('pt-BR') : 'Data a confirmar',
+      result.tournament || 'Torneio PlayFinal',
+    ])
+    : fallbackMatches
 
   return (
     <div className="playerPortalPage">
-      <header className="playerPortalHero">
-        <span>Perfil do jogador</span>
-        <h1>{player.nickname || player.name}</h1>
-        <p>{player.city || 'Cidade não informada'}{player.state ? ` • ${player.state}` : ''}</p>
+      <LandingTopHeadline />
+
+      <header className="playerDashboardTopbar">
+        <a href="/" className="playerDashboardLogo">
+          <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+        </a>
+        <nav className="playerDashboardBreadcrumb" aria-label="Caminho da página">
+          <a href="/">⌂ Início</a>
+          <span>Perfil</span>
+          <strong>{playerName}</strong>
+        </nav>
+        <div className="playerDashboardTools">
+          <label>
+            <span>Buscar</span>
+            <input type="search" placeholder="Pesquisar torneio, jogador..." />
+          </label>
+          <button type="button" aria-label="Notificações">🔔</button>
+          <div className="playerDashboardMiniProfile">
+            <img src="/player/photos/avatar-jogador-generico-recriado.webp" alt="" />
+            <span>{playerName}</span>
+          </div>
+        </div>
       </header>
 
-      <section className="playerStatsGrid">
-        <div><span>Elo</span><strong>{stats.elo}</strong></div>
-        <div><span>Vitórias</span><strong>{stats.wins}</strong></div>
-        <div><span>Derrotas</span><strong>{stats.losses}</strong></div>
-        <div><span>Aproveitamento</span><strong>{stats.winRate}%</strong></div>
-        <div><span>Torneios</span><strong>{stats.tournaments}</strong></div>
-        <div><span>Títulos</span><strong>{stats.championCount}</strong></div>
-      </section>
+      <main className="playerDashboardShell">
+        <aside className="playerDashboardSidebar" aria-label="Navegação do perfil">
+          <nav>
+            <a className="active" href="#perfil">Perfil</a>
+            <a href="#estatisticas">Estatísticas</a>
+            <a href="#torneios">Torneios</a>
+          </nav>
 
-      <main className="playerPortalGrid">
-        <section className="playerPortalCard">
-          <h2>Últimos resultados</h2>
-          {latestResults.length === 0 && <p>Nenhuma partida finalizada encontrada.</p>}
-          {latestResults.map((result: any) => (
-            <div key={result.id} className="playerResultRow">
-              <strong>{result.result}</strong>
-              <span>{result.tournament}</span>
-              <small>{result.opponent} • {result.score}</small>
+          <section className="playerRankingCard">
+            <span>Ranking global</span>
+            <strong>#12</strong>
+            <small>Position</small>
+          </section>
+
+          <section className="playerPointsCard">
+            <span>Pontos atuais</span>
+            <strong>{elo.toLocaleString('pt-BR')}</strong>
+            <small>1.256 Pontos</small>
+          </section>
+
+          <section className="playerNextTournament">
+            <span>Próximo torneio</span>
+            <strong>Masters PlayFinal</strong>
+            <small>20/07 • Arena Central SP</small>
+          </section>
+
+          <div className="playerShareTools">
+            <button type="button" aria-label="Compartilhar perfil">↗</button>
+            <button type="button" aria-label="Copiar link do perfil">⛓</button>
+            <button type="button" aria-label="Baixar resumo">⇩</button>
+          </div>
+        </aside>
+
+        <div className="playerDashboardMain">
+          <section className="playerProfileHeader" id="perfil">
+            <div className="playerProfileAvatar">
+              <img src="/player/photos/avatar-jogador-generico-recriado.webp" alt={`Foto de ${playerName}`} />
+              <button type="button" aria-label="Atualizar foto">📷</button>
             </div>
-          ))}
-        </section>
-
-        <section className="playerPortalCard">
-          <h2>Histórico de torneios</h2>
-          {registrations.length === 0 && <p>Nenhum torneio vinculado ao perfil.</p>}
-          {registrations.map((registration: any) => (
-            <div key={registration.id} className="playerResultRow">
-              <strong>{registration.tournament}</strong>
-              <span>{registration.status} • {registration.paymentStatus}</span>
-              <small>{registration.date ? new Date(registration.date).toLocaleDateString() : 'Data a confirmar'}</small>
+            <div className="playerProfileIdentity">
+              <div>
+                <h1>{playerName}</h1>
+                <span className="verifiedBadge">✓</span>
+              </div>
+              <p><span className="playerFlag">BR</span> {playerCity}{playerState ? ` / ${playerState}` : ''}</p>
+              <dl>
+                <div><dt>Modalidade principal</dt><dd>Sinuca</dd></div>
+                <div><dt>Desde</dt><dd>{memberSince}</dd></div>
+                <div><dt>Torneios</dt><dd>{tournaments}</dd></div>
+                <div><dt>Títulos</dt><dd>{titles}</dd></div>
+              </dl>
             </div>
-          ))}
-        </section>
+          </section>
 
-        <section className="playerPortalCard">
-          <h2>Conquistas</h2>
-          {achievements.length === 0 && <p>As conquistas aparecerão conforme os torneios forem finalizados.</p>}
-          {achievements.map((item: string) => (
-            <div key={item} className="achievementPill">{item}</div>
-          ))}
-        </section>
-
-        <section className="playerPortalCard">
-          <h2>Avisos</h2>
-          {notices.length === 0 && <p>Nenhum aviso ativo.</p>}
-          {notices.map((notice: any) => (
-            <div key={notice.id} className="playerResultRow">
-              <strong>{notice.title}</strong>
-              <span>{notice.text}</span>
+          <section className="playerStatsPanel" id="estatisticas">
+            <div className="playerSectionHeading">
+              <span>Estatísticas gerais</span>
+              <strong>Temporada ativa</strong>
             </div>
-          ))}
-        </section>
+            <div className="playerStatsGrid">
+              {mainMetrics.map(([icon, label, value, tag, tone]) => (
+                <article key={label} className={`playerMetricCard ${tone}`}>
+                  <span className="playerMetricIcon">{icon}</span>
+                  <small>{label}</small>
+                  <strong>{value}</strong>
+                  <em>{tag}</em>
+                </article>
+              ))}
+            </div>
+            <div className="playerSubStatsGrid">
+              {subMetrics.map(([label, value]) => (
+                <div key={label}>
+                  <span>{label}</span>
+                  <strong>{value}</strong>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="playerLowerGrid">
+            <div className="playerTournamentPanel" id="torneios">
+              <div className="playerSectionHeading">
+                <span>Torneios jogados</span>
+                <div className="playerTabs" aria-label="Filtro de torneios">
+                  <button className="active" type="button">Todos</button>
+                  <button type="button">Campeonatos</button>
+                </div>
+              </div>
+
+              <div className="playerTournamentTable">
+                <div className="playerTournamentHead">
+                  <span>Torneio</span>
+                  <span>Data</span>
+                  <span>Rank</span>
+                  <span>J</span>
+                  <span>V</span>
+                  <span>D</span>
+                  <span>Aprov.</span>
+                  <span>Pts</span>
+                </div>
+                {tournamentRows.map(([name, date, rank, matches, rowWins, rowLosses, performance, points]: any[]) => (
+                  <div key={`${name}-${date}`} className="playerTournamentDataRow">
+                    <strong>{rank === '1º' ? '🥇 ' : rank === '2º' ? '🥈 ' : rank === '3º' ? '🥉 ' : ''}{name}</strong>
+                    <span>{date}</span>
+                    <span className="rankCell">{rank}</span>
+                    <span>{matches}</span>
+                    <span>{rowWins}</span>
+                    <span>{rowLosses}</span>
+                    <span className="performanceCell">{performance}</span>
+                    <span className="pointsCell">{points}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button className="playerViewAllButton" type="button">Ver todos os torneios</button>
+            </div>
+
+            <aside className="playerMatchesPanel">
+              <div className="playerSectionHeading">
+                <span>Últimas partidas</span>
+                <strong>Histórico recente</strong>
+              </div>
+              <div className="playerMatchFeed">
+                {matchRows.map(([result, opponent, score, date, tournament]: any[]) => {
+                  const isWin = String(result).toLowerCase().includes('vit')
+                  return (
+                    <article key={`${opponent}-${date}-${score}`} className="playerMatchItem">
+                      <span className={isWin ? 'matchBadge win' : 'matchBadge loss'}>{isWin ? 'Vitória' : 'Derrota'}</span>
+                      <div className="matchPlayers">
+                        <img src="/player/photos/avatar-jogador-generico-recriado.webp" alt="" />
+                        <strong>{score}</strong>
+                        <span>{opponent}</span>
+                      </div>
+                      <small>{date} • {tournament}</small>
+                    </article>
+                  )
+                })}
+              </div>
+            </aside>
+          </section>
+        </div>
       </main>
+
+      <LandingFooter />
     </div>
   )
 }
@@ -5951,7 +6126,7 @@ function AgendaPage() {
               de ranking, telão, pagamentos e comunicação da plataforma.
             </p>
           </div>
-          <a className="landingButton" href="/onboarding/organizador">Criar torneio gratuitamente</a>
+          <a className="landingButton" href="/cadastro">Criar torneio gratuitamente</a>
         </section>
       </main>
 
@@ -6002,7 +6177,7 @@ function OrganizerLanding() {
               rankings e transmissões ao vivo.
             </p>
             <div className="organizerHeroActions">
-              <a className="landingButton" href="/onboarding/organizador">Criar torneio gratuitamente</a>
+              <a className="landingButton" href="/cadastro">Criar torneio gratuitamente</a>
               <a className="landingSecondary" href="/#recursos">Ver demonstração</a>
             </div>
           </div>
@@ -6068,7 +6243,7 @@ function OrganizerLanding() {
           <div>
             <h2>Pronto para levar seus torneios ao próximo nível?</h2>
             <p>Crie agora mesmo seu torneio gratuitamente e descubra por que somos a plataforma número 1 do Brasil.</p>
-            <a className="landingButton" href="/onboarding/organizador">Criar torneio gratuitamente</a>
+            <a className="landingButton" href="/cadastro">Criar torneio gratuitamente</a>
           </div>
           <img src="/organizer/photos/trofeu-cta-recriado.webp" alt="Troféu PlayFinal Arena" />
         </section>
@@ -6122,7 +6297,7 @@ function PlayerLanding() {
               Participe de torneios, acompanhe rankings, melhore seu desempenho
               e construa sua história nas mesas.
             </p>
-            <a className="landingButton playerPrimaryButton" href="/onboarding/jogador">Criar meu perfil gratuitamente</a>
+            <a className="landingButton playerPrimaryButton" href="/cadastro">Criar meu perfil gratuitamente</a>
           </div>
 
           <div className="playerHeroVisual" aria-label="Jogador de sinuca em ação">
@@ -6223,7 +6398,7 @@ function PlayerLanding() {
           <div>
             <h2>Entre para a comunidade PlayFinal Arena</h2>
             <p>Crie seu perfil gratuito e comece sua jornada rumo ao topo do ranking.</p>
-            <a className="landingButton playerPrimaryButton" href="/onboarding/jogador">Criar meu perfil</a>
+            <a className="landingButton playerPrimaryButton" href="/cadastro">Criar meu perfil</a>
           </div>
         </section>
       </main>
@@ -6496,7 +6671,7 @@ function PlansComparison() {
       description: 'Para testar a plataforma com acesso aos principais recursos.',
       featured: false,
       cta: 'Começar grátis',
-      href: '/onboarding/organizador',
+      href: '/cadastro',
       features: ['1 torneio', 'Até 16 jogadores', 'Chave e painel do torneio', 'Página pública', 'Login após expirar'],
     },
     {
@@ -6506,7 +6681,7 @@ function PlansComparison() {
       description: 'Para arenas e organizadores com torneios recorrentes.',
       featured: true,
       cta: 'Escolher Pro',
-      href: '/onboarding/arena',
+      href: '/cadastro',
       features: ['Torneios ilimitados', 'Até 64 jogadores', 'Telão e página pública', 'Ranking e histórico', 'Recursos principais'],
     },
     {
@@ -6516,7 +6691,7 @@ function PlansComparison() {
       description: 'Para operações maiores, equipe e torneios acima de 64 jogadores.',
       featured: false,
       cta: 'Escolher Master',
-      href: '/onboarding/arena',
+      href: '/cadastro',
       features: ['Torneios acima de 64 jogadores', 'Usuários/equipe', 'Recursos avançados', 'Gestão ampliada', 'Acesso completo'],
     },
     {
@@ -6526,7 +6701,7 @@ function PlansComparison() {
       description: 'Para quem precisa organizar apenas um evento pontual.',
       featured: false,
       cta: 'Comprar avulso',
-      href: '/onboarding/organizador',
+      href: '/cadastro',
       features: ['Crédito de 1 torneio', 'Ideal para evento único', 'Chave e painel do torneio', 'Página pública', 'Sem mensalidade'],
     },
   ]

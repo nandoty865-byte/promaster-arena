@@ -4433,9 +4433,14 @@ app.post('/auth/register-organizer', (req, res) => {
         : rawPhoneDigits
       const accountEmail = isExistingAccountFlow ? normalizeEmail(authUser.email) : email
       const isArenaProfile = ['salao', 'clube', 'bar'].includes(organizerType)
+      const effectiveOrganizationName = isIndividualOrganizer
+        ? (organizationName || name)
+        : organizationName
 
-      if (organizationName.length < 2) {
-        return res.status(400).json({ error: 'Informe o nome da organização' })
+      if (effectiveOrganizationName.length < 2) {
+        return res.status(400).json({
+          error: isIndividualOrganizer ? 'Informe o nome do responsável' : 'Informe o nome da organização',
+        })
       }
 
       if (name.length < 2) {
@@ -4503,7 +4508,7 @@ app.post('/auth/register-organizer', (req, res) => {
         }
       }
 
-      const slug = organizationName
+      const slug = effectiveOrganizationName
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -4511,7 +4516,7 @@ app.post('/auth/register-organizer', (req, res) => {
         .replace(/^-+|-+$/g, '') || 'organizacao'
 
       const organizationData = {
-        name: organizationName,
+        name: effectiveOrganizationName,
         slug: `${slug}-${Date.now()}`,
         address: address || null,
         street: organizationStreet || responsibleStreet || null,
@@ -4563,7 +4568,7 @@ app.post('/auth/register-organizer', (req, res) => {
         arena = await prisma.arena.create({
           data: {
             organizationId: organization.id,
-            name: organizationName,
+            name: effectiveOrganizationName,
             phone,
             email: accountEmail,
             country: organizationCountry || responsibleCountry || null,
@@ -4593,7 +4598,7 @@ app.post('/auth/register-organizer', (req, res) => {
         user = await prisma.user.update({
           where: { id: authUser.id },
           data: {
-            name: authUser.name || name || organizationName,
+            name: authUser.name || name || effectiveOrganizationName,
             phone: authUser.phone || phone || null,
             role: 'admin',
             organizationId: organization.id,
@@ -4603,7 +4608,7 @@ app.post('/auth/register-organizer', (req, res) => {
         user = await prisma.user.update({
           where: { id: existingAccount.id },
           data: {
-            name: existingAccount.name || name || organizationName,
+            name: existingAccount.name || name || effectiveOrganizationName,
             phone: existingAccount.phone || phone || null,
             role: 'admin',
             organizationId: organization.id,
@@ -4614,7 +4619,7 @@ app.post('/auth/register-organizer', (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10)
         user = await prisma.user.create({
           data: {
-            name: name || organizationName,
+            name: name || effectiveOrganizationName,
             email: accountEmail,
             phone,
             password: hashedPassword,
@@ -4671,14 +4676,14 @@ app.post('/auth/register-organizer', (req, res) => {
         text: `Seu cadastro de organizador foi recebido. Confirme seu e-mail: ${verifyUrl}`,
         html: `
           <h2>Cadastro de organizador recebido</h2>
-          <p>Sua conta <strong>${escapeHtml(organizationName)}</strong> foi criada.</p>
+          <p>Sua conta <strong>${escapeHtml(effectiveOrganizationName)}</strong> foi criada.</p>
           <p><a href="${verifyUrl}">Confirmar e-mail</a></p>
         `,
       })
 
       const whatsAppResult = await sendWhatsApp({
         to: phone,
-        text: `PlayFinal Arena: cadastro de organizador recebido para ${organizationName}. Valide seu cadastro por este link: ${verifyUrl}`,
+        text: `PlayFinal Arena: cadastro de organizador recebido para ${effectiveOrganizationName}. Valide seu cadastro por este link: ${verifyUrl}`,
       })
 
       const delivery = buildDeliveryResponse(emailResult, whatsAppResult)

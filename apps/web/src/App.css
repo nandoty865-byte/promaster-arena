@@ -12316,3 +12316,692 @@ button:hover {
     padding: 24px;
   }
 }
+
+.playerPortalPage {
+  min-height: 100vh;
+  padding: 58px 0 0;
+  background:
+    linear-gradient(180deg, rgba(11, 13, 23, .96), rgba(11, 13, 23, 1) 42%, #070914 100%),
+    radial-gradient(circle at 80% 0%, rgba(212, 175, 55, .16), transparent 30%);
+  color: #f8fafc;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+.playerDashboardTopbar {
+  position: sticky;
+  top: 42px;
+  z-index: 50;
+  width: 100%;
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 240px minmax(260px, 1fr) minmax(360px, auto);
+  gap: 22px;
+  align-items: center;
+  padding: 14px clamp(18px, 3vw, 42px);
+  border-bottom: 1px solid rgba(212, 175, 55, .18);
+  background: rgba(7, 9, 20, .88);
+  backdrop-filter: blur(18px);
+}
+
+.playerDashboardLogo img {
+  width: 210px;
+  max-width: 100%;
+  display: block;
+}
+
+.playerDashboardBreadcrumb,
+.playerDashboardTools,
+.playerDashboardMiniProfile,
+.playerProfileIdentity > div,
+.playerSectionHeading,
+.playerTabs,
+.matchPlayers,
+.playerShareTools {
+  display: flex;
+  align-items: center;
+}
+
+.playerDashboardBreadcrumb {
+  gap: 10px;
+  color: #7a8294;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.playerDashboardBreadcrumb a,
+.playerDashboardBreadcrumb strong {
+  color: #f8fafc;
+  text-decoration: none;
+}
+
+.playerDashboardTools {
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.playerDashboardTools label {
+  position: relative;
+  width: min(320px, 34vw);
+}
+
+.playerDashboardTools label span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.playerDashboardTools input {
+  width: 100%;
+  height: 38px;
+  border: 1px solid rgba(122, 130, 148, .24);
+  border-radius: 6px;
+  background: #111521;
+  color: #f8fafc;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.playerDashboardTools button,
+.playerShareTools button,
+.playerProfileAvatar button {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(212, 175, 55, .28);
+  background: #111521;
+  color: #d4af37;
+  cursor: pointer;
+}
+
+.playerDashboardTools button {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+}
+
+.playerDashboardMiniProfile {
+  gap: 9px;
+  min-width: 0;
+  color: #e5e7eb;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.playerDashboardMiniProfile img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.playerDashboardShell {
+  width: min(1500px, calc(100% - 36px));
+  margin: 24px auto 0;
+  display: grid;
+  grid-template-columns: 246px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.playerDashboardSidebar {
+  position: sticky;
+  top: 132px;
+  display: grid;
+  gap: 14px;
+}
+
+.playerDashboardSidebar nav,
+.playerRankingCard,
+.playerPointsCard,
+.playerNextTournament,
+.playerProfileHeader,
+.playerStatsPanel,
+.playerTournamentPanel,
+.playerMatchesPanel {
+  border: 1px solid rgba(122, 130, 148, .18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(17, 21, 33, .96), rgba(13, 16, 27, .96));
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .28);
+}
+
+.playerDashboardSidebar nav {
+  display: grid;
+  padding: 8px;
+}
+
+.playerDashboardSidebar nav a {
+  padding: 12px 14px;
+  border-radius: 5px;
+  color: #a9b1c3;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.playerDashboardSidebar nav a.active,
+.playerDashboardSidebar nav a:hover {
+  background: rgba(212, 175, 55, .12);
+  color: #f8fafc;
+}
+
+.playerRankingCard,
+.playerPointsCard,
+.playerNextTournament {
+  padding: 18px;
+}
+
+.playerRankingCard span,
+.playerPointsCard span,
+.playerNextTournament span,
+.playerSectionHeading span {
+  color: #7a8294;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.playerRankingCard strong {
+  display: block;
+  margin-top: 8px;
+  color: #fff;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.playerPointsCard strong,
+.playerNextTournament strong {
+  display: block;
+  margin-top: 8px;
+  color: #d4af37;
+  font-size: 22px;
+}
+
+.playerRankingCard small,
+.playerPointsCard small,
+.playerNextTournament small {
+  display: block;
+  margin-top: 6px;
+  color: #a9b1c3;
+  font-size: 11px;
+}
+
+.playerNextTournament {
+  background:
+    linear-gradient(135deg, rgba(212, 175, 55, .18), rgba(17, 21, 33, .96)),
+    #111521;
+}
+
+.playerShareTools {
+  gap: 8px;
+}
+
+.playerShareTools button {
+  width: 42px;
+  height: 38px;
+  border-radius: 6px;
+}
+
+.playerDashboardMain {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.playerProfileHeader {
+  min-height: 220px;
+  display: grid;
+  grid-template-columns: 158px minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  padding: 28px;
+  background:
+    linear-gradient(90deg, rgba(17, 21, 33, .98), rgba(17, 21, 33, .8)),
+    url('/playfinal-hero-broadcast.png') center right / cover no-repeat;
+}
+
+.playerProfileAvatar {
+  position: relative;
+  width: 148px;
+  height: 148px;
+}
+
+.playerProfileAvatar img {
+  width: 148px;
+  height: 148px;
+  border: 3px solid rgba(212, 175, 55, .74);
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
+}
+
+.playerProfileAvatar button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.playerProfileIdentity h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.verifiedBadge {
+  width: 22px;
+  height: 22px;
+  margin-left: 10px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #d4af37;
+  color: #0b0d17;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.playerProfileIdentity p {
+  margin: 10px 0 18px;
+  color: #d7dcea;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.playerFlag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  min-width: 28px;
+  margin-right: 8px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #16a34a, #facc15);
+  color: #08111f;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.playerProfileIdentity dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 150px));
+  gap: 10px;
+  margin: 0;
+}
+
+.playerProfileIdentity dl div,
+.playerSubStatsGrid div {
+  padding: 12px;
+  border: 1px solid rgba(122, 130, 148, .18);
+  border-radius: 6px;
+  background: rgba(11, 13, 23, .64);
+}
+
+.playerProfileIdentity dt,
+.playerSubStatsGrid span {
+  color: #7a8294;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.playerProfileIdentity dd {
+  margin: 5px 0 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.playerStatsPanel,
+.playerTournamentPanel,
+.playerMatchesPanel {
+  min-width: 0;
+  padding: 18px;
+}
+
+.playerSectionHeading {
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.playerSectionHeading strong {
+  color: #d4af37;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.playerStatsGrid {
+  max-width: none;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.playerMetricCard {
+  min-height: 134px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid rgba(122, 130, 148, .16);
+  border-radius: 8px;
+  background: #0b0d17;
+}
+
+.playerMetricIcon {
+  color: #d4af37;
+  font-size: 20px;
+}
+
+.playerMetricCard small {
+  min-height: 30px;
+  color: #7a8294;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.playerMetricCard strong {
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.playerMetricCard em {
+  width: max-content;
+  max-width: 100%;
+  padding: 4px 7px;
+  border-radius: 4px;
+  color: #77f2a1;
+  background: rgba(34, 197, 94, .12);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.playerMetricCard.negative em {
+  color: #f3a1a1;
+  background: rgba(239, 68, 68, .12);
+}
+
+.playerMetricCard.neutral em {
+  color: #d4af37;
+  background: rgba(212, 175, 55, .12);
+}
+
+.playerSubStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.playerSubStatsGrid strong {
+  display: block;
+  margin-top: 5px;
+  color: #f8fafc;
+  font-size: 13px;
+}
+
+.playerLowerGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+.playerTabs {
+  gap: 6px;
+}
+
+.playerTabs button,
+.playerViewAllButton {
+  border: 1px solid rgba(212, 175, 55, .26);
+  border-radius: 4px;
+  background: transparent;
+  color: #a9b1c3;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.playerTabs button {
+  padding: 7px 10px;
+}
+
+.playerTabs button.active,
+.playerTabs button:hover,
+.playerViewAllButton:hover {
+  background: #d4af37;
+  color: #0b0d17;
+}
+
+.playerTournamentTable {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.playerTournamentHead,
+.playerTournamentDataRow {
+  min-width: 760px;
+  display: grid;
+  grid-template-columns: minmax(210px, 1.7fr) 90px 58px 42px 42px 42px 74px 60px;
+  gap: 8px;
+  align-items: center;
+}
+
+.playerTournamentHead {
+  padding: 0 10px 8px;
+  color: #7a8294;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.playerTournamentDataRow {
+  min-height: 46px;
+  padding: 9px 10px;
+  border-top: 1px solid rgba(122, 130, 148, .14);
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.playerTournamentDataRow strong {
+  color: #fff;
+  font-size: 12px;
+}
+
+.rankCell,
+.pointsCell {
+  color: #d4af37;
+  font-weight: 800;
+}
+
+.performanceCell {
+  color: #77f2a1;
+  font-weight: 700;
+}
+
+.playerViewAllButton {
+  width: 100%;
+  min-height: 38px;
+  margin-top: 14px;
+}
+
+.playerMatchFeed {
+  display: grid;
+  gap: 10px;
+}
+
+.playerMatchItem {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid rgba(122, 130, 148, .16);
+  border-radius: 8px;
+  background: #0b0d17;
+}
+
+.matchBadge {
+  width: max-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.matchBadge.win {
+  background: rgba(34, 197, 94, .14);
+  color: #77f2a1;
+}
+
+.matchBadge.loss {
+  background: rgba(239, 68, 68, .14);
+  color: #f3a1a1;
+}
+
+.matchPlayers {
+  gap: 10px;
+}
+
+.matchPlayers img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.matchPlayers strong {
+  color: #fff;
+  font-size: 18px;
+}
+
+.matchPlayers span,
+.playerMatchItem small {
+  color: #a9b1c3;
+  font-size: 12px;
+}
+
+.playerPortalPage .landingFooter {
+  width: 100%;
+  margin: 70px 0 0;
+}
+
+@media (max-width: 1180px) {
+  .playerDashboardTopbar {
+    grid-template-columns: 190px 1fr;
+  }
+
+  .playerDashboardTools {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+
+  .playerDashboardTools label {
+    width: min(520px, 100%);
+  }
+
+  .playerDashboardShell,
+  .playerLowerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .playerDashboardSidebar {
+    position: static;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .playerDashboardSidebar nav {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .playerShareTools {
+    align-self: end;
+  }
+
+  .playerStatsGrid,
+  .playerSubStatsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .playerPortalPage {
+    padding-top: 48px;
+  }
+
+  .playerDashboardTopbar {
+    top: 42px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .playerDashboardLogo img {
+    width: 176px;
+  }
+
+  .playerDashboardBreadcrumb {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .playerDashboardTools {
+    align-items: stretch;
+  }
+
+  .playerDashboardMiniProfile span {
+    display: none;
+  }
+
+  .playerDashboardShell {
+    width: calc(100% - 24px);
+    margin-top: 16px;
+  }
+
+  .playerDashboardSidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .playerDashboardSidebar nav {
+    grid-template-columns: 1fr;
+  }
+
+  .playerProfileHeader {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    padding: 22px 16px;
+  }
+
+  .playerProfileIdentity > div {
+    justify-content: center;
+  }
+
+  .playerProfileIdentity dl,
+  .playerStatsGrid,
+  .playerSubStatsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .playerSectionHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .playerTournamentHead,
+  .playerTournamentDataRow {
+    min-width: 700px;
+  }
+}
