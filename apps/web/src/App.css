@@ -456,13 +456,17 @@ body {
 
 .loginArenaPage {
   min-height: 100vh;
-  padding: 82px 20px 28px;
+  padding: 104px 20px 34px;
   display: flex;
   justify-content: center;
   align-items: center;
+  font-family: Inter, Arial, "Segoe UI", sans-serif;
   background:
-    radial-gradient(circle at center, #141913 0%, #060709 58%, #030405 100%),
-    linear-gradient(135deg, #0d0e12 0%, #050608 100%);
+    linear-gradient(90deg, rgba(5, 6, 8, .98), rgba(5, 6, 8, .58) 18%, rgba(5, 6, 8, .22) 50%, rgba(5, 6, 8, .58) 82%, rgba(5, 6, 8, .98)),
+    radial-gradient(ellipse at center, rgba(204, 255, 0, .16) 0%, rgba(204, 255, 0, .04) 24%, transparent 48%),
+    linear-gradient(135deg, rgba(204, 255, 0, .18) 0 1px, transparent 1px 26%, transparent 74%, rgba(204, 255, 0, .14) 74% 75%, transparent 75%),
+    url('/playfinal-hero-broadcast.png') center / cover no-repeat,
+    #060709;
   position: relative;
   overflow: hidden;
 }
@@ -471,46 +475,52 @@ body {
 .loginArenaPage::after {
   content: '';
   position: absolute;
-  width: 200%;
-  height: 200%;
-  top: -50%;
-  left: -50%;
-  background-image:
-    linear-gradient(to right, rgba(204, 255, 0, .035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(204, 255, 0, .03) 1px, transparent 1px);
-  background-size: 50px 50px;
-  transform: perspective(500px) rotateX(60deg);
+  pointer-events: none;
   z-index: 0;
 }
 
-.loginArenaPage::after {
+.loginArenaPage::before {
+  inset: 0;
   background:
-    radial-gradient(circle at 8% 62%, rgba(204, 255, 0, .18), transparent 14%),
-    radial-gradient(circle at 92% 62%, rgba(204, 255, 0, .16), transparent 14%);
-  transform: none;
-  filter: blur(10px);
-  opacity: .75;
+    linear-gradient(112deg, transparent 0 18%, rgba(204, 255, 0, .34) 18.2%, transparent 19.2% 80.8%, rgba(204, 255, 0, .34) 81%, transparent 82%),
+    linear-gradient(68deg, transparent 0 21%, rgba(255, 255, 255, .14) 21.2%, transparent 22.2% 77.8%, rgba(255, 255, 255, .13) 78%, transparent 79%);
+  filter: blur(.2px);
+  opacity: .55;
+}
+
+.loginArenaPage::after {
+  left: 50%;
+  top: 50%;
+  width: min(1300px, 120vw);
+  height: min(760px, 86vh);
+  background:
+    linear-gradient(90deg, rgba(204, 255, 0, .2), transparent 18% 82%, rgba(204, 255, 0, .2)),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .08) 0 1px, transparent 1px 86px);
+  border: 1px solid rgba(204, 255, 0, .09);
+  transform: translate(-50%, -50%) perspective(700px) rotateX(62deg);
+  filter: blur(.4px);
+  opacity: .38;
 }
 
 .loginArenaContainer {
-  width: min(440px, 100%);
+  width: min(450px, 100%);
   position: relative;
   z-index: 2;
 }
 
 .loginArenaLogoWrapper {
   position: absolute;
-  top: -62px;
+  top: -76px;
   left: 50%;
   z-index: 3;
-  width: 126px;
-  height: 126px;
-  padding: 12px;
+  width: 160px;
+  height: 150px;
+  padding: 0;
   transform: translateX(-50%);
-  border: 2px solid var(--landing-green);
-  border-radius: 999px;
-  background: #0d0e12;
-  box-shadow: 0 0 24px rgba(204, 255, 0, .34), 0 16px 34px rgba(0,0,0,.65);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   display: grid;
   place-items: center;
 }
@@ -519,46 +529,56 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 0 10px rgba(204,255,0,.28));
+  filter:
+    drop-shadow(0 0 12px rgba(204,255,0,.42))
+    drop-shadow(0 16px 18px rgba(0,0,0,.72));
 }
 
 .loginArenaCard {
   width: 100%;
-  padding: 76px 30px 30px;
+  max-width: 450px;
+  padding: 88px 35px 35px;
   position: relative;
   overflow: hidden;
-  border-radius: 16px;
-  border: 2px solid #282a35;
+  border-radius: 24px;
+  border: 1px solid rgba(203, 213, 225, .32);
   background:
-    linear-gradient(180deg, #181a20 0%, #111216 100%),
-    repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 1px, transparent 1px 7px);
+    linear-gradient(180deg, rgba(44, 45, 48, .9) 0%, rgba(17, 18, 22, .98) 100%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.05) 0 1px, transparent 1px 6px),
+    radial-gradient(circle at top, rgba(255, 255, 255, .12), transparent 36%);
   box-shadow:
-    0 20px 40px rgba(0,0,0,.7),
-    inset 0 1px 2px rgba(255,255,255,.1);
+    0 28px 70px rgba(0,0,0,.76),
+    inset 0 1px 0 rgba(255,255,255,.28),
+    inset 0 -18px 42px rgba(0,0,0,.35);
 }
 
 .loginArenaCard::after {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 14px;
-  border: 1px solid rgba(204, 255, 0, .15);
+  border-radius: 24px;
+  border: 1px solid rgba(204, 255, 0, .18);
   pointer-events: none;
 }
 
 .loginArenaTitle {
-  margin: 0 0 25px;
-  color: #fff;
-  font-size: 20px;
-  font-weight: 950;
+  margin: 0 0 28px;
+  color: #f5f7fa;
+  font-family: Oswald, Montserrat, Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  font-style: italic;
   letter-spacing: 1px;
   text-align: center;
   text-transform: uppercase;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, .8),
+    0 0 10px rgba(255, 255, 255, .22);
 }
 
 .loginArenaTitle span {
-  color: var(--landing-green);
-  text-shadow: 0 0 10px rgba(204, 255, 0, .4);
+  color: #ccff00;
+  text-shadow: 0 0 12px rgba(204, 255, 0, .54);
 }
 
 .loginArenaAlert {
@@ -575,35 +595,48 @@ body {
 
 .loginArenaGroup {
   position: relative;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .loginArenaGroup input {
   width: 100%;
-  min-height: 50px;
-  padding: 14px 14px 14px 45px;
-  border: 1px solid #2f3242;
-  border-radius: 8px;
-  background: #1a1c23;
+  height: 48px;
+  padding: 0 14px 0 48px;
+  border: 1px solid rgba(204, 255, 0, .78);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(33, 35, 40, .98), rgba(17, 18, 22, .98));
   color: #fff;
   font-size: 14px;
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .16),
+    0 0 0 2px rgba(204, 255, 0, .08),
+    0 6px 16px rgba(0, 0, 0, .36);
   transition: border-color .3s ease, background .3s ease, box-shadow .3s ease;
+}
+
+.loginArenaGroup input::placeholder {
+  color: #96999f;
 }
 
 .loginArenaGroup input:focus {
   outline: none;
-  border-color: var(--landing-green);
-  background: #1f222d;
-  box-shadow: 0 0 10px rgba(204, 255, 0, .2);
+  border-color: #ccff00;
+  background: #1f2228;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .2),
+    0 0 0 3px rgba(204, 255, 0, .16),
+    0 0 18px rgba(204, 255, 0, .24);
 }
 
 .loginArenaGroup svg {
   position: absolute;
-  left: 14px;
+  left: 15px;
   top: 50%;
-  width: 20px;
-  height: 20px;
-  fill: #a6a8b0;
+  width: 22px;
+  height: 22px;
+  fill: #e5e7eb;
   transform: translateY(-50%);
   transition: fill .3s ease;
 }
@@ -613,14 +646,15 @@ body {
 }
 
 .loginArenaForgotWrap {
-  margin-top: -10px;
-  margin-bottom: 25px;
+  margin-top: -5px;
+  margin-bottom: 23px;
   text-align: right;
 }
 
 .loginArenaForgot {
   color: #a6a8b0;
   font-size: 12px;
+  font-weight: 400;
   text-decoration: none;
   transition: color .2s ease;
 }
@@ -632,21 +666,28 @@ body {
 
 .loginArenaSubmit {
   width: 100%;
-  padding: 16px;
+  height: 54px;
+  padding: 0 18px;
   border: 0;
-  border-radius: 8px;
-  background: linear-gradient(90deg, #e1e4eb 0%, #f5f7fa 40%, #b8ff00 41%, #8ed400 100%);
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, #f8fafc 0%, #c8ccd3 36%, #f7fbff 48%, #ccff00 50%, #a7dc00 100%);
   background-size: 200% auto;
-  color: #000;
+  color: #111216;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 950;
+  font-family: Oswald, Montserrat, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 900;
   font-style: italic;
   letter-spacing: 1px;
   text-transform: uppercase;
-  box-shadow: 0 4px 20px rgba(142, 212, 0, .4);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .38);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, .78),
+    inset 0 -4px 0 rgba(0, 0, 0, .16),
+    0 0 24px rgba(204, 255, 0, .34);
   transition: transform .3s ease, box-shadow .3s ease, background-position .3s ease;
-  margin-bottom: 25px;
+  margin-bottom: 24px;
 }
 
 .loginArenaSubmit:hover {
@@ -656,35 +697,41 @@ body {
 }
 
 .loginArenaSocialTitle {
-  margin-bottom: 15px;
+  margin-bottom: 14px;
   color: #a6a8b0;
   font-size: 12px;
+  font-weight: 400;
   text-align: center;
 }
 
 .loginArenaSocialGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .loginArenaSocialButton {
-  min-height: 42px;
-  padding: 10px 8px;
-  border: 1px solid #2d313f;
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid rgba(204, 255, 0, .54);
   border-radius: 8px;
-  background: #16181f;
+  background:
+    linear-gradient(180deg, rgba(39, 41, 47, .98), rgba(17, 18, 22, .98));
   color: #fff;
   cursor: pointer;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .16),
+    0 0 12px rgba(204, 255, 0, .1);
   transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
 }
 
 .loginArenaSocialButton:hover {
-  border-color: var(--landing-green);
+  border-color: #ccff00;
   background: #1e212b;
-  box-shadow: 0 0 8px rgba(204, 255, 0, .15);
+  box-shadow: 0 0 14px rgba(204, 255, 0, .2);
 }
 
 .loginArenaSocialButton span {
@@ -707,13 +754,44 @@ body {
 }
 
 .loginArenaSignup a {
-  color: var(--landing-green);
+  color: #f2f4f8;
   font-weight: 900;
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .loginArenaSignup a:hover {
-  text-decoration: underline;
+  color: #ccff00;
+}
+
+@media (max-width: 520px) {
+  .loginArenaPage {
+    padding: 88px 16px 26px;
+    align-items: flex-start;
+  }
+
+  .loginArenaLogoWrapper {
+    top: -66px;
+    width: 138px;
+    height: 132px;
+  }
+
+  .loginArenaCard {
+    padding: 78px 22px 28px;
+    border-radius: 22px;
+  }
+
+  .loginArenaTitle {
+    font-size: 20px;
+  }
+
+  .loginArenaSocialGrid {
+    gap: 8px;
+  }
+
+  .loginArenaSocialButton {
+    font-size: 11px;
+  }
 }
 
 .loginLinks {

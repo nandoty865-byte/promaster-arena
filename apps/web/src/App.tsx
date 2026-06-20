@@ -1903,7 +1903,7 @@ function Login() {
         </div>
 
         <form className="loginArenaCard" onSubmit={login}>
-          <h1 className="loginArenaTitle">PlayFinal <span>Arena</span> Login</h1>
+          <h1 className="loginArenaTitle">PLAYFINAL <span>ARENA</span> LOGIN</h1>
           {loginNotice && <div className="loginArenaAlert">{loginNotice}</div>}
 
           <div className="loginArenaGroup">
@@ -1926,6 +1926,7 @@ function Login() {
             onChange={e => setPassword(e.target.value)}
               placeholder="Digite sua Senha"
             type="password"
+              autoComplete="current-password"
               required
           />
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1937,7 +1938,7 @@ function Login() {
             <a className="loginArenaForgot" href="/forgot-password">Esqueceu sua Senha?</a>
           </div>
 
-          <button className="loginArenaSubmit" type="submit">Entrar na Arena</button>
+          <button className="loginArenaSubmit" type="submit">ENTRAR NA ARENA</button>
 
           <div className="loginArenaSocialTitle">Ou entre com Redes Sociais:</div>
           <div className="loginArenaSocialGrid">
