@@ -191,6 +191,7 @@ function isPublicPath(path: string) {
     path === '/forgot-password' ||
     path === '/reset-password' ||
     path === '/cadastro' ||
+    path === '/validar-conta' ||
     path === '/inscreva-se' ||
     path === '/cadastro-organizador' ||
     path === '/cadastro-jogador' ||
@@ -204,8 +205,11 @@ function isPublicPath(path: string) {
     path === '/contato' ||
     path === '/blog' ||
     path === '/termos' ||
+    path === '/termos-de-uso' ||
     path === '/privacidade' ||
+    path === '/politica-de-privacidade' ||
     path === '/lgpd' ||
+    path === '/termo-de-imagem' ||
     path.startsWith('/jogador/') ||
     path.startsWith('/telao/') ||
     path.startsWith('/public/')
@@ -364,7 +368,14 @@ export default function App() {
         return res.json()
       })
       .then(data => {
-        if (data?.user) setUser(data.user)
+        if (data?.user) {
+          if (data.user.validationPending && path !== '/validar-conta') {
+            window.location.href = `/validar-conta?redirect=${encodeURIComponent(path)}`
+            return
+          }
+
+          setUser(data.user)
+        }
       })
       .catch(() => {
         localStorage.removeItem('token')
@@ -383,6 +394,7 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/cadastro" element={<SignupChoice />} />
+      <Route path="/validar-conta" element={<AccountValidation />} />
       <Route path="/inscreva-se" element={<SignupChoice />} />
       <Route path="/onboarding/organizador" element={ENABLE_LEGACY_ONBOARDING ? <OrganizerSignup /> : <Navigate to="/cadastro?profile=organizer" />} />
       <Route path="/onboarding/jogador" element={ENABLE_LEGACY_ONBOARDING ? <PlayerSignup /> : <Navigate to="/cadastro?profile=player" />} />
@@ -398,8 +410,11 @@ export default function App() {
       <Route path="/contato" element={<StaticPublicPage type="contato" />} />
       <Route path="/blog" element={<StaticPublicPage type="blog" />} />
       <Route path="/termos" element={<StaticPublicPage type="termos" />} />
+      <Route path="/termos-de-uso" element={<StaticPublicPage type="termos" />} />
       <Route path="/privacidade" element={<StaticPublicPage type="privacidade" />} />
+      <Route path="/politica-de-privacidade" element={<StaticPublicPage type="privacidade" />} />
       <Route path="/lgpd" element={<StaticPublicPage type="lgpd" />} />
+      <Route path="/termo-de-imagem" element={<StaticPublicPage type="imagem" />} />
       <Route path="/jogador/:id" element={<PlayerDashboard />} />
       <Route path="/" element={<Landing />} />
       <Route path="/planos" element={<PlansComparison />} />
@@ -478,6 +493,83 @@ const SIGNUP_PROFILE_OPTIONS = [
   },
 ]
 
+const LEGAL_VERSION = '2026.06'
+const LEGAL_UPDATED_AT = '21/06/2026'
+const REQUIRED_TERMS_TEXT = 'Li e aceito os Termos de Uso e a Política de Privacidade da PlayFinal Arena.'
+const MARKETING_CONSENT_TEXT = 'Aceito receber novidades, torneios, planos e promoções por e-mail e WhatsApp.'
+
+const LEGAL_DOCUMENTS: Record<string, {
+  title: string
+  version: string
+  updatedAt: string
+  summary: string[]
+  sections: Array<{ title: string, body: string }>
+}> = {
+  terms: {
+    title: 'Termos de Uso',
+    version: LEGAL_VERSION,
+    updatedAt: LEGAL_UPDATED_AT,
+    summary: [
+      'Uso da plataforma, cadastro único e perfis de usuário.',
+      'Validação por e-mail ou WhatsApp e acesso progressivo.',
+      'Inscrições, pagamentos, rankings, transmissões e responsabilidades.',
+      'Antifraude, suspensão, privacidade e suporte.',
+    ],
+    sections: [
+      { title: '1. Identificação da plataforma', body: 'A PlayFinal Arena, antigo ProMaster Arena, opera site, painéis, páginas públicas de torneios, rankings, inscrições, pagamentos, transmissões e comunicação por e-mail/WhatsApp. Os dados formais da operadora, CNPJ, endereço e canais oficiais deverão constar na versão jurídica final.' },
+      { title: '2. Objeto da plataforma', body: 'A plataforma é destinada à organização, divulgação, gestão e acompanhamento de torneios, eventos esportivos, rankings, inscrições, partidas, transmissões, páginas públicas, painéis administrativos e comunicação com participantes.' },
+      { title: '3. Cadastro único e perfis', body: 'O cadastro usa conta única com nome, sobrenome, e-mail, WhatsApp, senha e aceite dos documentos aplicáveis. O usuário pode iniciar como Jogador, Organizador, Arena ou Árbitro quando convidado/aprovado, podendo possuir mais de um perfil vinculado.' },
+      { title: '4. Validação da conta', body: 'Após o cadastro, a conta poderá ficar pendente até confirmação de e-mail ou WhatsApp. A confirmação de um canal libera acesso básico. Ações sensíveis podem exigir validações adicionais, documentos, segundo canal, dados financeiros ou análise interna.' },
+      { title: '5. Responsabilidades do usuário', body: 'O usuário declara que suas informações são verdadeiras, manterá credenciais em segurança, não usará dados de terceiros sem autorização e utilizará a plataforma de forma lícita, ética e de boa-fé.' },
+      { title: '6. Perfil Jogador', body: 'O jogador pode visualizar torneios, realizar inscrições, acompanhar partidas, rankings, notificações, histórico e estatísticas. Para participar de torneios, poderá complementar dados e aceitar regulamentos específicos ou termo de imagem quando aplicável.' },
+      { title: '7. Perfil Organizador', body: 'O organizador pode criar e gerenciar torneios, inscrições, chaveamentos, premiações, árbitros, locais, páginas públicas, transmissões e financeiro quando habilitado. É responsável pelas informações, premiação, regulamento, execução do evento e comunicação com participantes.' },
+      { title: '8. Arena e responsável pelo local', body: 'A plataforma pode permitir cadastro de arenas, bares, clubes, associações e outros locais. O responsável poderá confirmar eventos por e-mail ou WhatsApp e assumir responsabilidades sobre endereço, autorização e operação local.' },
+      { title: '9. Inscrições, pagamentos e repasses', body: 'Inscrições podem ser gratuitas ou pagas via Pix, cartão, boleto, carteiras digitais ou outros meios. Pagamentos podem ser processados por terceiros. Valores podem sofrer taxas, retenções, análise antifraude, prazo de contestação e regras de repasse.' },
+      { title: '10. Antifraude e uso aceitável', body: 'São proibidas fraudes, torneios falsos, manipulação de resultados, uso indevido de dados, abuso de chargeback, ataques, spam, assédio, discriminação ou conteúdo ilegal. Violações podem gerar suspensão, bloqueios, retenções e medidas cabíveis.' },
+      { title: '11. Rankings, resultados e conteúdo público', body: 'Rankings, estatísticas e resultados têm caráter informativo e competitivo e podem ser corrigidos em caso de erro, revisão, denúncia, fraude ou decisão administrativa. Torneios e partidas podem aparecer em páginas públicas, telões e transmissões quando habilitado.' },
+      { title: '12. Imagem, voz e transmissões', body: 'Eventos podem envolver foto, vídeo, áudio, transmissões, redes sociais, telões e materiais promocionais. O uso de imagem e voz deve ter aceite específico quando aplicável ao torneio ou evento.' },
+      { title: '13. Privacidade e dados pessoais', body: 'O tratamento de dados pessoais ocorre conforme a Política de Privacidade e a legislação aplicável, incluindo a LGPD.' },
+      { title: '14. Alterações, suspensão e suporte', body: 'A PlayFinal Arena poderá atualizar estes Termos e solicitar novo aceite quando houver alteração relevante. Contas e funcionalidades podem ser suspensas por violação, suspeita de fraude, risco financeiro, inadimplência, determinação legal ou uso indevido.' },
+      { title: '15. Aceite', body: 'Ao marcar o checkbox de aceite e criar sua conta, o usuário declara que leu e aceitou os Termos de Uso e a Política de Privacidade, que suas informações são verdadeiras e que está ciente de validações e termos específicos para ações sensíveis.' },
+    ],
+  },
+  privacy: {
+    title: 'Política de Privacidade',
+    version: LEGAL_VERSION,
+    updatedAt: LEGAL_UPDATED_AT,
+    summary: [
+      'Dados coletados para cadastro, validação, torneios, pagamentos e segurança.',
+      'Comunicação operacional por e-mail e WhatsApp.',
+      'Compartilhamento com fornecedores, organizadores, arenas e parceiros técnicos quando necessário.',
+      'Direitos do titular, retenção, segurança e contato.',
+    ],
+    sections: [
+      { title: '1. Controlador e contato', body: 'A PlayFinal Arena, antigo ProMaster Arena, atua como controladora dos dados em sua plataforma. A versão final deve indicar razão social, CNPJ, endereço, e-mail de privacidade, canal do encarregado/DPO e suporte.' },
+      { title: '2. Dados coletados', body: 'Podem ser coletados dados de cadastro, contato, senha criptografada, perfil esportivo, histórico de torneios, ranking, estatísticas, dados de organizador, arena/local, pagamentos, dados técnicos, cookies, logs, comunicações e dados de imagem/mídia quando aplicável.' },
+      { title: '3. Finalidades', body: 'Os dados são utilizados para criar e gerenciar contas, validar e-mail e WhatsApp, direcionar o perfil escolhido, permitir inscrições, pagamentos, rankings, páginas públicas, comunicação operacional, convites, confirmação de locais, segurança, antifraude, suporte e melhoria da plataforma.' },
+      { title: '4. Bases legais', body: 'O tratamento poderá ocorrer por execução de contrato, cumprimento de obrigação legal/regulatória, exercício regular de direitos, legítimo interesse, prevenção à fraude, segurança e consentimento quando necessário.' },
+      { title: '5. E-mail e WhatsApp', body: 'A plataforma pode usar e-mail e WhatsApp para validar cadastro, enviar códigos, confirmar inscrições, avisar sobre partidas, resultados, pagamentos, árbitros, locais e suporte. Comunicações promocionais devem respeitar consentimento específico ou opção de descadastramento.' },
+      { title: '6. Compartilhamento', body: 'Dados podem ser compartilhados com gateways de pagamento, hospedagem, e-mail, WhatsApp/API, organizadores, arenas, árbitros vinculados, antifraude, análise, segurança, parceiros técnicos e autoridades quando necessário.' },
+      { title: '7. Dados públicos', body: 'Algumas informações podem aparecer publicamente, como nome esportivo, ranking, pontuação, histórico, resultados, foto/avatar, conquistas, nome do organizador, nome da arena e página pública do torneio. Documentos, dados financeiros e dados sensíveis não devem ser exibidos publicamente sem base adequada.' },
+      { title: '8. Cookies e segurança', body: 'Cookies podem manter login, proteger conta, lembrar preferências, medir desempenho e melhorar navegação. A plataforma adota medidas como senha criptografada, controle de acesso, validação, limite de tentativas, tokens temporários, logs e monitoramento antifraude.' },
+      { title: '9. Retenção', body: 'Dados serão mantidos pelo tempo necessário para prestação dos serviços, obrigações legais, prevenção à fraude, rankings, comprovação de aceite, obrigações financeiras e exercício de direitos. Depois podem ser eliminados ou anonimizados quando aplicável.' },
+      { title: '10. Direitos do titular', body: 'O usuário pode solicitar confirmação de tratamento, acesso, correção, anonimização, bloqueio, eliminação, portabilidade, informações de compartilhamento, revogação de consentimento e revisão de decisões automatizadas, conforme LGPD.' },
+      { title: '11. Menores, transferência internacional e atualizações', body: 'Menores podem exigir autorização de responsável. Fornecedores podem processar dados fora do Brasil, observadas salvaguardas legais. Alterações relevantes da política podem ser comunicadas por e-mail, WhatsApp ou aviso na plataforma.' },
+      { title: '12. Aceite', body: 'Ao aceitar a Política de Privacidade, o usuário declara ciência de que seus dados serão tratados para cadastro, validação, uso da plataforma, inscrições, comunicação, segurança, pagamentos e demais finalidades descritas.' },
+    ],
+  },
+  image: {
+    title: 'Termo de Uso de Imagem, Voz e Transmissão',
+    version: LEGAL_VERSION,
+    updatedAt: LEGAL_UPDATED_AT,
+    summary: ['Autorização específica para torneios transmitidos, gravados ou divulgados.', 'Uso separado do aceite básico de cadastro.'],
+    sections: [
+      { title: 'Uso de imagem e voz', body: 'Quando aplicável, o participante poderá autorizar captação, uso e divulgação de imagem, voz, nome, apelido esportivo, resultados, fotos, vídeos, entrevistas, transmissões, telões e materiais relacionados ao torneio.' },
+      { title: 'Finalidade e limites', body: 'A autorização se limita ao contexto do evento, plataforma, cobertura esportiva, histórico competitivo e divulgação relacionada. Não permite uso ilícito, ofensivo, discriminatório ou descontextualizado que cause dano à honra, imagem ou reputação.' },
+    ],
+  },
+}
+
 function SignupProfileIcon({ type }: { type: string }) {
   if (type === 'organizer') {
     return (
@@ -505,6 +597,61 @@ function SignupProfileIcon({ type }: { type: string }) {
   )
 }
 
+function LegalDocumentContent({ documentKey }: { documentKey: string }) {
+  const document = LEGAL_DOCUMENTS[documentKey] || LEGAL_DOCUMENTS.terms
+
+  return (
+    <div className="legalDocumentContent">
+      <p className="legalDocumentMeta">Versão {document.version} | Atualizado em {document.updatedAt}</p>
+      <div className="legalSummary">
+        <strong>Resumo rápido</strong>
+        <ol>
+          {document.summary.map(item => <li key={item}>{item}</li>)}
+        </ol>
+      </div>
+      <div className="legalSections">
+        {document.sections.map(section => (
+          <section key={section.title}>
+            <h3>{section.title}</h3>
+            <p>{section.body}</p>
+          </section>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function LegalDocumentModal({ documentKey, onClose }: { documentKey: string, onClose: () => void }) {
+  const document = LEGAL_DOCUMENTS[documentKey] || LEGAL_DOCUMENTS.terms
+  const pagePath = documentKey === 'privacy'
+    ? '/politica-de-privacidade'
+    : documentKey === 'image'
+      ? '/termo-de-imagem'
+      : '/termos-de-uso'
+
+  return (
+    <div className="legalModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle">
+      <section className="legalModal">
+        <header>
+          <div>
+            <h2 id="legalModalTitle">{document.title}</h2>
+            <span>Versão {document.version}</span>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Fechar">Fechar</button>
+        </header>
+
+        <LegalDocumentContent documentKey={documentKey} />
+
+        <footer>
+          <a href={pagePath} target="_blank" rel="noreferrer">Abrir página completa</a>
+          <button type="button" onClick={() => window.print()}>Imprimir / salvar PDF</button>
+          <button type="button" onClick={onClose}>Fechar</button>
+        </footer>
+      </section>
+    </div>
+  )
+}
+
 function SignupChoice() {
   const searchParams = new URLSearchParams(window.location.search)
   const redirectParam = searchParams.get('redirect')
@@ -524,11 +671,13 @@ function SignupChoice() {
     password: '',
     confirmPassword: '',
     termsAccepted: false,
+    marketingConsent: false,
   })
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [validationMessage, setValidationMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [createdAccount, setCreatedAccount] = useState<any>(null)
+  const [legalDocumentKey, setLegalDocumentKey] = useState('')
 
   function profileRegisterHref(profile: any) {
     const params = new URLSearchParams()
@@ -583,7 +732,7 @@ function SignupChoice() {
     }
 
     if (!form.termsAccepted) {
-      errors.termsAccepted = 'Aceite os termos de uso para continuar.'
+      errors.termsAccepted = 'Aceite os termos de uso e a política de privacidade para continuar.'
     }
 
     return errors
@@ -613,12 +762,21 @@ function SignupChoice() {
           password: form.password,
           signupProfile: selectedProfile?.key || '',
           termsAccepted: form.termsAccepted,
+          privacyAccepted: form.termsAccepted,
+          marketingConsent: form.marketingConsent,
+          termsCheckboxText: REQUIRED_TERMS_TEXT,
         }),
       })
       const data = await response.json()
 
       if (!response.ok || data.error) {
         setValidationMessage(data.error || 'Não foi possível criar a conta agora.')
+        return
+      }
+
+      if (data.token) {
+        localStorage.setItem('token', data.token)
+        window.location.href = data.validationPath || `/validar-conta?profile=${selectedProfile?.key || ''}`
         return
       }
 
@@ -768,21 +926,228 @@ function SignupChoice() {
           </div>
         </div>
 
-        <label className="termsLine" aria-invalid={!!fieldErrors.termsAccepted}>
+        <label className="termsLine termsLineRich" aria-invalid={!!fieldErrors.termsAccepted}>
           <input
             type="checkbox"
             checked={form.termsAccepted}
             onChange={e => updateField('termsAccepted', e.target.checked)}
           />
-          Aceito os termos de uso da plataforma.
+          <span>
+            {REQUIRED_TERMS_TEXT}
+            <small>Ao continuar, declaro estar ciente das regras de cadastro, uso da plataforma, comunicação por WhatsApp/e-mail e tratamento dos meus dados.</small>
+            <span className="termsInlineLinks">
+              <button type="button" onClick={() => setLegalDocumentKey('terms')}>Termos de Uso</button>
+              <button type="button" onClick={() => setLegalDocumentKey('privacy')}>Política de Privacidade</button>
+            </span>
+          </span>
         </label>
         {fieldError('termsAccepted')}
 
+        <label className="termsLine termsLineOptional">
+          <input
+            type="checkbox"
+            checked={form.marketingConsent}
+            onChange={e => updateField('marketingConsent', e.target.checked)}
+          />
+          <span>{MARKETING_CONSENT_TEXT} <small>Opcional.</small></span>
+        </label>
+
         <div className="onboardingActions">
-          <button className="primaryButton" onClick={registerAccount} disabled={loading}>
+          <button className="primaryButton" onClick={registerAccount} disabled={loading || !form.termsAccepted}>
             {loading ? 'Criando...' : 'Criar conta'}
           </button>
         </div>
+      </section>
+
+      {legalDocumentKey && (
+        <LegalDocumentModal documentKey={legalDocumentKey} onClose={() => setLegalDocumentKey('')} />
+      )}
+    </div>
+  )
+}
+
+function AccountValidation() {
+  const [status, setStatus] = useState<any>(null)
+  const [code, setCode] = useState('')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState('')
+  const [waitSeconds, setWaitSeconds] = useState(0)
+
+  function finishValidation(data: any) {
+    if (!data?.basicAccessGranted) return false
+
+    if (data.token) localStorage.setItem('token', data.token)
+    if (data.activeProfile) localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, data.activeProfile)
+
+    setMessage('Conta confirmada com sucesso. Redirecionando para seu painel...')
+    window.setTimeout(() => {
+      window.location.href = appUrlWithFreshVersion(data.redirectPath || '/app/perfil')
+    }, 900)
+    return true
+  }
+
+  async function loadStatus(silent = false) {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      window.location.href = '/login'
+      return
+    }
+
+    try {
+      const response = await fetch(`${API}/auth/validation-status`, { headers: authHeaders(), cache: 'no-store' })
+      const data = await response.json()
+
+      if (!response.ok || data.error) {
+        if (!silent) setMessage(data.error || 'Não foi possível consultar a validação.')
+        return
+      }
+
+      setStatus(data)
+      finishValidation(data)
+    } catch {
+      if (!silent) setMessage('Não foi possível conectar agora.')
+    }
+  }
+
+  async function verifyCode() {
+    setLoading(true)
+    setMessage('')
+
+    try {
+      const response = await fetch(`${API}/auth/verify-whatsapp`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ code }),
+      })
+      const data = await response.json()
+
+      if (!response.ok || data.error) {
+        setMessage(data.error || 'Código inválido.')
+        return
+      }
+
+      setStatus(data)
+      finishValidation(data)
+    } catch {
+      setMessage('Não foi possível validar agora.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function resend(channel: string) {
+    setResending(channel)
+    setMessage('')
+
+    try {
+      const response = await fetch(`${API}/auth/resend-validation`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ channel }),
+      })
+      const data = await response.json()
+
+      if (!response.ok || data.error) {
+        setMessage(data.error || 'Não foi possível reenviar.')
+        if (data.waitSeconds) setWaitSeconds(data.waitSeconds)
+        return
+      }
+
+      setMessage(data.message || 'Confirmação reenviada.')
+      if (data.waitSeconds) setWaitSeconds(data.waitSeconds)
+      loadStatus(true)
+    } catch {
+      setMessage('Não foi possível reenviar agora.')
+    } finally {
+      setResending('')
+    }
+  }
+
+  useEffect(() => {
+    loadStatus()
+    const poll = window.setInterval(() => loadStatus(true), 4000)
+    return () => window.clearInterval(poll)
+  }, [])
+
+  useEffect(() => {
+    if (waitSeconds <= 0) return
+    const timer = window.setInterval(() => {
+      setWaitSeconds(current => Math.max(0, current - 1))
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [waitSeconds])
+
+  const codeDigits = code.padEnd(6, ' ').slice(0, 6).split('')
+
+  return (
+    <div className="onboardingPage validationPage signupPremiumPage">
+      <section className="signupPremiumHero validationHero">
+        <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+        <span>Conta criada com sucesso</span>
+        <h1>Confirme sua conta para acessar o painel.</h1>
+        <p>Você pode validar por WhatsApp ou e-mail. Basta um canal confirmado para liberar o acesso básico.</p>
+      </section>
+
+      <section className="validationCard">
+        <div className="validationChannel">
+          <div>
+            <h2>WhatsApp</h2>
+            <p>Enviamos um código para {status?.phone || 'seu WhatsApp'}.</p>
+          </div>
+          <span className={status?.whatsappVerified ? 'validationBadge ok' : 'validationBadge'}>{status?.whatsappVerified ? 'Confirmado' : 'Pendente'}</span>
+        </div>
+
+        <label>Código de 6 dígitos</label>
+        <input
+          className="validationCodeInput"
+          value={code}
+          maxLength={6}
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+          placeholder="000000"
+        />
+
+        <div className="validationCodeBoxes" aria-hidden="true">
+          {codeDigits.map((digit, index) => (
+            <span key={index}>{digit.trim() || '_'}</span>
+          ))}
+        </div>
+
+        <button className="primaryButton" onClick={verifyCode} disabled={loading || code.length !== 6}>
+          {loading ? 'Verificando...' : 'Verificar'}
+        </button>
+
+        <div className="validationActions">
+          <button type="button" onClick={() => resend('whatsapp')} disabled={!!resending || waitSeconds > 0}>
+            {waitSeconds > 0 ? `Reenviar código em ${waitSeconds}s` : resending === 'whatsapp' ? 'Reenviando...' : 'Reenviar código'}
+          </button>
+          <button type="button" onClick={() => window.location.href = '/app/perfil'}>
+            Alterar número depois
+          </button>
+        </div>
+
+        <div className="validationDivider">Ou valide por e-mail</div>
+
+        <div className="validationChannel">
+          <div>
+            <h2>E-mail</h2>
+            <p>Enviamos um link de confirmação para {status?.email || 'seu e-mail'}.</p>
+          </div>
+          <span className={status?.emailVerified ? 'validationBadge ok' : 'validationBadge'}>{status?.emailVerified ? 'Confirmado' : 'Pendente'}</span>
+        </div>
+
+        <div className="validationActions">
+          <button type="button" onClick={() => resend('email')} disabled={!!resending}>
+            {resending === 'email' ? 'Reenviando...' : 'Reenviar e-mail'}
+          </button>
+          <button type="button" onClick={() => window.location.href = '/app/perfil'}>
+            Alterar e-mail depois
+          </button>
+        </div>
+
+        {message && <div className="validationMessage">{message}</div>}
       </section>
     </div>
   )
@@ -2054,6 +2419,11 @@ function Login() {
   }
 
   localStorage.setItem('token', data.token)
+
+  if (data.validationPending) {
+    window.location.href = appUrlWithFreshVersion(data.validationPath || '/validar-conta')
+    return
+  }
 
   if (safeRedirect) {
     window.location.href = appUrlWithFreshVersion(safeRedirect)
@@ -5754,7 +6124,7 @@ function LandingHeader() {
   )
 }
 
-type StaticPublicPageType = 'sobre' | 'contato' | 'blog' | 'agenda' | 'termos' | 'privacidade' | 'lgpd'
+type StaticPublicPageType = 'sobre' | 'contato' | 'blog' | 'agenda' | 'termos' | 'privacidade' | 'lgpd' | 'imagem'
 
 const staticPublicPages: Record<StaticPublicPageType, {
   eyebrow: string
@@ -5832,6 +6202,16 @@ const staticPublicPages: Record<StaticPublicPageType, {
       ['Governança', 'A evolução da plataforma deve incluir políticas, registros e controles para operação em escala.'],
     ],
   },
+  imagem: {
+    eyebrow: 'Uso de imagem',
+    title: 'Termo de imagem, voz e transmissão.',
+    description: 'Documento específico para torneios com transmissão, gravação, telão, fotos ou divulgação de conteúdo audiovisual.',
+    blocks: [
+      ['Autorização específica', 'O aceite de imagem deve aparecer quando houver torneio, evento ou transmissão aplicável.'],
+      ['Finalidade determinada', 'A autorização deve informar uso de imagem, voz, nome, resultados, materiais promocionais e canais de divulgação.'],
+      ['Registro de aceite', 'O sistema deve registrar versão, data, origem, perfil, torneio e texto aceito.'],
+    ],
+  },
 }
 
 function LandingFooter() {
@@ -5900,8 +6280,9 @@ function LandingFooter() {
 
         <nav className="footerLinks" aria-label="Links legais">
           <strong>Legal</strong>
-          <a href="/privacidade">Política de Privacidade</a>
-          <a href="/termos">Termos de Uso</a>
+          <a href="/politica-de-privacidade">Política de Privacidade</a>
+          <a href="/termos-de-uso">Termos de Uso</a>
+          <a href="/termo-de-imagem">Uso de Imagem</a>
           <a href="/lgpd">LGPD</a>
         </nav>
 
@@ -5937,6 +6318,13 @@ function LandingFooter() {
 
 function StaticPublicPage({ type }: { type: StaticPublicPageType }) {
   const page = staticPublicPages[type]
+  const legalDocumentKey = type === 'termos'
+    ? 'terms'
+    : type === 'privacidade' || type === 'lgpd'
+      ? 'privacy'
+      : type === 'imagem'
+        ? 'image'
+        : ''
 
   return (
     <div className="landing staticPublicPage">
@@ -5947,14 +6335,20 @@ function StaticPublicPage({ type }: { type: StaticPublicPageType }) {
         <h1>{page.title}</h1>
         <p>{page.description}</p>
 
-        <div className="staticPublicGrid">
-          {page.blocks.map(([title, text]) => (
-            <article key={title}>
-              <strong>{title}</strong>
-              <p>{text}</p>
-            </article>
-          ))}
-        </div>
+        {legalDocumentKey ? (
+          <article className="staticLegalDocument">
+            <LegalDocumentContent documentKey={legalDocumentKey} />
+          </article>
+        ) : (
+          <div className="staticPublicGrid">
+            {page.blocks.map(([title, text]) => (
+              <article key={title}>
+                <strong>{title}</strong>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        )}
       </main>
 
       <LandingFooter />

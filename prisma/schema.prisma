@@ -265,6 +265,23 @@ model User {
   phone String?
 emailVerified Boolean @default(false)
 emailVerifyToken String?
+whatsappVerified Boolean @default(false)
+whatsappVerifyCode String?
+whatsappVerifyExpiresAt DateTime?
+whatsappVerifyAttempts Int @default(0)
+whatsappLastSentAt DateTime?
+profileIntent String?
+signupSource String?
+termsVersion String?
+termsAcceptedAt DateTime?
+privacyVersion String?
+privacyAcceptedAt DateTime?
+termsCheckboxText String?
+marketingConsent Boolean @default(false)
+marketingConsentAt DateTime?
+signupIp String?
+signupUserAgent String?
+basicAccessGrantedAt DateTime?
 passwordResetToken String?
 passwordResetExpiresAt DateTime?
 organizationId Int?

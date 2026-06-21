@@ -169,6 +169,21 @@ function normalizeSignupProfile(value) {
   return aliases[normalized] || ''
 }
 
+const TERMS_VERSION = process.env.TERMS_VERSION || '2026.06'
+const PRIVACY_VERSION = process.env.PRIVACY_VERSION || '2026.06'
+const TERMS_CHECKBOX_TEXT = 'Li e aceito os Termos de Uso e a Política de Privacidade da PlayFinal Arena.'
+const VALIDATION_CODE_TTL_MS = 10 * 60 * 1000
+const VALIDATION_RESEND_COOLDOWN_MS = 45 * 1000
+const VALIDATION_MAX_ATTEMPTS = 5
+
+function generateValidationCode() {
+  return String(Math.floor(100000 + Math.random() * 900000))
+}
+
+function isBasicAccessGranted(user) {
+  return Boolean(user?.role === 'superadmin' || user?.emailVerified || user?.whatsappVerified)
+}
+
 function signupProfileRedirect(profile) {
   const redirects = {
     player: '/app/perfil?perfil=player&confirmed=1',
@@ -517,6 +532,21 @@ function auth(req, res, next) {
 
   try {
     req.user = jwt.verify(token, JWT_SECRET)
+
+    const validationAllowedPaths = new Set([
+      '/me',
+      '/auth/validation-status',
+      '/auth/verify-whatsapp',
+      '/auth/resend-validation',
+    ])
+
+    if (req.user.validationPending && !validationAllowedPaths.has(req.path)) {
+      return res.status(403).json({
+        error: 'Confirme sua conta para continuar.',
+        validationPending: true,
+      })
+    }
+
     next()
   } catch {
     return res.status(401).json({ error: 'Token inválido' })
@@ -574,6 +604,8 @@ function serializeUserRoles(user) {
 }
 
 function buildUserToken(user) {
+  const basicAccessGranted = isBasicAccessGranted(user)
+
   return jwt.sign(
     {
       id: user.id,
@@ -581,7 +613,9 @@ function buildUserToken(user) {
       role: user.role,
       roles: serializeUserRoles(user),
       organizationId: user.organizationId,
-      playerProfileId: user.playerProfile?.id || null
+      playerProfileId: user.playerProfile?.id || null,
+      basicAccessGranted,
+      validationPending: !basicAccessGranted,
     },
     JWT_SECRET,
     { expiresIn: '7d' }
@@ -589,12 +623,20 @@ function buildUserToken(user) {
 }
 
 function serializeAuthUser(user) {
+  const basicAccessGranted = isBasicAccessGranted(user)
+
   return {
     id: user.id,
     name: user.name,
     email: user.email,
+    phone: user.phone,
     role: user.role,
     roles: serializeUserRoles(user),
+    emailVerified: Boolean(user.emailVerified),
+    whatsappVerified: Boolean(user.whatsappVerified),
+    basicAccessGranted,
+    validationPending: !basicAccessGranted,
+    profileIntent: user.profileIntent || null,
     organizationId: user.organizationId,
     organization: user.organization,
     playerProfile: user.playerProfile ? {
@@ -767,6 +809,84 @@ async function ensureSignupProfileResources(user, profile) {
     user: nextUser,
     redirectPath: '/app/perfil?confirmed=1',
     activeProfile: '',
+  }
+}
+
+function buildValidationCodeData() {
+  return {
+    whatsappVerifyCode: generateValidationCode(),
+    whatsappVerifyExpiresAt: new Date(Date.now() + VALIDATION_CODE_TTL_MS),
+    whatsappVerifyAttempts: 0,
+    whatsappLastSentAt: new Date(),
+  }
+}
+
+function maskEmail(value) {
+  const email = normalizeEmail(value)
+  const [name, domain] = email.split('@')
+  if (!name || !domain) return email
+  return `${name.slice(0, 2)}***@${domain}`
+}
+
+function validationStatusPayload(user, extra = {}) {
+  const profileIntent = normalizeSignupProfile(user.profileIntent)
+  const basicAccessGranted = isBasicAccessGranted(user)
+
+  return {
+    ok: true,
+    validationPending: !basicAccessGranted,
+    basicAccessGranted,
+    profileIntent,
+    email: maskEmail(user.email),
+    phone: maskPhone(user.phone),
+    emailVerified: Boolean(user.emailVerified),
+    whatsappVerified: Boolean(user.whatsappVerified),
+    redirectPath: basicAccessGranted ? signupProfileRedirect(profileIntent) || '/app/perfil?confirmed=1' : '',
+    ...extra,
+  }
+}
+
+async function sendAccountValidationMessages(user, { sendEmailChannel = true, sendWhatsAppChannel = true } = {}) {
+  const profileIntent = normalizeSignupProfile(user.profileIntent)
+  const emailVerifyToken = user.emailVerifyToken || (profileIntent ? `${profileIntent}.${randomUUID()}` : randomUUID())
+  const verifyUrl = `${APP_URL}/api/auth/verify-email/${emailVerifyToken}`
+  const codeData = buildValidationCodeData()
+
+  const updatedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      emailVerifyToken,
+      ...(sendWhatsAppChannel ? codeData : {}),
+    },
+    include: { organization: true, playerProfile: true, roles: true },
+  })
+
+  const emailResult = sendEmailChannel
+    ? await sendEmail({
+      to: updatedUser.email,
+      subject: 'Confirme sua conta no PlayFinal Arena',
+      text: `Bem-vindo ao PlayFinal Arena. Confirme sua conta acessando: ${verifyUrl}. Código de confirmação: ${updatedUser.whatsappVerifyCode}`,
+      html: `
+        <h2>Conta criada com sucesso no PlayFinal Arena</h2>
+        <p>Olá, ${escapeHtml(updatedUser.name)}.</p>
+        <p>Clique no botão abaixo para confirmar sua conta:</p>
+        <p><a href="${verifyUrl}">Confirmar minha conta</a></p>
+        <p>Código de confirmação: <strong>${escapeHtml(updatedUser.whatsappVerifyCode || '')}</strong></p>
+        <p>Se você não solicitou este cadastro, ignore esta mensagem.</p>
+      `,
+    })
+    : { skipped: true }
+
+  const whatsAppResult = sendWhatsAppChannel
+    ? await sendWhatsApp({
+      to: updatedUser.phone,
+      text: `Bem-vindo ao PlayFinal Arena!\n\nSua conta foi criada com sucesso.\n\nCódigo de confirmação:\n${updatedUser.whatsappVerifyCode}\n\nDigite esse código na tela de cadastro ou confirme diretamente pelo link abaixo:\n${verifyUrl}`,
+    })
+    : { skipped: true }
+
+  return {
+    user: updatedUser,
+    delivery: buildDeliveryResponse(emailResult, whatsAppResult),
   }
 }
 
@@ -4478,6 +4598,8 @@ app.post('/auth/register', async (req, res) => {
       password: rawPassword,
       signupProfile: rawSignupProfile,
       termsAccepted,
+      privacyAccepted,
+      marketingConsent,
     } = req.body
 
     const firstName = normalizeText(rawFirstName)
@@ -4513,6 +4635,10 @@ app.post('/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Aceite os termos de uso para continuar' })
     }
 
+    if (privacyAccepted !== true && privacyAccepted !== 'true') {
+      return res.status(400).json({ error: 'Aceite a política de privacidade para continuar' })
+    }
+
     const exists = await prisma.user.findFirst({
       where: { email: { equals: email, mode: 'insensitive' } },
     })
@@ -4523,6 +4649,7 @@ app.post('/auth/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10)
     const emailVerifyToken = signupProfile ? `${signupProfile}.${randomUUID()}` : randomUUID()
+    const validationCodeData = buildValidationCodeData()
 
     const user = await prisma.user.create({
       data: {
@@ -4532,34 +4659,33 @@ app.post('/auth/register', async (req, res) => {
         password: hashedPassword,
         role: 'user',
         emailVerified: false,
-        emailVerifyToken
-      }
+        whatsappVerified: false,
+        emailVerifyToken,
+        profileIntent: signupProfile || null,
+        signupSource: 'SELECT_PROFILE_PAGE',
+        termsVersion: TERMS_VERSION,
+        termsAcceptedAt: new Date(),
+        privacyVersion: PRIVACY_VERSION,
+        privacyAcceptedAt: new Date(),
+        termsCheckboxText: TERMS_CHECKBOX_TEXT,
+        marketingConsent: marketingConsent === true || marketingConsent === 'true',
+        marketingConsentAt: (marketingConsent === true || marketingConsent === 'true') ? new Date() : null,
+        signupIp: req.ip || null,
+        signupUserAgent: req.get('user-agent') || null,
+        ...validationCodeData,
+      },
+      include: { organization: true, playerProfile: true, roles: true },
     })
 
-    const verifyUrl = `${APP_URL}/api/auth/verify-email/${emailVerifyToken}`
-
-    const emailResult = await sendEmail({
-      to: email,
-      subject: 'Confirme seu cadastro no PlayFinal Arena',
-      text: `Bem-vindo ao PlayFinal Arena. Confirme seu e-mail acessando: ${verifyUrl}`,
-      html: `
-        <h2>Bem-vindo ao PlayFinal Arena</h2>
-        <p>Sua conta foi criada com sucesso.</p>
-        <p>Confirme seu cadastro para liberar as próximas opções da plataforma.</p>
-        <p><a href="${verifyUrl}">Confirmar e-mail</a></p>
-      `,
-    })
-
-    const whatsAppResult = await sendWhatsApp({
-      to: phone,
-      text: `Olá ${fullName}! Sua conta no PlayFinal Arena foi criada. Confirme seu cadastro por este link: ${verifyUrl}`,
-    })
-
-    const delivery = buildDeliveryResponse(emailResult, whatsAppResult)
+    const { user: validationUser, delivery } = await sendAccountValidationMessages(user)
 
     res.json({
       ok: true,
       ...delivery,
+      validationPending: true,
+      token: buildUserToken(validationUser),
+      user: serializeAuthUser(validationUser),
+      validationPath: `/validar-conta?profile=${signupProfile || 'player'}`,
     })
 
   } catch (error) {
@@ -5475,8 +5601,14 @@ app.post('/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Usuário ou senha inválidos' })
     }
 
-    if (user.role !== 'superadmin' && !user.emailVerified) {
-      return res.status(403).json({ error: 'Confirme seu cadastro pelo link enviado por e-mail ou WhatsApp antes de entrar.' })
+    if (user.role !== 'superadmin' && !isBasicAccessGranted(user)) {
+      return res.status(403).json({
+        error: 'Sua conta ainda precisa ser confirmada.',
+        validationPending: true,
+        token: buildUserToken(user),
+        user: serializeAuthUser(user),
+        validationPath: `/validar-conta?profile=${normalizeSignupProfile(user.profileIntent) || 'player'}`,
+      })
     }
 
     if (user.role !== 'superadmin' && ['blocked', 'deleted'].includes(user.organization?.status)) {
@@ -5496,6 +5628,137 @@ app.post('/auth/login', async (req, res) => {
   }
 })
 
+app.get('/auth/validation-status', auth, async (req, res) => {
+  try {
+    const user = await loadAuthUser(req.user.id)
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    if (isBasicAccessGranted(user)) {
+      const profileResult = await ensureSignupProfileResources(user, user.profileIntent)
+      return res.json(validationStatusPayload(profileResult.user, {
+        token: buildUserToken(profileResult.user),
+        redirectPath: profileResult.redirectPath,
+        activeProfile: profileResult.activeProfile,
+      }))
+    }
+
+    res.json(validationStatusPayload(user))
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao consultar validação' })
+  }
+})
+
+app.post('/auth/verify-whatsapp', auth, async (req, res) => {
+  try {
+    const code = String(req.body?.code || '').replace(/\D/g, '').slice(0, 6)
+    const user = await loadAuthUser(req.user.id)
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    if (isBasicAccessGranted(user)) {
+      const profileResult = await ensureSignupProfileResources(user, user.profileIntent)
+      return res.json(validationStatusPayload(profileResult.user, {
+        token: buildUserToken(profileResult.user),
+        redirectPath: profileResult.redirectPath,
+        activeProfile: profileResult.activeProfile,
+      }))
+    }
+
+    if (!/^\d{6}$/.test(code)) {
+      return res.status(400).json({ error: 'Informe o código de 6 dígitos.' })
+    }
+
+    if (!user.whatsappVerifyCode || !user.whatsappVerifyExpiresAt || user.whatsappVerifyExpiresAt < new Date()) {
+      return res.status(400).json({ error: 'Código expirado. Solicite um novo código.' })
+    }
+
+    if (user.whatsappVerifyAttempts >= VALIDATION_MAX_ATTEMPTS) {
+      return res.status(429).json({ error: 'Limite de tentativas atingido. Reenvie o código.' })
+    }
+
+    if (user.whatsappVerifyCode !== code) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { whatsappVerifyAttempts: { increment: 1 } },
+      })
+      return res.status(400).json({ error: 'Código inválido.' })
+    }
+
+    const verifiedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        whatsappVerified: true,
+        whatsappVerifyCode: null,
+        whatsappVerifyExpiresAt: null,
+        whatsappVerifyAttempts: 0,
+        basicAccessGrantedAt: user.basicAccessGrantedAt || new Date(),
+      },
+      include: { organization: true, playerProfile: true, roles: true },
+    })
+
+    const profileResult = await ensureSignupProfileResources(verifiedUser, verifiedUser.profileIntent)
+
+    res.json(validationStatusPayload(profileResult.user, {
+      message: 'WhatsApp confirmado com sucesso.',
+      token: buildUserToken(profileResult.user),
+      redirectPath: profileResult.redirectPath,
+      activeProfile: profileResult.activeProfile,
+    }))
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao validar WhatsApp' })
+  }
+})
+
+app.post('/auth/resend-validation', auth, async (req, res) => {
+  try {
+    const channel = String(req.body?.channel || 'both').toLowerCase()
+    const user = await loadAuthUser(req.user.id)
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' })
+    }
+
+    if (isBasicAccessGranted(user)) {
+      return res.json(validationStatusPayload(user, { message: 'Conta já confirmada.' }))
+    }
+
+    const resendWhatsApp = channel === 'both' || channel === 'whatsapp'
+    const resendEmail = channel === 'both' || channel === 'email'
+
+    if (resendWhatsApp && user.whatsappLastSentAt) {
+      const elapsed = Date.now() - new Date(user.whatsappLastSentAt).getTime()
+      if (elapsed < VALIDATION_RESEND_COOLDOWN_MS) {
+        return res.status(429).json({
+          error: 'Aguarde para reenviar o código por WhatsApp.',
+          waitSeconds: Math.ceil((VALIDATION_RESEND_COOLDOWN_MS - elapsed) / 1000),
+        })
+      }
+    }
+
+    const result = await sendAccountValidationMessages(user, {
+      sendEmailChannel: resendEmail,
+      sendWhatsAppChannel: resendWhatsApp,
+    })
+
+    res.json({
+      ok: true,
+      message: result.delivery.message,
+      delivery: result.delivery.delivery,
+      waitSeconds: resendWhatsApp ? Math.ceil(VALIDATION_RESEND_COOLDOWN_MS / 1000) : 0,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao reenviar validação' })
+  }
+})
+
 app.get('/me', auth, async (req, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
@@ -5506,8 +5769,10 @@ app.get('/me', auth, async (req, res) => {
     return res.status(404).json({ error: 'Usuário não encontrado' })
   }
 
-  const { password, ...safeUser } = user
+  const { password, emailVerifyToken, whatsappVerifyCode, signupIp, signupUserAgent, ...safeUser } = user
   safeUser.roles = serializeUserRoles(user)
+  safeUser.basicAccessGranted = isBasicAccessGranted(user)
+  safeUser.validationPending = !safeUser.basicAccessGranted
   if (safeUser.playerProfile) {
     const { password: playerPassword, verifyToken, ...safePlayerProfile } = safeUser.playerProfile
     safeUser.playerProfile = safePlayerProfile
@@ -6954,13 +7219,14 @@ app.post('/auth/verify-email/:token', async (req, res) => {
       return res.status(400).send('Token inválido')
     }
 
-    const signupProfile = normalizeSignupProfile(String(user.emailVerifyToken || token).split('.')[0])
+    const signupProfile = normalizeSignupProfile(user.profileIntent || String(user.emailVerifyToken || token).split('.')[0])
 
     const verifiedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
         emailVerified: true,
-        emailVerifyToken: null
+        emailVerifyToken: null,
+        basicAccessGrantedAt: user.basicAccessGrantedAt || new Date(),
       },
       include: { organization: true, playerProfile: true, roles: true },
     })
