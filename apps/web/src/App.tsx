@@ -6154,6 +6154,10 @@ function LandingTopHeadline() {
 }
 
 function LandingHeader() {
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  const closeMenu = () => setMenuOpen(false)
+
   return (
     <>
       <a className="skipLink" href="#conteudo-principal">Pular para o conteúdo</a>
@@ -6183,9 +6187,48 @@ function LandingHeader() {
 
         <div className="landingActions">
           <a href="/login">Entrar</a>
-          <a className="landingButton" href="/cadastro">Começar agora</a>
+          <a className="landingButton" href="/cadastro">Criar conta</a>
+          <button
+            className="landingMenuButton"
+            type="button"
+            aria-expanded={menuOpen}
+            aria-controls="landingMobileMenu"
+            onClick={() => setMenuOpen(true)}
+          >
+            <span className="landingMenuIcon" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+            Menu
+          </button>
         </div>
       </header>
+
+      {menuOpen && (
+        <div className="landingMenuLayer">
+          <button className="landingMenuBackdrop" type="button" aria-label="Fechar menu" onClick={closeMenu} />
+          <aside className="landingMobileMenu" id="landingMobileMenu" aria-label="Menu principal">
+            <div className="landingMobileMenuHeader">
+              <span>PlayFinal Arena</span>
+              <button type="button" onClick={closeMenu}>Fechar</button>
+            </div>
+            <nav className="landingMobileMenuNav">
+              <a href="/" onClick={closeMenu}>Início</a>
+              <a href="/agenda" onClick={closeMenu}>Agenda</a>
+              <a href="/planos" onClick={closeMenu}>Planos</a>
+              <a href="/jogador" onClick={closeMenu}>Para Jogadores</a>
+              <a href="/organizador" onClick={closeMenu}>Para Organizadores</a>
+              <a href="/arena" onClick={closeMenu}>Para Arenas</a>
+              <a href="/contato" onClick={closeMenu}>Contato</a>
+            </nav>
+            <div className="landingMobileMenuActions">
+              <a href="/login" onClick={closeMenu}>Entrar</a>
+              <a className="landingButton" href="/cadastro" onClick={closeMenu}>Criar conta</a>
+            </div>
+          </aside>
+        </div>
+      )}
     </>
   )
 }
