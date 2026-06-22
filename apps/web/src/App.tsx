@@ -856,9 +856,8 @@ function SignupChoice() {
 
   if (!selectedProfile) {
     return renderSignupLayout(
-      <div className="onboardingPage signupChoicePage signupPremiumPage">
-        <section className="signupPremiumHero">
-          <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+      <div className="onboardingPage signupChoicePage signupPremiumPage signupProfileSelectPage">
+        <section className="signupPremiumHero signupSelectHero">
           <h1>Como você deseja começar<span>?</span></h1>
           <p>Escolha seu perfil.</p>
         </section>
@@ -889,90 +888,136 @@ function SignupChoice() {
   }
 
   return renderSignupLayout(
-    <div className="onboardingPage signupChoicePage signupPremiumPage">
-      <section className="signupPremiumHero signupRegisterHero">
-        <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
-        <span>Cadastro único</span>
-        <h1>{selectedProfile.action}</h1>
-        <p>Crie sua conta mínima. Após confirmar o cadastro, você acessa o painel de {selectedProfile.title.toLowerCase()} e resolve pendências por avisos internos.</p>
+    <div className="signupV8Page">
+      <section className="signupV8Institutional" aria-label="PlayFinal Arena">
+        <span className="signupV8Light one" aria-hidden="true" />
+        <span className="signupV8Light two" aria-hidden="true" />
+        <div className="signupV8HeroTop">
+          <div className="signupV8LogoBlock">
+            <img src="/playfinal-logo-symbol.png" alt="" />
+            <div>
+              <span className="signupV8Kicker">Cadastro premium</span>
+              <h1>
+                Comece no
+                <strong>PlayFinal Arena</strong>
+              </h1>
+            </div>
+          </div>
+          <p>
+            Crie sua conta, confirme por WhatsApp ou e-mail e acesse o painel de {selectedProfile.title.toLowerCase()} com avisos e pendências no lugar certo.
+          </p>
+        </div>
+        <div className="signupV8FeatureGrid">
+          <article>
+            <span>01</span>
+            <strong>Conta única</strong>
+            <p>Um login para jogador, organizador, arena e convites.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <strong>Validação rápida</strong>
+            <p>Código no WhatsApp ou link por e-mail.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <strong>Painel certo</strong>
+            <p>Direcionamento automático para o perfil escolhido.</p>
+          </article>
+          <article>
+            <span>04</span>
+            <strong>Pendências guiadas</strong>
+            <p>Complete dados extras dentro da plataforma.</p>
+          </article>
+        </div>
       </section>
 
-      <section className="onboardingCard signupAccountCard">
-        <h2>Dados mínimos</h2>
-        <button
-          type="button"
-          className="socialLoginButton"
-          onClick={() => alert('Login por rede social em preparação. Use o cadastro com e-mail e WhatsApp por enquanto.')}
-        >
-          <span>G</span>
-          Continuar com Google
-        </button>
-        <div className="signupDivider"><span>ou cadastre seus dados</span></div>
-        {validationMessage && <div className="formError">{validationMessage}</div>}
+      <section className="signupV8Card" aria-label="Cadastro mínimo">
+        <div className="signupV8FormContent">
+          <h2><span />{selectedProfile.action}</h2>
+          <p>Cadastro mínimo para liberar sua validação e preparar seu painel.</p>
 
-        <div className="onboardingGrid">
-          <div>
-            <label>Nome *</label>
-            <input value={form.firstName} onChange={e => updateField('firstName', e.target.value)} aria-invalid={!!fieldErrors.firstName} />
-            {fieldError('firstName')}
+          <div className="signupV8SocialRow">
+            {['Google', 'Facebook', 'X'].map(provider => (
+              <button
+                type="button"
+                key={provider}
+                onClick={() => alert('Login por rede social em preparação. Use o cadastro com e-mail e WhatsApp por enquanto.')}
+              >
+                <strong>{provider.slice(0, 1)}</strong>
+                {provider}
+              </button>
+            ))}
           </div>
-          <div>
-            <label>Sobrenome *</label>
-            <input value={form.lastName} onChange={e => updateField('lastName', e.target.value)} aria-invalid={!!fieldErrors.lastName} />
-            {fieldError('lastName')}
-          </div>
-          <div>
-            <label>E-mail *</label>
-            <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} />
-            {fieldError('email')}
-          </div>
-          <div>
-            <label>Telefone / WhatsApp *</label>
-            <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} aria-invalid={!!fieldErrors.phone} />
-            {fieldError('phone')}
-          </div>
-          <div>
-            <label>Senha *</label>
-            <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} aria-invalid={!!fieldErrors.password} />
-            {fieldError('password')}
-          </div>
-          <div>
-            <label>Confirmar senha *</label>
-            <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} aria-invalid={!!fieldErrors.confirmPassword} />
-            {fieldError('confirmPassword')}
-          </div>
-        </div>
 
-        <label className="termsLine termsLineRich" aria-invalid={!!fieldErrors.termsAccepted}>
-          <input
-            type="checkbox"
-            checked={form.termsAccepted}
-            onChange={e => updateField('termsAccepted', e.target.checked)}
-          />
-          <span>
-            {REQUIRED_TERMS_TEXT}
-            <small>Ao continuar, declaro estar ciente das regras de cadastro, uso da plataforma, comunicação por WhatsApp/e-mail e tratamento dos meus dados.</small>
-            <span className="termsInlineLinks">
-              <button type="button" onClick={() => setLegalDocumentKey('terms')}>Termos de Uso</button>
-              <button type="button" onClick={() => setLegalDocumentKey('privacy')}>Política de Privacidade</button>
-            </span>
-          </span>
-        </label>
-        {fieldError('termsAccepted')}
+          <div className="signupV8Divider"><span>ou cadastre seus dados</span></div>
+          {validationMessage && <div className="formError">{validationMessage}</div>}
 
-        <label className="termsLine termsLineOptional">
-          <input
-            type="checkbox"
-            checked={form.marketingConsent}
-            onChange={e => updateField('marketingConsent', e.target.checked)}
-          />
-          <span>{MARKETING_CONSENT_TEXT} <small>Opcional.</small></span>
-        </label>
+          <div className="signupV8FormGrid">
+            <label>
+              <span>Nome *</span>
+              <input value={form.firstName} onChange={e => updateField('firstName', e.target.value)} aria-invalid={!!fieldErrors.firstName} placeholder="Digite seu nome" />
+              {fieldError('firstName')}
+            </label>
+            <label>
+              <span>Sobrenome *</span>
+              <input value={form.lastName} onChange={e => updateField('lastName', e.target.value)} aria-invalid={!!fieldErrors.lastName} placeholder="Digite seu sobrenome" />
+              {fieldError('lastName')}
+            </label>
+            <label>
+              <span>E-mail *</span>
+              <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} aria-invalid={!!fieldErrors.email} placeholder="seu@email.com" />
+              {fieldError('email')}
+            </label>
+            <label>
+              <span>Telefone / WhatsApp *</span>
+              <input value={form.phone} onChange={e => updateField('phone', formatBrazilCellphone(e.target.value))} aria-invalid={!!fieldErrors.phone} placeholder="(11) 99999-9999" />
+              {fieldError('phone')}
+            </label>
+            <label>
+              <span>Senha *</span>
+              <input type="password" value={form.password} onChange={e => updateField('password', e.target.value)} aria-invalid={!!fieldErrors.password} placeholder="Mínimo 6 caracteres" />
+              {fieldError('password')}
+            </label>
+            <label>
+              <span>Confirmar senha *</span>
+              <input type="password" value={form.confirmPassword} onChange={e => updateField('confirmPassword', e.target.value)} aria-invalid={!!fieldErrors.confirmPassword} placeholder="Repita sua senha" />
+              {fieldError('confirmPassword')}
+            </label>
+          </div>
 
-        <div className="onboardingActions">
-          <button className="primaryButton" onClick={registerAccount} disabled={loading || !form.termsAccepted}>
-            {loading ? 'Criando...' : 'Criar conta'}
-          </button>
+          <div className="signupV8Consents">
+            <label className="termsLine termsLineRich" aria-invalid={!!fieldErrors.termsAccepted}>
+              <input
+                type="checkbox"
+                checked={form.termsAccepted}
+                onChange={e => updateField('termsAccepted', e.target.checked)}
+              />
+              <span>
+                {REQUIRED_TERMS_TEXT}
+                <small>Ao continuar, declaro estar ciente das regras de cadastro, uso da plataforma, comunicação por WhatsApp/e-mail e tratamento dos meus dados.</small>
+                <span className="termsInlineLinks">
+                  <button type="button" onClick={() => setLegalDocumentKey('terms')}>Termos de Uso</button>
+                  <button type="button" onClick={() => setLegalDocumentKey('privacy')}>Política de Privacidade</button>
+                </span>
+              </span>
+            </label>
+            {fieldError('termsAccepted')}
+
+            <label className="termsLine termsLineOptional">
+              <input
+                type="checkbox"
+                checked={form.marketingConsent}
+                onChange={e => updateField('marketingConsent', e.target.checked)}
+              />
+              <span>{MARKETING_CONSENT_TEXT} <small>Opcional.</small></span>
+            </label>
+          </div>
+
+          <div className="signupV8SubmitRow">
+            <button className="primaryButton" onClick={registerAccount} disabled={loading || !form.termsAccepted}>
+              {loading ? 'Criando...' : 'Criar conta'}
+            </button>
+          </div>
         </div>
       </section>
     </div>
