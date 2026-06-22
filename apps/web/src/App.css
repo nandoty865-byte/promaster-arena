@@ -8332,11 +8332,11 @@ button:hover {
 }
 
 .signupV8Page {
-  width: min(948px, calc(100vw - 40px));
+  width: min(998px, calc(100vw - 40px));
   margin: 0 auto;
-  padding: 8px 0 16px;
+  padding: 24px 0 16px;
   display: grid;
-  grid-template-columns: 500px minmax(390px, 430px);
+  grid-template-columns: 550px minmax(390px, 430px);
   gap: 18px;
   align-items: stretch;
 }
@@ -8355,10 +8355,12 @@ button:hover {
 }
 
 .signupV8Institutional {
-  width: 500px;
+  width: 550px;
   min-height: 0;
   padding: 24px 26px;
   border: 0;
+  background: transparent;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -8370,6 +8372,7 @@ button:hover {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  display: none;
 }
 
 .signupV8Institutional::before {
@@ -8424,9 +8427,9 @@ button:hover {
 .signupV8LogoBlock {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 28px;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
   text-align: left;
 }
 
@@ -8487,7 +8490,7 @@ button:hover {
 }
 
 .signupV8HeroTop p {
-  max-width: 440px;
+  max-width: 100%;
   margin: 14px 0 0;
   color: rgba(232, 237, 247, .82);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
@@ -12430,6 +12433,11 @@ button:hover {
 }
 
 .termsLineRich .termsAgreementText {
+  display: block;
+  text-align: left;
+}
+
+.termsLineRich small {
   display: block;
   text-align: justify;
 }
