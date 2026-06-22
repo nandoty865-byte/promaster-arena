@@ -9775,43 +9775,83 @@ button:hover {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 10px;
+    gap: 8px 10px;
+    position: sticky;
+    top: 0;
+    z-index: 65;
     width: calc(100% + 32px);
     margin-left: -16px;
     margin-right: -16px;
     margin-bottom: 10px;
-    padding: 8px 16px 10px;
+    padding: 8px 16px 9px;
     border-radius: 0;
     background: rgba(2, 6, 23, .9);
+    backdrop-filter: blur(18px);
   }
 
   .landingLogo {
+    grid-column: 1;
+    grid-row: 1;
     justify-content: flex-start;
     min-width: 0;
   }
 
   .landingLogo img {
-    width: min(168px, 44vw);
-    max-height: 56px;
+    width: min(142px, 37vw);
+    max-height: 48px;
   }
 
   .landingNav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    justify-content: flex-start;
+    gap: 16px;
+    min-width: 0;
+    overflow-x: auto;
+    padding: 6px 2px 0;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .landingNav::-webkit-scrollbar {
     display: none;
+  }
+
+  .landingNav a,
+  .landingNavDropdown summary {
+    flex: 0 0 auto;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .landingNavDropdown {
+    width: auto;
+    flex: 0 0 auto;
   }
 
   .landingActions {
+    grid-column: 2;
+    grid-row: 1;
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
+    gap: 8px;
   }
 
   .landingActions a:not(.landingButton) {
-    display: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    font-size: 12px;
+    white-space: nowrap;
   }
 
   .landingButton {
-    min-height: 38px;
-    padding: 10px 14px;
+    min-height: 34px;
+    padding: 9px 11px;
     border-radius: 12px;
     font-size: 12px;
     white-space: nowrap;
@@ -9822,6 +9862,56 @@ button:hover {
     font-weight: 800;
     letter-spacing: 0;
     text-transform: none;
+  }
+
+  .landingArenaPage,
+  .organizerLandingPage,
+  .playerLandingPage,
+  .signupLandingPage,
+  .personaLanding-arena {
+    padding-top: 156px;
+  }
+
+  .landingArenaPage .landingHeader,
+  .organizerLandingPage .landingHeader,
+  .playerLandingPage .landingHeader,
+  .signupLandingPage .landingHeader,
+  .personaLanding-arena .landingHeader {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 40px;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .signupLandingPage .landingHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 10px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 65;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding-top: 8px;
+    padding-bottom: 9px;
+  }
+
+  .signupLandingPage .landingLogo img {
+    width: min(142px, 37vw);
+    max-height: 48px;
+  }
+
+  .signupLandingPage .landingNav {
+    display: flex;
+  }
+
+  .signupLandingPage .landingActions a:not(.landingButton) {
+    display: inline-flex;
   }
 
   .landingFooter {
@@ -13399,6 +13489,14 @@ button:hover {
     text-transform: none;
   }
 
+  .landingArenaPage .landingHeader {
+    position: fixed;
+    top: 40px;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
   .arenaDeviceStage {
     min-height: 250px;
     margin-top: 10px;
@@ -13547,12 +13645,12 @@ button:hover {
 @media (max-width: 680px) {
   .organizerLandingPage,
   .playerLandingPage {
-    padding-top: 16px;
+    padding-top: 156px;
   }
 
   .organizerLandingPage .landingHeader,
   .playerLandingPage .landingHeader {
-    top: auto;
+    top: 40px;
   }
 
   .organizerLandingPage .landingHeader,
@@ -13560,8 +13658,15 @@ button:hover {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 10px;
-    padding: 8px 16px 10px;
+    gap: 8px 10px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 65;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 8px 16px 9px;
   }
 
   .organizerLandingPage .landingLogo,
@@ -13571,13 +13676,13 @@ button:hover {
 
   .organizerLandingPage .landingLogo img,
   .playerLandingPage .landingLogo img {
-    width: min(168px, 44vw);
-    max-height: 56px;
+    width: min(142px, 37vw);
+    max-height: 48px;
   }
 
   .organizerLandingPage .landingNav,
   .playerLandingPage .landingNav {
-    display: none;
+    display: flex;
   }
 
   .organizerLandingPage .landingActions,
@@ -13588,13 +13693,13 @@ button:hover {
 
   .organizerLandingPage .landingActions a:not(.landingButton),
   .playerLandingPage .landingActions a:not(.landingButton) {
-    display: none;
+    display: inline-flex;
   }
 
   .organizerLandingPage .landingButton,
   .playerLandingPage .landingButton {
-    min-height: 38px;
-    padding: 10px 14px;
+    min-height: 34px;
+    padding: 9px 11px;
     border-radius: 12px;
     font-size: 12px;
     white-space: nowrap;
