@@ -6707,7 +6707,7 @@ function OrganizerLanding() {
           </div>
 
           <div className="organizerHeroMockup" aria-label="Prévia do painel do organizador">
-            <img src="/organizer/photos/dashboard-hero-mockup-recriado.webp" alt="Dashboard do organizador PlayFinal Arena" />
+            <img src="/organizer/photos/dashboard-organizer-notebook-screen.png" alt="Dashboard do organizador PlayFinal Arena" />
           </div>
         </section>
 
