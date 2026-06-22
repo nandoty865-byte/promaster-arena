@@ -897,8 +897,10 @@ function SignupChoice() {
             <img src="/playfinal-logo-symbol.png" alt="" />
             <div>
               <h1>
-                Comece no
-                <strong>PlayFinal Arena</strong>
+                <span>Comece no</span>
+                <strong className="signupBrandName">
+                  <span>Play</span><span>Final</span> Arena
+                </strong>
               </h1>
             </div>
           </div>
@@ -943,7 +945,7 @@ function SignupChoice() {
       <section className="signupV8Card" aria-label="Cadastro mínimo">
         <div className="signupV8FormContent">
           <h2><span />Crie Sua Conta</h2>
-          <p>Cadastro mínimo para liberar sua validação e preparar seu painel.</p>
+          <p>Inicie sua jornada</p>
 
           <div className="signupV8SocialRow">
             {['Google', 'Facebook', 'X'].map(provider => (
@@ -1040,7 +1042,9 @@ function SignupChoice() {
                 checked={form.marketingConsent}
                 onChange={e => updateField('marketingConsent', e.target.checked)}
               />
-              <span>{MARKETING_CONSENT_TEXT} <small>Opcional.</small></span>
+              <span className="termsAgreementText">
+                {MARKETING_CONSENT_TEXT} <span className="optionalConsentTag">[Opcional]</span>
+              </span>
             </label>
           </div>
 

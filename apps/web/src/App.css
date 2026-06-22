@@ -8426,7 +8426,11 @@ button:hover {
   gap: 16px;
   align-items: center;
   margin-bottom: 14px;
-  text-align: center;
+  text-align: left;
+}
+
+.signupV8LogoBlock > div {
+  width: 100%;
 }
 
 .signupV8LogoBlock img {
@@ -8454,17 +8458,26 @@ button:hover {
 .signupV8HeroTop h1 {
   margin: 0;
   color: #f8fafc;
-  font-size: 38px;
+  font-size: 44px;
   line-height: .98;
   font-weight: 950;
   letter-spacing: 0;
   text-transform: uppercase;
+  text-align: left;
 }
 
 .signupV8HeroTop h1 strong {
   display: block;
   color: #9eff00;
   text-shadow: 0 0 24px rgba(158, 255, 0, .3), 0 18px 50px rgba(0, 0, 0, .6);
+}
+
+.signupV8HeroTop h1 .signupBrandName {
+  font-style: italic;
+}
+
+.signupV8HeroTop h1 .signupBrandName span {
+  color: #fff;
 }
 
 .signupV8HeroTop p {
@@ -8475,7 +8488,7 @@ button:hover {
   font-size: 14px;
   line-height: 1.42;
   text-align: justify;
-  text-align-last: center;
+  text-align-last: left;
 }
 
 .signupV8FeatureGrid {
@@ -8638,6 +8651,7 @@ button:hover {
   letter-spacing: .75px;
   text-transform: uppercase;
   min-width: 0;
+  text-align: left;
 }
 
 .signupV8FormGrid input {
@@ -8670,6 +8684,7 @@ button:hover {
 
 .signupV8Consents .termsLine {
   margin: 0;
+  align-items: flex-start;
 }
 
 .signupV8SubmitRow {
@@ -12388,6 +12403,11 @@ button:hover {
   gap: 6px;
 }
 
+.termsLineRich input,
+.termsLineOptional input {
+  margin-top: 2px;
+}
+
 .termsLine small {
   color: #94a3b8;
   font-size: 12px;
@@ -12400,6 +12420,7 @@ button:hover {
   font-size: 12px;
   font-weight: 850;
   line-height: 1.35;
+  text-align: left;
 }
 
 .termsAgreementLink {
@@ -12421,6 +12442,12 @@ button:hover {
 
 .termsAgreementLink:hover {
   color: #f3d66b;
+}
+
+.optionalConsentTag {
+  color: #9eff00;
+  font-weight: 950;
+  white-space: nowrap;
 }
 
 .termsInlineLinks {
