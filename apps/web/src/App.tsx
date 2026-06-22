@@ -896,7 +896,6 @@ function SignupChoice() {
           <div className="signupV8LogoBlock">
             <img src="/playfinal-logo-symbol.png" alt="" />
             <div>
-              <span className="signupV8Kicker">Cadastro premium</span>
               <h1>
                 Comece no
                 <strong>PlayFinal Arena</strong>
