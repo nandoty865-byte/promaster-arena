@@ -5974,9 +5974,9 @@ button:hover {
 .organizerLandingPage .landingNavDropdown summary,
 .organizerLandingPage .landingActions a {
   font-family: var(--font-ui);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: .04em;
+  letter-spacing: .03em;
   text-transform: uppercase;
 }
 
@@ -5996,6 +5996,8 @@ button:hover {
 
 .organizerHeroCopy {
   max-width: 560px;
+  justify-self: start;
+  text-align: left;
 }
 
 .organizerBadge {
@@ -6013,6 +6015,7 @@ button:hover {
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
+  align-self: flex-start;
 }
 
 .organizerBadge::before {
@@ -6025,14 +6028,14 @@ button:hover {
 }
 
 .organizerHero h1 {
-  max-width: 650px;
+  max-width: 620px;
   margin: 0;
   color: var(--organizer-text);
   font-family: var(--font-heading, var(--font-body));
-  font-size: clamp(44px, 5.8vw, 72px);
+  font-size: 56px;
   font-weight: 800;
-  letter-spacing: -.045em;
-  line-height: .98;
+  letter-spacing: 0;
+  line-height: 1;
   text-align: left;
 }
 
@@ -13121,6 +13124,10 @@ button:hover {
     padding-top: 34px;
   }
 
+  .organizerHero h1 {
+    font-size: 48px;
+  }
+
   .organizerHeroCopy,
   .organizerHero p,
   .playerHeroCopy,
@@ -13177,6 +13184,10 @@ button:hover {
   .organizerHero,
   .playerHero {
     gap: 24px;
+  }
+
+  .organizerHero h1 {
+    font-size: 38px;
   }
 
   .organizerHeroActions,
