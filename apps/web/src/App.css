@@ -4471,6 +4471,19 @@ button:hover {
     radial-gradient(circle at 20% 0%, rgba(190, 242, 100, .16), transparent 34%),
     linear-gradient(180deg, rgba(3, 7, 18, .96), rgba(2, 6, 23, .98));
   box-shadow: -28px 0 90px rgba(0, 0, 0, .48);
+  animation: landingDrawerIn .24s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+@keyframes landingDrawerIn {
+  from {
+    opacity: .55;
+    transform: translateX(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .landingMobileMenuHeader {
@@ -14687,8 +14700,8 @@ button:hover {
   .organizerLandingPage .landingLogo img,
   .playerLandingPage .landingLogo img,
   .signupLandingPage .landingLogo img {
-    width: min(112px, 30vw);
-    max-height: 42px;
+    width: min(132px, 34vw);
+    max-height: 48px;
   }
 
   .landingNav,
@@ -14714,10 +14727,13 @@ button:hover {
   .organizerLandingPage .landingButton,
   .playerLandingPage .landingButton {
     min-height: 36px;
-    padding: 9px 10px;
+    padding: 0 10px;
     border-radius: 12px;
     font-size: 12px;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .landingMenuButton {
@@ -14759,7 +14775,7 @@ button:hover {
   .organizerLandingPage .landingLogo img,
   .playerLandingPage .landingLogo img,
   .signupLandingPage .landingLogo img {
-    width: 92px;
+    width: 108px;
   }
 
   .landingActions a[href="/login"] {
