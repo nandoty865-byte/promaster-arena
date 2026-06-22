@@ -8399,23 +8399,23 @@ button:hover {
 
 .signupV8Light {
   position: absolute;
-  width: 280px;
-  height: 280px;
+  width: 220px;
+  height: 220px;
   border-radius: 50%;
-  filter: blur(28px);
-  opacity: .52;
-  background: radial-gradient(circle, rgba(158, 255, 0, .24), transparent 62%);
+  filter: blur(44px);
+  opacity: .28;
+  background: radial-gradient(circle, rgba(158, 255, 0, .16), rgba(158, 255, 0, .05) 42%, transparent 76%);
   pointer-events: none;
 }
 
 .signupV8Light.one {
-  top: -120px;
-  left: 160px;
+  top: -70px;
+  left: 190px;
 }
 
 .signupV8Light.two {
-  right: -120px;
-  bottom: 50px;
+  right: -60px;
+  bottom: 80px;
 }
 
 .signupV8HeroTop,
@@ -8427,9 +8427,9 @@ button:hover {
 .signupV8LogoBlock {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 38px;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: 22px;
   text-align: left;
 }
 
@@ -8438,9 +8438,9 @@ button:hover {
 }
 
 .signupV8LogoBlock img {
-  width: 132px;
+  width: 162px;
   height: auto;
-  filter: drop-shadow(0 0 34px rgba(158, 255, 0, .46));
+  filter: drop-shadow(0 0 18px rgba(158, 255, 0, .28));
 }
 
 .signupV8Kicker {
@@ -8777,11 +8777,11 @@ button:hover {
 
   .signupV8LogoBlock {
     align-items: center;
-    gap: 16px;
+    gap: 24px;
   }
 
   .signupV8LogoBlock img {
-    width: 78px;
+    width: 112px;
   }
 
   .signupV8HeroTop h1 {

@@ -945,7 +945,6 @@ function SignupChoice() {
       <section className="signupV8Card" aria-label="Cadastro mínimo">
         <div className="signupV8FormContent">
           <h2><span />Crie Sua Conta</h2>
-          <p>Inicie sua jornada</p>
 
           <div className="signupV8SocialRow">
             {['Google', 'Facebook', 'X'].map(provider => (
