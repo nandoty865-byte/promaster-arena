@@ -8476,8 +8476,13 @@ button:hover {
   font-style: italic;
 }
 
-.signupV8HeroTop h1 .signupBrandName span {
+.signupV8HeroTop h1 .signupBrandPlay,
+.signupV8HeroTop h1 .signupBrandArena {
   color: #fff;
+}
+
+.signupV8HeroTop h1 .signupBrandFinal {
+  color: #9eff00;
 }
 
 .signupV8HeroTop p {
@@ -8582,7 +8587,7 @@ button:hover {
 }
 
 .signupV8FormContent > p {
-  margin: 0 0 10px 23px;
+  margin: 0 0 10px;
   color: #98a2b6;
   font-family: Inter, "Segoe UI", Arial, sans-serif;
   font-size: 12px;

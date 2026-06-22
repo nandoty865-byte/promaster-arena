@@ -899,7 +899,7 @@ function SignupChoice() {
               <h1>
                 <span>Comece no</span>
                 <strong className="signupBrandName">
-                  <span>Play</span><span>Final</span> Arena
+                  <span className="signupBrandPlay">Play</span><span className="signupBrandFinal">Final</span> <span className="signupBrandArena">Arena</span>
                 </strong>
               </h1>
             </div>
