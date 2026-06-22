@@ -485,7 +485,7 @@ const SIGNUP_PROFILE_OPTIONS = [
     key: 'arena',
     title: 'Arena',
     action: 'Cadastrar minha arena',
-    cardTitle: 'Cadastrar minha arena',
+    cardTitle: 'Minha Arena',
     cardSubtitle: 'Quero gerenciar minha arena',
     benefits: ['Gestão completa', 'Planos completa', 'Multiusuários', 'Marca personalizada'],
     image: '/signup/photos/card-arena-v2.png',
