@@ -6692,7 +6692,9 @@ function OrganizerLanding() {
           <div className="organizerHeroCopy">
             <span className="organizerBadge">Para organizadores</span>
             <h1>
-              Organize torneios profissionais em <strong>minutos</strong>
+              <span>Organize torneios</span>
+              <span>profissionais em</span>
+              <strong>minutos</strong>
             </h1>
             <p>
               Plataforma completa para gestão de torneios, inscrições, pagamentos,
