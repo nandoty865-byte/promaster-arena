@@ -6946,6 +6946,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
 
   return (
     <div className={`landing personaLanding personaLanding-${type}`}>
+      {type === 'arena' && <LandingTopHeadline />}
       <LandingHeader />
 
       <section id="conteudo-principal" className="personaHero">

@@ -5737,6 +5737,14 @@ button:hover {
     url('/playfinal-hero-broadcast.png') center / cover no-repeat;
 }
 
+.personaLanding-arena {
+  padding-top: 66px;
+}
+
+.personaLanding-arena .landingHeader {
+  top: 50px;
+}
+
 .personaHeroCopy,
 .personaPanel,
 .personaBenefits,
