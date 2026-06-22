@@ -6226,16 +6226,15 @@ function LandingHeader() {
           <button className="landingMenuBackdrop" type="button" aria-label="Fechar menu" onClick={closeMenu} />
           <aside className="landingMobileMenu" id="landingMobileMenu" aria-label="Menu principal">
             <div className="landingMobileMenuHeader">
-              <a href="/" className="landingMobileMenuLogo" onClick={closeMenu}>
-                <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
-              </a>
+              <div className="landingMobileMenuBrand">
+                <a href="/" className="landingMobileMenuLogo" onClick={closeMenu}>
+                  <img src="/playfinal-logo-symbol.png" alt="PlayFinal Arena" />
+                </a>
+                <strong>Menu principal</strong>
+              </div>
               <button type="button" aria-label="Fechar menu" onClick={closeMenu}>
                 <span aria-hidden="true" />
               </button>
-            </div>
-            <div className="landingMobileMenuIntro">
-              <strong>Menu principal</strong>
-              <p>Escolha uma área da plataforma ou crie sua conta para começar.</p>
             </div>
             <nav className="landingMobileMenuNav">
               {landingMobileMenuItems.map(item => (

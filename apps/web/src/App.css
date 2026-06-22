@@ -4463,11 +4463,11 @@ button:hover {
   width: min(420px, 100%);
   height: 100%;
   overflow-y: auto;
-  padding: 26px 14px 22px;
+  padding: 18px 14px 16px;
   display: grid;
-  grid-template-rows: auto auto auto auto auto;
+  grid-template-rows: auto auto auto auto;
   align-content: start;
-  gap: 18px;
+  gap: 12px;
   border-left: 1px solid rgba(255, 255, 255, .16);
   background:
     radial-gradient(circle at 8% 8%, rgba(190, 242, 100, .16), transparent 26%),
@@ -4492,29 +4492,46 @@ button:hover {
 .landingMobileMenuHeader {
   display: flex;
   justify-content: space-between;
-  gap: 14px;
-  align-items: flex-start;
-  min-height: 88px;
+  gap: 12px;
+  align-items: center;
+  min-height: 58px;
+}
+
+.landingMobileMenuBrand {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.landingMobileMenuBrand strong {
+  color: #d3d5dc;
+  font-size: 16px;
+  font-weight: 950;
+  letter-spacing: .6px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, .55);
 }
 
 .landingMobileMenuLogo {
-  min-width: 0;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   text-decoration: none;
 }
 
 .landingMobileMenuLogo img {
-  width: min(270px, 64vw);
-  max-height: 92px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
-  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, .58));
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .58));
 }
 
 .landingMobileMenuHeader button {
-  width: 54px;
-  height: 54px;
-  flex: 0 0 54px;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, .08);
@@ -4551,41 +4568,18 @@ button:hover {
   transform: rotate(-45deg);
 }
 
-.landingMobileMenuIntro {
-  padding: 0 24px 14px;
-}
-
-.landingMobileMenuIntro strong {
-  display: block;
-  color: #d3d5dc;
-  font-size: 18px;
-  font-weight: 950;
-  letter-spacing: .7px;
-  line-height: 1;
-  text-transform: uppercase;
-  text-shadow: 0 3px 8px rgba(0, 0, 0, .55);
-}
-
-.landingMobileMenuIntro p {
-  max-width: 330px;
-  margin: 18px 0 0;
-  color: #b9bbc4;
-  font-size: 17px;
-  line-height: 1.55;
-}
-
 .landingMobileMenuNav {
   display: grid;
   align-content: start;
-  gap: 10px;
+  gap: 8px;
 }
 
 .landingMobileMenuNav a {
-  min-height: 70px;
-  padding: 10px 18px;
+  min-height: 58px;
+  padding: 8px 14px;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 18px;
-  gap: 12px;
+  grid-template-columns: 40px minmax(0, 1fr) 16px;
+  gap: 10px;
   align-items: center;
   border: 1px solid rgba(255, 255, 255, .12);
   border-radius: 10px;
@@ -4613,7 +4607,7 @@ button:hover {
 .landingMobileMenuNav a strong {
   overflow-wrap: anywhere;
   color: #dddfe7;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 950;
   letter-spacing: .5px;
   line-height: 1.1;
@@ -4622,26 +4616,26 @@ button:hover {
 }
 
 .landingMobileMenuNav a small {
-  margin-top: 6px;
+  margin-top: 4px;
   color: #b6b8c1;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.2;
 }
 
 .landingMobileMenuNav a i {
-  width: 14px;
-  height: 14px;
-  border-top: 3px solid #b8bbc3;
-  border-right: 3px solid #b8bbc3;
+  width: 12px;
+  height: 12px;
+  border-top: 2px solid #b8bbc3;
+  border-right: 2px solid #b8bbc3;
   transform: rotate(45deg);
   opacity: .9;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .5));
 }
 
 .landingMobileMenuItemIcon {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   position: relative;
@@ -4746,18 +4740,18 @@ button:hover {
 .landingMobileMenuActions {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
-  padding: 8px 0 2px;
+  gap: 9px;
+  padding: 2px 0 0;
 }
 
 .landingMobileMenuActions a {
-  min-height: 62px;
+  min-height: 48px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 18px;
+  border-radius: 15px;
   color: #d8dbe2;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 950;
   letter-spacing: .7px;
   text-decoration: none;
@@ -4781,21 +4775,23 @@ button:hover {
 }
 
 .landingMobileMenuFooter {
-  margin-top: 2px;
-  padding-top: 18px;
+  margin-top: 0;
+  padding-top: 12px;
   border-top: 1px solid rgba(190, 242, 100, .10);
+  text-align: center;
 }
 
 .landingMobileMenuSocials {
   display: flex;
-  gap: 12px;
+  justify-content: center;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
 }
 
 .landingMobileMenuSocials a {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   position: relative;
@@ -4812,8 +4808,8 @@ button:hover {
 }
 
 .landingMobileMenuSocials img {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 
@@ -4822,21 +4818,22 @@ button:hover {
 }
 
 .landingMobileMenuFooter p {
-  margin: 0 0 8px;
+  margin: 0 0 7px;
   color: #a8abb5;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.35;
 }
 
 .landingMobileMenuFooter div {
   display: flex;
+  justify-content: center;
   gap: 14px;
   flex-wrap: wrap;
 }
 
 .landingMobileMenuFooter div a {
   color: #b8bbc4;
-  font-size: 13px;
+  font-size: 12px;
   text-decoration: none;
 }
 
@@ -15079,20 +15076,12 @@ button:hover {
 
   .landingMobileMenu {
     width: 100%;
-    padding: 22px 14px 20px;
+    padding: 18px 14px 16px;
   }
 
   .landingMobileMenuLogo img {
-    width: min(258px, 64vw);
-  }
-
-  .landingMobileMenuIntro {
-    padding-left: 22px;
-    padding-right: 22px;
-  }
-
-  .landingMobileMenuIntro p {
-    font-size: 16px;
+    width: 62px;
+    height: 62px;
   }
 }
 
@@ -15114,61 +15103,52 @@ button:hover {
   }
 
   .landingMobileMenu {
-    padding: 18px 12px 20px;
-    gap: 14px;
+    padding: 14px 12px 14px;
+    gap: 9px;
   }
 
   .landingMobileMenuHeader {
-    min-height: 76px;
+    min-height: 54px;
   }
 
   .landingMobileMenuLogo img {
-    width: min(232px, 62vw);
-    max-height: 78px;
+    width: 56px;
+    height: 56px;
   }
 
   .landingMobileMenuHeader button {
-    width: 48px;
-    height: 48px;
-    flex-basis: 48px;
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
   }
 
-  .landingMobileMenuIntro {
-    padding: 0 16px 8px;
-  }
-
-  .landingMobileMenuIntro strong {
-    font-size: 16px;
-  }
-
-  .landingMobileMenuIntro p {
-    margin-top: 14px;
-    font-size: 15px;
+  .landingMobileMenuBrand {
+    gap: 8px;
   }
 
   .landingMobileMenuNav a {
-    min-height: 64px;
-    grid-template-columns: 42px minmax(0, 1fr) 16px;
-    gap: 10px;
-    padding: 9px 14px;
+    min-height: 54px;
+    grid-template-columns: 36px minmax(0, 1fr) 14px;
+    gap: 8px;
+    padding: 7px 12px;
   }
 
   .landingMobileMenuNav a strong {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .landingMobileMenuNav a small {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .landingMobileMenuActions a {
-    min-height: 56px;
-    font-size: 15px;
+    min-height: 44px;
+    font-size: 14px;
   }
 
   .landingMobileMenuSocials a {
-    width: 46px;
-    height: 46px;
+    width: 36px;
+    height: 36px;
   }
 }
 
