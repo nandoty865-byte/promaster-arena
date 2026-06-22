@@ -919,10 +919,11 @@ function SignupChoice() {
               <button
                 type="button"
                 key={provider}
+                aria-label={provider}
                 onClick={() => alert('Login por rede social em preparação. Use o cadastro com e-mail e WhatsApp por enquanto.')}
               >
-                <strong>{provider.slice(0, 1)}</strong>
-                {provider}
+                <strong aria-hidden="true">{provider.slice(0, 1)}</strong>
+                {provider !== 'X' && <span>{provider}</span>}
               </button>
             ))}
           </div>

@@ -8743,6 +8743,57 @@ button:hover {
 }
 
 @media (max-width: 720px) {
+  .signupLandingPage {
+    padding-top: 0;
+  }
+
+  .signupLandingPage .landingTopHeadline {
+    margin-bottom: 0;
+  }
+
+  .signupLandingPage .landingHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-top: 8px;
+    padding-bottom: 10px;
+    background: rgba(2, 6, 23, .9);
+  }
+
+  .signupLandingPage .landingLogo {
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .signupLandingPage .landingLogo img {
+    width: min(168px, 44vw);
+    max-height: 56px;
+  }
+
+  .signupLandingPage .landingNav {
+    display: none;
+  }
+
+  .signupLandingPage .landingActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .signupLandingPage .landingActions a:not(.landingButton) {
+    display: none;
+  }
+
+  .signupLandingPage .landingButton {
+    min-height: 38px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
   .signupProfileSelectPage {
     padding-top: 8px;
   }
@@ -8751,49 +8802,159 @@ button:hover {
     font-size: 26px;
   }
 
+  .signupSelectHero {
+    margin-bottom: 18px;
+  }
+
+  .signupPremiumPage {
+    padding: 16px 0 30px;
+  }
+
+  .signupPremiumHero {
+    margin-bottom: 16px;
+  }
+
+  .signupPremiumGrid {
+    gap: 16px;
+  }
+
+  .signupPremiumCard {
+    width: min(330px, 100%);
+    border-radius: 16px;
+  }
+
+  .signupPremiumCard::before {
+    border-radius: 14px;
+  }
+
+  .signupPremiumImage {
+    height: 190px;
+  }
+
+  .signupPremiumPanel {
+    padding: 22px 20px 18px;
+  }
+
+  .signupPremiumCard h2 {
+    min-height: 0;
+  }
+
+  .signupPremiumCard p {
+    margin-bottom: 14px;
+  }
+
+  .signupPremiumCard ul {
+    gap: 6px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
   .signupV8Page {
     width: min(100%, calc(100vw - 24px));
-    padding: 12px 0 18px;
+    padding: 8px 0 18px;
+    gap: 12px;
   }
 
   .signupV8Institutional,
   .signupV8Card {
-    border-radius: 20px;
+    border-radius: 18px;
   }
 
   .signupV8Institutional {
-    padding: 24px 20px;
+    padding: 18px 16px;
+    background:
+      radial-gradient(circle at 50% 18%, rgba(158, 255, 0, .14), transparent 28%),
+      linear-gradient(180deg, rgba(7, 11, 20, .92), rgba(3, 6, 12, .95));
+    border: 1px solid rgba(158, 255, 0, .18);
+    box-shadow: 0 22px 70px rgba(0, 0, 0, .42), inset 0 0 58px rgba(158, 255, 0, .035);
   }
 
   .signupV8LogoBlock {
     align-items: center;
-    gap: 24px;
+    gap: 12px;
+    margin-bottom: 14px;
+    text-align: center;
   }
 
   .signupV8LogoBlock img {
-    width: 112px;
+    width: 78px;
   }
 
   .signupV8HeroTop h1 {
-    font-size: 34px;
+    font-size: 28px;
+    text-align: center;
   }
 
   .signupV8HeroTop p {
-    font-size: 15px;
+    margin-top: 12px;
+    font-size: 14px;
+    text-align: center;
+    text-align-last: center;
   }
 
-  .signupV8FeatureGrid,
-  .signupV8SocialRow,
   .signupV8FormGrid {
     grid-template-columns: 1fr;
   }
 
+  .signupV8FeatureGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 16px;
+  }
+
+  .signupV8FeatureGrid article {
+    min-height: 0;
+    padding: 8px 6px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .signupV8FeatureGrid span {
+    width: 26px;
+    height: 26px;
+    margin: 0 auto 7px;
+    border-radius: 10px;
+    font-size: 11px;
+  }
+
+  .signupV8FeatureGrid strong {
+    margin-bottom: 0;
+    font-size: 8.5px;
+  }
+
+  .signupV8FeatureGrid p {
+    display: none;
+  }
+
   .signupV8Card {
-    padding: 24px 18px;
+    padding: 22px 18px;
   }
 
   .signupV8FormContent h2 {
     font-size: 23px;
+  }
+
+  .signupV8SocialRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 22px 0 20px;
+  }
+
+  .signupV8SocialRow button {
+    min-height: 36px;
+    gap: 5px;
+    font-size: 11px;
+    padding: 0 6px;
+  }
+
+  .signupV8SocialRow strong {
+    font-size: 14px;
+  }
+
+  .signupV8Divider {
+    gap: 10px;
+    letter-spacing: .9px;
   }
 
   .signupV8SubmitRow .primaryButton {
@@ -9547,6 +9708,10 @@ button:hover {
     padding: 16px;
   }
 
+  .landingTopHeadline {
+    margin-bottom: 0;
+  }
+
   .agendaPage {
     padding: 66px 16px 16px;
   }
@@ -9607,11 +9772,56 @@ button:hover {
   }
 
   .landingHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
     width: calc(100% + 32px);
     margin-left: -16px;
     margin-right: -16px;
-    padding: 14px 16px;
+    margin-bottom: 10px;
+    padding: 8px 16px 10px;
     border-radius: 0;
+    background: rgba(2, 6, 23, .9);
+  }
+
+  .landingLogo {
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .landingLogo img {
+    width: min(168px, 44vw);
+    max-height: 56px;
+  }
+
+  .landingNav {
+    display: none;
+  }
+
+  .landingActions {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .landingActions a:not(.landingButton) {
+    display: none;
+  }
+
+  .landingButton {
+    min-height: 38px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .landingHeader .landingButton {
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .landingFooter {
@@ -9626,8 +9836,7 @@ button:hover {
     font-size: 20px;
   }
 
-  .landingCtas,
-  .landingActions {
+  .landingCtas {
     flex-direction: column;
     align-items: stretch;
   }
@@ -13177,7 +13386,17 @@ button:hover {
 
 @media (max-width: 640px) {
   .arenaLandingHero {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
     padding: 22px;
+  }
+
+  .landingArenaPage .landingHeader .landingButton {
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .arenaDeviceStage {
@@ -13328,12 +13547,65 @@ button:hover {
 @media (max-width: 680px) {
   .organizerLandingPage,
   .playerLandingPage {
-    padding-top: 52px;
+    padding-top: 16px;
   }
 
   .organizerLandingPage .landingHeader,
   .playerLandingPage .landingHeader {
     top: auto;
+  }
+
+  .organizerLandingPage .landingHeader,
+  .playerLandingPage .landingHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px 10px;
+  }
+
+  .organizerLandingPage .landingLogo,
+  .playerLandingPage .landingLogo {
+    justify-content: flex-start;
+  }
+
+  .organizerLandingPage .landingLogo img,
+  .playerLandingPage .landingLogo img {
+    width: min(168px, 44vw);
+    max-height: 56px;
+  }
+
+  .organizerLandingPage .landingNav,
+  .playerLandingPage .landingNav {
+    display: none;
+  }
+
+  .organizerLandingPage .landingActions,
+  .playerLandingPage .landingActions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .organizerLandingPage .landingActions a:not(.landingButton),
+  .playerLandingPage .landingActions a:not(.landingButton) {
+    display: none;
+  }
+
+  .organizerLandingPage .landingButton,
+  .playerLandingPage .landingButton {
+    min-height: 38px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .organizerLandingPage .landingHeader .landingButton,
+  .playerLandingPage .landingHeader .landingButton {
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: none;
   }
 
   .organizerHero,
