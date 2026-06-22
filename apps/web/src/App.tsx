@@ -6369,6 +6369,7 @@ function LandingFooter() {
               <span className="brandLogoArena">Arena</span>
             </span>
           </a>
+          <p>Torneios em tempo real para jogadores, organizadores e arenas.</p>
         </div>
 
         <nav className="footerLinks" aria-label="Mapa do site">
@@ -6417,9 +6418,74 @@ function LandingFooter() {
         </nav>
       </div>
 
+      <div className="landingFooterMobile">
+        <div className="footerMobileBrand">
+          <a href="/" className="landingLogo">
+            <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+            <span className="brandLogoText" aria-label="PlayFinal Arena">
+              <span className="brandLogoPro">Play</span>
+              <span className="brandLogoMaster">Final</span>
+              <span className="brandLogoArena">Arena</span>
+            </span>
+          </a>
+          <p>Torneios em tempo real para jogadores, organizadores e arenas.</p>
+          <a className="landingButton footerMobileCta" href="/cadastro">Criar conta grátis</a>
+        </div>
+
+        <nav className="footerMobileSocials" aria-label="Redes sociais">
+          {visibleSocialLinks.map(link => (
+            <a
+              key={link.provider}
+              href={link.url}
+              aria-label={`${link.label} da PlayFinal Arena`}
+              target={link.url.startsWith('http') ? '_blank' : undefined}
+              rel={link.url.startsWith('http') ? 'noreferrer' : undefined}
+            >
+              {socialIconSrc[link.provider] ? (
+                <img src={socialIconSrc[link.provider]} alt="" />
+              ) : (
+                socialIconLabels[link.provider] || link.label?.slice(0, 2) || 'RS'
+              )}
+            </a>
+          ))}
+        </nav>
+
+        <div className="footerMobileAccordion">
+          <details>
+            <summary>Mapa do Site</summary>
+            <a href="/">Início</a>
+            <a href="/planos">Planos</a>
+            <a href="/agenda">Agenda</a>
+            <a href="/contato">Contato</a>
+            <a href="/sobre">Sobre</a>
+          </details>
+
+          <details>
+            <summary>Experiência</summary>
+            <a href="/jogador">Jogador</a>
+            <a href="/organizador">Organizador</a>
+            <a href="/arena">Minha Arena</a>
+            <a href="/cadastro">Inscreva-se</a>
+          </details>
+
+          <details>
+            <summary>Suporte e Legal</summary>
+            <a href="/contato">Contato</a>
+            <a href="/termos-de-uso">Termos de Uso</a>
+            <a href="/politica-de-privacidade">Política de Privacidade</a>
+            <a href="/termo-de-imagem">Uso de Imagem</a>
+            <a href="/lgpd">LGPD</a>
+          </details>
+        </div>
+      </div>
+
       <div className="landingFooterBottom">
         <span>© 2026 PlayFinal Arena. Todos os direitos reservados.</span>
-        <span>Torneios em Tempo Real</span>
+        <span>
+          <a href="/termos-de-uso">Termos</a>
+          <a href="/politica-de-privacidade">Privacidade</a>
+          <a href="/contato">Contato</a>
+        </span>
       </div>
     </footer>
   )

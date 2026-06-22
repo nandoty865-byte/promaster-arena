@@ -7101,6 +7101,23 @@ button:hover {
   font-weight: 400;
 }
 
+.landingFooterMobile {
+  display: none;
+}
+
+.landingFooterBottom a {
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.landingFooterBottom a + a {
+  margin-left: 12px;
+}
+
+.landingFooterBottom a:hover {
+  color: #bef264;
+}
+
 .staticPublicMain {
   max-width: 1180px;
   margin: 34px auto 0;
@@ -14785,5 +14802,186 @@ button:hover {
   .landingButton {
     padding-left: 9px;
     padding-right: 9px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1180px) {
+  .landingFooterInner {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 26px 34px;
+    padding: 34px 28px;
+  }
+
+  .footerBrand {
+    grid-column: auto;
+  }
+
+  .footerSocials div {
+    grid-template-columns: repeat(4, 34px);
+  }
+}
+
+@media (max-width: 768px) {
+  .landingFooter {
+    width: calc(100% + 32px);
+    margin: 48px -16px 0;
+    border-top-color: rgba(158, 255, 0, .18);
+    border-bottom: 0;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(158, 255, 0, .10), transparent 30%),
+      linear-gradient(180deg, #03060c 0%, #050914 100%);
+  }
+
+  .landingFooterInner {
+    display: none;
+  }
+
+  .landingFooterMobile {
+    width: min(100%, 430px);
+    margin: 0 auto;
+    padding: 30px 22px 20px;
+    display: block;
+  }
+
+  .footerMobileBrand {
+    text-align: center;
+  }
+
+  .footerMobileBrand .landingLogo {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .footerMobileBrand .landingLogo img {
+    width: min(190px, 70vw);
+    max-height: 76px;
+    margin: 0 auto 12px;
+  }
+
+  .footerMobileBrand p {
+    max-width: 320px;
+    margin: 0 auto 18px;
+    color: #aeb6c8;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .footerMobileCta {
+    min-height: 42px;
+    padding: 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    box-shadow: 0 0 22px rgba(158, 255, 0, .25);
+  }
+
+  .footerMobileSocials {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0 24px;
+  }
+
+  .footerMobileSocials a {
+    width: 36px;
+    height: 36px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid rgba(158, 255, 0, .18);
+    border-radius: 14px;
+    background: rgba(15, 23, 42, .58);
+    color: #d9f99d;
+    font-size: 11px;
+    font-weight: 900;
+    text-decoration: none;
+  }
+
+  .footerMobileSocials img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+  }
+
+  .footerMobileAccordion {
+    border-top: 1px solid rgba(255, 255, 255, .08);
+  }
+
+  .footerMobileAccordion details {
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    padding: 0;
+  }
+
+  .footerMobileAccordion summary {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    list-style: none;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  .footerMobileAccordion summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .footerMobileAccordion summary::after {
+    content: "+";
+    color: #9eff00;
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  .footerMobileAccordion details[open] summary::after {
+    content: "-";
+  }
+
+  .footerMobileAccordion a {
+    display: block;
+    padding: 0 0 11px;
+    color: #aeb6c8;
+    font-size: 13px;
+    text-decoration: none;
+  }
+
+  .footerMobileAccordion a:hover {
+    color: #9eff00;
+  }
+
+  .landingFooterBottom {
+    width: min(100%, 430px);
+    padding: 0 22px 24px;
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    border-top: 0;
+    color: #7a8294;
+    font-size: 11px;
+    text-align: center;
+  }
+
+  .landingFooterBottom span:last-child {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .landingFooterBottom a {
+    color: #aeb6c8;
+    font-size: 11px;
+  }
+
+  .landingFooterBottom a + a {
+    margin-left: 0;
   }
 }
