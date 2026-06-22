@@ -6135,6 +6135,22 @@ const landingLiveHeadlines = [
   ['Placar ao vivo', 'Bingo rodada 3 - prêmio acumulado'],
 ]
 
+const landingMobileMenuItems = [
+  { href: '/', label: 'Início', description: 'Voltar para a landing', icon: 'home' },
+  { href: '/agenda', label: 'Agenda', description: 'Próximos torneios', icon: 'calendar' },
+  { href: '/planos', label: 'Planos', description: 'Avulso, Pro, Master e Arena', icon: 'plans' },
+  { href: '/jogador', label: 'Para Jogadores', description: 'Inscrições, ranking e histórico', icon: 'player' },
+  { href: '/organizador', label: 'Para Organizadores', description: 'Crie e gerencie torneios', icon: 'organizer' },
+  { href: '/arena', label: 'Para Arenas', description: 'Planos, multiusuários e marca', icon: 'arena' },
+]
+
+const landingMobileSocialLinks = [
+  { href: '/contato', label: 'Instagram', icon: '/social-icons/playfinal-instagram-64.png', short: 'IG' },
+  { href: '/contato', label: 'TikTok', icon: '/social-icons/playfinal-tiktok-64.png', short: 'TK' },
+  { href: '/contato', label: 'YouTube', icon: '/social-icons/playfinal-youtube-64.png', short: 'YT' },
+  { href: '/contato', label: 'Facebook', icon: '/social-icons/playfinal-facebook-64.png', short: 'FB' },
+]
+
 function LandingTopHeadline() {
   return (
     <section className="landingTopHeadline" aria-label="Atualizações ao vivo">
@@ -6210,21 +6226,48 @@ function LandingHeader() {
           <button className="landingMenuBackdrop" type="button" aria-label="Fechar menu" onClick={closeMenu} />
           <aside className="landingMobileMenu" id="landingMobileMenu" aria-label="Menu principal">
             <div className="landingMobileMenuHeader">
-              <span>PlayFinal Arena</span>
-              <button type="button" onClick={closeMenu}>Fechar</button>
+              <a href="/" className="landingMobileMenuLogo" onClick={closeMenu}>
+                <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
+              </a>
+              <button type="button" aria-label="Fechar menu" onClick={closeMenu}>
+                <span aria-hidden="true" />
+              </button>
+            </div>
+            <div className="landingMobileMenuIntro">
+              <strong>Menu principal</strong>
+              <p>Escolha uma área da plataforma ou crie sua conta para começar.</p>
             </div>
             <nav className="landingMobileMenuNav">
-              <a href="/" onClick={closeMenu}>Início</a>
-              <a href="/agenda" onClick={closeMenu}>Agenda</a>
-              <a href="/planos" onClick={closeMenu}>Planos</a>
-              <a href="/jogador" onClick={closeMenu}>Para Jogadores</a>
-              <a href="/organizador" onClick={closeMenu}>Para Organizadores</a>
-              <a href="/arena" onClick={closeMenu}>Para Arenas</a>
-              <a href="/contato" onClick={closeMenu}>Contato</a>
+              {landingMobileMenuItems.map(item => (
+                <a key={item.href} href={item.href} onClick={closeMenu}>
+                  <span className={`landingMobileMenuItemIcon landingMobileMenuItemIcon-${item.icon}`} aria-hidden="true" />
+                  <span>
+                    <strong>{item.label}</strong>
+                    <small>{item.description}</small>
+                  </span>
+                  <i aria-hidden="true" />
+                </a>
+              ))}
             </nav>
             <div className="landingMobileMenuActions">
               <a href="/login" onClick={closeMenu}>Entrar</a>
               <a className="landingButton" href="/cadastro" onClick={closeMenu}>Criar conta</a>
+            </div>
+            <div className="landingMobileMenuFooter">
+              <nav className="landingMobileMenuSocials" aria-label="Redes sociais">
+                {landingMobileSocialLinks.map(link => (
+                  <a key={link.label} href={link.href} onClick={closeMenu} aria-label={link.label}>
+                    <img src={link.icon} alt="" />
+                    <span>{link.short}</span>
+                  </a>
+                ))}
+              </nav>
+              <p>© 2026 PlayFinal Arena. Torneios em tempo real.</p>
+              <div>
+                <a href="/termos-de-uso" onClick={closeMenu}>Termos</a>
+                <a href="/politica-de-privacidade" onClick={closeMenu}>Privacidade</a>
+                <a href="/contato" onClick={closeMenu}>Contato</a>
+              </div>
             </div>
           </aside>
         </div>
