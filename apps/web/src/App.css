@@ -4495,6 +4495,7 @@ button:hover {
   gap: 12px;
   align-items: center;
   min-height: 58px;
+  margin-bottom: 8px;
 }
 
 .landingMobileMenuBrand {
@@ -4532,6 +4533,7 @@ button:hover {
   width: 46px;
   height: 46px;
   flex: 0 0 46px;
+  padding: 0;
   display: grid;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, .08);
@@ -4551,8 +4553,8 @@ button:hover {
 .landingMobileMenuHeader button span::after {
   content: '';
   position: absolute;
-  top: 11px;
-  left: 1px;
+  top: 50%;
+  left: 50%;
   width: 22px;
   height: 3px;
   border-radius: 999px;
@@ -4561,11 +4563,11 @@ button:hover {
 }
 
 .landingMobileMenuHeader button span::before {
-  transform: rotate(45deg);
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 
 .landingMobileMenuHeader button span::after {
-  transform: rotate(-45deg);
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 .landingMobileMenuNav {
