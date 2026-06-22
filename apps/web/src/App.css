@@ -8602,7 +8602,7 @@ button:hover {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin: 18px 0 16px;
+  margin: 30px 0 28px;
 }
 
 .signupV8SocialRow button {
