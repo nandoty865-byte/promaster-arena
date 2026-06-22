@@ -289,6 +289,7 @@ organization   Organization? @relation(fields: [organizationId], references: [id
 playerProfile PlayerProfile?
 registrations TournamentRegistration[]
 roles UserRole[]
+auditEvents AuditEvent[]
 }
 
 model UserRole {
@@ -389,4 +390,40 @@ model IntegrationSetting {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model AuditEvent {
+  id             Int      @id @default(autoincrement())
+  actorUserId    Int?
+  actorName      String?
+  actorRole      String?
+  action         String
+  category       String   @default("business")
+  entityType     String?
+  entityId       String?
+  organizationId Int?
+  tournamentId   Int?
+  arenaId        Int?
+  paymentId      Int?
+  severity       String   @default("info")
+  status         String   @default("recorded")
+  beforeData     Json?
+  afterData      Json?
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  requestId      String?
+  createdAt      DateTime @default(now())
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorUserId])
+  @@index([action])
+  @@index([category])
+  @@index([severity])
+  @@index([entityType, entityId])
+  @@index([organizationId])
+  @@index([tournamentId])
+  @@map("audit_events")
 }

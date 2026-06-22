@@ -27,6 +27,11 @@ const prisma = new PrismaClient({
 const app = express()
 app.use(cors())
 app.use(express.json())
+app.use((req, res, next) => {
+  req.requestId = String(req.headers['x-request-id'] || randomUUID())
+  res.setHeader('X-Request-Id', req.requestId)
+  next()
+})
 const JWT_SECRET = process.env.JWT_SECRET || 'playfinal_dev_secret'
 const APP_URL = process.env.APP_URL || 'https://www.playfinal.com.br'
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
@@ -234,6 +239,99 @@ function maskPhone(value) {
   const digits = String(value || '').replace(/\D/g, '')
   if (digits.length <= 4) return digits ? '***' : ''
   return `${digits.slice(0, 4)}*****${digits.slice(-4)}`
+}
+
+function maskDocument(value) {
+  const digits = String(value || '').replace(/\D/g, '')
+  if (digits.length <= 4) return digits ? '***' : ''
+  return `${'*'.repeat(Math.max(3, digits.length - 4))}${digits.slice(-4)}`
+}
+
+function maskEmail(value) {
+  const email = String(value || '').trim()
+  const [name, domain] = email.split('@')
+  if (!name || !domain) return email ? '***' : ''
+  return `${name.slice(0, 1)}***@${domain}`
+}
+
+function auditSafeValue(key, value, depth = 0) {
+  const normalizedKey = String(key || '').toLowerCase()
+
+  if (value === undefined) return null
+  if (value === null) return null
+  if (['password', 'senha', 'token', 'secret', 'apikey', 'api_key', 'accessToken', 'refreshToken', 'cvv', 'qrCode', 'paymentQrCode', 'paymentQrCodeBase64'].some(item => normalizedKey.includes(item.toLowerCase()))) {
+    return value ? '[mascarado]' : null
+  }
+  if (['cpf', 'cnpj', 'document', 'documentNumber', 'responsibleCpf'].some(item => normalizedKey.includes(item.toLowerCase()))) {
+    return maskDocument(value)
+  }
+  if (['phone', 'whatsapp', 'telefone'].some(item => normalizedKey.includes(item.toLowerCase()))) {
+    return maskPhone(value)
+  }
+  if (normalizedKey.includes('email')) {
+    return maskEmail(value)
+  }
+  if (value instanceof Date) {
+    return value.toISOString()
+  }
+  if (Array.isArray(value)) {
+    if (depth >= 4) return '[lista]'
+    return value.slice(0, 50).map(item => auditSafeValue(key, item, depth + 1))
+  }
+  if (typeof value === 'object') {
+    if (depth >= 4) return '[objeto]'
+    return Object.fromEntries(
+      Object.entries(value)
+        .slice(0, 120)
+        .map(([childKey, childValue]) => [childKey, auditSafeValue(childKey, childValue, depth + 1)])
+    )
+  }
+  if (typeof value === 'string') {
+    return value.slice(0, 2000)
+  }
+  return value
+}
+
+function auditSafeJson(value) {
+  if (value === undefined || value === null) return undefined
+  return auditSafeValue('', value)
+}
+
+function clientIp(req) {
+  const forwardedFor = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+  return forwardedFor || req.socket?.remoteAddress || null
+}
+
+async function recordAuditEvent(req, event) {
+  try {
+    const actor = req?.user || {}
+
+    await prisma.auditEvent.create({
+      data: {
+        actorUserId: actor.id || event.actorUserId || null,
+        actorName: event.actorName || actor.name || actor.email || null,
+        actorRole: event.actorRole || actor.role || null,
+        action: event.action,
+        category: event.category || 'business',
+        entityType: event.entityType || null,
+        entityId: event.entityId === undefined || event.entityId === null ? null : String(event.entityId),
+        organizationId: event.organizationId === undefined ? (actor.organizationId || null) : event.organizationId,
+        tournamentId: event.tournamentId || null,
+        arenaId: event.arenaId || null,
+        paymentId: event.paymentId || null,
+        severity: event.severity || 'info',
+        status: event.status || 'recorded',
+        beforeData: auditSafeJson(event.beforeData),
+        afterData: auditSafeJson(event.afterData),
+        metadata: auditSafeJson(event.metadata),
+        ipAddress: event.ipAddress || (req ? clientIp(req) : null),
+        userAgent: event.userAgent || req?.headers?.['user-agent'] || null,
+        requestId: event.requestId || req?.requestId || null,
+      },
+    })
+  } catch (error) {
+    console.warn('Falha ao registrar auditoria:', error.message)
+  }
 }
 
 async function sendWhatsApp({ to, text }) {
@@ -1615,12 +1713,46 @@ app.post('/billing/webhook', async (req, res) => {
             paidAt: new Date(),
           },
         })
+
+        await recordAuditEvent(req, {
+          action: 'PAYMENT_WEBHOOK_APPROVED',
+          category: 'webhook',
+          entityType: registrationId ? 'TournamentRegistration' : 'Payment',
+          entityId: registrationId || payment.id,
+          organizationId: orgId ? Number(orgId) : null,
+          tournamentId: payment.metadata?.tournamentId ? Number(payment.metadata.tournamentId) : null,
+          severity: 'high',
+          status: 'processed',
+          afterData: {
+            mercadoPagoId: payment.id,
+            status: payment.status,
+            statusDetail: payment.status_detail,
+            transactionAmount: payment.transaction_amount,
+            metadata: payment.metadata,
+          },
+          metadata: {
+            source: 'mercado_pago',
+            type,
+          },
+        })
       }
     }
 
     res.sendStatus(200)
   } catch (error) {
     console.error(error)
+    await recordAuditEvent(req, {
+      action: 'PAYMENT_WEBHOOK_FAILED',
+      category: 'webhook',
+      entityType: 'Webhook',
+      severity: 'high',
+      status: 'failed',
+      afterData: req.body,
+      metadata: {
+        source: 'mercado_pago',
+        error: error.response?.data || error.message,
+      },
+    })
     res.sendStatus(500)
  }
 })
@@ -1651,6 +1783,127 @@ app.get('/tournaments/:id', async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Erro ao buscar torneio' })
+  }
+})
+
+app.get('/admin/audit/summary', auth, requireRole('superadmin'), async (req, res) => {
+  try {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const [
+      eventsToday,
+      criticalEvents,
+      securityEvents,
+      financialEvents,
+      webhookErrors,
+      legalEvents,
+      recentEvents,
+    ] = await Promise.all([
+      prisma.auditEvent.count({ where: { createdAt: { gte: today } } }),
+      prisma.auditEvent.count({ where: { severity: { in: ['high', 'critical'] } } }),
+      prisma.auditEvent.count({ where: { category: 'security', createdAt: { gte: today } } }),
+      prisma.auditEvent.count({ where: { category: 'financial', createdAt: { gte: today } } }),
+      prisma.auditEvent.count({ where: { category: 'webhook', status: { in: ['failed', 'error'] } } }),
+      prisma.auditEvent.count({ where: { category: 'legal', createdAt: { gte: today } } }),
+      prisma.auditEvent.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 8,
+        include: {
+          actor: {
+            select: { id: true, name: true, email: true, role: true },
+          },
+        },
+      }),
+    ])
+
+    res.json({
+      cards: {
+        eventsToday,
+        criticalEvents,
+        securityEvents,
+        financialEvents,
+        webhookErrors,
+        legalEvents,
+      },
+      recentEvents,
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao carregar resumo de auditoria' })
+  }
+})
+
+app.get('/admin/audit/events', auth, requireRole('superadmin'), async (req, res) => {
+  try {
+    const {
+      category,
+      action,
+      severity,
+      status,
+      entityType,
+      organizationId,
+      tournamentId,
+      actorUserId,
+      search,
+      from,
+      to,
+    } = req.query
+    const page = Math.max(1, Number(req.query.page || 1))
+    const limit = Math.min(100, Math.max(10, Number(req.query.limit || 50)))
+    const where = {}
+
+    if (category) where.category = String(category)
+    if (action) where.action = String(action)
+    if (severity) where.severity = String(severity)
+    if (status) where.status = String(status)
+    if (entityType) where.entityType = String(entityType)
+    if (organizationId) where.organizationId = Number(organizationId)
+    if (tournamentId) where.tournamentId = Number(tournamentId)
+    if (actorUserId) where.actorUserId = Number(actorUserId)
+    if (from || to) {
+      where.createdAt = {}
+      if (from) where.createdAt.gte = new Date(String(from))
+      if (to) where.createdAt.lte = new Date(String(to))
+    }
+    if (search) {
+      const text = String(search)
+      where.OR = [
+        { action: { contains: text, mode: 'insensitive' } },
+        { actorName: { contains: text, mode: 'insensitive' } },
+        { entityType: { contains: text, mode: 'insensitive' } },
+        { entityId: { contains: text, mode: 'insensitive' } },
+        { requestId: { contains: text, mode: 'insensitive' } },
+      ]
+    }
+
+    const [events, total] = await Promise.all([
+      prisma.auditEvent.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          actor: {
+            select: { id: true, name: true, email: true, role: true },
+          },
+        },
+      }),
+      prisma.auditEvent.count({ where }),
+    ])
+
+    res.json({
+      events,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Erro ao listar auditoria' })
   }
 })
 
@@ -1880,6 +2133,51 @@ app.put('/tournaments/:id/settings', auth, requireRole('admin', 'operator'), asy
       },
     })
 
+    await recordAuditEvent(req, {
+      action: 'TOURNAMENT_SETTINGS_UPDATED',
+      category: 'business',
+      entityType: 'Tournament',
+      entityId: updated.id,
+      organizationId: updated.organizationId,
+      tournamentId: updated.id,
+      severity: (
+        tournament.prize !== updated.prize ||
+        tournament.registrationFee !== updated.registrationFee ||
+        tournament.paymentCollectionMode !== updated.paymentCollectionMode ||
+        tournament.status !== updated.status
+      ) ? 'high' : 'medium',
+      beforeData: {
+        name: tournament.name,
+        playerCount: tournament.playerCount,
+        format: tournament.format,
+        location: tournament.location,
+        venueAddress: tournament.venueAddress,
+        eventDate: tournament.eventDate,
+        eventTime: tournament.eventTime,
+        prize: tournament.prize,
+        registrationOpen: tournament.registrationOpen,
+        registrationFee: tournament.registrationFee,
+        paymentCollectionMode: tournament.paymentCollectionMode,
+      },
+      afterData: {
+        name: updated.name,
+        playerCount: updated.playerCount,
+        format: updated.format,
+        location: updated.location,
+        venueAddress: updated.venueAddress,
+        eventDate: updated.eventDate,
+        eventTime: updated.eventTime,
+        prize: updated.prize,
+        registrationOpen: updated.registrationOpen,
+        registrationFee: updated.registrationFee,
+        paymentCollectionMode: updated.paymentCollectionMode,
+      },
+      metadata: {
+        source: 'organizer_dashboard',
+        structureChanged,
+      },
+    })
+
     res.json({ ok: true, tournament: updated })
   } catch (error) {
     console.error(error)
@@ -1983,6 +2281,10 @@ app.post('/admin/organization/:id/plan', auth, requireRole('superadmin'), async 
     return res.status(400).json({ error: 'Plano inválido' })
   }
 
+  const previousOrg = await prisma.organization.findUnique({
+    where: { id: Number(req.params.id) },
+  })
+
   const org = await prisma.organization.update({
     where: { id: Number(req.params.id) },
    data: {
@@ -1997,6 +2299,25 @@ app.post('/admin/organization/:id/plan', auth, requireRole('superadmin'), async 
 }
 })
 
+  await recordAuditEvent(req, {
+    action: 'ADMIN_ORGANIZATION_PLAN_UPDATED',
+    category: 'admin',
+    entityType: 'Organization',
+    entityId: org.id,
+    organizationId: org.id,
+    severity: 'high',
+    beforeData: {
+      plan: previousOrg?.plan,
+      trialEndsAt: previousOrg?.trialEndsAt,
+      planExpiresAt: previousOrg?.planExpiresAt,
+    },
+    afterData: {
+      plan: org.plan,
+      trialEndsAt: org.trialEndsAt,
+      planExpiresAt: org.planExpiresAt,
+    },
+  })
+
   res.json({ ok: true, org })
 })
 
@@ -2009,9 +2330,24 @@ app.patch('/admin/organization/:id/status', auth, requireRole('superadmin'), asy
       return res.status(400).json({ error: 'Status inválido' })
     }
 
+    const previousOrg = await prisma.organization.findUnique({
+      where: { id: Number(req.params.id) },
+    })
+
     const org = await prisma.organization.update({
       where: { id: Number(req.params.id) },
       data: { status },
+    })
+
+    await recordAuditEvent(req, {
+      action: status === 'blocked' ? 'ADMIN_ORGANIZATION_BLOCKED' : 'ADMIN_ORGANIZATION_UNBLOCKED',
+      category: 'admin',
+      entityType: 'Organization',
+      entityId: org.id,
+      organizationId: org.id,
+      severity: status === 'blocked' ? 'critical' : 'high',
+      beforeData: { status: previousOrg?.status },
+      afterData: { status: org.status },
     })
 
     res.json({ ok: true, org })
@@ -2081,7 +2417,7 @@ app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), asyn
       .filter(Boolean)
       .join(', ')
 
-    await prisma.organization.update({
+    const updatedProfile = await prisma.organization.update({
       where: { id: organizationId },
       data: {
         name: organizationName || organization.name,
@@ -4000,6 +4336,37 @@ for (const playerData of parsedPlayers.slice(0, requestedPlayerCount)) {
       })
     }
 
+    await recordAuditEvent(req, {
+      action: 'TOURNAMENT_CREATED',
+      category: 'business',
+      entityType: 'Tournament',
+      entityId: tournament.id,
+      organizationId,
+      tournamentId: tournament.id,
+      severity: Number(tournament.registrationFee || 0) > 0 || tournament.prize ? 'high' : 'medium',
+      afterData: {
+        id: tournament.id,
+        name: tournament.name,
+        sportId: tournament.sportId,
+        playerCount: tournament.playerCount,
+        format: tournament.format,
+        status: tournament.status,
+        location: tournament.location,
+        venueAddress: tournament.venueAddress,
+        eventDate: tournament.eventDate,
+        eventTime: tournament.eventTime,
+        prize: tournament.prize,
+        registrationFee: tournament.registrationFee,
+        paymentCollectionMode: tournament.paymentCollectionMode,
+        seasonId: tournament.seasonId,
+      },
+      metadata: {
+        source: 'organizer_dashboard',
+        useTournamentCredit,
+        playersCreated: players.length,
+      },
+    })
+
     res.json({
       ok: true,
       tournament,
@@ -4325,6 +4692,26 @@ app.post('/public/:slug/register', async (req, res) => {
       where: { id: registration.id },
     })
 
+    await recordAuditEvent(req, {
+      actorUserId: authUser?.id || null,
+      actorName: authUser?.name || registrationName,
+      actorRole: authUser?.role || 'public',
+      action: 'PUBLIC_REGISTRATION_CREATED',
+      category: usesAutomaticPayment ? 'financial' : 'business',
+      entityType: 'TournamentRegistration',
+      entityId: currentRegistration.id,
+      organizationId: tournament.organizationId,
+      tournamentId: tournament.id,
+      severity: usesAutomaticPayment ? 'high' : 'medium',
+      afterData: currentRegistration,
+      metadata: {
+        source: 'public_tournament_page',
+        automaticPayment: usesAutomaticPayment,
+        payment,
+        rulesAccepted: Boolean(playerProfile),
+      },
+    })
+
     res.json({
       ok: true,
       registration: {
@@ -4394,6 +4781,29 @@ app.post('/public/registrations/payment-confirmed', async (req, res) => {
     })
 
     const updated = await confirmPaidRegistration(prepared)
+
+    await recordAuditEvent(req, {
+      action: 'REGISTRATION_PAYMENT_CONFIRMED_EXTERNALLY',
+      category: 'financial',
+      entityType: 'TournamentRegistration',
+      entityId: updated.id,
+      organizationId: registration.tournament.organizationId,
+      tournamentId: registration.tournamentId,
+      severity: 'high',
+      beforeData: {
+        paymentStatus: registration.paymentStatus,
+        paymentMethod: registration.paymentMethod,
+        checkedIn: registration.checkedIn,
+      },
+      afterData: {
+        paymentStatus: updated.paymentStatus,
+        paymentMethod: updated.paymentMethod,
+        checkedIn: updated.checkedIn,
+      },
+      metadata: {
+        source: 'payment_confirmation_endpoint',
+      },
+    })
 
     res.json({
       ok: true,
@@ -4675,6 +5085,57 @@ app.post('/auth/register', async (req, res) => {
         ...validationCodeData,
       },
       include: { organization: true, playerProfile: true, roles: true },
+    })
+
+    await recordAuditEvent(req, {
+      actorUserId: user.id,
+      actorName: user.name,
+      actorRole: user.role,
+      action: 'ACCOUNT_CREATED',
+      category: 'legal',
+      entityType: 'User',
+      entityId: user.id,
+      organizationId: user.organizationId,
+      severity: 'medium',
+      afterData: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        signupProfile,
+        termsVersion: TERMS_VERSION,
+        privacyVersion: PRIVACY_VERSION,
+        termsCheckboxText: TERMS_CHECKBOX_TEXT,
+        marketingConsent: user.marketingConsent,
+      },
+      metadata: {
+        source: 'signup',
+        termsAccepted: true,
+        privacyAccepted: true,
+      },
+    })
+
+    await recordAuditEvent(req, {
+      action: 'ADMIN_ORGANIZATION_PROFILE_UPDATED',
+      category: 'admin',
+      entityType: 'Organization',
+      entityId: organizationId,
+      organizationId,
+      severity: password ? 'high' : 'medium',
+      beforeData: {
+        organization,
+        adminUser,
+      },
+      afterData: {
+        organization: updatedProfile,
+        adminUser: adminUser ? {
+          id: adminUser.id,
+          name: name || adminUser.name,
+          email: email || adminUser.email,
+          phone: phone || null,
+          passwordChanged: Boolean(password),
+        } : null,
+      },
     })
 
     const { user: validationUser, delivery } = await sendAccountValidationMessages(user)
@@ -5592,12 +6053,40 @@ app.post('/auth/login', async (req, res) => {
     })
 
     if (!user) {
+      await recordAuditEvent(req, {
+        actorName: normalizedEmail,
+        action: 'AUTH_LOGIN_FAILED',
+        category: 'security',
+        entityType: 'User',
+        severity: 'medium',
+        status: 'failed',
+        metadata: {
+          reason: 'user_not_found',
+          email: normalizedEmail,
+        },
+      })
       return res.status(401).json({ error: 'Usuário ou senha inválidos' })
     }
 
     const validPassword = await bcrypt.compare(password, user.password)
 
     if (!validPassword) {
+      await recordAuditEvent(req, {
+        actorUserId: user.id,
+        actorName: user.name,
+        actorRole: user.role,
+        action: 'AUTH_LOGIN_FAILED',
+        category: 'security',
+        entityType: 'User',
+        entityId: user.id,
+        organizationId: user.organizationId,
+        severity: 'medium',
+        status: 'failed',
+        metadata: {
+          reason: 'invalid_password',
+          email: normalizedEmail,
+        },
+      })
       return res.status(401).json({ error: 'Usuário ou senha inválidos' })
     }
 
@@ -5616,6 +6105,22 @@ app.post('/auth/login', async (req, res) => {
     }
 
     const token = buildUserToken(user)
+
+    await recordAuditEvent(req, {
+      actorUserId: user.id,
+      actorName: user.name,
+      actorRole: user.role,
+      action: 'AUTH_LOGIN_SUCCEEDED',
+      category: 'security',
+      entityType: 'User',
+      entityId: user.id,
+      organizationId: user.organizationId,
+      severity: 'info',
+      metadata: {
+        email: normalizedEmail,
+        validationPending: !isBasicAccessGranted(user),
+      },
+    })
 
     res.json({
       ok: true,
@@ -5703,6 +6208,27 @@ app.post('/auth/verify-whatsapp', auth, async (req, res) => {
     })
 
     const profileResult = await ensureSignupProfileResources(verifiedUser, verifiedUser.profileIntent)
+
+    await recordAuditEvent(req, {
+      actorUserId: verifiedUser.id,
+      actorName: verifiedUser.name,
+      actorRole: verifiedUser.role,
+      action: 'ACCOUNT_WHATSAPP_VERIFIED',
+      category: 'legal',
+      entityType: 'User',
+      entityId: verifiedUser.id,
+      organizationId: profileResult.user.organizationId,
+      severity: 'medium',
+      afterData: {
+        whatsappVerified: true,
+        basicAccessGrantedAt: verifiedUser.basicAccessGrantedAt,
+        profileIntent: verifiedUser.profileIntent,
+      },
+      metadata: {
+        source: 'account_validation',
+        activeProfile: profileResult.activeProfile,
+      },
+    })
 
     res.json(validationStatusPayload(profileResult.user, {
       message: 'WhatsApp confirmado com sucesso.',
@@ -6077,6 +6603,18 @@ app.patch('/tournaments/:id/registrations/open', auth, requireRole('admin', 'ope
       data: { registrationOpen: Boolean(registrationOpen) },
     })
 
+    await recordAuditEvent(req, {
+      action: updated.registrationOpen ? 'TOURNAMENT_REGISTRATIONS_OPENED' : 'TOURNAMENT_REGISTRATIONS_CLOSED',
+      category: 'business',
+      entityType: 'Tournament',
+      entityId: updated.id,
+      organizationId: updated.organizationId,
+      tournamentId: updated.id,
+      severity: 'medium',
+      beforeData: { registrationOpen: tournament.registrationOpen },
+      afterData: { registrationOpen: updated.registrationOpen },
+    })
+
     res.json({ ok: true, tournament: updated })
   } catch (error) {
     console.error(error)
@@ -6129,6 +6667,28 @@ app.patch('/tournaments/:id/status', auth, requireRole('admin', 'operator'), asy
     const updated = await prisma.tournament.update({
       where: { id },
       data,
+    })
+
+    await recordAuditEvent(req, {
+      action: `TOURNAMENT_STATUS_${String(action).toUpperCase()}`,
+      category: 'business',
+      entityType: 'Tournament',
+      entityId: updated.id,
+      organizationId: updated.organizationId,
+      tournamentId: updated.id,
+      severity: action === 'cancel' ? 'critical' : 'high',
+      beforeData: {
+        status: tournament.status,
+        registrationOpen: tournament.registrationOpen,
+        eventDate: tournament.eventDate,
+        eventTime: tournament.eventTime,
+      },
+      afterData: {
+        status: updated.status,
+        registrationOpen: updated.registrationOpen,
+        eventDate: updated.eventDate,
+        eventTime: updated.eventTime,
+      },
     })
 
     res.json({ ok: true, message, tournament: updated })
@@ -6202,6 +6762,28 @@ app.patch('/registrations/:id/checkin', auth, requireRole('admin', 'operator'), 
       await deletePlayerForRegistration(updated)
     }
 
+    await recordAuditEvent(req, {
+      action: nextCheckedIn ? 'REGISTRATION_CHECKIN_CONFIRMED' : 'REGISTRATION_CHECKIN_REVERTED',
+      category: 'business',
+      entityType: 'TournamentRegistration',
+      entityId: updated.id,
+      organizationId: registration.tournament.organizationId,
+      tournamentId: registration.tournamentId,
+      severity: nextCheckedIn ? 'medium' : 'high',
+      beforeData: {
+        checkedIn: registration.checkedIn,
+        paymentStatus: registration.paymentStatus,
+        paymentMethod: registration.paymentMethod,
+        status: registration.status,
+      },
+      afterData: {
+        checkedIn: updated.checkedIn,
+        paymentStatus: updated.paymentStatus,
+        paymentMethod: updated.paymentMethod,
+        status: updated.status,
+      },
+    })
+
     res.json({ ok: true, registration: updated })
   } catch (error) {
     console.error(error)
@@ -6254,6 +6836,26 @@ app.patch('/registrations/:id/payment', auth, requireRole('admin', 'operator'), 
     if (nextPaymentStatus === 'paid') {
       updated = await confirmPaidRegistration(updated)
     }
+
+    await recordAuditEvent(req, {
+      action: nextPaymentStatus === 'paid' ? 'REGISTRATION_PAYMENT_CONFIRMED' : 'REGISTRATION_PAYMENT_UPDATED',
+      category: 'financial',
+      entityType: 'TournamentRegistration',
+      entityId: updated.id,
+      organizationId: registration.tournament.organizationId,
+      tournamentId: registration.tournamentId,
+      severity: nextPaymentStatus === 'paid' ? 'high' : 'medium',
+      beforeData: {
+        paymentStatus: registration.paymentStatus,
+        paymentMethod: registration.paymentMethod,
+        checkedIn: registration.checkedIn,
+      },
+      afterData: {
+        paymentStatus: updated.paymentStatus,
+        paymentMethod: updated.paymentMethod,
+        checkedIn: updated.checkedIn,
+      },
+    })
 
     res.json({ ok: true, registration: updated })
   } catch (error) {
@@ -6323,6 +6925,21 @@ app.post('/tournaments/:id/registrations', auth, requireRole('admin', 'operator'
     })
 
     const delivery = await sendRegistrationConfirmation(tournament, registration)
+
+    await recordAuditEvent(req, {
+      action: 'REGISTRATION_CREATED_BY_ORGANIZER',
+      category: 'business',
+      entityType: 'TournamentRegistration',
+      entityId: registration.id,
+      organizationId: tournament.organizationId,
+      tournamentId: tournament.id,
+      severity: 'medium',
+      afterData: registration,
+      metadata: {
+        source: 'organizer_dashboard',
+        delivery: delivery?.delivery,
+      },
+    })
 
     res.json({ ok: true, registration, delivery })
   } catch (error) {
@@ -7233,6 +7850,27 @@ app.post('/auth/verify-email/:token', async (req, res) => {
 
     const profileResult = await ensureSignupProfileResources(verifiedUser, signupProfile)
     const authToken = buildUserToken(profileResult.user)
+
+    await recordAuditEvent(req, {
+      actorUserId: verifiedUser.id,
+      actorName: verifiedUser.name,
+      actorRole: verifiedUser.role,
+      action: 'ACCOUNT_EMAIL_VERIFIED',
+      category: 'legal',
+      entityType: 'User',
+      entityId: verifiedUser.id,
+      organizationId: profileResult.user.organizationId,
+      severity: 'medium',
+      afterData: {
+        emailVerified: true,
+        basicAccessGrantedAt: verifiedUser.basicAccessGrantedAt,
+        profileIntent: signupProfile,
+      },
+      metadata: {
+        source: 'email_validation',
+        activeProfile: profileResult.activeProfile,
+      },
+    })
 
     res.send(renderVerifiedRedirectPage({
       title: 'Cadastro confirmado',

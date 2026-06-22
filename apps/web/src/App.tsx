@@ -443,6 +443,7 @@ export default function App() {
       <Route path="/telao/:id" element={<TelaoTV />} />
       <Route path="/register" element={<Register />} />
       <Route path="/admin/financeiro" element={<Financeiro />} />
+      <Route path="/admin/auditoria" element={<AdminAudit />} />
       <Route path="/admin/configuracoes/integracoes" element={<AdminIntegrations />} />
       <Route path="/admin/clientes" element={<AdminClientes />} />
       <Route path="/admin/clientes/:id" element={<AdminClientPage defaultPanel="dashboard" />} />
@@ -3107,7 +3108,12 @@ function AdminSidebar() {
 
       <details className="sidebarGroup">
         <summary>Auditoria</summary>
-        {adminMenuItem('Ações da Plataforma')}
+        {adminMenuItem('Visão Geral', '/admin/auditoria')}
+        {adminMenuItem('Ações da Plataforma', '/admin/auditoria?categoria=business')}
+        {adminMenuItem('Logs de Segurança', '/admin/auditoria?categoria=security')}
+        {adminMenuItem('Logs Financeiros', '/admin/auditoria?categoria=financial')}
+        {adminMenuItem('Webhooks', '/admin/auditoria?categoria=webhook')}
+        {adminMenuItem('Aceites Legais', '/admin/auditoria?categoria=legal')}
         {adminMenuItem('Filtros por Usuário')}
         {adminMenuItem('Filtros por Torneio')}
         {adminMenuItem('Filtros por Circuito')}
@@ -11731,6 +11737,260 @@ function AdminIntegrations() {
             })}
           </div>
         )}
+      </main>
+    </div>
+  )
+}
+
+function auditCategoryLabel(category?: string) {
+  const labels: Record<string, string> = {
+    business: 'Auditoria de ações',
+    security: 'Segurança',
+    financial: 'Financeiro',
+    webhook: 'Webhooks',
+    legal: 'Aceites legais',
+    admin: 'SuperAdmin',
+  }
+
+  return labels[String(category || '')] || category || '-'
+}
+
+function auditSeverityLabel(severity?: string) {
+  const labels: Record<string, string> = {
+    info: 'Informativo',
+    low: 'Baixa',
+    medium: 'Média',
+    high: 'Alta',
+    critical: 'Crítica',
+  }
+
+  return labels[String(severity || '')] || severity || '-'
+}
+
+function auditActionLabel(action?: string) {
+  return String(action || '-')
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/(^|\s)\S/g, item => item.toUpperCase())
+}
+
+function auditJsonPreview(value: any) {
+  if (!value) return 'Sem dados'
+  return JSON.stringify(value, null, 2)
+}
+
+function AdminAudit() {
+  const location = useLocation()
+  const [summary, setSummary] = useState<any>(null)
+  const [events, setEvents] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedEvent, setSelectedEvent] = useState<any>(null)
+  const [filters, setFilters] = useState({
+    search: '',
+    category: '',
+    severity: '',
+  })
+
+  function loadAudit(nextFilters = filters) {
+    setLoading(true)
+
+    const params = new URLSearchParams()
+    if (nextFilters.search) params.set('search', nextFilters.search)
+    if (nextFilters.category) params.set('category', nextFilters.category)
+    if (nextFilters.severity) params.set('severity', nextFilters.severity)
+    params.set('limit', '50')
+
+    Promise.all([
+      fetch(`${API}/admin/audit/summary`, { headers: authHeaders() }).then(res => res.json()),
+      fetch(`${API}/admin/audit/events?${params.toString()}`, { headers: authHeaders() }).then(res => res.json()),
+    ])
+      .then(([summaryData, eventsData]) => {
+        if (summaryData.error || eventsData.error) {
+          alert(summaryData.error || eventsData.error)
+          return
+        }
+
+        setSummary(summaryData)
+        setEvents(Array.isArray(eventsData.events) ? eventsData.events : [])
+        setSelectedEvent((current: any) => current || eventsData.events?.[0] || null)
+      })
+      .finally(() => setLoading(false))
+  }
+
+  function updateFilter(field: string, value: string) {
+    const nextFilters = { ...filters, [field]: value }
+    setFilters(nextFilters)
+    loadAudit(nextFilters)
+  }
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      goHome()
+      return
+    }
+
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        if (data.user?.role !== 'superadmin') {
+          goHome()
+          return
+        }
+
+        const params = new URLSearchParams(location.search)
+        const initialFilters = {
+          search: '',
+          category: params.get('categoria') || '',
+          severity: '',
+        }
+        setFilters(initialFilters)
+        loadAudit(initialFilters)
+      })
+  }, [location.search])
+
+  const cards = summary?.cards || {}
+  const cardItems = [
+    ['Eventos hoje', cards.eventsToday || 0],
+    ['Ações críticas', cards.criticalEvents || 0],
+    ['Segurança hoje', cards.securityEvents || 0],
+    ['Financeiro hoje', cards.financialEvents || 0],
+    ['Webhooks com erro', cards.webhookErrors || 0],
+    ['Aceites hoje', cards.legalEvents || 0],
+  ]
+
+  return (
+    <div className="saasLayout">
+      <AdminSidebar />
+
+      <main className="saasMain">
+        <header className="hero">
+          <div className="badge">SuperAdmin</div>
+          <h1>Auditoria e Logs</h1>
+          <p>Central de eventos críticos da plataforma PlayFinal Arena.</p>
+        </header>
+
+        <div className="financeGrid adminStatsGrid auditStatsGrid">
+          {cardItems.map(([label, value]) => (
+            <div className="financeCard" key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
+
+        <div className="panel">
+          <div className="auditPanelHeader">
+            <div>
+              <h2>Eventos auditáveis</h2>
+              <p className="panelSubtitle">Ações que alteram acesso, dinheiro, responsabilidade, resultado ou aceite legal.</p>
+            </div>
+            <button className="primaryButton" onClick={() => loadAudit()}>Atualizar</button>
+          </div>
+
+          <div className="clientFilters auditFilters">
+            <input
+              value={filters.search}
+              onChange={e => updateFilter('search', e.target.value)}
+              placeholder="Buscar por ação, usuário, entidade ou request ID"
+            />
+            <select value={filters.category} onChange={e => updateFilter('category', e.target.value)}>
+              <option value="">Todas as categorias</option>
+              <option value="business">Auditoria de ações</option>
+              <option value="admin">SuperAdmin</option>
+              <option value="security">Segurança</option>
+              <option value="financial">Financeiro</option>
+              <option value="webhook">Webhooks</option>
+              <option value="legal">Aceites legais</option>
+            </select>
+            <select value={filters.severity} onChange={e => updateFilter('severity', e.target.value)}>
+              <option value="">Todas as severidades</option>
+              <option value="info">Informativo</option>
+              <option value="medium">Média</option>
+              <option value="high">Alta</option>
+              <option value="critical">Crítica</option>
+            </select>
+          </div>
+
+          {loading && <p>Carregando auditoria...</p>}
+          {!loading && events.length === 0 && <p>Nenhum evento encontrado.</p>}
+
+          {!loading && events.length > 0 && (
+            <div className="auditWorkspace">
+              <div className="adminClientTableWrap auditTableWrap">
+                <table className="adminClientTable auditTable">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Usuário</th>
+                      <th>Ação</th>
+                      <th>Categoria</th>
+                      <th>Entidade</th>
+                      <th>Severidade</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {events.map(event => (
+                      <tr
+                        key={event.id}
+                        className={selectedEvent?.id === event.id ? 'selected' : ''}
+                        onClick={() => setSelectedEvent(event)}
+                      >
+                        <td>{event.createdAt ? new Date(event.createdAt).toLocaleString() : '-'}</td>
+                        <td>{event.actorName || event.actor?.name || event.actor?.email || '-'}</td>
+                        <td>{auditActionLabel(event.action)}</td>
+                        <td>{auditCategoryLabel(event.category)}</td>
+                        <td>{event.entityType || '-'} {event.entityId ? `#${event.entityId}` : ''}</td>
+                        <td><span className={`auditSeverity ${event.severity}`}>{auditSeverityLabel(event.severity)}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <aside className="auditDetailPanel">
+                {selectedEvent ? (
+                  <>
+                    <span className={`auditSeverity ${selectedEvent.severity}`}>{auditSeverityLabel(selectedEvent.severity)}</span>
+                    <h3>{auditActionLabel(selectedEvent.action)}</h3>
+                    <p>{auditCategoryLabel(selectedEvent.category)} • {selectedEvent.status || 'recorded'}</p>
+
+                    <div className="auditDetailGrid">
+                      <span>Usuário</span>
+                      <strong>{selectedEvent.actorName || selectedEvent.actor?.name || '-'}</strong>
+                      <span>Entidade</span>
+                      <strong>{selectedEvent.entityType || '-'} {selectedEvent.entityId ? `#${selectedEvent.entityId}` : ''}</strong>
+                      <span>Organização</span>
+                      <strong>{selectedEvent.organizationId ? `#${selectedEvent.organizationId}` : '-'}</strong>
+                      <span>Torneio</span>
+                      <strong>{selectedEvent.tournamentId ? `#${selectedEvent.tournamentId}` : '-'}</strong>
+                      <span>IP</span>
+                      <strong>{selectedEvent.ipAddress || '-'}</strong>
+                      <span>Request ID</span>
+                      <strong>{selectedEvent.requestId || '-'}</strong>
+                    </div>
+
+                    <div className="auditJsonGrid">
+                      <div>
+                        <h4>Antes</h4>
+                        <pre>{auditJsonPreview(selectedEvent.beforeData)}</pre>
+                      </div>
+                      <div>
+                        <h4>Depois</h4>
+                        <pre>{auditJsonPreview(selectedEvent.afterData)}</pre>
+                      </div>
+                      <div className="auditJsonWide">
+                        <h4>Metadados</h4>
+                        <pre>{auditJsonPreview(selectedEvent.metadata)}</pre>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p>Selecione um evento.</p>
+                )}
+              </aside>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   )
