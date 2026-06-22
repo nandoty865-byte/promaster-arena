@@ -821,8 +821,25 @@ function SignupChoice() {
     )
   }
 
-  if (isVerifiedAccount) {
+  function renderSignupLayout(content: any) {
     return (
+      <div className="landing signupLandingPage">
+        <LandingTopHeadline />
+        <LandingHeader />
+        <main className="signupLandingMain">
+          {content}
+        </main>
+        <LandingFooter />
+
+        {legalDocumentKey && (
+          <LegalDocumentModal documentKey={legalDocumentKey} onClose={() => setLegalDocumentKey('')} />
+        )}
+      </div>
+    )
+  }
+
+  if (isVerifiedAccount) {
+    return renderSignupLayout(
       <div className="onboardingPage signupChoicePage signupPremiumPage">
         <section className="signupPremiumHero">
           <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
@@ -838,7 +855,7 @@ function SignupChoice() {
   }
 
   if (!selectedProfile) {
-    return (
+    return renderSignupLayout(
       <div className="onboardingPage signupChoicePage signupPremiumPage">
         <section className="signupPremiumHero">
           <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
@@ -852,7 +869,7 @@ function SignupChoice() {
   }
 
   if (createdAccount) {
-    return (
+    return renderSignupLayout(
       <div className="onboardingPage signupChoicePage signupPremiumPage">
         <section className="signupPremiumHero">
           <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
@@ -871,7 +888,7 @@ function SignupChoice() {
     )
   }
 
-  return (
+  return renderSignupLayout(
     <div className="onboardingPage signupChoicePage signupPremiumPage">
       <section className="signupPremiumHero signupRegisterHero">
         <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
@@ -958,10 +975,6 @@ function SignupChoice() {
           </button>
         </div>
       </section>
-
-      {legalDocumentKey && (
-        <LegalDocumentModal documentKey={legalDocumentKey} onClose={() => setLegalDocumentKey('')} />
-      )}
     </div>
   )
 }
