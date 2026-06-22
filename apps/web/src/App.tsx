@@ -467,7 +467,7 @@ const SIGNUP_PROFILE_OPTIONS = [
     cardTitle: 'Jogador',
     cardSubtitle: 'Quero participar de torneios',
     benefits: ['Inscrição rápido', 'Ranking pessoal', 'Histórico de partidas', 'Notificações de jogos'],
-    image: '/player/photos/hero-jogador-sinuca-recriado.webp',
+    image: '/signup/photos/select-player.png',
     href: '/app/perfil?perfil=player',
   },
   {
@@ -478,7 +478,7 @@ const SIGNUP_PROFILE_OPTIONS = [
     cardSubtitle: 'Quero criar torneios',
     badge: 'ORG',
     benefits: ['Criar torneios', 'Gerenciar jogadores', 'Compartilhar resultados'],
-    image: '/organizer/photos/dashboard-hero-mockup-recriado.webp',
+    image: '/signup/photos/select-organizer.png',
     href: '/app',
   },
   {
@@ -488,7 +488,7 @@ const SIGNUP_PROFILE_OPTIONS = [
     cardTitle: 'Cadastrar minha arena',
     cardSubtitle: 'Quero gerenciar minha arena',
     benefits: ['Gestão completa', 'Planos completa', 'Multiusuários', 'Marca personalizada'],
-    image: '/arena/photos/hero-arena-sinuca-premium-recriado.webp',
+    image: '/signup/photos/select-arena.png',
     href: '/campeonatos/arenas',
   },
 ]
