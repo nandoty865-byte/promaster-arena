@@ -922,6 +922,21 @@ function SignupChoice() {
             <strong>Ranking atualizado</strong>
             <p>Transforme cada resultado em histórico, pontos e evolução.</p>
           </article>
+          <article>
+            <span>04</span>
+            <strong>Comunicação instantânea</strong>
+            <p>Receba avisos por e-mail e WhatsApp nos momentos certos.</p>
+          </article>
+          <article>
+            <span>05</span>
+            <strong>Painel inteligente</strong>
+            <p>Acesse o painel certo conforme o perfil escolhido.</p>
+          </article>
+          <article>
+            <span>06</span>
+            <strong>Conta validada</strong>
+            <p>Confirme por WhatsApp ou e-mail e avance com segurança.</p>
+          </article>
         </div>
       </section>
 
