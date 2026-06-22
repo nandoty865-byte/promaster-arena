@@ -905,7 +905,7 @@ function SignupChoice() {
             </div>
           </div>
           <p>
-            Crie sua conta, confirme por WhatsApp ou e-mail e acesse o painel de {selectedProfile.title.toLowerCase()} com avisos e pendências no lugar certo.
+            Crie sua conta, valide seus dados, acesse o painel e inicie a sua jornada.
           </p>
         </div>
         <div className="signupV8FeatureGrid">

@@ -8571,7 +8571,7 @@ button:hover {
 }
 
 .signupV8FormContent h2 {
-  margin: 0 0 6px;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -8602,7 +8602,7 @@ button:hover {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  margin-bottom: 10px;
+  margin: 18px 0 16px;
 }
 
 .signupV8SocialRow button {
@@ -12464,7 +12464,7 @@ button:hover {
 }
 
 .optionalConsentTag {
-  color: #9eff00;
+  color: #fff;
   font-weight: 950;
   white-space: nowrap;
 }
