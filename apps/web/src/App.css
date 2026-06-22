@@ -8332,11 +8332,11 @@ button:hover {
 }
 
 .signupV8Page {
-  width: min(1140px, calc(100vw - 40px));
+  width: min(948px, calc(100vw - 40px));
   margin: 0 auto;
   padding: 8px 0 16px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(390px, 430px);
+  grid-template-columns: 500px minmax(390px, 430px);
   gap: 18px;
   align-items: stretch;
 }
@@ -8355,8 +8355,9 @@ button:hover {
 }
 
 .signupV8Institutional {
+  width: 500px;
   min-height: 0;
-  padding: 22px 26px;
+  padding: 24px 26px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -8421,15 +8422,15 @@ button:hover {
 
 .signupV8LogoBlock {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .signupV8LogoBlock img {
-  width: 74px;
+  width: 118px;
   height: auto;
-  filter: drop-shadow(0 0 28px rgba(158, 255, 0, .36));
+  filter: drop-shadow(0 0 34px rgba(158, 255, 0, .46));
 }
 
 .signupV8Kicker {
@@ -8451,7 +8452,7 @@ button:hover {
 .signupV8HeroTop h1 {
   margin: 0;
   color: #f8fafc;
-  font-size: clamp(34px, 3.1vw, 48px);
+  font-size: 38px;
   line-height: .98;
   font-weight: 950;
   letter-spacing: 0;
@@ -8465,48 +8466,49 @@ button:hover {
 }
 
 .signupV8HeroTop p {
-  max-width: 500px;
-  margin: 12px 0 0;
+  max-width: 420px;
+  margin: 14px 0 0;
   color: rgba(232, 237, 247, .82);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
-  font-size: 13px;
-  line-height: 1.38;
+  font-size: 14px;
+  line-height: 1.42;
 }
 
 .signupV8FeatureGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .signupV8FeatureGrid article {
-  min-height: 86px;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, .1);
-  border-radius: 12px;
-  background: linear-gradient(180deg, rgba(15, 23, 38, .74), rgba(6, 10, 19, .84));
-  box-shadow: inset 0 0 24px rgba(158, 255, 0, .025);
+  min-height: 118px;
+  padding: 13px 12px;
+  border: 1px solid rgba(158, 255, 0, .2);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(15, 23, 38, .82), rgba(6, 10, 19, .88));
+  box-shadow: inset 0 0 24px rgba(158, 255, 0, .035), 0 14px 32px rgba(0, 0, 0, .24);
 }
 
 .signupV8FeatureGrid span {
   display: inline-grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  margin-bottom: 7px;
-  border: 1px solid rgba(158, 255, 0, .18);
-  border-radius: 11px;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(158, 255, 0, .28);
+  border-radius: 12px;
   color: #9eff00;
-  background: rgba(158, 255, 0, .1);
+  background: rgba(158, 255, 0, .11);
   font-weight: 950;
+  box-shadow: 0 0 18px rgba(158, 255, 0, .12);
 }
 
 .signupV8FeatureGrid strong {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   color: #f8fafc;
-  font-size: 10px;
-  line-height: 1.2;
+  font-size: 11px;
+  line-height: 1.18;
   font-weight: 950;
   text-transform: uppercase;
 }
@@ -8515,8 +8517,8 @@ button:hover {
   margin: 0;
   color: #98a2b6;
   font-family: Inter, "Segoe UI", Arial, sans-serif;
-  font-size: 10px;
-  line-height: 1.3;
+  font-size: 10.5px;
+  line-height: 1.35;
 }
 
 .signupV8Card {
@@ -8701,6 +8703,7 @@ button:hover {
   }
 
   .signupV8Institutional {
+    width: auto;
     min-height: auto;
     padding: 30px;
   }
@@ -8710,7 +8713,7 @@ button:hover {
   }
 
   .signupV8FeatureGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-top: 20px;
   }
 
@@ -12386,8 +12389,16 @@ button:hover {
   line-height: 1.4;
 }
 
+.termsAgreementText {
+  color: rgba(232, 237, 247, .9);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
 .termsAgreementLink {
-  width: fit-content;
+  display: inline;
+  width: auto;
   min-width: 0;
   padding: 0;
   border: 0;
@@ -12396,7 +12407,7 @@ button:hover {
   cursor: pointer;
   font: inherit;
   font-weight: 900;
-  line-height: 1.35;
+  line-height: inherit;
   text-align: left;
   text-decoration: underline;
   text-underline-offset: 3px;

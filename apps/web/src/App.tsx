@@ -909,23 +909,18 @@ function SignupChoice() {
         <div className="signupV8FeatureGrid">
           <article>
             <span>01</span>
-            <strong>Conta única</strong>
-            <p>Um login para jogador, organizador, arena e convites.</p>
+            <strong>Torneios profissionais</strong>
+            <p>Crie, organize e dispute competições com experiência premium.</p>
           </article>
           <article>
             <span>02</span>
-            <strong>Validação rápida</strong>
-            <p>Código no WhatsApp ou link por e-mail.</p>
+            <strong>Placar ao vivo</strong>
+            <p>Acompanhe partidas, resultados e avisos em tempo real.</p>
           </article>
           <article>
             <span>03</span>
-            <strong>Painel certo</strong>
-            <p>Direcionamento automático para o perfil escolhido.</p>
-          </article>
-          <article>
-            <span>04</span>
-            <strong>Pendências guiadas</strong>
-            <p>Complete dados extras dentro da plataforma.</p>
+            <strong>Ranking atualizado</strong>
+            <p>Transforme cada resultado em histórico, pontos e evolução.</p>
           </article>
         </div>
       </section>
@@ -992,17 +987,33 @@ function SignupChoice() {
                 onChange={e => updateField('termsAccepted', e.target.checked)}
               />
               <span>
-                <button
-                  className="termsAgreementLink"
-                  type="button"
-                  onClick={event => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    setLegalDocumentKey('terms')
-                  }}
-                >
-                  {REQUIRED_TERMS_TEXT}
-                </button>
+                <span className="termsAgreementText">
+                  Li e aceito os{' '}
+                  <button
+                    className="termsAgreementLink"
+                    type="button"
+                    onClick={event => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      setLegalDocumentKey('terms')
+                    }}
+                  >
+                    Termos de Uso
+                  </button>
+                  {' '}e a{' '}
+                  <button
+                    className="termsAgreementLink"
+                    type="button"
+                    onClick={event => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      setLegalDocumentKey('privacy')
+                    }}
+                  >
+                    Política de Privacidade
+                  </button>
+                  {' '}da PlayFinal Arena.
+                </span>
                 <small>Ao continuar, declaro estar ciente das regras de cadastro, uso da plataforma, comunicação por WhatsApp/e-mail e tratamento dos meus dados.</small>
               </span>
             </label>
