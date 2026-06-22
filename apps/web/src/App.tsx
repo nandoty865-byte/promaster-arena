@@ -932,7 +932,7 @@ function SignupChoice() {
 
       <section className="signupV8Card" aria-label="Cadastro mínimo">
         <div className="signupV8FormContent">
-          <h2><span />{selectedProfile.action}</h2>
+          <h2><span />Crie Sua Conta</h2>
           <p>Cadastro mínimo para liberar sua validação e preparar seu painel.</p>
 
           <div className="signupV8SocialRow">
@@ -992,12 +992,18 @@ function SignupChoice() {
                 onChange={e => updateField('termsAccepted', e.target.checked)}
               />
               <span>
-                {REQUIRED_TERMS_TEXT}
+                <button
+                  className="termsAgreementLink"
+                  type="button"
+                  onClick={event => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    setLegalDocumentKey('terms')
+                  }}
+                >
+                  {REQUIRED_TERMS_TEXT}
+                </button>
                 <small>Ao continuar, declaro estar ciente das regras de cadastro, uso da plataforma, comunicação por WhatsApp/e-mail e tratamento dos meus dados.</small>
-                <span className="termsInlineLinks">
-                  <button type="button" onClick={() => setLegalDocumentKey('terms')}>Termos de Uso</button>
-                  <button type="button" onClick={() => setLegalDocumentKey('privacy')}>Política de Privacidade</button>
-                </span>
               </span>
             </label>
             {fieldError('termsAccepted')}
