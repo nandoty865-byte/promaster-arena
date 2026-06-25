@@ -7165,7 +7165,14 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
         <div>
           <span className="landingBadge">PlayFinal Arena</span>
           <h2>{page.showcaseTitle}</h2>
-          <p>{page.showcaseText}</p>
+          <p>
+            {type === 'arena' ? (
+              <>
+                A plataforma ajuda a transformar movimento local em recorrência,<br />
+                receita, ranking e comunidade esportiva.
+              </>
+            ) : page.showcaseText}
+          </p>
           {type !== 'arena' && <a className="landingButton" href={signupHref}>Começar agora</a>}
         </div>
         <img src={page.showcaseImage || page.image} alt={page.showcaseTitle} />
@@ -7177,7 +7184,14 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
           <div>
             <span className="landingBadge">Gestão em tempo real</span>
             <h2>Controle sua arena em todos os dispositivos.</h2>
-            <p>Mesas, eventos, inscrições e indicadores conectados em uma operação visual.</p>
+            <p>
+              {type === 'arena' ? (
+                <>
+                  Mesas, eventos, inscrições e indicadores<br />
+                  conectados em uma operação visual.
+                </>
+              ) : 'Mesas, eventos, inscrições e indicadores conectados em uma operação visual.'}
+            </p>
             {type !== 'arena' && <a className="landingButton" href={signupHref}>{page.cta}</a>}
           </div>
         </section>
