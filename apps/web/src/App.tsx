@@ -6411,7 +6411,6 @@ function LandingFooter() {
               <span className="brandLogoArena">Arena</span>
             </span>
           </a>
-          <p>Torneios em tempo real para jogadores, organizadores e arenas.</p>
         </div>
 
         <nav className="footerLinks" aria-label="Mapa do site">
@@ -6470,7 +6469,6 @@ function LandingFooter() {
               <span className="brandLogoArena">Arena</span>
             </span>
           </a>
-          <p>Torneios em tempo real para jogadores, organizadores e arenas.</p>
           <a className="landingButton footerMobileCta" href="/cadastro">Criar conta grátis</a>
         </div>
 
@@ -6523,11 +6521,6 @@ function LandingFooter() {
 
       <div className="landingFooterBottom">
         <span>© 2026 PlayFinal Arena. Todos os direitos reservados.</span>
-        <span>
-          <a href="/termos-de-uso">Termos</a>
-          <a href="/politica-de-privacidade">Privacidade</a>
-          <a href="/contato">Contato</a>
-        </span>
       </div>
     </footer>
   )
