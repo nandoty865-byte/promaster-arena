@@ -5841,7 +5841,7 @@ button:hover {
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(157, 255, 0, .44);
-  border-radius: 12px;
+  border-radius: 0;
   background:
     radial-gradient(circle at 50% 0%, rgba(157, 255, 0, .12), transparent 34%),
     linear-gradient(180deg, rgba(15, 23, 42, .88), rgba(0, 0, 0, .86));
@@ -6084,16 +6084,17 @@ button:hover {
 }
 
 .arenaFinalBand {
-  max-width: 1280px;
+  width: calc(100% + 56px);
+  max-width: none;
   min-height: 154px;
-  margin: 58px auto 0;
+  margin: 58px -28px 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   align-items: center;
   padding: 28px 40px;
   border: 1px solid rgba(157, 255, 0, .5);
-  border-radius: 12px;
+  border-radius: 0;
   background:
     linear-gradient(90deg, rgba(0, 0, 0, .54), rgba(0, 0, 0, .18)),
     url('/landing-final-bg.png') center / cover no-repeat;
@@ -13782,8 +13783,7 @@ button:hover {
 
 @media (min-width: 1600px) {
   .landingMetricsStrip,
-  .arenaSection,
-  .arenaFinalBand {
+  .arenaSection {
     max-width: 1440px;
   }
 
@@ -14023,6 +14023,12 @@ button:hover {
 
   .arenaModalityGrid article {
     min-height: 220px;
+  }
+
+  .arenaFinalBand {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
   }
 }
 
