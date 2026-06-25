@@ -6966,7 +6966,8 @@ function PlayerLanding() {
           <div className="playerHeroCopy">
             <span className="playerBadge">Para jogadores</span>
             <h1>
-              Sua <strong>carreira</strong> esportiva começa aqui
+              <span>Sua carreira esportiva</span>
+              <strong>começa aqui</strong>
             </h1>
             <p>
               Participe de torneios, acompanhe rankings, melhore seu desempenho
