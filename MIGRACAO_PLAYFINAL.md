@@ -13,7 +13,6 @@ Mapa limpo para continuar a migracao do antigo ProMaster Arena para PlayFinal Ar
 
 Arquivos versionados com nome legado:
 
-- `apps/web/promaster.conf`
 - `prisma/migrations/20260426215233_init_promaster/migration.sql`
 
 Arquivos operacionais com nome legado que devem ser mantidos por enquanto:
@@ -31,17 +30,10 @@ Arquivos operacionais com nome legado que devem ser mantidos por enquanto:
   - `apps/web/public/promaster-logo.jpeg`
   - `apps/web/public/promaster-logo-novo.png`
   - `apps/web/public/promaster-telao-reference.png`
+- Removida configuracao Apache legada sem uso:
+  - `apps/web/promaster.conf`
 
 ## Classificacao segura
-
-### Revisar antes de remover
-
-- `apps/web/promaster.conf`
-
-Motivo:
-
-- Parece configuracao Apache antiga, enquanto o projeto atual opera com Nginx nos caminhos oficiais.
-- Pode ser removivel, mas so depois de confirmar que nao e usado na VPS.
 
 ### Manter por historico
 
@@ -79,12 +71,11 @@ Regra segura:
 ## Proximo passo recomendado
 
 1. Manter migration antiga sem alterar.
-2. Revisar `apps/web/promaster.conf` e remover somente se confirmado que nao e usado.
-3. Depois abrir uma etapa separada para eventual renomeacao operacional de paths/PM2.
+2. Depois abrir uma etapa separada para eventual renomeacao operacional de paths/PM2.
 
 ## Comandos de auditoria
 
 ```bash
-git grep -n -i "promaster|pro master|pro-master" -- .
+git grep -n -i -E "promaster|pro master|pro-master" -- .
 rg --files -g "*promaster*" -g "*ProMaster*" -g "!node_modules" -g "!apps/web/dist" -g "!.git" -g "!*.log" -g "!*.err.log"
 ```
