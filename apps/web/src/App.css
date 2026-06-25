@@ -16142,3 +16142,127 @@ button:hover {
     padding: 34px 20px;
   }
 }
+
+.organizerLandingPage main {
+  width: min(1180px, calc(100% - 40px));
+}
+
+.organizerLandingPage .organizerHero {
+  width: calc(100% + 40px);
+  min-height: 560px;
+  margin-left: -20px;
+  margin-right: -20px;
+  display: grid;
+  grid-template-columns: minmax(0, 620px);
+  justify-content: flex-start;
+  align-items: center;
+  padding: clamp(38px, 6vw, 76px) 20px;
+  background:
+    linear-gradient(90deg, rgba(5, 8, 12, .96) 0%, rgba(5, 8, 12, .78) 34%, rgba(5, 8, 12, .18) 72%),
+    url('/organizer/photos/hero-organizador-institucional.jpg') center / cover no-repeat;
+}
+
+.organizerLandingPage .organizerHeroCopy {
+  max-width: 580px;
+  justify-self: start;
+  text-align: left;
+}
+
+.organizerLandingPage .organizerBadge {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+}
+
+.organizerLandingPage .organizerBadge::before {
+  display: none;
+}
+
+.organizerLandingPage .organizerHeroMockup {
+  display: none;
+}
+
+.organizerLandingPage .organizerCtaBanner {
+  width: calc(100% + 40px);
+  min-height: 360px;
+  margin: clamp(44px, 7vw, 86px) -20px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1180px);
+  justify-content: center;
+  align-items: center;
+  padding: clamp(34px, 6vw, 70px) max(20px, calc((100vw - 1180px) / 2));
+  border-top: 1px solid rgba(134, 241, 60, .30);
+  border-right: 0;
+  border-bottom: 1px solid rgba(134, 241, 60, .30);
+  border-left: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(5, 8, 12, .96) 0%, rgba(5, 8, 12, .74) 44%, rgba(5, 8, 12, .22) 100%),
+    url('/organizer/photos/banner-trofeu-institucional.png') center / cover no-repeat;
+  box-shadow: none;
+}
+
+.organizerLandingPage .organizerCtaBanner > div {
+  max-width: 620px;
+  justify-self: start;
+  text-align: left;
+}
+
+.organizerLandingPage .organizerCtaBanner h2,
+.organizerLandingPage .organizerCtaBanner p {
+  max-width: 600px;
+  margin-left: 0;
+  margin-right: 0;
+  text-align: left;
+}
+
+.organizerLandingPage .organizerCtaBanner .landingButton {
+  margin: 0;
+}
+
+.organizerLandingPage .organizerCtaBanner img {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .organizerLandingPage .organizerHero {
+    width: calc(100% + 28px);
+    margin-left: -14px;
+    margin-right: -14px;
+    padding: 46px 24px;
+  }
+
+  .organizerLandingPage .organizerCtaBanner {
+    width: calc(100% + 28px);
+    margin-left: -14px;
+    margin-right: -14px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .organizerLandingPage .organizerCtaBanner h2,
+  .organizerLandingPage .organizerCtaBanner p {
+    text-align: left;
+  }
+
+  .organizerLandingPage .organizerCtaBanner .landingButton {
+    margin: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .organizerLandingPage .organizerHero {
+    min-height: 560px;
+    padding: 44px 20px;
+    background:
+      linear-gradient(180deg, rgba(5, 8, 12, .95) 0%, rgba(5, 8, 12, .82) 46%, rgba(5, 8, 12, .30) 100%),
+      url('/organizer/photos/hero-organizador-institucional.jpg') center right / cover no-repeat;
+  }
+
+  .organizerLandingPage .organizerCtaBanner {
+    min-height: 320px;
+    padding: 34px 20px;
+  }
+}
