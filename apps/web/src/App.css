@@ -14015,6 +14015,120 @@ button:hover {
   }
 }
 
+.organizerLandingPage,
+.playerLandingPage,
+.personaLanding-arena {
+  font-family: inherit;
+}
+
+.organizerBadge,
+.playerBadge,
+.personaLanding-arena .landingBadge {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.organizerHero h1,
+.playerHero h1,
+.personaLanding-arena .personaHeroCopy h1 {
+  font-family: inherit;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.12;
+}
+
+.organizerHero h1 strong,
+.playerHero h1 strong,
+.personaLanding-arena .personaHeroCopy h1 strong {
+  font-weight: 800;
+}
+
+.organizerHero p,
+.playerHero p,
+.personaLanding-arena .personaHeroCopy p,
+.organizerHowSection > p,
+.organizerFeatureCard p,
+.organizerStepCard p,
+.organizerTestimonialCard p,
+.organizerCtaBanner p,
+.playerFeatureCard p,
+.playerUpcomingPanel span,
+.playerCommunityCta p,
+.personaLanding-arena .personaBenefits p,
+.personaLanding-arena .personaFlow p,
+.personaLanding-arena .personaShowcase p,
+.personaLanding-arena .personaCtaVisual p {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+}
+
+.organizerSection > h2,
+.organizerCtaBanner h2,
+.playerSection > h2,
+.playerUpcomingPanel h2,
+.playerAchievementsPanel h2,
+.playerCommunityCta h2,
+.personaLanding-arena .personaBenefits h2,
+.personaLanding-arena .personaFlow h2,
+.personaLanding-arena .personaShowcase h2,
+.personaLanding-arena .personaCtaVisual h2 {
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.18;
+}
+
+.organizerFeatureCard h3,
+.organizerStepCard h3,
+.playerFeatureCard h3,
+.personaLanding-arena .personaBenefits strong,
+.personaLanding-arena .personaFlow strong {
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.18;
+}
+
+.organizerLandingPage .landingButton,
+.organizerLandingPage .landingSecondary,
+.playerLandingPage .landingButton,
+.playerLandingPage .landingSecondary,
+.personaLanding-arena .landingButton,
+.personaLanding-arena .landingSecondary {
+  min-height: 0;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.personaLanding-arena .personaHero .landingButton {
+  background: linear-gradient(135deg, #f97316, #f59e0b);
+  color: #1f1300 !important;
+  box-shadow: 0 16px 36px rgba(249, 115, 22, .32);
+}
+
+.personaLanding-arena .personaBenefits h2,
+.personaLanding-arena .personaFlow h2,
+.personaLanding-arena .personaBenefits strong,
+.personaLanding-arena .personaFlow strong,
+.personaLanding-arena .personaShowcase h2,
+.personaLanding-arena .personaCtaVisual h2 {
+  color: #f59e0b;
+}
+
 @media (min-width: 1600px) {
   .landingMetricsStrip,
   .arenaSection {
