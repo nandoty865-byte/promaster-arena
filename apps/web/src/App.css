@@ -15986,6 +15986,10 @@ button:hover {
   width: min(1180px, calc(100% - 40px));
 }
 
+.playerLandingPage {
+  overflow-x: clip;
+}
+
 .playerLandingPage .playerHero {
   width: calc(100% + 40px);
   min-height: 560px;
@@ -16024,9 +16028,9 @@ button:hover {
 }
 
 .playerLandingPage .playerCommunityCta {
-  width: 100vw;
+  width: calc(100% + 40px);
   min-height: 360px;
-  margin: clamp(44px, 7vw, 86px) calc(50% - 50vw) 0;
+  margin: clamp(44px, 7vw, 86px) -20px 0;
   display: grid;
   grid-template-columns: minmax(0, 1180px);
   justify-content: center;
@@ -16036,7 +16040,7 @@ button:hover {
   border-radius: 0;
   background:
     linear-gradient(90deg, rgba(3, 6, 17, .95) 0%, rgba(3, 6, 17, .72) 44%, rgba(3, 6, 17, .28) 100%),
-    url('/player/photos/hero-jogador-fundo.png') center / cover no-repeat;
+    url('/player/photos/banner-jogadores.jpg') center / cover no-repeat;
   box-shadow: none;
 }
 
@@ -16064,6 +16068,14 @@ button:hover {
     margin-left: -14px;
     margin-right: -14px;
     padding: 46px 24px;
+  }
+
+  .playerLandingPage .playerCommunityCta {
+    width: calc(100% + 28px);
+    margin-left: -14px;
+    margin-right: -14px;
+    padding-left: 24px;
+    padding-right: 24px;
   }
 
   .playerLandingPage .playerCommunityCta h2,
