@@ -6238,9 +6238,13 @@ button:hover {
   white-space: nowrap;
 }
 
-.personaLanding-arena .personaHeroCopy h1 .arenaHeroHighlight,
+.personaLanding-arena .personaHeroCopy h1 em,
 .personaLanding-arena .personaHeroCopy h1 strong {
   color: #f59e0b;
+}
+
+.personaLanding-arena .personaHeroCopy h1 em {
+  font-style: normal;
 }
 
 .personaHeroCopy p {
@@ -6945,6 +6949,65 @@ button:hover {
   border-color: rgba(79, 123, 255, .72);
   color: #fff;
   box-shadow: 0 18px 48px rgba(47, 91, 255, .28);
+}
+
+.organizerLandingPage .landingHeader,
+.playerLandingPage .landingHeader,
+.personaLanding-arena .landingHeader {
+  top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, .18);
+  border-bottom: 1px solid rgba(148, 163, 184, .18);
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+  background: rgba(2, 6, 23, .76);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, .28);
+}
+
+.organizerLandingPage .landingNav a,
+.organizerLandingPage .landingNavDropdown summary,
+.organizerLandingPage .landingActions a,
+.playerLandingPage .landingNav a,
+.playerLandingPage .landingNavDropdown summary,
+.playerLandingPage .landingActions a,
+.personaLanding-arena .landingNav a,
+.personaLanding-arena .landingNavDropdown summary,
+.personaLanding-arena .landingActions a {
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.organizerLandingPage .landingActions a,
+.playerLandingPage .landingActions a,
+.personaLanding-arena .landingActions a {
+  color: #fff;
+}
+
+.organizerLandingPage .landingHeader .landingButton,
+.playerLandingPage .landingHeader .landingButton,
+.personaLanding-arena .landingHeader .landingButton {
+  min-height: 0;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #bef264, #22c55e);
+  color: #052e16 !important;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 16px 36px rgba(34, 197, 94, .28);
+}
+
+.personaLanding-arena .personaBenefits h2,
+.personaLanding-arena .personaFlow h2,
+.personaLanding-arena .personaBenefits strong,
+.personaLanding-arena .personaFlow strong {
+  color: #fff;
 }
 
 .playerHero {

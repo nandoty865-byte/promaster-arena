@@ -7108,7 +7108,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
             {type === 'arena' ? (
               <>
                 <span>Transforme sua arena</span>
-                <span className="arenaHeroHighlight">em uma operação</span>
+                <span>em uma <em>operação</em></span>
                 <strong>profissional</strong>
               </>
             ) : page.title}
@@ -7166,7 +7166,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
           <span className="landingBadge">PlayFinal Arena</span>
           <h2>{page.showcaseTitle}</h2>
           <p>{page.showcaseText}</p>
-          <a className="landingButton" href={signupHref}>Começar agora</a>
+          {type !== 'arena' && <a className="landingButton" href={signupHref}>Começar agora</a>}
         </div>
         <img src={page.showcaseImage || page.image} alt={page.showcaseTitle} />
       </section>
@@ -7178,7 +7178,7 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
             <span className="landingBadge">Gestão em tempo real</span>
             <h2>Controle sua arena em todos os dispositivos.</h2>
             <p>Mesas, eventos, inscrições e indicadores conectados em uma operação visual.</p>
-            <a className="landingButton" href={signupHref}>{page.cta}</a>
+            {type !== 'arena' && <a className="landingButton" href={signupHref}>{page.cta}</a>}
           </div>
         </section>
       )}
