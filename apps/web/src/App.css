@@ -16267,3 +16267,341 @@ button:hover {
     padding: 34px 20px;
   }
 }
+
+.landingArenaPage {
+  --pf-bg: #06070a;
+  --pf-section: #10161d;
+  --pf-card: #111820;
+  --pf-border: #26303a;
+  --pf-text: #f5f7fa;
+  --pf-green: #a6ff00;
+  --landing-black: #06070a;
+  --landing-card: #111820;
+  --landing-green: #a6ff00;
+  --landing-green-dark: #7bcc00;
+  --landing-white: #f5f7fa;
+  --landing-gray: rgba(245, 247, 250, .72);
+  color: var(--pf-text);
+  background:
+    radial-gradient(circle at 52% 0%, rgba(166, 255, 0, .10), transparent 28%),
+    radial-gradient(circle at 12% 8%, rgba(245, 247, 250, .045), transparent 26%),
+    linear-gradient(180deg, var(--pf-bg) 0%, var(--pf-section) 46%, var(--pf-bg) 100%);
+}
+
+.landingArenaPage .landingTopHeadline {
+  border-bottom-color: rgba(166, 255, 0, .36);
+  background:
+    linear-gradient(90deg, rgba(6, 7, 10, .96), rgba(16, 22, 29, .94), rgba(6, 7, 10, .96));
+  color: var(--pf-text);
+  box-shadow: 0 16px 44px rgba(6, 7, 10, .42);
+}
+
+.landingArenaPage .landingTopHeadline span,
+.landingArenaPage .landingTopHeadlinePro {
+  color: rgba(245, 247, 250, .86);
+}
+
+.landingArenaPage .landingTopHeadline strong,
+.landingArenaPage .landingTopHeadline b {
+  color: var(--pf-green);
+  text-shadow: 0 0 18px rgba(166, 255, 0, .34);
+}
+
+.landingArenaPage .landingHeader {
+  border-color: rgba(38, 48, 58, .86);
+  background: rgba(6, 7, 10, .78);
+  box-shadow: 0 20px 70px rgba(6, 7, 10, .54);
+}
+
+.landingArenaPage .landingLogo img {
+  filter: drop-shadow(0 0 14px rgba(166, 255, 0, .22));
+}
+
+.landingArenaPage .brandLogoMaster,
+.landingArenaPage .landingNavDropdown summary::after {
+  color: var(--pf-green);
+  border-color: var(--pf-green);
+}
+
+.landingArenaPage .landingNav a,
+.landingArenaPage .landingNavDropdown summary,
+.landingArenaPage .landingActions a {
+  color: rgba(245, 247, 250, .84);
+}
+
+.landingArenaPage .landingNav a:hover,
+.landingArenaPage .landingNavDropdown summary:hover,
+.landingArenaPage .landingActions a:hover {
+  color: var(--pf-green);
+}
+
+.landingArenaPage .landingNavMenu {
+  border-color: rgba(38, 48, 58, .9);
+  background: rgba(17, 24, 32, .96);
+  box-shadow: 0 26px 80px rgba(6, 7, 10, .58);
+}
+
+.landingArenaPage .landingNavMenu a {
+  color: rgba(245, 247, 250, .86);
+}
+
+.landingArenaPage .landingNavMenu a:hover {
+  background: rgba(166, 255, 0, .10);
+  color: var(--pf-green);
+}
+
+.landingArenaPage .landingButton,
+.landingArenaPage .landingButtonGlow,
+.landingArenaPage .footerMobileCta,
+.landingArenaPage .landingMobileMenuActions .landingButton {
+  border-color: rgba(166, 255, 0, .74);
+  background: linear-gradient(180deg, #a6ff00 0%, #7bcc00 100%);
+  color: #06070a !important;
+  box-shadow:
+    0 0 0 1px rgba(166, 255, 0, .24),
+    0 0 30px rgba(166, 255, 0, .35),
+    0 18px 48px rgba(166, 255, 0, .18);
+}
+
+.landingArenaPage .landingSecondary,
+.landingArenaPage .landingMobileMenuActions a:not(.landingButton) {
+  border-color: rgba(38, 48, 58, .95);
+  background:
+    linear-gradient(180deg, rgba(245, 247, 250, .045), rgba(17, 24, 32, .70)),
+    rgba(17, 24, 32, .64);
+  color: var(--pf-text) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(245, 247, 250, .08),
+    0 12px 26px rgba(6, 7, 10, .28);
+}
+
+.landingArenaPage .arenaLandingHero {
+  background:
+    radial-gradient(circle at 34% 38%, rgba(166, 255, 0, .14), transparent 30%),
+    linear-gradient(90deg, rgba(6, 7, 10, .88) 0%, rgba(6, 7, 10, .62) 42%, rgba(6, 7, 10, .20) 100%),
+    url('/landing-arena-bg.png') center top / cover no-repeat;
+  box-shadow:
+    inset 0 -1px 0 rgba(166, 255, 0, .22),
+    0 34px 120px rgba(6, 7, 10, .60);
+}
+
+.landingArenaPage .arenaLandingHero::before {
+  background:
+    linear-gradient(180deg, rgba(6, 7, 10, .02), rgba(6, 7, 10, .48)),
+    linear-gradient(90deg, rgba(6, 7, 10, .36), transparent 62%);
+}
+
+.landingArenaPage .arenaHeroTitle span,
+.landingArenaPage .arenaSection h2,
+.landingArenaPage .arenaFeatureGrid h3,
+.landingArenaPage .arenaModalityGrid h3,
+.landingArenaPage .arenaFinalBand h2 {
+  color: var(--pf-text);
+}
+
+.landingArenaPage .arenaHeroTitle strong,
+.landingArenaPage .arenaSection h2 strong,
+.landingArenaPage .arenaStepsGrid h3,
+.landingArenaPage .arenaStepHeading .arenaStepNumber,
+.landingArenaPage .arenaFinalBand h2 strong,
+.landingArenaPage .landingMetricsStrip span {
+  color: var(--pf-green);
+  text-shadow:
+    0 0 10px rgba(166, 255, 0, .54),
+    0 0 24px rgba(166, 255, 0, .25);
+}
+
+.landingArenaPage .arenaHeroCopy p,
+.landingArenaPage .arenaFeatureGrid p,
+.landingArenaPage .arenaModalityGrid p,
+.landingArenaPage .arenaStepsGrid p,
+.landingArenaPage .arenaFinalBand p,
+.landingArenaPage .arenaFinalBand span {
+  color: rgba(245, 247, 250, .78);
+}
+
+.landingArenaPage .arenaTrustLine span {
+  border-color: rgba(38, 48, 58, .9);
+  background: rgba(17, 24, 32, .62);
+  color: rgba(245, 247, 250, .84);
+}
+
+.landingArenaPage .landingMetricsStrip::before,
+.landingArenaPage .landingMetricsStrip::after {
+  background: linear-gradient(90deg, transparent, rgba(166, 255, 0, .70), transparent);
+}
+
+.landingArenaPage .landingMetricsStrip > * + *::before {
+  background: linear-gradient(180deg, transparent, rgba(38, 48, 58, .96), transparent);
+}
+
+.landingArenaPage .landingMetricsStrip img,
+.landingArenaPage .arenaFeatureGrid article > .arenaFeatureIcon,
+.landingArenaPage .arenaModalityGrid article img,
+.landingArenaPage .arenaStepsGrid article > img {
+  filter: drop-shadow(0 0 16px rgba(166, 255, 0, .40));
+}
+
+.landingArenaPage .arenaFeatureGrid article,
+.landingArenaPage .arenaModalityGrid article {
+  border-color: rgba(38, 48, 58, .92);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(166, 255, 0, .10), transparent 34%),
+    linear-gradient(180deg, rgba(17, 24, 32, .92), rgba(16, 22, 29, .90));
+  box-shadow:
+    inset 0 0 36px rgba(166, 255, 0, .045),
+    0 20px 60px rgba(6, 7, 10, .34);
+}
+
+.landingArenaPage .arenaFeatureGrid article > span {
+  border-color: rgba(38, 48, 58, .95);
+  background:
+    linear-gradient(135deg, rgba(166, 255, 0, .18), rgba(17, 24, 32, .38));
+  box-shadow: 0 0 24px rgba(166, 255, 0, .18);
+}
+
+.landingArenaPage .arenaFeatureGrid article > span::before {
+  border-color: var(--pf-green);
+}
+
+.landingArenaPage .arenaModalityGrid article {
+  background:
+    linear-gradient(180deg, rgba(6, 7, 10, .12), rgba(6, 7, 10, .88)),
+    var(--sport-bg) center / cover no-repeat;
+}
+
+.landingArenaPage .arenaModalityGrid article::before {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(166, 255, 0, .15), transparent 38%),
+    linear-gradient(180deg, rgba(6, 7, 10, .08), rgba(6, 7, 10, .82));
+}
+
+.landingArenaPage .arenaStepsGrid article {
+  background:
+    linear-gradient(180deg, rgba(17, 24, 32, .82), rgba(16, 22, 29, .74));
+  border: 1px solid rgba(38, 48, 58, .86);
+}
+
+.landingArenaPage .arenaFinalBand {
+  border-color: rgba(38, 48, 58, .92);
+  background:
+    linear-gradient(90deg, rgba(6, 7, 10, .72), rgba(6, 7, 10, .32)),
+    url('/landing-final-bg.png') center / cover no-repeat;
+  box-shadow:
+    inset 0 0 50px rgba(166, 255, 0, .08),
+    0 22px 70px rgba(6, 7, 10, .30);
+}
+
+.landingArenaPage .landingFooter {
+  border-top-color: rgba(38, 48, 58, .92);
+  border-bottom-color: rgba(38, 48, 58, .82);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(166, 255, 0, .10), transparent 28%),
+    linear-gradient(180deg, rgba(16, 22, 29, .92), rgba(6, 7, 10, .94));
+  box-shadow: 0 24px 90px rgba(6, 7, 10, .34);
+}
+
+.landingArenaPage .footerLinks strong,
+.landingArenaPage .footerMobileAccordion summary {
+  color: var(--pf-text);
+}
+
+.landingArenaPage .footerLinks a,
+.landingArenaPage .landingFooterBottom a,
+.landingArenaPage .footerMobileAccordion a {
+  color: rgba(245, 247, 250, .72);
+}
+
+.landingArenaPage .footerLinks a:hover,
+.landingArenaPage .landingFooterBottom a:hover,
+.landingArenaPage .footerMobileAccordion a:hover {
+  color: var(--pf-green);
+}
+
+.landingArenaPage .landingFooterBottom {
+  border-top-color: rgba(38, 48, 58, .78);
+  color: rgba(245, 247, 250, .52);
+}
+
+.landingArenaPage .footerSocials a,
+.landingArenaPage .footerMobileSocials a {
+  border-color: rgba(38, 48, 58, .82);
+  background: rgba(17, 24, 32, .54);
+  color: var(--pf-green);
+}
+
+.landingArenaPage .footerMobileAccordion {
+  border-top-color: rgba(38, 48, 58, .82);
+}
+
+.landingArenaPage .footerMobileAccordion details {
+  border-bottom-color: rgba(38, 48, 58, .82);
+}
+
+.landingArenaPage .footerMobileAccordion summary::after {
+  color: var(--pf-green);
+}
+
+.landingArenaPage .landingMenuButton {
+  border-color: rgba(38, 48, 58, .95);
+  background: rgba(17, 24, 32, .72);
+  color: var(--pf-text);
+}
+
+.landingArenaPage .landingMenuIcon span {
+  background: var(--pf-green);
+}
+
+.landingArenaPage .landingMenuBackdrop {
+  background: rgba(6, 7, 10, .66);
+}
+
+.landingArenaPage .landingMobileMenu {
+  border-left-color: rgba(38, 48, 58, .92);
+  background:
+    radial-gradient(circle at 8% 8%, rgba(166, 255, 0, .12), transparent 26%),
+    radial-gradient(circle at 92% 92%, rgba(245, 247, 250, .06), transparent 20%),
+    linear-gradient(135deg, rgba(17, 24, 32, .98) 0%, rgba(16, 22, 29, .98) 46%, rgba(6, 7, 10, .99) 100%);
+  box-shadow: -34px 0 100px rgba(6, 7, 10, .62), inset 1px 0 0 rgba(245, 247, 250, .06);
+}
+
+.landingArenaPage .landingMobileMenuBrand strong,
+.landingArenaPage .landingMobileMenuNav a strong,
+.landingArenaPage .landingMobileMenuActions a,
+.landingArenaPage .landingMobileMenuItemIcon {
+  color: var(--pf-text);
+}
+
+.landingArenaPage .landingMobileMenuHeader button,
+.landingArenaPage .landingMobileMenuNav a {
+  border-color: rgba(38, 48, 58, .92);
+  background:
+    linear-gradient(180deg, rgba(245, 247, 250, .035), rgba(245, 247, 250, .012)),
+    rgba(17, 24, 32, .58);
+}
+
+.landingArenaPage .landingMobileMenuHeader button span::before,
+.landingArenaPage .landingMobileMenuHeader button span::after {
+  background: rgba(245, 247, 250, .84);
+}
+
+.landingArenaPage .landingMobileMenuNav a:hover {
+  border-color: rgba(166, 255, 0, .42);
+  background:
+    linear-gradient(180deg, rgba(166, 255, 0, .08), rgba(245, 247, 250, .018)),
+    rgba(17, 24, 32, .66);
+}
+
+.landingArenaPage .landingMobileMenuNav a small,
+.landingArenaPage .landingMobileMenuFooter p,
+.landingArenaPage .landingMobileMenuFooter div a {
+  color: rgba(245, 247, 250, .62);
+}
+
+.landingArenaPage .landingMobileMenuNav a i {
+  border-color: rgba(245, 247, 250, .70);
+}
+
+.landingArenaPage .landingMobileMenuFooter {
+  border-top-color: rgba(38, 48, 58, .86);
+}
