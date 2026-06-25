@@ -6123,9 +6123,9 @@ const personaLandingContent: Record<PersonaLandingType, {
     ],
     showcaseTitle: 'Sua arena como centro de competição.',
     showcaseText: 'A plataforma ajuda a transformar movimento local em recorrência, receita, ranking e comunidade esportiva.',
-    image: '/arena/photos/hero-arena-sinuca-premium-recriado.webp',
-    showcaseImage: '/arena/photos/card-gestao-arena-abstrato-recriado.webp',
-    ctaImage: '/arena/photos/cta-dashboard-dispositivos-recriado.webp',
+    image: '/arena/photos/arena-institucional-hero.png',
+    showcaseImage: '/arena/photos/arena-mesa-sinuca.png',
+    ctaImage: '/arena/photos/arena-notebook.jpg',
   },
 }
 
@@ -7104,7 +7104,15 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
       <section id="conteudo-principal" className="personaHero">
         <div className="personaHeroCopy">
           <span className="landingBadge">{page.badge}</span>
-          <h1>{page.title}</h1>
+          <h1>
+            {type === 'arena' ? (
+              <>
+                <span>Transforme sua arena</span>
+                <span className="arenaHeroHighlight">em uma operação</span>
+                <strong>profissional</strong>
+              </>
+            ) : page.title}
+          </h1>
           <p>{page.description}</p>
           <div className="landingCtas">
             <a className="landingButton" href={signupHref}>{page.cta}</a>
@@ -7112,18 +7120,20 @@ function PersonaLanding({ type }: { type: PersonaLandingType }) {
           </div>
         </div>
 
-        <div className="personaPanel">
-          <span>{page.panelEyebrow}</span>
-          <h2>{page.panelTitle}</h2>
-          <div className="personaMetrics">
-            {page.metrics.map(([value, label]) => (
-              <div key={label}>
-                <strong>{value}</strong>
-                <small>{label}</small>
-              </div>
-            ))}
+        {type !== 'arena' && (
+          <div className="personaPanel">
+            <span>{page.panelEyebrow}</span>
+            <h2>{page.panelTitle}</h2>
+            <div className="personaMetrics">
+              {page.metrics.map(([value, label]) => (
+                <div key={label}>
+                  <strong>{value}</strong>
+                  <small>{label}</small>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       <section className="personaBenefits">

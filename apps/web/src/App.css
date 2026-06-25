@@ -6168,10 +6168,16 @@ button:hover {
 }
 
 .personaLanding-arena .personaHero {
+  grid-template-columns: minmax(0, 660px);
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 680px;
+  border-color: transparent;
+  border-radius: 0;
   background:
-    linear-gradient(90deg, rgba(2, 6, 23, .94), rgba(2, 6, 23, .58)),
-    radial-gradient(circle at 82% 35%, rgba(245, 158, 11, .28), transparent 28%),
-    url('/playfinal-hero-broadcast.png') center / cover no-repeat;
+    linear-gradient(90deg, rgba(2, 6, 23, .96) 0%, rgba(2, 6, 23, .78) 34%, rgba(2, 6, 23, .22) 72%),
+    url('/arena/photos/arena-institucional-hero.png') center / cover no-repeat;
+  box-shadow: none;
 }
 
 .personaLanding-arena {
@@ -6197,11 +6203,44 @@ button:hover {
   padding: 30px;
 }
 
+.personaLanding-arena .personaHeroCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 660px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  text-align: left;
+}
+
 .personaHeroCopy h1 {
   margin: 0 0 18px;
   font-size: 36px;
   font-weight: 800;
   line-height: 1.12;
+}
+
+.personaLanding-arena .personaHeroCopy h1 {
+  color: #fff;
+  font-size: clamp(44px, 5.3vw, 78px);
+  line-height: .94;
+  letter-spacing: 0;
+  text-align: left;
+}
+
+.personaLanding-arena .personaHeroCopy h1 span,
+.personaLanding-arena .personaHeroCopy h1 strong {
+  display: block;
+  white-space: nowrap;
+}
+
+.personaLanding-arena .personaHeroCopy h1 .arenaHeroHighlight,
+.personaLanding-arena .personaHeroCopy h1 strong {
+  color: #f59e0b;
 }
 
 .personaHeroCopy p {
@@ -6210,6 +6249,17 @@ button:hover {
   font-size: 14px;
   font-weight: 400;
   line-height: 1.5;
+}
+
+.personaLanding-arena .personaHeroCopy p {
+  max-width: 560px;
+  margin: 0 0 22px;
+  color: #fff;
+  text-align: left;
+}
+
+.personaLanding-arena .landingCtas {
+  justify-content: flex-start;
 }
 
 .personaPanel {
@@ -6353,6 +6403,41 @@ button:hover {
   box-shadow: 0 24px 90px rgba(0, 0, 0, .34);
 }
 
+.personaLanding-arena .personaShowcase {
+  grid-template-columns: minmax(0, 620px);
+  justify-content: flex-start;
+  min-height: 470px;
+  padding: clamp(28px, 5vw, 64px);
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, rgba(2, 6, 23, .96) 0%, rgba(2, 6, 23, .76) 38%, rgba(2, 6, 23, .16) 78%),
+    url('/arena/photos/arena-mesa-sinuca.png') center / cover no-repeat;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.personaLanding-arena .personaShowcase > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 560px;
+  text-align: left;
+}
+
+.personaLanding-arena .personaShowcase h2,
+.personaLanding-arena .personaShowcase p {
+  text-align: left;
+}
+
+.personaLanding-arena .personaShowcase p {
+  color: #fff;
+}
+
+.personaLanding-arena .personaShowcase img {
+  display: none;
+}
+
 .personaCtaVisual {
   max-width: 1180px;
   margin: -36px auto 70px;
@@ -6387,6 +6472,41 @@ button:hover {
   color: #cbd5e1;
   font-size: 14px;
   line-height: 1.55;
+}
+
+.personaLanding-arena .personaCtaVisual {
+  grid-template-columns: minmax(0, 560px);
+  justify-content: flex-end;
+  justify-items: end;
+  min-height: 470px;
+  padding: clamp(28px, 5vw, 64px);
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(270deg, rgba(2, 6, 23, .96) 0%, rgba(2, 6, 23, .78) 38%, rgba(2, 6, 23, .12) 78%),
+    url('/arena/photos/arena-notebook.jpg') center / cover no-repeat;
+  box-shadow: none;
+}
+
+.personaLanding-arena .personaCtaVisual img {
+  display: none;
+}
+
+.personaLanding-arena .personaCtaVisual > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  max-width: 540px;
+  text-align: right;
+}
+
+.personaLanding-arena .personaCtaVisual h2,
+.personaLanding-arena .personaCtaVisual p {
+  text-align: right;
+}
+
+.personaLanding-arena .personaCtaVisual p {
+  color: #fff;
 }
 
 .organizerLandingPage {
@@ -10158,6 +10278,41 @@ button:hover {
   .landingFooterBottom {
     flex-direction: column;
   }
+
+  .personaLanding-arena .personaHero,
+  .personaLanding-arena .personaShowcase,
+  .personaLanding-arena .personaCtaVisual {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 34px 22px;
+  }
+
+  .personaLanding-arena .personaHero {
+    min-height: 560px;
+    background:
+      linear-gradient(180deg, rgba(2, 6, 23, .94) 0%, rgba(2, 6, 23, .82) 44%, rgba(2, 6, 23, .28) 100%),
+      url('/arena/photos/arena-institucional-hero.png') center / cover no-repeat;
+  }
+
+  .personaLanding-arena .personaHeroCopy h1 {
+    font-size: clamp(36px, 9vw, 52px);
+  }
+
+  .personaLanding-arena .personaShowcase {
+    min-height: 460px;
+    background:
+      linear-gradient(180deg, rgba(2, 6, 23, .94) 0%, rgba(2, 6, 23, .78) 48%, rgba(2, 6, 23, .24) 100%),
+      url('/arena/photos/arena-mesa-sinuca.png') center / cover no-repeat;
+  }
+
+  .personaLanding-arena .personaCtaVisual {
+    justify-content: flex-end;
+    min-height: 460px;
+    background:
+      linear-gradient(270deg, rgba(2, 6, 23, .96) 0%, rgba(2, 6, 23, .82) 44%, rgba(2, 6, 23, .28) 100%),
+      url('/arena/photos/arena-notebook.jpg') center / cover no-repeat;
+  }
 }
 
 @media (max-width: 640px) {
@@ -10386,6 +10541,19 @@ button:hover {
   .landingCtas {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .personaLanding-arena .landingCtas {
+    align-items: flex-start;
+  }
+
+  .personaLanding-arena .landingCtas a {
+    width: auto;
+  }
+
+  .personaLanding-arena .personaHeroCopy h1 span,
+  .personaLanding-arena .personaHeroCopy h1 strong {
+    white-space: normal;
   }
 
   .landingButton,
