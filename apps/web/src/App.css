@@ -6408,7 +6408,7 @@ button:hover {
 }
 
 .organizerLandingPage .landingHeader {
-  top: 50px;
+  top: 40px;
   border-radius: 0;
   border-color: rgba(134, 241, 60, .2);
   background: rgba(5, 8, 12, .86);
@@ -6477,21 +6477,23 @@ button:hover {
   margin: 0;
   color: var(--organizer-text);
   font-family: var(--font-heading, var(--font-body));
-  font-size: 56px;
+  font-size: clamp(42px, 4.2vw, 50px);
   font-weight: 800;
   letter-spacing: 0;
-  line-height: 1;
+  line-height: .98;
   text-align: left;
 }
 
 .organizerHero h1 span {
   display: block;
+  white-space: nowrap;
 }
 
 .organizerHero h1 strong {
   display: block;
   color: var(--organizer-green);
   font-weight: 800;
+  white-space: nowrap;
   text-shadow: 0 0 28px rgba(134, 241, 60, .22);
 }
 
@@ -14172,7 +14174,7 @@ button:hover {
   }
 
   .organizerHero h1 {
-    font-size: 38px;
+    font-size: clamp(34px, 10vw, 38px);
   }
 
   .organizerHeroActions,
