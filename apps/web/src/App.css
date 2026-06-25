@@ -16464,6 +16464,21 @@ button:hover {
   border-color: var(--pf-green);
 }
 
+.landingArenaPage .arenaFeatureGrid article > .arenaFeatureIcon {
+  border: 0;
+  background-image: var(--feature-icon) !important;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-color: transparent !important;
+  box-shadow: none;
+}
+
+.landingArenaPage .arenaFeatureGrid article > .arenaFeatureIcon::before {
+  content: none;
+  display: none;
+}
+
 .landingArenaPage .arenaModalityGrid article {
   background:
     linear-gradient(180deg, rgba(6, 7, 10, .12), rgba(6, 7, 10, .88)),
