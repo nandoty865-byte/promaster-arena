@@ -16200,7 +16200,8 @@ button:hover {
   border-radius: 0;
   background:
     linear-gradient(90deg, rgba(5, 8, 12, .96) 0%, rgba(5, 8, 12, .74) 44%, rgba(5, 8, 12, .22) 100%),
-    url('/organizer/photos/banner-trofeu-institucional.png') center / cover no-repeat;
+    url('/organizer/photos/banner-trofeu-institucional.png') right center / contain no-repeat;
+  background-color: #05080c;
   box-shadow: none;
 }
 
