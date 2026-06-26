@@ -16633,11 +16633,11 @@ button:hover {
   border: 0;
   background: transparent;
   color: #a6ff00;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 900;
-  letter-spacing: .28em;
+  letter-spacing: .16em;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: capitalize;
   text-shadow:
     0 0 6px rgba(166, 255, 0, .56),
     0 0 14px rgba(166, 255, 0, .22);
@@ -16679,13 +16679,15 @@ button:hover {
   min-width: 0;
   min-height: 238px;
   margin-left: -10px;
-  border-color: rgba(166, 255, 0, .9);
+  border-color: rgba(166, 255, 0, .96);
   border-radius: 8px;
   background: var(--sport-bg) center / cover no-repeat;
   clip-path: polygon(9% 0, 100% 0, 91% 100%, 0 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(166, 255, 0, .20),
-    0 0 18px rgba(166, 255, 0, .28),
+    inset 10px 0 0 -8px rgba(166, 255, 0, .95),
+    inset -10px 0 0 -8px rgba(166, 255, 0, .95),
+    inset 0 0 0 1px rgba(166, 255, 0, .36),
+    0 0 20px rgba(166, 255, 0, .34),
     0 18px 38px rgba(6, 7, 10, .42);
 }
 
@@ -16708,8 +16710,8 @@ button:hover {
   height: 40px;
   margin-bottom: 8px;
   filter:
-    brightness(0) saturate(100%) invert(88%) sepia(95%) saturate(748%) hue-rotate(28deg) brightness(104%) contrast(112%)
-    drop-shadow(0 0 10px rgba(166, 255, 0, .58))
+    brightness(0) invert(1)
+    drop-shadow(0 0 10px rgba(245, 247, 250, .48))
     drop-shadow(0 5px 10px rgba(6, 7, 10, .72));
 }
 
@@ -16741,15 +16743,15 @@ button:hover {
   .landingArenaPage .arenaModalitiesSection .landingBadge {
     width: 100%;
     gap: 10px;
-    font-size: 13px;
-    letter-spacing: .18em;
+    font-size: 12px;
+    letter-spacing: .12em;
   }
 
   .landingArenaPage .arenaStepsSection .landingBadge {
     width: 100%;
     gap: 10px;
-    font-size: 13px;
-    letter-spacing: .16em;
+    font-size: 12px;
+    letter-spacing: .1em;
   }
 
   .landingArenaPage .arenaModalitiesSection .arenaModalityGrid {
