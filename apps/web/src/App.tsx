@@ -7320,6 +7320,7 @@ function Landing() {
               <div>
                 <img src={`/landing-modality-icon-${slug}.png`} alt="" aria-hidden="true" />
                 <h3>{title}</h3>
+                {slug === 'volei' && <span className="arenaSportMore">e mais</span>}
               </div>
             </article>
           ))}

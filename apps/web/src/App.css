@@ -16269,14 +16269,14 @@ button:hover {
 }
 
 .landingArenaPage {
-  --pf-bg: #06070a;
-  --pf-section: #10161d;
-  --pf-card: #111820;
+  --pf-bg: #0b0e14;
+  --pf-section: #0b0e14;
+  --pf-card: #111622;
   --pf-border: #26303a;
   --pf-text: #f5f7fa;
   --pf-green: #a6ff00;
-  --landing-black: #06070a;
-  --landing-card: #111820;
+  --landing-black: #0b0e14;
+  --landing-card: #111622;
   --landing-green: #a6ff00;
   --landing-green-dark: #7bcc00;
   --landing-white: #f5f7fa;
@@ -16291,9 +16291,9 @@ button:hover {
 .landingArenaPage .landingTopHeadline {
   border-bottom-color: rgba(166, 255, 0, .36);
   background:
-    linear-gradient(90deg, rgba(6, 7, 10, .96), rgba(16, 22, 29, .94), rgba(6, 7, 10, .96));
+    linear-gradient(90deg, rgba(11, 14, 20, .96), rgba(17, 22, 34, .94), rgba(11, 14, 20, .96));
   color: var(--pf-text);
-  box-shadow: 0 16px 44px rgba(6, 7, 10, .42);
+  box-shadow: 0 16px 44px rgba(11, 14, 20, .42);
 }
 
 .landingArenaPage .landingTopHeadline span,
@@ -16309,8 +16309,8 @@ button:hover {
 
 .landingArenaPage .landingHeader {
   border-color: rgba(38, 48, 58, .86);
-  background: rgba(6, 7, 10, .78);
-  box-shadow: 0 20px 70px rgba(6, 7, 10, .54);
+  background: rgba(11, 14, 20, .78);
+  box-shadow: 0 20px 70px rgba(11, 14, 20, .54);
 }
 
 .landingArenaPage .landingLogo img {
@@ -16337,8 +16337,8 @@ button:hover {
 
 .landingArenaPage .landingNavMenu {
   border-color: rgba(38, 48, 58, .9);
-  background: rgba(17, 24, 32, .96);
-  box-shadow: 0 26px 80px rgba(6, 7, 10, .58);
+  background: rgba(17, 22, 34, .96);
+  box-shadow: 0 26px 80px rgba(11, 14, 20, .58);
 }
 
 .landingArenaPage .landingNavMenu a {
@@ -16356,7 +16356,7 @@ button:hover {
 .landingArenaPage .landingMobileMenuActions .landingButton {
   border-color: rgba(166, 255, 0, .74);
   background: linear-gradient(180deg, #a6ff00 0%, #7bcc00 100%);
-  color: #06070a !important;
+  color: #0b0e14 !important;
   box-shadow:
     0 0 0 1px rgba(166, 255, 0, .24),
     0 0 30px rgba(166, 255, 0, .35),
@@ -16367,28 +16367,28 @@ button:hover {
 .landingArenaPage .landingMobileMenuActions a:not(.landingButton) {
   border-color: rgba(38, 48, 58, .95);
   background:
-    linear-gradient(180deg, rgba(245, 247, 250, .045), rgba(17, 24, 32, .70)),
-    rgba(17, 24, 32, .64);
+    linear-gradient(180deg, rgba(245, 247, 250, .045), rgba(17, 22, 34, .70)),
+    rgba(17, 22, 34, .64);
   color: var(--pf-text) !important;
   box-shadow:
     inset 0 1px 0 rgba(245, 247, 250, .08),
-    0 12px 26px rgba(6, 7, 10, .28);
+    0 12px 26px rgba(11, 14, 20, .28);
 }
 
 .landingArenaPage .arenaLandingHero {
   background:
     radial-gradient(circle at 34% 38%, rgba(166, 255, 0, .14), transparent 30%),
-    linear-gradient(90deg, rgba(6, 7, 10, .88) 0%, rgba(6, 7, 10, .62) 42%, rgba(6, 7, 10, .20) 100%),
+    linear-gradient(90deg, rgba(11, 14, 20, .88) 0%, rgba(11, 14, 20, .62) 42%, rgba(11, 14, 20, .20) 100%),
     url('/landing-arena-bg.png') center top / cover no-repeat;
   box-shadow:
     inset 0 -1px 0 rgba(166, 255, 0, .22),
-    0 34px 120px rgba(6, 7, 10, .60);
+    0 34px 120px rgba(11, 14, 20, .60);
 }
 
 .landingArenaPage .arenaLandingHero::before {
   background:
-    linear-gradient(180deg, rgba(6, 7, 10, .02), rgba(6, 7, 10, .48)),
-    linear-gradient(90deg, rgba(6, 7, 10, .36), transparent 62%);
+    linear-gradient(180deg, rgba(11, 14, 20, .02), rgba(11, 14, 20, .48)),
+    linear-gradient(90deg, rgba(11, 14, 20, .36), transparent 62%);
 }
 
 .landingArenaPage .arenaHeroTitle span,
@@ -16422,7 +16422,7 @@ button:hover {
 
 .landingArenaPage .arenaTrustLine span {
   border-color: rgba(38, 48, 58, .9);
-  background: rgba(17, 24, 32, .62);
+  background: rgba(17, 22, 34, .62);
   color: rgba(245, 247, 250, .84);
 }
 
@@ -16447,16 +16447,16 @@ button:hover {
   border-color: rgba(38, 48, 58, .92);
   background:
     radial-gradient(circle at 50% 0%, rgba(166, 255, 0, .10), transparent 34%),
-    linear-gradient(180deg, rgba(17, 24, 32, .92), rgba(16, 22, 29, .90));
+    linear-gradient(180deg, rgba(17, 22, 34, .92), rgba(17, 22, 34, .90));
   box-shadow:
     inset 0 0 36px rgba(166, 255, 0, .045),
-    0 20px 60px rgba(6, 7, 10, .34);
+    0 20px 60px rgba(11, 14, 20, .34);
 }
 
 .landingArenaPage .arenaFeatureGrid article > span {
   border-color: rgba(38, 48, 58, .95);
   background:
-    linear-gradient(135deg, rgba(166, 255, 0, .18), rgba(17, 24, 32, .38));
+    linear-gradient(135deg, rgba(166, 255, 0, .18), rgba(17, 22, 34, .38));
   box-shadow: 0 0 24px rgba(166, 255, 0, .18);
 }
 
@@ -16481,30 +16481,30 @@ button:hover {
 
 .landingArenaPage .arenaModalityGrid article {
   background:
-    linear-gradient(180deg, rgba(6, 7, 10, .12), rgba(6, 7, 10, .88)),
+    linear-gradient(180deg, rgba(11, 14, 20, .12), rgba(11, 14, 20, .88)),
     var(--sport-bg) center / cover no-repeat;
 }
 
 .landingArenaPage .arenaModalityGrid article::before {
   background:
     radial-gradient(circle at 50% 18%, rgba(166, 255, 0, .15), transparent 38%),
-    linear-gradient(180deg, rgba(6, 7, 10, .08), rgba(6, 7, 10, .82));
+    linear-gradient(180deg, rgba(11, 14, 20, .08), rgba(11, 14, 20, .82));
 }
 
 .landingArenaPage .arenaStepsGrid article {
   background:
-    linear-gradient(180deg, rgba(17, 24, 32, .82), rgba(16, 22, 29, .74));
+    linear-gradient(180deg, rgba(17, 22, 34, .82), rgba(17, 22, 34, .74));
   border: 1px solid rgba(38, 48, 58, .86);
 }
 
 .landingArenaPage .arenaFinalBand {
   border-color: rgba(38, 48, 58, .92);
   background:
-    linear-gradient(90deg, rgba(6, 7, 10, .72), rgba(6, 7, 10, .32)),
+    linear-gradient(90deg, rgba(11, 14, 20, .72), rgba(11, 14, 20, .32)),
     url('/landing-final-bg.png') center / cover no-repeat;
   box-shadow:
     inset 0 0 50px rgba(166, 255, 0, .08),
-    0 22px 70px rgba(6, 7, 10, .30);
+    0 22px 70px rgba(11, 14, 20, .30);
 }
 
 .landingArenaPage .landingFooter {
@@ -16512,8 +16512,8 @@ button:hover {
   border-bottom-color: rgba(38, 48, 58, .82);
   background:
     radial-gradient(circle at 8% 0%, rgba(166, 255, 0, .10), transparent 28%),
-    linear-gradient(180deg, rgba(16, 22, 29, .92), rgba(6, 7, 10, .94));
-  box-shadow: 0 24px 90px rgba(6, 7, 10, .34);
+    linear-gradient(180deg, rgba(17, 22, 34, .92), rgba(11, 14, 20, .94));
+  box-shadow: 0 24px 90px rgba(11, 14, 20, .34);
 }
 
 .landingArenaPage .footerLinks strong,
@@ -16541,7 +16541,7 @@ button:hover {
 .landingArenaPage .footerSocials a,
 .landingArenaPage .footerMobileSocials a {
   border-color: rgba(38, 48, 58, .82);
-  background: rgba(17, 24, 32, .54);
+  background: rgba(17, 22, 34, .54);
   color: var(--pf-green);
 }
 
@@ -16559,7 +16559,7 @@ button:hover {
 
 .landingArenaPage .landingMenuButton {
   border-color: rgba(38, 48, 58, .95);
-  background: rgba(17, 24, 32, .72);
+  background: rgba(17, 22, 34, .72);
   color: var(--pf-text);
 }
 
@@ -16568,7 +16568,7 @@ button:hover {
 }
 
 .landingArenaPage .landingMenuBackdrop {
-  background: rgba(6, 7, 10, .66);
+  background: rgba(11, 14, 20, .66);
 }
 
 .landingArenaPage .landingMobileMenu {
@@ -16576,8 +16576,8 @@ button:hover {
   background:
     radial-gradient(circle at 8% 8%, rgba(166, 255, 0, .12), transparent 26%),
     radial-gradient(circle at 92% 92%, rgba(245, 247, 250, .06), transparent 20%),
-    linear-gradient(135deg, rgba(17, 24, 32, .98) 0%, rgba(16, 22, 29, .98) 46%, rgba(6, 7, 10, .99) 100%);
-  box-shadow: -34px 0 100px rgba(6, 7, 10, .62), inset 1px 0 0 rgba(245, 247, 250, .06);
+    linear-gradient(135deg, rgba(17, 22, 34, .98) 0%, rgba(17, 22, 34, .98) 46%, rgba(11, 14, 20, .99) 100%);
+  box-shadow: -34px 0 100px rgba(11, 14, 20, .62), inset 1px 0 0 rgba(245, 247, 250, .06);
 }
 
 .landingArenaPage .landingMobileMenuBrand strong,
@@ -16592,7 +16592,7 @@ button:hover {
   border-color: rgba(38, 48, 58, .92);
   background:
     linear-gradient(180deg, rgba(245, 247, 250, .035), rgba(245, 247, 250, .012)),
-    rgba(17, 24, 32, .58);
+    rgba(17, 22, 34, .58);
 }
 
 .landingArenaPage .landingMobileMenuHeader button span::before,
@@ -16604,7 +16604,7 @@ button:hover {
   border-color: rgba(166, 255, 0, .42);
   background:
     linear-gradient(180deg, rgba(166, 255, 0, .08), rgba(245, 247, 250, .018)),
-    rgba(17, 24, 32, .66);
+    rgba(17, 22, 34, .66);
 }
 
 .landingArenaPage .landingMobileMenuNav a small,
@@ -16688,7 +16688,7 @@ button:hover {
     inset -10px 0 0 -8px rgba(166, 255, 0, .95),
     inset 0 0 0 1px rgba(166, 255, 0, .36),
     0 0 20px rgba(166, 255, 0, .34),
-    0 18px 38px rgba(6, 7, 10, .42);
+    0 18px 38px rgba(11, 14, 20, .42);
 }
 
 .landingArenaPage .arenaModalitiesSection .arenaModalityGrid article:first-child {
@@ -16712,7 +16712,7 @@ button:hover {
   filter:
     brightness(0) invert(1)
     drop-shadow(0 0 10px rgba(245, 247, 250, .48))
-    drop-shadow(0 5px 10px rgba(6, 7, 10, .72));
+    drop-shadow(0 5px 10px rgba(11, 14, 20, .72));
 }
 
 .landingArenaPage .arenaModalitiesSection .arenaModalityGrid h3 {
@@ -16722,8 +16722,25 @@ button:hover {
   letter-spacing: .04em;
   line-height: 1;
   text-shadow:
-    0 2px 7px rgba(6, 7, 10, .92),
-    0 0 10px rgba(6, 7, 10, .84);
+    0 2px 7px rgba(11, 14, 20, .92),
+    0 0 10px rgba(11, 14, 20, .84);
+}
+
+.landingArenaPage .arenaModalitiesSection .arenaSportMore {
+  display: block;
+  margin-top: 7px;
+  color: var(--pf-green);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: .08em;
+  line-height: 1;
+  text-transform: lowercase;
+  text-shadow:
+    0 0 7px rgba(166, 255, 0, .55),
+    0 0 14px rgba(166, 255, 0, .26),
+    0 2px 7px rgba(11, 14, 20, .88);
 }
 
 @media (max-width: 980px) {
