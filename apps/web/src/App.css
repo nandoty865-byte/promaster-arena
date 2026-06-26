@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter+Tight:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter+Tight:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=Teko:wght@500;600;700&display=swap');
 
 :root {
   --font-title: 'Teko', 'Bebas Neue', sans-serif;
@@ -4145,6 +4145,475 @@ button:hover {
   opacity: .85;
 }
 
+.organizerDashboardLayout {
+  grid-template-columns: 268px minmax(0, 1fr);
+  background: #0B0E14;
+  color: #F8FAFC;
+  font-family: 'Inter', 'Plus Jakarta Sans', Arial, sans-serif;
+}
+
+.organizerDashboardLayout .sidebar {
+  border-right: 1px solid #1E2538;
+  background: #0B0E14;
+  padding: 22px 14px;
+}
+
+.organizerDashboardLayout .sidebarLogo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  color: #FFB800;
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.organizerDashboardLayout .sidebarLogo::before {
+  content: "PF";
+  width: 34px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  background: #FFB800;
+  color: #0B0E14;
+  font-size: 13px;
+  font-weight: 900;
+  clip-path: polygon(50% 0, 92% 16%, 84% 78%, 50% 100%, 16% 78%, 8% 16%);
+}
+
+.organizerDashboardLayout .sidebarProfileSelector,
+.organizerDashboardLayout .sidebarProfileSelector select,
+.organizerDashboardLayout .sidebar button,
+.organizerDashboardLayout .sidebarGroup summary,
+.organizerDashboardLayout .sidebar .sidebarSubButton {
+  border-color: #1E2538;
+  border-radius: 8px;
+  background: #111622;
+}
+
+.organizerDashboardLayout .sidebar button,
+.organizerDashboardLayout .sidebarGroup summary {
+  color: #DDE3F0;
+  font-weight: 600;
+}
+
+.organizerDashboardLayout .sidebarSectionTitle,
+.organizerDashboardLayout .sidebarProfileSelector label {
+  color: #7E879A;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.organizerDashboardLayout .sidebarGroup summary::after {
+  color: #7E879A;
+  font-size: 10px;
+}
+
+.organizerDashboardLayout .sidebar button:hover,
+.organizerDashboardLayout .sidebarGroup summary:hover,
+.organizerDashboardLayout .sidebar .sidebarSubButton.active {
+  background: rgba(255, 184, 0, .1);
+  color: #FFB800;
+  transform: translateX(2px);
+}
+
+.sidebarLiveSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sidebarLiveSummary::after {
+  content: "" !important;
+}
+
+.sidebarLiveBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #3A1E5C;
+  color: #E9D5FF;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.organizerDashboardMain {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  background: #0B0E14;
+}
+
+.organizerDashboardTopbar,
+.organizerDashboardHero,
+.organizerKpiCard,
+.organizerChartPanel,
+.organizerDataPanel {
+  border: 1px solid #1E2538;
+  border-radius: 8px;
+  background: #111622;
+}
+
+.organizerDashboardTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+}
+
+.organizerDashboardBrand,
+.organizerDashboardActions,
+.organizerPanelHeader,
+.organizerMiniRow {
+  display: flex;
+  align-items: center;
+}
+
+.organizerDashboardBrand {
+  gap: 12px;
+}
+
+.organizerBrandShield {
+  width: 38px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  background: #FFB800;
+  color: #0B0E14;
+  font-size: 13px;
+  font-weight: 900;
+  clip-path: polygon(50% 0, 92% 16%, 84% 78%, 50% 100%, 16% 78%, 8% 16%);
+}
+
+.organizerDashboardBrand strong,
+.organizerHeroSummary strong,
+.organizerKpiCard strong,
+.organizerPanelHeader h2,
+.organizerMiniRow strong {
+  color: #F8FAFC;
+}
+
+.organizerDashboardBrand strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.organizerDashboardBrand small,
+.organizerKpiCard small,
+.organizerHeroSummary small,
+.organizerMiniRow span,
+.organizerDataPanel p {
+  color: #8D96AA;
+  font-weight: 400;
+}
+
+.organizerDashboardActions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.organizerDashboardMain .profileSwitcher,
+.organizerProfileButton {
+  border: 1px solid #1E2538;
+  border-radius: 8px;
+  background: #0B0E14;
+}
+
+.organizerDashboardMain .profileSwitcher select {
+  border-color: #1E2538;
+  background: #0B0E14;
+  color: #F8FAFC;
+}
+
+.organizerDashboardMain button.organizerPrimaryButton,
+.organizerDashboardMain .organizerPrimaryButton {
+  border: 0;
+  border-radius: 8px;
+  background: #FFB800;
+  color: #0B0E14;
+  font-weight: 800;
+  box-shadow: 0 14px 34px rgba(255, 184, 0, .18);
+}
+
+.organizerDashboardHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  align-items: center;
+  gap: 18px;
+  padding: 20px;
+}
+
+.organizerEyebrow,
+.organizerPanelHeader span,
+.organizerKpiCard span {
+  display: block;
+  color: #FFB800;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.organizerDashboardHero h1 {
+  margin: 8px 0 6px;
+  font-size: 34px;
+  line-height: 1.06;
+  letter-spacing: 0;
+}
+
+.organizerDashboardHero p {
+  max-width: 620px;
+  margin: 0;
+  color: #A9B2C6;
+  font-size: 15px;
+}
+
+.organizerHeroSummary {
+  min-height: 118px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid #1E2538;
+  border-radius: 8px;
+  background: #0B0E14;
+}
+
+.organizerHeroSummary span {
+  color: #8D96AA;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.organizerHeroSummary strong {
+  font-size: 38px;
+  line-height: 1;
+}
+
+.organizerKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.organizerKpiCard {
+  position: relative;
+  min-height: 142px;
+  display: grid;
+  align-content: space-between;
+  gap: 14px;
+  padding: 16px;
+}
+
+.organizerKpiCard strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.organizerKpiCard em {
+  justify-self: start;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #0A2F1D;
+  color: #10B981;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.organizerAnalyticsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, .9fr) minmax(240px, .75fr);
+  gap: 14px;
+}
+
+.organizerChartPanel,
+.organizerDataPanel {
+  min-width: 0;
+  padding: 16px;
+}
+
+.organizerLinePanel {
+  min-height: 330px;
+}
+
+.organizerPanelHeader {
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.organizerPanelHeader h2 {
+  margin: 5px 0 0;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.organizerPanelHeader strong {
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #0A2F1D;
+  color: #10B981;
+  font-size: 12px;
+}
+
+.organizerChartCanvas {
+  height: 250px;
+}
+
+.organizerDonutWrap {
+  display: grid;
+  align-items: center;
+  gap: 8px;
+}
+
+.organizerDonutLegend {
+  display: grid;
+  gap: 8px;
+}
+
+.organizerDonutLegend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #C7D0E2;
+  font-size: 13px;
+}
+
+.organizerDonutLegend i {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+.organizerDataGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr);
+  gap: 14px;
+}
+
+.organizerMiniTable {
+  display: grid;
+  gap: 8px;
+}
+
+.organizerMiniRow {
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 58px;
+  padding: 10px 0;
+  border-bottom: 1px solid #1E2538;
+}
+
+.organizerMiniRow:last-child {
+  border-bottom: 0;
+}
+
+.organizerMiniRow div {
+  min-width: 0;
+}
+
+.organizerMiniRow strong,
+.organizerMiniRow span {
+  display: block;
+}
+
+.organizerMiniRow strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.organizerMiniRow span {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.organizerStatusPill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.organizerStatusPill.paid {
+  background: #0A2F1D;
+  color: #10B981;
+}
+
+.organizerStatusPill.pending {
+  background: #3A2A0A;
+  color: #F59E0B;
+}
+
+.organizerStatusPill.canceled {
+  background: #2D1015;
+  color: #EF4444;
+}
+
+.organizerTournamentPanel {
+  margin-bottom: 12px;
+}
+
+.organizerTournamentsTable {
+  min-width: 820px;
+}
+
+.organizerDashboardMain .tournamentsTable th,
+.organizerDashboardMain .tournamentsTable td {
+  border-bottom-color: #1E2538;
+}
+
+.organizerDashboardMain .tournamentsTable th {
+  color: #8D96AA;
+  font-weight: 700;
+}
+
+.organizerDashboardMain .tableLinkButton {
+  color: #F8FAFC;
+  font-weight: 700;
+}
+
+.organizerDashboardMain .tableLinkButton:hover {
+  color: #FFB800;
+}
+
+.organizerDashboardMain .tableActionIconButton {
+  border: 1px solid #1E2538;
+  border-radius: 8px;
+  background: #0B0E14;
+  color: #C7D0E2;
+}
+
+.organizerDashboardMain .tableActionIconButton:hover {
+  border-color: rgba(255, 184, 0, .5);
+  color: #FFB800;
+  opacity: 1;
+}
+
+.organizerDashboardMain .tableActionMenuList {
+  border-color: #1E2538;
+  border-radius: 8px;
+  background: #111622;
+}
+
 @media (max-width: 900px) {
   .saasLayout {
     grid-template-columns: 1fr;
@@ -4162,6 +4631,34 @@ button:hover {
 
   .registrationKanban {
     grid-template-columns: repeat(4, minmax(240px, 1fr));
+  }
+
+  .organizerDashboardTopbar,
+  .organizerDashboardHero,
+  .organizerDataGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .organizerDashboardTopbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .organizerDashboardActions {
+    justify-content: stretch;
+  }
+
+  .organizerDashboardActions > * {
+    flex: 1 1 180px;
+  }
+
+  .organizerKpiGrid,
+  .organizerAnalyticsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .organizerDashboardHero h1 {
+    font-size: 28px;
   }
 }
 

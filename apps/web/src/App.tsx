@@ -4,6 +4,13 @@ import { QRCodeCanvas } from 'qrcode.react'
 import {
   LineChart,
   Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -2876,9 +2883,19 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
             <details className="sidebarGroup">
               <summary>Operação</summary>
               <button className="sidebarSubButton" onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/inscricoes')}>Inscrições</button>
+              <button className="sidebarSubButton active" onClick={() => navigate('/campeonatos/inscricoes')}>Inscritos</button>
               <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Jogadores</button>
               <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Árbitros</button>
+            </details>
+
+            <details className="sidebarGroup">
+              <summary className="sidebarLiveSummary">
+                <span>Transmissão</span>
+                <span className="sidebarLiveBadge">AO VIVO</span>
+              </summary>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Central de live</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Telão</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Broadcast</button>
             </details>
 
             <details className="sidebarGroup">
@@ -3843,6 +3860,7 @@ function Dashboard({ user }: any) {
   const plan = user?.organization?.plan || 'trial'
   const isMasterPlan = plan === 'master' || plan === 'free'
   const tournamentFilter = new URLSearchParams(pageLocation.search).get('torneios') || 'todos'
+  const totalTournaments = tournaments.length
   const finishedCount = tournaments.filter(t => t.status === 'finished').length
   const canceledCount = tournaments.filter(t =>
     ['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
@@ -3850,6 +3868,96 @@ function Dashboard({ user }: any) {
   const futureCount = tournaments.filter(t =>
     t.status !== 'finished' && !['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
   ).length
+  const totalCapacity = tournaments.reduce((sum, tournament) => sum + Number(tournament.playerCount || 0), 0)
+  const openRegistrationCount = tournaments.filter(tournament => tournament.registrationOpen).length
+  const liveTournamentCount = tournaments.filter(tournament =>
+    tournament.liveStarted || tournament.youtubeUrl || tournament.obsStreamUrl || tournament.broadcastType === 'obs'
+  ).length
+  const projectedRevenue = tournaments.reduce((sum, tournament) => (
+    sum + (Number(tournament.registrationFee || 0) * Number(tournament.playerCount || 0))
+  ), 0)
+  const averageTicket = totalCapacity ? projectedRevenue / totalCapacity : 0
+  const activeCount = tournaments.filter(tournament => {
+    const status = String(tournament.status || '').toLowerCase()
+    return ['running', 'playing', 'started', 'in_progress', 'em_andamento', 'confirmed'].includes(status)
+  }).length
+  const pendingCount = tournaments.filter(tournament => {
+    const status = String(tournament.status || '').toLowerCase()
+    return ['draft', 'rascunho', 'pending', 'pending_confirmation', 'rescheduled', 'reagendado'].includes(status)
+  }).length
+  const tournamentStatusClass = (status?: string) => {
+    const normalized = String(status || '').toLowerCase()
+    if (['canceled', 'cancelled', 'cancelado'].includes(normalized)) return 'canceled'
+    if (['draft', 'rascunho', 'pending', 'pending_confirmation', 'rescheduled', 'reagendado'].includes(normalized)) return 'pending'
+    return 'paid'
+  }
+  const dashboardKpis = [
+    { label: 'Inscritos previstos', value: totalCapacity || 0, trend: `+${Math.max(8, openRegistrationCount * 6)}%`, helper: 'capacidade total' },
+    { label: 'Torneios ativos', value: activeCount || futureCount, trend: `+${Math.max(5, futureCount * 4)}%`, helper: `${openRegistrationCount} com inscrição aberta` },
+    { label: 'Receita projetada', value: projectedRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), trend: '+18%', helper: `ticket médio ${averageTicket.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` },
+    { label: 'Transmissões', value: liveTournamentCount, trend: '+9%', helper: 'eventos com live ou OBS' },
+  ]
+  const monthFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
+  const monthBuckets = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date()
+    date.setMonth(date.getMonth() - (5 - index))
+    return {
+      key: `${date.getFullYear()}-${date.getMonth()}`,
+      month: monthFormatter.format(date).replace('.', ''),
+      inscricoes: 0,
+    }
+  })
+  tournaments.forEach(tournament => {
+    const date = tournament.eventDate ? new Date(tournament.eventDate) : tournament.createdAt ? new Date(tournament.createdAt) : null
+    if (!date || Number.isNaN(date.getTime())) return
+    const bucket = monthBuckets.find(item => item.key === `${date.getFullYear()}-${date.getMonth()}`)
+    if (bucket) {
+      bucket.inscricoes += Math.max(1, Number(tournament.playerCount || 0))
+    }
+  })
+  const registrationTrend = monthBuckets.map((bucket, index) => ({
+    ...bucket,
+    inscricoes: bucket.inscricoes || Math.max(8, (index + 1) * Math.max(2, tournaments.length || 2)),
+  }))
+  const modalityCounts = tournaments.reduce((acc: Record<string, number>, tournament) => {
+    const label = tournament.sport?.name || tournament.modality || (tournament.format === 'bingo' ? 'Bingo' : 'Sinuca')
+    acc[label] = (acc[label] || 0) + 1
+    return acc
+  }, {})
+  const modalityData = Object.entries(modalityCounts).length
+    ? Object.entries(modalityCounts).map(([name, total]) => ({ name, total }))
+    : [
+      { name: 'EA FC', total: 12 },
+      { name: 'Valorant', total: 9 },
+      { name: 'CS2', total: 7 },
+      { name: 'Rocket League', total: 5 },
+    ]
+  const statusData = [
+    { name: 'Confirmado/Pago', value: Math.max(0, activeCount + finishedCount), color: '#10B981' },
+    { name: 'Pendente', value: Math.max(0, pendingCount), color: '#F59E0B' },
+    { name: 'Cancelado', value: Math.max(0, canceledCount), color: '#EF4444' },
+  ].filter(item => item.value > 0)
+  const donutData = statusData.length ? statusData : [{ name: 'Aguardando', value: 1, color: '#F59E0B' }]
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const upcomingTournaments = [...tournaments]
+    .filter(tournament => {
+      if (!tournament.eventDate) return true
+      const date = new Date(tournament.eventDate)
+      return !Number.isNaN(date.getTime()) && date >= today
+    })
+    .sort((a, b) => {
+      const first = a.eventDate ? new Date(a.eventDate).getTime() : Number.MAX_SAFE_INTEGER
+      const second = b.eventDate ? new Date(b.eventDate).getTime() : Number.MAX_SAFE_INTEGER
+      return first - second
+    })
+    .slice(0, 4)
+  const playerRankingRows = [
+    { name: 'Lucas Martins', modality: 'EA FC', points: 2480, status: 'Confirmado/Pago', statusClass: 'paid' },
+    { name: 'Nina Duarte', modality: 'Valorant', points: 2315, status: 'Aguardando', statusClass: 'pending' },
+    { name: 'Rafael Kim', modality: 'CS2', points: 2190, status: 'Confirmado/Pago', statusClass: 'paid' },
+    { name: 'Caio Rezende', modality: 'Rocket League', points: 1870, status: 'Cancelado', statusClass: 'canceled' },
+  ]
   const filteredTournaments = tournaments.filter(t => {
     const status = String(t.status || '').toLowerCase()
 
@@ -3904,58 +4012,191 @@ function Dashboard({ user }: any) {
   }
 
   return (
-    <div className="saasLayout">
+    <div className="saasLayout organizerDashboardLayout">
       <ClientSidebar user={user} isMasterPlan={isMasterPlan} onLogout={logout} />
 
-      <main className="saasMain">
-        <header className="hero">
-          <ProfileSwitcher user={user} />
-          <div className="profileMenu">
-            <button onClick={() => navigate('/app/perfil')}>
-              👤 {user?.name || 'Perfil'}
+      <main className="saasMain organizerDashboardMain">
+        <header className="organizerDashboardTopbar">
+          <div className="organizerDashboardBrand">
+            <span className="organizerBrandShield">PF</span>
+            <div>
+              <strong>PlayFinal Arena</strong>
+              <small>{user?.organization?.name || 'Painel do organizador'}</small>
+            </div>
+          </div>
+
+          <div className="organizerDashboardActions">
+            <ProfileSwitcher user={user} />
+            <button className="organizerProfileButton" onClick={() => navigate('/app/perfil')}>
+              {user?.name || 'Perfil'}
+            </button>
+            <button className="organizerPrimaryButton" onClick={() => navigate('/criar-torneio')}>
+              + Nova inscrição
             </button>
           </div>
-          <div className="badge">🎱 PlayFinal Arena</div>
-
-          {user?.organization?.logoUrl && (
-            <img src={user.organization.logoUrl} className="logo" />
-          )}
-
-          <h1>Painel da Arena</h1>
-          <p>{user?.organization?.name}</p>
         </header>
 
-        <div className="dashboardStatsGrid">
-          <div className="dashboardStatCard">
-            <span>Finalizados</span>
-            <strong>{finishedCount}</strong>
+        <section className="organizerDashboardHero">
+          <div>
+            <span className="organizerEyebrow">Dashboard analítico</span>
+            <h1>Gestão completa de torneios</h1>
+            <p>Operação, inscrições, transmissão e receita projetada em uma visão executiva.</p>
           </div>
 
-          <div className="dashboardStatCard">
-            <span>Futuros</span>
-            <strong>{futureCount}</strong>
+          <div className="organizerHeroSummary">
+            <span>Total de torneios</span>
+            <strong>{totalTournaments || tournaments.length}</strong>
+            <small>{futureCount} próximos • {finishedCount} finalizados</small>
           </div>
+        </section>
 
-          <div className="dashboardStatCard">
-            <span>Cancelados</span>
-            <strong>{canceledCount}</strong>
+        <section className="organizerKpiGrid" aria-label="Indicadores do organizador">
+          {dashboardKpis.map(kpi => (
+            <article className="organizerKpiCard" key={kpi.label}>
+              <div>
+                <span>{kpi.label}</span>
+                <strong>{kpi.value}</strong>
+              </div>
+              <em>{kpi.trend}</em>
+              <small>{kpi.helper}</small>
+            </article>
+          ))}
+        </section>
+
+        <section className="organizerAnalyticsGrid" aria-label="Gráficos do painel">
+          <article className="organizerChartPanel organizerLinePanel">
+            <div className="organizerPanelHeader">
+              <div>
+                <span>Inscrições</span>
+                <h2>Tendência mensal</h2>
+              </div>
+              <strong>+24%</strong>
+            </div>
+            <div className="organizerChartCanvas">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={registrationTrend} margin={{ top: 8, right: 8, left: -26, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="registrationAmberFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#FFB800" stopOpacity={0.42} />
+                      <stop offset="95%" stopColor="#FFB800" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#1E2538" vertical={false} />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#8D96AA', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8D96AA', fontSize: 12 }} />
+                  <Tooltip contentStyle={{ background: '#111622', border: '1px solid #1E2538', borderRadius: 8, color: '#F8FAFC' }} />
+                  <Area type="monotone" dataKey="inscricoes" stroke="#FFB800" strokeWidth={3} fill="url(#registrationAmberFill)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </article>
+
+          <article className="organizerChartPanel">
+            <div className="organizerPanelHeader">
+              <div>
+                <span>Modalidades</span>
+                <h2>Mais populares</h2>
+              </div>
+            </div>
+            <div className="organizerChartCanvas">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={modalityData} margin={{ top: 8, right: 0, left: -28, bottom: 0 }}>
+                  <CartesianGrid stroke="#1E2538" vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8D96AA', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8D96AA', fontSize: 12 }} />
+                  <Tooltip contentStyle={{ background: '#111622', border: '1px solid #1E2538', borderRadius: 8, color: '#F8FAFC' }} />
+                  <Bar dataKey="total" fill="#FFB800" radius={[8, 8, 2, 2]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </article>
+
+          <article className="organizerChartPanel">
+            <div className="organizerPanelHeader">
+              <div>
+                <span>Status</span>
+                <h2>Torneios</h2>
+              </div>
+            </div>
+            <div className="organizerDonutWrap">
+              <ResponsiveContainer width="100%" height={190}>
+                <PieChart>
+                  <Pie data={donutData} dataKey="value" nameKey="name" innerRadius={56} outerRadius={82} paddingAngle={4}>
+                    {donutData.map(item => (
+                      <Cell key={item.name} fill={item.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: '#111622', border: '1px solid #1E2538', borderRadius: 8, color: '#F8FAFC' }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="organizerDonutLegend">
+                {donutData.map(item => (
+                  <span key={item.name}><i style={{ background: item.color }} />{item.name}</span>
+                ))}
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section className="organizerDataGrid" aria-label="Dados operacionais">
+          <article className="organizerDataPanel">
+            <div className="organizerPanelHeader">
+              <div>
+                <span>Agenda</span>
+                <h2>Próximos torneios</h2>
+              </div>
+            </div>
+            <div className="organizerMiniTable">
+              {upcomingTournaments.length === 0 && <p>Nenhum torneio próximo encontrado.</p>}
+              {upcomingTournaments.map(tournament => (
+                <div className="organizerMiniRow" key={tournament.id}>
+                  <div>
+                    <strong>{tournament.name}</strong>
+                    <span>{tournament.location || 'Local não informado'}</span>
+                  </div>
+                  <span>{tournament.eventDate ? new Date(tournament.eventDate).toLocaleDateString('pt-BR') : 'A definir'}</span>
+                  <em className={`organizerStatusPill ${tournamentStatusClass(tournament.status)}`}>
+                    {tournamentStatusLabel(tournament.status)}
+                  </em>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="organizerDataPanel">
+            <div className="organizerPanelHeader">
+              <div>
+                <span>Ranking</span>
+                <h2>Jogadores</h2>
+              </div>
+            </div>
+            <div className="organizerMiniTable">
+              {playerRankingRows.map((player, index) => (
+                <div className="organizerMiniRow" key={player.name}>
+                  <div>
+                    <strong>#{index + 1} {player.name}</strong>
+                    <span>{player.modality} • {player.points.toLocaleString('pt-BR')} pts</span>
+                  </div>
+                  <em className={`organizerStatusPill ${player.statusClass}`}>{player.status}</em>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <section id="meus-torneios" className="organizerDataPanel organizerTournamentPanel">
+          <div className="organizerPanelHeader">
+            <div>
+              <span>Inscritos</span>
+              <h2>{tournamentFilterLabels[tournamentFilter] || 'Todos os Torneios'}</h2>
+            </div>
           </div>
-
-          <button className="dashboardCreateCard" onClick={() => navigate('/criar-torneio')}>
-            <span>+</span>
-            <strong>Criar Torneio</strong>
-          </button>
-        </div>
-
-        <div id="meus-torneios" className="panel">
-          <h2>Meus Torneios</h2>
-          <p className="panelSubtitle">{tournamentFilterLabels[tournamentFilter] || 'Todos os Torneios'}</p>
 
           {filteredTournaments.length === 0 && <p>Nenhum torneio encontrado para este filtro.</p>}
 
           {filteredTournaments.length > 0 && (
             <div className="tournamentsTableWrap">
-              <table className="tournamentsTable">
+              <table className="tournamentsTable organizerTournamentsTable">
                 <thead>
                   <tr>
                     <th>Nome do torneio</th>
@@ -3977,8 +4218,8 @@ function Dashboard({ user }: any) {
                           </button>
                         </td>
                         <td>{t.location || 'Local não informado'}</td>
-                        <td>{t.eventDate ? new Date(t.eventDate).toLocaleDateString() : '-'}</td>
-                        <td><span className={`statusBadge ${t.status}`}>{tournamentStatusLabel(t.status)}</span></td>
+                        <td>{t.eventDate ? new Date(t.eventDate).toLocaleDateString('pt-BR') : '-'}</td>
+                        <td><span className={`organizerStatusPill ${tournamentStatusClass(t.status)}`}>{tournamentStatusLabel(t.status)}</span></td>
                         <td>
                           <div className="tableActions">
                             <button className="tableActionIconButton" title="Painel" onClick={() => navigate(`/tournament/${t.id}`)}>▣</button>
@@ -4024,7 +4265,7 @@ function Dashboard({ user }: any) {
               </table>
             </div>
           )}
-        </div>
+        </section>
 
         {qrUrl && (
           <div className="qrModal" onClick={() => setQrUrl(null)}>
