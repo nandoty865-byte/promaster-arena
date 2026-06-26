@@ -16668,10 +16668,11 @@ button:hover {
 .landingArenaPage .arenaModalitiesSection .arenaModalityGrid {
   max-width: 1180px;
   margin: 0 auto;
+  position: relative;
   display: flex;
   gap: 0;
   justify-content: center;
-  padding: 0 8px;
+  padding: 0 8px 30px;
 }
 
 .landingArenaPage .arenaModalitiesSection .arenaModalityGrid article {
@@ -16679,14 +16680,14 @@ button:hover {
   min-width: 0;
   min-height: 238px;
   margin-left: -10px;
-  border-color: rgba(166, 255, 0, .96);
+  border: 0;
   border-radius: 8px;
   background: var(--sport-bg) center / cover no-repeat;
   clip-path: polygon(9% 0, 100% 0, 91% 100%, 0 100%);
+  isolation: isolate;
   box-shadow:
     inset 10px 0 0 -8px rgba(166, 255, 0, .95),
     inset -10px 0 0 -8px rgba(166, 255, 0, .95),
-    inset 0 0 0 1px rgba(166, 255, 0, .36),
     0 0 20px rgba(166, 255, 0, .34),
     0 18px 38px rgba(11, 14, 20, .42);
 }
@@ -16697,6 +16698,27 @@ button:hover {
 
 .landingArenaPage .arenaModalitiesSection .arenaModalityGrid article::before {
   display: none;
+}
+
+.landingArenaPage .arenaModalitiesSection .arenaModalityGrid article::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 2px;
+  pointer-events: none;
+  background:
+    linear-gradient(125deg, rgba(166, 255, 0, 1), rgba(166, 255, 0, .58) 52%, rgba(166, 255, 0, .96));
+  clip-path: polygon(9% 0, 100% 0, 91% 100%, 0 100%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 8px rgba(166, 255, 0, .48));
 }
 
 .landingArenaPage .arenaModalitiesSection .arenaModalityGrid article div {
@@ -16727,14 +16749,18 @@ button:hover {
 }
 
 .landingArenaPage .arenaModalitiesSection .arenaSportMore {
-  display: block;
-  margin-top: 7px;
+  position: absolute;
+  right: 8px;
+  bottom: 0;
+  width: calc((100% - 16px) / 6);
+  display: inline-flex;
+  justify-content: center;
   color: var(--pf-green);
-  font-family: var(--font-ui);
-  font-size: 13px;
-  font-style: italic;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: clamp(14px, 1vw, 18px);
+  font-style: normal;
   font-weight: 900;
-  letter-spacing: .08em;
+  letter-spacing: .04em;
   line-height: 1;
   text-transform: lowercase;
   text-shadow:
@@ -16747,11 +16773,16 @@ button:hover {
   .landingArenaPage .arenaModalitiesSection .arenaModalityGrid {
     flex-wrap: wrap;
     gap: 10px;
+    padding-bottom: 28px;
   }
 
   .landingArenaPage .arenaModalitiesSection .arenaModalityGrid article {
     flex: 0 1 calc(33.333% - 8px);
     margin-left: 0;
+  }
+
+  .landingArenaPage .arenaModalitiesSection .arenaSportMore {
+    width: calc(33.333% - 8px);
   }
 }
 
@@ -16774,6 +16805,7 @@ button:hover {
   .landingArenaPage .arenaModalitiesSection .arenaModalityGrid {
     gap: 8px;
     padding: 0;
+    padding-bottom: 28px;
   }
 
   .landingArenaPage .arenaModalitiesSection .arenaModalityGrid article {
@@ -16782,9 +16814,18 @@ button:hover {
     clip-path: polygon(7% 0, 100% 0, 93% 100%, 0 100%);
   }
 
+  .landingArenaPage .arenaModalitiesSection .arenaModalityGrid article::after {
+    clip-path: polygon(7% 0, 100% 0, 93% 100%, 0 100%);
+  }
+
   .landingArenaPage .arenaModalitiesSection .arenaModalityGrid article div {
     min-height: 180px;
     padding-bottom: 14px;
+  }
+
+  .landingArenaPage .arenaModalitiesSection .arenaSportMore {
+    right: 0;
+    width: calc(50% - 4px);
   }
 }
 
@@ -16796,5 +16837,9 @@ button:hover {
 
   .landingArenaPage .arenaModalitiesSection .arenaModalityGrid article div {
     min-height: 188px;
+  }
+
+  .landingArenaPage .arenaModalitiesSection .arenaSportMore {
+    width: 100%;
   }
 }
