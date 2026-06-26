@@ -3002,6 +3002,75 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
   )
 }
 
+function OrganizerDashboardSidebar({ user }: { user?: any }) {
+  const navigate = useNavigate()
+  const organizationName = user?.organization?.name || 'Arena PlayFinal'
+  const logoUrl = user?.organization?.logoUrl
+  const menuItems = [
+    { label: 'Dashboard', icon: 'home', path: '/app', active: true },
+    { label: 'Torneios', icon: 'trophy', path: '/app?torneios=todos' },
+    { label: 'Inscrições', icon: 'clipboard', path: '/campeonatos/inscricoes' },
+    { label: 'Partidas', icon: 'match', path: '/campeonatos', live: true },
+    { label: 'Participantes', icon: 'participant', path: '/campeonatos' },
+    { label: 'Times', icon: 'teams', path: '/campeonatos' },
+    { label: 'Ranking', icon: 'star', path: '/campeonatos' },
+    { label: 'Financeiro', icon: 'finance', path: '/campeonatos/pagamentos' },
+    { label: 'Arenas', icon: 'location', path: '/campeonatos/arenas' },
+    { label: 'Comunicação', icon: 'message', path: '/app/perfil' },
+    { label: 'Relatórios', icon: 'document', path: '/campeonatos/pagamentos' },
+    { label: 'Configurações', icon: 'settings', path: '/app/perfil' },
+  ]
+
+  return (
+    <aside className="organizerSidebar" aria-label="Menu do organizador">
+      <div className="organizerSidebarLogo" aria-label="PlayFinal Arena">
+        <div className="organizerSidebarShield">
+          <span className="organizerShieldCrown" aria-hidden="true" />
+          <span className="organizerShieldStars" aria-hidden="true" />
+          <strong>PF</strong>
+        </div>
+        <div className="organizerSidebarBrandText">
+          <strong>PLAYFINAL</strong>
+          <span>ARENA</span>
+        </div>
+      </div>
+
+      <button className="organizerSidebarProfile" type="button" onClick={() => navigate('/app/perfil')}>
+        <span className="organizerProfileAvatar">
+          {logoUrl ? <img src={logoUrl} alt="" /> : <span>{organizationName.slice(0, 2).toUpperCase()}</span>}
+        </span>
+        <span className="organizerProfileText">
+          <strong>{organizationName}</strong>
+          <small>Organizador</small>
+        </span>
+        <span className="organizerProfileChevron" aria-hidden="true" />
+      </button>
+
+      <nav className="organizerNavList" aria-label="Navegação do painel">
+        {menuItems.map(item => (
+          <button
+            key={item.label}
+            className={`organizerNavButton${item.active ? ' active' : ''}`}
+            type="button"
+            onClick={() => navigate(item.path)}
+          >
+            <span className={`organizerNavIcon ${item.icon}`} aria-hidden="true" />
+            <span>{item.label}</span>
+            {item.live && <em>AO VIVO</em>}
+          </button>
+        ))}
+      </nav>
+
+      <div className="organizerPlanCard">
+        <span className="organizerPlanCrown" aria-hidden="true" />
+        <strong>Plano Premium</strong>
+        <small>Renovação em 23/06/2025</small>
+        <button type="button" onClick={() => navigate('/upgrade')}>Gerenciar Plano</button>
+      </div>
+    </aside>
+  )
+}
+
 function AdminSidebar() {
   const navigate = useNavigate()
 
@@ -3857,8 +3926,6 @@ function Dashboard({ user }: any) {
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [detailsTournament, setDetailsTournament] = useState<any>(null)
   const [openTournamentMenuId, setOpenTournamentMenuId] = useState<number | null>(null)
-  const plan = user?.organization?.plan || 'trial'
-  const isMasterPlan = plan === 'master' || plan === 'free'
   const tournamentFilter = new URLSearchParams(pageLocation.search).get('torneios') || 'todos'
   const totalTournaments = tournaments.length
   const finishedCount = tournaments.filter(t => t.status === 'finished').length
@@ -3987,11 +4054,6 @@ function Dashboard({ user }: any) {
     arquivados: 'Arquivados',
   }
 
-  function logout() {
-    localStorage.removeItem('token')
-    window.location.href = '/login'
-  }
-
   function loadMyTournaments() {
     fetch(`${API}/me/tournaments`, { headers: authHeaders() })
       .then(res => res.json())
@@ -4013,7 +4075,7 @@ function Dashboard({ user }: any) {
 
   return (
     <div className="saasLayout organizerDashboardLayout">
-      <ClientSidebar user={user} isMasterPlan={isMasterPlan} onLogout={logout} />
+      <OrganizerDashboardSidebar user={user} />
 
       <main className="saasMain organizerDashboardMain">
         <header className="organizerDashboardTopbar">
