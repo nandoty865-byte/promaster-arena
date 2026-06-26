@@ -16621,7 +16621,9 @@ button:hover {
   border-top-color: rgba(38, 48, 58, .86);
 }
 
-.landingArenaPage .arenaModalitiesSection .landingBadge {
+.landingArenaPage .arenaFeatureSection .landingBadge,
+.landingArenaPage .arenaModalitiesSection .landingBadge,
+.landingArenaPage .arenaStepsSection .landingBadge {
   width: min(680px, 100%);
   margin: 0 auto 18px;
   display: flex;
@@ -16637,24 +16639,30 @@ button:hover {
   line-height: 1;
   text-transform: uppercase;
   text-shadow:
-    0 0 10px rgba(166, 255, 0, .76),
-    0 0 24px rgba(166, 255, 0, .36);
+    0 0 6px rgba(166, 255, 0, .56),
+    0 0 14px rgba(166, 255, 0, .22);
   box-shadow: none;
 }
 
+.landingArenaPage .arenaFeatureSection .landingBadge::before,
+.landingArenaPage .arenaFeatureSection .landingBadge::after,
 .landingArenaPage .arenaModalitiesSection .landingBadge::before,
-.landingArenaPage .arenaModalitiesSection .landingBadge::after {
+.landingArenaPage .arenaModalitiesSection .landingBadge::after,
+.landingArenaPage .arenaStepsSection .landingBadge::before,
+.landingArenaPage .arenaStepsSection .landingBadge::after {
   content: '';
   height: 1px;
   flex: 1;
-  background: linear-gradient(90deg, transparent, rgba(166, 255, 0, .98));
+  background: linear-gradient(90deg, transparent, rgba(166, 255, 0, .92));
   box-shadow:
-    0 0 10px rgba(166, 255, 0, .82),
-    0 0 22px rgba(166, 255, 0, .42);
+    0 0 4px rgba(166, 255, 0, .54),
+    0 0 10px rgba(166, 255, 0, .18);
 }
 
-.landingArenaPage .arenaModalitiesSection .landingBadge::after {
-  background: linear-gradient(90deg, rgba(166, 255, 0, .98), transparent);
+.landingArenaPage .arenaFeatureSection .landingBadge::after,
+.landingArenaPage .arenaModalitiesSection .landingBadge::after,
+.landingArenaPage .arenaStepsSection .landingBadge::after {
+  background: linear-gradient(90deg, rgba(166, 255, 0, .92), transparent);
 }
 
 .landingArenaPage .arenaModalitiesSection .arenaModalityGrid {
@@ -16729,11 +16737,19 @@ button:hover {
 }
 
 @media (max-width: 640px) {
+  .landingArenaPage .arenaFeatureSection .landingBadge,
   .landingArenaPage .arenaModalitiesSection .landingBadge {
     width: 100%;
     gap: 10px;
     font-size: 13px;
     letter-spacing: .18em;
+  }
+
+  .landingArenaPage .arenaStepsSection .landingBadge {
+    width: 100%;
+    gap: 10px;
+    font-size: 13px;
+    letter-spacing: .16em;
   }
 
   .landingArenaPage .arenaModalitiesSection .arenaModalityGrid {
