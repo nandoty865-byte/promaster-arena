@@ -4256,18 +4256,35 @@ button:hover {
 }
 
 .organizerSidebarLogo {
+  position: relative;
   display: grid;
   justify-items: center;
-  padding: 0 0 2px;
+  padding: 0 0 4px;
   text-align: center;
 }
 
+.organizerSidebarLogo::before {
+  content: "";
+  position: absolute;
+  inset: 5px 34px 0;
+  z-index: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(166, 255, 0, .34), rgba(166, 255, 0, .12) 42%, transparent 72%);
+  filter: blur(14px);
+  opacity: .9;
+  pointer-events: none;
+}
+
 .organizerSidebarLogoImage {
-  width: min(132px, 100%);
+  position: relative;
+  z-index: 1;
+  width: min(112px, 100%);
   height: auto;
-  max-height: 140px;
+  max-height: 118px;
   object-fit: contain;
-  filter: drop-shadow(0 0 18px rgba(198, 255, 0, .22));
+  filter:
+    drop-shadow(0 0 12px rgba(166, 255, 0, .30))
+    drop-shadow(0 0 24px rgba(166, 255, 0, .18));
 }
 
 .organizerSidebarShield {
@@ -5184,9 +5201,11 @@ button:hover {
   gap: 16px;
   min-height: 64px;
   padding: 10px 10px 10px 16px;
+  border: 0;
+  border-bottom: 1px solid #1E2538;
   border-radius: 0;
   background: #080B10;
-  box-shadow: 0 1px 0 rgba(166, 255, 0, .35);
+  box-shadow: none;
 }
 
 .organizerDashboardActions,
