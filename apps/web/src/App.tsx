@@ -2784,22 +2784,22 @@ function profilePlanInfo(role: string, user: any) {
   const planByRole: Record<string, { title: string, subtitle: string, progress: number }> = {
     PLAYER: {
       title: 'Plano Jogador',
-      subtitle: `Jogador • desde ${createdAt}`,
+      subtitle: `Desde ${createdAt}`,
       progress: profileCompletionPercent(role, user),
     },
     ORGANIZER: {
       title: 'Plano Master',
-      subtitle: `Master • desde ${createdAt}`,
+      subtitle: `Desde ${createdAt}`,
       progress: profileCompletionPercent(role, user),
     },
     ARENA_OWNER: {
       title: 'Plano Arena',
-      subtitle: `Arena • desde ${createdAt}`,
+      subtitle: `Desde ${createdAt}`,
       progress: profileCompletionPercent(role, user),
     },
     REFEREE: {
       title: 'Plano Árbitro',
-      subtitle: `Árbitro • desde ${createdAt}`,
+      subtitle: `Desde ${createdAt}`,
       progress: profileCompletionPercent(role, user),
     },
   }
@@ -4301,15 +4301,15 @@ function Dashboard({ user }: any) {
                 {user?.organization?.logoUrl && activeProfile !== 'PLAYER' ? <img src={user.organization.logoUrl} alt="" /> : activeProfileInitials}
               </span>
               <span>
-                <strong>Acessando como</strong>
+                <strong>Perfil usuário</strong>
                 <small>{activeProfileLabel}</small>
               </span>
               <i aria-hidden="true" />
               </button>
               {profileMenuOpen && (
-                <div className="organizerTopbarProfileMenu" aria-label="Perfil de usuário">
+                <div className="organizerTopbarProfileMenu" aria-label="Perfil usuário">
                   <div className="organizerTopbarProfileMenuHeader">
-                    <span>Perfil de usuário</span>
+                    <span>Perfil usuário</span>
                     <strong>{activeProfileLabel}</strong>
                   </div>
                   <div className="organizerTopbarProfileProgress" aria-label="Preenchimento do perfil">
@@ -4329,7 +4329,7 @@ function Dashboard({ user }: any) {
                       navigate(profilePath(activeProfile, user))
                     }}
                   >
-                    <span>Meu perfil (ativo)</span>
+                    <span>Meu perfil</span>
                   </button>
                   <button type="button" onClick={() => navigate('/upgrade')}>Assinatura</button>
                   <button type="button" onClick={logout}>Sair</button>
