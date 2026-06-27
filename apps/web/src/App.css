@@ -4873,6 +4873,55 @@ button:hover {
   display: none;
 }
 
+.organizerNavIcon.trophy::before,
+.organizerNavIcon.registration::before,
+.organizerNavIcon.participant::before,
+.organizerNavIcon.teams::before,
+.organizerNavIcon.location::before {
+  inset: 0;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background: currentColor;
+  box-shadow: none;
+  clip-path: none;
+  transform: none;
+}
+
+.organizerNavIcon.trophy::after,
+.organizerNavIcon.registration::after,
+.organizerNavIcon.participant::after,
+.organizerNavIcon.teams::after,
+.organizerNavIcon.location::after {
+  display: none;
+}
+
+.organizerNavIcon.trophy::before {
+  -webkit-mask: url('/organizer-icon-tournament.png') center / contain no-repeat;
+  mask: url('/organizer-icon-tournament.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.registration::before {
+  -webkit-mask: url('/organizer-icon-registration.png') center / contain no-repeat;
+  mask: url('/organizer-icon-registration.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.participant::before {
+  -webkit-mask: url('/organizer-icon-participants.png') center / contain no-repeat;
+  mask: url('/organizer-icon-participants.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.teams::before {
+  -webkit-mask: url('/organizer-icon-teams.png') center / contain no-repeat;
+  mask: url('/organizer-icon-teams.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.location::before {
+  -webkit-mask: url('/organizer-icon-arenas.png') center / contain no-repeat;
+  mask: url('/organizer-icon-arenas.png') center / contain no-repeat;
+}
+
 .organizerPlanCard {
   position: sticky;
   bottom: -22px;

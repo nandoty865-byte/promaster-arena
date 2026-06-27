@@ -3165,7 +3165,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
         {menuPrimaryItems.map(renderMenuItem)}
         <details className="organizerNavDropdown">
           <summary className="organizerNavDropdownSummary">
-            <span className="organizerNavIcon participant" aria-hidden="true" />
+            <span className="organizerNavIcon registration" aria-hidden="true" />
             <span>Cadastro</span>
             <i aria-hidden="true" />
           </summary>
