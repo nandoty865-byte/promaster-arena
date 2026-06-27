@@ -2846,6 +2846,11 @@ function ProfileSwitcher({ user }: { user: any }) {
 function loggedPageMeta(pathname: string, search: string) {
   const params = new URLSearchParams(search)
   const defaultPanel = params.get('painel') || ''
+  const tournamentFilter = params.get('torneios') || ''
+
+  if (pathname === '/app' && tournamentFilter) {
+    return { title: 'Torneios', breadcrumb: 'Home > Torneios' }
+  }
 
   if (pathname === '/app/perfil') {
     return { title: 'Meu Perfil', breadcrumb: 'Home > Conta > Meu Perfil' }
@@ -2884,6 +2889,10 @@ function loggedPageMeta(pathname: string, search: string) {
   }
 
   if (pathname === '/campeonatos') {
+    if (defaultPanel === 'partidas') return { title: 'Partidas', breadcrumb: 'Home > Torneios > Partidas' }
+    if (defaultPanel === 'ranking') return { title: 'Ranking', breadcrumb: 'Home > Torneios > Ranking' }
+    if (defaultPanel === 'relatorios') return { title: 'Relatórios', breadcrumb: 'Home > Relatórios' }
+    if (defaultPanel === 'patrocinadores') return { title: 'Patrocinadores', breadcrumb: 'Home > Patrocinadores' }
     if (defaultPanel === 'arenas') return { title: 'Cadastro de Arenas', breadcrumb: 'Home > Cadastro > Arenas' }
     if (defaultPanel === 'pagamentos') return { title: 'Pagamentos', breadcrumb: 'Home > Financeiro > Pagamentos' }
     if (defaultPanel === 'inscricoes') return { title: 'Inscrições', breadcrumb: 'Home > Torneios > Inscrições' }
@@ -3278,20 +3287,23 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
   const activePlanInfo = profilePlanInfo(activeProfile, user)
   const profileOptions = availableProfileOptions(user)
   const isPath = (path: string) => location.pathname === path
+  const menuParams = new URLSearchParams(location.search)
+  const activePanel = menuParams.get('painel') || ''
+  const activeTournamentFilter = menuParams.get('torneios') || ''
   const showArenaPageMenu = activeProfile === 'ARENA_OWNER'
   const menuItems = [
-    { label: 'Home', icon: 'home', path: '/app', active: isPath('/app') },
-    { label: 'Torneios', icon: 'trophy', path: '/app?torneios=todos', active: location.pathname === '/campeonatos' },
+    { label: 'Home', icon: 'home', path: '/app', active: isPath('/app') && !activeTournamentFilter },
+    { label: 'Torneios', icon: 'trophy', path: '/app?torneios=todos', active: (isPath('/app') && Boolean(activeTournamentFilter)) || (isPath('/campeonatos') && !activePanel), scrollTarget: 'meus-torneios' },
     { label: 'Inscrições', icon: 'clipboard', path: '/campeonatos/inscricoes', active: isPath('/campeonatos/inscricoes') },
-    { label: 'Partidas', icon: 'match', path: '/campeonatos', live: true },
+    { label: 'Partidas', icon: 'match', path: '/campeonatos?painel=partidas', active: isPath('/campeonatos') && activePanel === 'partidas', live: true },
     { label: 'Participantes', icon: 'participant', path: '/campeonatos' },
     { label: 'Times', icon: 'teams', path: '/campeonatos' },
     { label: 'Arenas', icon: 'location', path: '/campeonatos/arenas', active: isPath('/campeonatos/arenas') },
-    { label: 'Ranking', icon: 'star', path: '/campeonatos' },
+    { label: 'Ranking', icon: 'star', path: '/campeonatos?painel=ranking', active: isPath('/campeonatos') && activePanel === 'ranking' },
     { label: 'Financeiro', icon: 'finance', path: '/campeonatos/pagamentos', active: isPath('/campeonatos/pagamentos') || isPath('/upgrade') },
     { label: 'Mídia', icon: 'message', path: '/app/perfil' },
-    { label: 'Relatórios', icon: 'document', path: '/campeonatos/pagamentos' },
-    { label: 'Patrocinadores', icon: 'sponsors', path: '/campeonatos' },
+    { label: 'Relatórios', icon: 'document', path: '/campeonatos?painel=relatorios', active: isPath('/campeonatos') && activePanel === 'relatorios' },
+    { label: 'Patrocinadores', icon: 'sponsors', path: '/campeonatos?painel=patrocinadores', active: isPath('/campeonatos') && activePanel === 'patrocinadores' },
     { label: 'Configurações', icon: 'settings', path: '/app/perfil', active: isPath('/app/perfil') || isPath('/app/usuarios') },
   ]
   const menuPrimaryItems = menuItems.slice(0, 4)
@@ -3331,14 +3343,18 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
     setDrawerOpen(false)
   }
 
-  function renderMenuItem(item: { label: string, icon: string, path: string, active?: boolean, live?: boolean }) {
+  function renderMenuItem(item: { label: string, icon: string, path: string, active?: boolean, live?: boolean, scrollTarget?: string }) {
     return (
       <button
         key={item.label}
         className={`organizerNavButton${item.active ? ' active' : ''}`}
         type="button"
         onClick={() => {
+          const scrollTarget = item.scrollTarget
           navigate(item.path)
+          if (scrollTarget) {
+            setTimeout(() => document.getElementById(scrollTarget)?.scrollIntoView({ behavior: 'smooth' }), 120)
+          }
           setDrawerOpen(false)
         }}
       >
