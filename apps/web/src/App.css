@@ -4669,9 +4669,10 @@ button:hover {
 
 .organizerNavIcon {
   position: relative;
-  width: 22px;
-  height: 22px;
-  color: currentColor;
+  width: 24px;
+  height: 24px;
+  color: #FFFFFF;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, .18));
 }
 
 .organizerNavSvg {
@@ -4992,6 +4993,52 @@ button:hover {
 .organizerNavIcon.sponsors::before {
   -webkit-mask: url('/organizer-icon-sponsors.png') center / contain no-repeat;
   mask: url('/organizer-icon-sponsors.png') center / contain no-repeat;
+}
+
+.organizerNavButton:hover .organizerNavIcon,
+.organizerNavButton.active .organizerNavIcon,
+.organizerNavDropdownSummary:hover .organizerNavIcon,
+.organizerNavDropdown[open] .organizerNavDropdownSummary .organizerNavIcon {
+  color: #A6FF00;
+  filter: drop-shadow(0 0 8px rgba(166, 255, 0, .42));
+}
+
+.organizerNavIcon.clipboard::before,
+.organizerNavIcon.star::before,
+.organizerNavIcon.finance::before,
+.organizerNavIcon.document::before {
+  inset: -2px;
+}
+
+.organizerNavIcon.match::before {
+  content: "VS";
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: currentColor;
+  font-size: 13px;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: 0;
+  -webkit-mask: none;
+  mask: none;
+  transform: translateX(1px);
+}
+
+.organizerNavIcon.match::after {
+  content: "";
+  display: block;
+  left: 10px;
+  top: 1px;
+  width: 2px;
+  height: 22px;
+  border: 0;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(24deg);
 }
 
 .organizerPlanCard {
