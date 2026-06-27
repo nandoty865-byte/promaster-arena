@@ -4864,21 +4864,62 @@ button:hover {
   z-index: 5;
   width: calc(100% + 36px);
   display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
   gap: 3px;
   margin: auto -18px -22px;
-  padding: 12px 18px 16px;
+  padding: 10px 12px 14px 18px;
   border: 0;
   border-radius: 0;
   background: #111622;
   color: #FFFFFF;
-  text-align: left;
-  cursor: pointer;
   box-shadow: 0 -14px 30px rgba(0, 0, 0, .22);
 }
 
 .organizerPlanCard:hover {
   background: #111622;
   opacity: 1;
+}
+
+.organizerPlanMain {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #FFFFFF;
+  text-align: left;
+  cursor: pointer;
+}
+
+.organizerPlanMain:hover {
+  background: transparent;
+  opacity: 1;
+}
+
+.organizerPlanSettings {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #FFFFFF;
+  cursor: pointer;
+}
+
+.organizerPlanSettings:hover {
+  background: transparent;
+  color: #A6FF00;
+  opacity: 1;
+}
+
+.organizerPlanSettings .organizerNavIcon {
+  width: 19px;
+  height: 19px;
 }
 
 .organizerPlanCrown {

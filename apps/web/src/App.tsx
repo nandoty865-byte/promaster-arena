@@ -3084,7 +3084,8 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
   ]
   const menuPrimaryItems = menuItems.slice(0, 4)
   const cadastroItems = menuItems.slice(4, 7)
-  const menuSecondaryItems = menuItems.slice(7)
+  const settingsItem = menuItems.find(item => item.label === 'Configurações')
+  const menuSecondaryItems = menuItems.slice(7).filter(item => item.label !== 'Configurações')
 
   useEffect(() => {
     setActiveProfile(initialActiveProfile(user))
@@ -3175,7 +3176,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
 
       <nav className="organizerNavList" aria-label="Navegação do painel">
         {menuPrimaryItems.map(renderMenuItem)}
-        <details className="organizerNavDropdown" open>
+        <details className="organizerNavDropdown">
           <summary className="organizerNavDropdownSummary">
             <span className="organizerNavIcon participant" aria-hidden="true" />
             <span>Cadastro</span>
@@ -3188,10 +3189,20 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
         {menuSecondaryItems.map(renderMenuItem)}
       </nav>
 
-      <button className="organizerPlanCard" type="button" onClick={() => navigate('/upgrade')}>
-        <strong>{activePlanInfo.title}</strong>
-        <small>{activePlanInfo.subtitle}</small>
-      </button>
+      <div className="organizerPlanCard">
+        <button className="organizerPlanMain" type="button" onClick={() => navigate('/upgrade')}>
+          <strong>{activePlanInfo.title}</strong>
+          <small>{activePlanInfo.subtitle}</small>
+        </button>
+        <button
+          className="organizerPlanSettings"
+          type="button"
+          aria-label="Configurações"
+          onClick={() => navigate(settingsItem?.path || '/app/perfil')}
+        >
+          <span className="organizerNavIcon settings" aria-hidden="true" />
+        </button>
+      </div>
     </aside>
   )
 }
