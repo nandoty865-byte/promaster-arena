@@ -2196,6 +2196,7 @@ function PlayerSignup() {
 function PlayerDashboard() {
   const { id } = useParams()
   const [data, setData] = useState<any>(null)
+  const [playerDrawerOpen, setPlayerDrawerOpen] = useState(false)
 
   useEffect(() => {
     fetch(`${API}/players/${id}/dashboard`, { cache: 'no-store' })
@@ -2290,6 +2291,16 @@ function PlayerDashboard() {
         <a href="/" className="playerDashboardLogo">
           <img src="/playfinal-logo-horizontal.png" alt="PlayFinal Arena" />
         </a>
+        <button
+          className="appDrawerToggle playerDrawerToggle"
+          type="button"
+          aria-label="Abrir menu do jogador"
+          aria-expanded={playerDrawerOpen}
+          onClick={() => setPlayerDrawerOpen(true)}
+        >
+          <span aria-hidden="true" />
+          <strong>Menu</strong>
+        </button>
         <nav className="playerDashboardBreadcrumb" aria-label="Caminho da página">
           <a href="/">⌂ Início</a>
           <span>Perfil</span>
@@ -2308,8 +2319,24 @@ function PlayerDashboard() {
         </div>
       </header>
 
+      <button
+        className={`appDrawerBackdrop${playerDrawerOpen ? ' open' : ''}`}
+        type="button"
+        aria-label="Fechar menu"
+        onClick={() => setPlayerDrawerOpen(false)}
+      />
+
       <main className="playerDashboardShell">
-        <aside className="playerDashboardSidebar" aria-label="Navegação do perfil">
+        <aside
+          className={`playerDashboardSidebar playerDrawerSidebar${playerDrawerOpen ? ' open' : ''}`}
+          aria-label="Navegação do perfil"
+          onClickCapture={event => {
+            const target = event.target
+            if (target instanceof HTMLElement && target.closest('a,button')) {
+              setPlayerDrawerOpen(false)
+            }
+          }}
+        >
           <nav>
             <a className="active" href="#perfil">Perfil</a>
             <a href="#estatisticas">Estatísticas</a>
@@ -2828,6 +2855,7 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
   const showArenaMenu = activeProfile === 'ARENA_OWNER'
   const showRefereeMenu = activeProfile === 'REFEREE'
   const showPlayerMenu = activeProfile === 'PLAYER' || roles.length === 0
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
     if (!isLoggedIn()) return
@@ -2855,6 +2883,7 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
     setActiveProfile(role)
     storeActiveProfile(role)
     navigate(profilePath(role, user))
+    setDrawerOpen(false)
   }
 
   function logout() {
@@ -2868,23 +2897,48 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
   }
 
   return (
-    <aside className="sidebar">
-      <div className="sidebarLogo">PlayFinal</div>
-      {roles.length > 0 && (
-        <div className="sidebarProfileSelector">
-          <label htmlFor="sidebarActiveProfile">Acessando como</label>
-          <select
-            id="sidebarActiveProfile"
-            value={activeProfile}
-            onChange={event => changeActiveProfile(event.target.value)}
-          >
-            {roles.map(role => (
-              <option key={role} value={role}>{PROFILE_ROLE_LABELS[role]}</option>
-            ))}
-          </select>
-        </div>
-      )}
-      <nav className="sidebarMenu" aria-label="Menu da conta">
+    <>
+      <button
+        className="appDrawerToggle"
+        type="button"
+        aria-label="Abrir menu da conta"
+        aria-expanded={drawerOpen}
+        onClick={() => setDrawerOpen(true)}
+      >
+        <span aria-hidden="true" />
+        <strong>Menu</strong>
+      </button>
+      <button
+        className={`appDrawerBackdrop${drawerOpen ? ' open' : ''}`}
+        type="button"
+        aria-label="Fechar menu"
+        onClick={() => setDrawerOpen(false)}
+      />
+      <aside
+        className={`sidebar appDrawerSidebar${drawerOpen ? ' open' : ''}`}
+        onClickCapture={event => {
+          const target = event.target
+          if (target instanceof HTMLElement && target.closest('button')) {
+            setDrawerOpen(false)
+          }
+        }}
+      >
+        <div className="sidebarLogo">PlayFinal</div>
+        {roles.length > 0 && (
+          <div className="sidebarProfileSelector">
+            <label htmlFor="sidebarActiveProfile">Acessando como</label>
+            <select
+              id="sidebarActiveProfile"
+              value={activeProfile}
+              onChange={event => changeActiveProfile(event.target.value)}
+            >
+              {roles.map(role => (
+                <option key={role} value={role}>{PROFILE_ROLE_LABELS[role]}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <nav className="sidebarMenu" aria-label="Menu da conta">
         <section className="sidebarMenuSection">
           <span className="sidebarSectionTitle">Principal</span>
           <button onClick={() => navigate(profilePath(activeProfile, user))}>
@@ -3041,8 +3095,9 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
           )}
           <button className="sidebarFooterButton" onClick={logout}>Sair</button>
         </section>
-      </nav>
-    </aside>
+        </nav>
+      </aside>
+    </>
   )
 }
 
@@ -3050,6 +3105,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
   const navigate = useNavigate()
   const [profileSelectorOpen, setProfileSelectorOpen] = useState(false)
   const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const organizationName = user?.organization?.name || 'Arena PlayFinal'
   const logoUrl = user?.organization?.logoUrl
   const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
@@ -3097,6 +3153,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
 
     setProfileSelectorOpen(false)
     navigate(profile.path)
+    setDrawerOpen(false)
   }
 
   function renderMenuItem(item: { label: string, icon: string, path: string, active?: boolean, live?: boolean }) {
@@ -3105,7 +3162,10 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
         key={item.label}
         className={`organizerNavButton${item.active ? ' active' : ''}`}
         type="button"
-        onClick={() => navigate(item.path)}
+        onClick={() => {
+          navigate(item.path)
+          setDrawerOpen(false)
+        }}
       >
         {item.icon === 'match' ? (
           <span className="organizerNavVsIcon" aria-hidden="true">VS</span>
@@ -3119,12 +3179,29 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
   }
 
   return (
-    <aside className="organizerSidebar" aria-label="Menu do organizador">
-      <div className="organizerSidebarLogo" aria-label="PlayFinal Arena">
-        <img className="organizerSidebarLogoImage" src="/playfinal-logo-symbol.png" alt="PlayFinal Arena" />
-      </div>
+    <>
+      <button
+        className="appDrawerToggle organizerDrawerToggle"
+        type="button"
+        aria-label="Abrir menu do organizador"
+        aria-expanded={drawerOpen}
+        onClick={() => setDrawerOpen(true)}
+      >
+        <span aria-hidden="true" />
+        <strong>Menu</strong>
+      </button>
+      <button
+        className={`appDrawerBackdrop${drawerOpen ? ' open' : ''}`}
+        type="button"
+        aria-label="Fechar menu"
+        onClick={() => setDrawerOpen(false)}
+      />
+      <aside className={`organizerSidebar appDrawerSidebar${drawerOpen ? ' open' : ''}`} aria-label="Menu do organizador">
+        <div className="organizerSidebarLogo" aria-label="PlayFinal Arena">
+          <img className="organizerSidebarLogoImage" src="/playfinal-logo-symbol.png" alt="PlayFinal Arena" />
+        </div>
 
-      <div className="organizerSidebarProfileWrap">
+        <div className="organizerSidebarProfileWrap">
         <button
           className="organizerSidebarProfile"
           type="button"
@@ -3155,9 +3232,9 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
             ))}
           </div>
         )}
-      </div>
+        </div>
 
-      <nav className="organizerNavList" aria-label="Navegação do painel">
+        <nav className="organizerNavList" aria-label="Navegação do painel">
         {menuPrimaryItems.map(renderMenuItem)}
         <details className="organizerNavDropdown">
           <summary className="organizerNavDropdownSummary">
@@ -3170,24 +3247,31 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
           </div>
         </details>
         {menuSecondaryItems.map(renderMenuItem)}
-      </nav>
+        </nav>
 
-      <div className="organizerPlanCard">
-        <img className="organizerPlanCrown" src="/organizer-plan-crown.png" alt="" aria-hidden="true" />
-        <button className="organizerPlanMain" type="button" onClick={() => navigate('/upgrade')}>
-          <strong>{activePlanInfo.title}</strong>
-          {activePlanInfo.subtitle && <small>{activePlanInfo.subtitle}</small>}
-        </button>
-        <button
-          className="organizerPlanSettings"
-          type="button"
-          aria-label="Configurações"
-          onClick={() => navigate(settingsItem?.path || '/app/perfil')}
-        >
-          <span className="organizerNavIcon settings" aria-hidden="true" />
-        </button>
-      </div>
-    </aside>
+        <div className="organizerPlanCard">
+          <img className="organizerPlanCrown" src="/organizer-plan-crown.png" alt="" aria-hidden="true" />
+          <button className="organizerPlanMain" type="button" onClick={() => {
+            navigate('/upgrade')
+            setDrawerOpen(false)
+          }}>
+            <strong>{activePlanInfo.title}</strong>
+            {activePlanInfo.subtitle && <small>{activePlanInfo.subtitle}</small>}
+          </button>
+          <button
+            className="organizerPlanSettings"
+            type="button"
+            aria-label="Configurações"
+            onClick={() => {
+              navigate(settingsItem?.path || '/app/perfil')
+              setDrawerOpen(false)
+            }}
+          >
+            <span className="organizerNavIcon settings" aria-hidden="true" />
+          </button>
+        </div>
+      </aside>
+    </>
   )
 }
 

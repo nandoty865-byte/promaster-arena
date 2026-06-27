@@ -3895,6 +3895,76 @@ button:hover {
   overflow-y: auto;
 }
 
+.appDrawerToggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1210;
+  display: none;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(96, 165, 250, .34);
+  border-radius: 999px;
+  background: rgba(17, 22, 34, .94);
+  color: #f8fafc;
+  font: 800 12px/1 'Inter', Arial, sans-serif;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .34), 0 0 22px rgba(96, 165, 250, .16);
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+}
+
+.appDrawerToggle span,
+.appDrawerToggle span::before,
+.appDrawerToggle span::after {
+  display: block;
+  width: 15px;
+  height: 2px;
+  border-radius: 999px;
+  background: #f8fafc;
+  content: "";
+}
+
+.appDrawerToggle span {
+  position: relative;
+}
+
+.appDrawerToggle span::before,
+.appDrawerToggle span::after {
+  position: absolute;
+  left: 0;
+}
+
+.appDrawerToggle span::before {
+  top: -5px;
+}
+
+.appDrawerToggle span::after {
+  top: 5px;
+}
+
+.appDrawerToggle strong {
+  font: inherit;
+}
+
+.appDrawerBackdrop {
+  display: none;
+}
+
+.appDrawerBackdrop.open {
+  position: fixed;
+  inset: 0;
+  z-index: 1180;
+  display: block;
+  border: 0;
+  background: rgba(2, 6, 15, .68);
+  backdrop-filter: blur(5px);
+  cursor: pointer;
+}
+
 .sidebarLogo {
   font-size: 22px;
   font-weight: 900;
@@ -5988,19 +6058,46 @@ button:hover {
     grid-template-columns: 1fr;
   }
 
+  .appDrawerToggle {
+    display: inline-flex;
+  }
+
   .integrationSettingsGrid,
   .integrationFieldGrid {
     grid-template-columns: 1fr;
   }
 
-  .sidebar {
+  .sidebar:not(.appDrawerSidebar) {
     position: relative;
     height: auto;
   }
 
-  .organizerSidebar {
+  .organizerSidebar:not(.appDrawerSidebar) {
     position: relative;
     height: auto;
+  }
+
+  .sidebar.appDrawerSidebar,
+  .organizerSidebar.appDrawerSidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1190;
+    width: min(330px, calc(100vw - 42px));
+    max-width: 360px;
+    height: 100dvh;
+    transform: translateX(calc(-100% - 22px));
+    transition: transform .24s ease, box-shadow .24s ease;
+    box-shadow: 22px 0 70px rgba(0, 0, 0, .46);
+  }
+
+  .sidebar.appDrawerSidebar.open,
+  .organizerSidebar.appDrawerSidebar.open {
+    transform: translateX(0);
+  }
+
+  .saasMain,
+  .organizerDashboardMain {
+    padding-top: 76px;
   }
 
   .registrationKanban {
@@ -17069,7 +17166,17 @@ button:hover {
 
 @media (max-width: 1180px) {
   .playerDashboardTopbar {
-    grid-template-columns: 190px 1fr;
+    grid-template-columns: 190px auto 1fr;
+  }
+
+  .playerDashboardTopbar .appDrawerToggle {
+    position: static;
+    display: inline-flex;
+    justify-self: start;
+  }
+
+  .playerDashboardBreadcrumb {
+    min-width: 0;
   }
 
   .playerDashboardTools {
@@ -17091,13 +17198,44 @@ button:hover {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .playerDashboardSidebar.playerDrawerSidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1190;
+    width: min(330px, calc(100vw - 42px));
+    max-width: 360px;
+    height: 100dvh;
+    align-content: start;
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+    padding: 18px;
+    border-right: 1px solid rgba(96, 165, 250, .26);
+    background: #0B0E14;
+    transform: translateX(calc(-100% - 22px));
+    transition: transform .24s ease, box-shadow .24s ease;
+    box-shadow: 22px 0 70px rgba(0, 0, 0, .46);
+  }
+
+  .playerDashboardSidebar.playerDrawerSidebar.open {
+    transform: translateX(0);
+  }
+
   .playerDashboardSidebar nav {
     grid-column: 1 / -1;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .playerDashboardSidebar.playerDrawerSidebar nav {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+  }
+
   .playerShareTools {
     align-self: end;
+  }
+
+  .playerDashboardSidebar.playerDrawerSidebar .playerShareTools {
+    align-self: auto;
   }
 
   .playerStatsGrid,
@@ -17116,6 +17254,10 @@ button:hover {
     grid-template-columns: 1fr;
     gap: 12px;
     padding: 12px 16px;
+  }
+
+  .playerDashboardTopbar .playerDrawerToggle {
+    width: max-content;
   }
 
   .playerDashboardLogo img {
