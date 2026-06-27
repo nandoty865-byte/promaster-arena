@@ -4543,6 +4543,7 @@ button:hover {
 .organizerNavDropdownSummary {
   position: relative;
   overflow: hidden;
+  width: 100%;
   min-height: 44px;
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr) 10px;
@@ -4552,16 +4553,62 @@ button:hover {
   color: #FFFFFF;
   font-size: 14px;
   font-weight: 500;
+  text-align: left;
   cursor: pointer;
   list-style: none;
+}
+
+.organizerNavDropdownSummary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(90deg, rgba(166, 255, 0, .18) 0%, rgba(166, 255, 0, .08) 48%, transparent 100%);
+  opacity: 0;
+  transform: scaleX(.18);
+  transform-origin: left center;
+  transition: opacity .2s ease, transform .24s ease;
+}
+
+.organizerNavDropdownSummary::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  z-index: 1;
+  width: 4px;
+  background: #A6FF00;
+  opacity: 0;
+  box-shadow: 0 0 16px rgba(166, 255, 0, .46);
+  transform: scaleY(.35);
+  transition: opacity .2s ease, transform .24s ease;
+}
+
+.organizerNavDropdownSummary > * {
+  position: relative;
+  z-index: 2;
 }
 
 .organizerNavDropdownSummary::-webkit-details-marker {
   display: none;
 }
 
-.organizerNavDropdownSummary:hover {
+.organizerNavDropdownSummary:hover,
+.organizerNavDropdown[open] .organizerNavDropdownSummary {
   color: #A6FF00;
+}
+
+.organizerNavDropdownSummary:hover::after,
+.organizerNavDropdown[open] .organizerNavDropdownSummary::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.organizerNavDropdownSummary:hover::before,
+.organizerNavDropdown[open] .organizerNavDropdownSummary::before {
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 .organizerNavDropdownSummary i {
@@ -4571,10 +4618,6 @@ button:hover {
   border-bottom: 2px solid currentColor;
   transform: rotate(45deg) translateY(-2px);
   transition: transform .18s ease;
-}
-
-.organizerNavDropdown[open] .organizerNavDropdownSummary {
-  color: #A6FF00;
 }
 
 .organizerNavDropdown[open] .organizerNavDropdownSummary i {

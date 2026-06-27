@@ -4056,6 +4056,7 @@ function Dashboard({ user }: any) {
   const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
   const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
   const activeProfileInitials = activeProfileLabel.slice(0, 2).toUpperCase()
+  const topbarUserName = user?.name || user?.fullName || user?.organization?.name || 'Usuário PlayFinal'
   const activePlanInfo = profilePlanInfo(activeProfile, user)
   const tournamentFilter = new URLSearchParams(pageLocation.search).get('torneios') || 'todos'
   const finishedCount = tournaments.filter(t => t.status === 'finished').length
@@ -4308,17 +4309,13 @@ function Dashboard({ user }: any) {
                 {user?.organization?.logoUrl && activeProfile !== 'PLAYER' ? <img src={user.organization.logoUrl} alt="" /> : activeProfileInitials}
               </span>
               <span>
-                <strong>Perfil usuário</strong>
+                <strong>{topbarUserName}</strong>
                 <small>{activeProfileLabel}</small>
               </span>
               <i aria-hidden="true" />
               </button>
               {profileMenuOpen && (
                 <div className="organizerTopbarProfileMenu" aria-label="Perfil usuário">
-                  <div className="organizerTopbarProfileMenuHeader">
-                    <span>Perfil usuário</span>
-                    <strong>{activeProfileLabel}</strong>
-                  </div>
                   <div className="organizerTopbarProfileProgress" aria-label="Preenchimento do perfil">
                     <div>
                       <span>Preenchimento perfil</span>
