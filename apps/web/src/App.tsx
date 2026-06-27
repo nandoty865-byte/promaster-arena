@@ -4079,21 +4079,40 @@ function Dashboard({ user }: any) {
 
       <main className="saasMain organizerDashboardMain">
         <header className="organizerDashboardTopbar">
-          <div className="organizerDashboardBrand">
-            <span className="organizerBrandShield">PF</span>
+          <div className="organizerTopbarBreadcrumbs" aria-label="Caminho da página">
+            <button className="organizerTopbarMenuButton" type="button" aria-label="Abrir menu">
+              <span />
+              <span />
+              <span />
+            </button>
             <div>
-              <strong>PlayFinal Arena</strong>
-              <small>{user?.organization?.name || 'Painel do organizador'}</small>
+              <span>PlayFinal Arena</span>
+              <strong>Dashboard Geral</strong>
             </div>
           </div>
 
+          <div className="organizerTopbarStatus" aria-label="Status do painel">
+            <span>Inscrições abertas</span>
+            <span>{openRegistrationCount} torneios ativos</span>
+            {liveTournamentCount > 0 && <span className="live">{liveTournamentCount} ao vivo</span>}
+          </div>
+
           <div className="organizerDashboardActions">
-            <ProfileSwitcher user={user} />
-            <button className="organizerProfileButton" onClick={() => navigate('/app/perfil')}>
-              {user?.name || 'Perfil'}
+            <button className="organizerTopbarIconButton bell" type="button" aria-label="Notificações">
+              <span>{Math.max(1, openRegistrationCount)}</span>
             </button>
-            <button className="organizerPrimaryButton" onClick={() => navigate('/criar-torneio')}>
-              + Nova inscrição
+            <button className="organizerTopbarIconButton mail" type="button" aria-label="Mensagens">
+              <span>{Math.max(1, liveTournamentCount || 1)}</span>
+            </button>
+            <button className="organizerTopbarProfile" onClick={() => navigate('/app/perfil')}>
+              <span className="organizerTopbarAvatar">
+                {user?.organization?.logoUrl ? <img src={user.organization.logoUrl} alt="" /> : 'PF'}
+              </span>
+              <span>
+                <strong>{user?.organization?.name || 'Arena PlayFinal'}</strong>
+                <small>Organizador</small>
+              </span>
+              <i aria-hidden="true" />
             </button>
           </div>
         </header>

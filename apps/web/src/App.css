@@ -4454,21 +4454,21 @@ button:hover {
 
 .organizerNavIcon.match::before,
 .organizerNavIcon.match::after {
-  top: 3px;
-  width: 5px;
-  height: 17px;
-  border: 2px solid currentColor;
+  left: 4px;
+  top: 10px;
+  width: 15px;
+  height: 2px;
+  border: 0;
   border-radius: 999px;
+  background: currentColor;
 }
 
 .organizerNavIcon.match::before {
-  left: 6px;
-  transform: rotate(-38deg);
+  transform: rotate(42deg);
 }
 
 .organizerNavIcon.match::after {
-  right: 6px;
-  transform: rotate(38deg);
+  transform: rotate(-42deg);
 }
 
 .organizerNavIcon.participant::before,
@@ -4660,34 +4660,22 @@ button:hover {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px;
+  min-height: 64px;
+  padding: 10px 16px;
+  border-radius: 0;
+  background: #080B10;
+  box-shadow: 0 1px 0 rgba(255, 184, 0, .35);
 }
 
-.organizerDashboardBrand,
 .organizerDashboardActions,
+.organizerTopbarBreadcrumbs,
+.organizerTopbarStatus,
 .organizerPanelHeader,
 .organizerMiniRow {
   display: flex;
   align-items: center;
 }
 
-.organizerDashboardBrand {
-  gap: 12px;
-}
-
-.organizerBrandShield {
-  width: 38px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  background: #FFB800;
-  color: #0B0E14;
-  font-size: 13px;
-  font-weight: 900;
-  clip-path: polygon(50% 0, 92% 16%, 84% 78%, 50% 100%, 16% 78%, 8% 16%);
-}
-
-.organizerDashboardBrand strong,
 .organizerHeroSummary strong,
 .organizerKpiCard strong,
 .organizerPanelHeader h2,
@@ -4695,13 +4683,6 @@ button:hover {
   color: #F8FAFC;
 }
 
-.organizerDashboardBrand strong {
-  display: block;
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.organizerDashboardBrand small,
 .organizerKpiCard small,
 .organizerHeroSummary small,
 .organizerMiniRow span,
@@ -4710,23 +4691,215 @@ button:hover {
   font-weight: 400;
 }
 
+.organizerTopbarBreadcrumbs {
+  min-width: 230px;
+  gap: 14px;
+}
+
+.organizerTopbarMenuButton {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.organizerTopbarMenuButton span {
+  display: block;
+  height: 2px;
+  border-radius: 999px;
+  background: #FFFFFF;
+}
+
+.organizerTopbarBreadcrumbs div {
+  display: grid;
+  gap: 2px;
+}
+
+.organizerTopbarBreadcrumbs div span {
+  color: #8D96AA;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.organizerTopbarBreadcrumbs div strong {
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.organizerTopbarStatus {
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: 8px;
+}
+
+.organizerTopbarStatus span {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border: 1px solid #1E2538;
+  border-radius: 999px;
+  background: #111622;
+  color: #A9B2C6;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.organizerTopbarStatus span.live {
+  border-color: rgba(255, 184, 0, .36);
+  background: rgba(58, 30, 92, .78);
+  color: #E9D5FF;
+}
+
 .organizerDashboardActions {
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 14px;
 }
 
-.organizerDashboardMain .profileSwitcher,
-.organizerProfileButton {
-  border: 1px solid #1E2538;
+.organizerTopbarIconButton {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
   border-radius: 8px;
-  background: #0B0E14;
+  background: transparent;
+  color: #FFFFFF;
+  cursor: pointer;
 }
 
-.organizerDashboardMain .profileSwitcher select {
-  border-color: #1E2538;
-  background: #0B0E14;
-  color: #F8FAFC;
+.organizerTopbarIconButton::before,
+.organizerTopbarIconButton::after {
+  content: "";
+  position: absolute;
+  border-color: currentColor;
+}
+
+.organizerTopbarIconButton.bell::before {
+  left: 10px;
+  top: 8px;
+  width: 14px;
+  height: 15px;
+  border: 2px solid currentColor;
+  border-bottom: 0;
+  border-radius: 999px 999px 5px 5px;
+}
+
+.organizerTopbarIconButton.bell::after {
+  left: 14px;
+  bottom: 7px;
+  width: 7px;
+  height: 4px;
+  border-bottom: 2px solid currentColor;
+  border-radius: 999px;
+}
+
+.organizerTopbarIconButton.mail::before {
+  left: 8px;
+  top: 10px;
+  width: 19px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+}
+
+.organizerTopbarIconButton.mail::after {
+  left: 10px;
+  top: 12px;
+  width: 15px;
+  height: 8px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg) skew(10deg, 10deg);
+}
+
+.organizerTopbarIconButton span {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  z-index: 1;
+  min-width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #0B0E14;
+  border-radius: 999px;
+  background: #A6FF00;
+  color: #0B0E14;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.organizerTopbarProfile {
+  min-width: 210px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 10px;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.organizerTopbarAvatar {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #A6FF00;
+  border-radius: 999px;
+  background: #111622;
+  color: #A6FF00;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.organizerTopbarAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.organizerTopbarProfile strong,
+.organizerTopbarProfile small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.organizerTopbarProfile strong {
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.organizerTopbarProfile small {
+  margin-top: 2px;
+  color: #A6FF00;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.organizerTopbarProfile i {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #8D96AA;
+  border-bottom: 2px solid #8D96AA;
+  transform: rotate(45deg) translateY(-2px);
 }
 
 .organizerDashboardMain button.organizerPrimaryButton,
@@ -5050,6 +5223,19 @@ button:hover {
 
   .organizerDashboardActions > * {
     flex: 1 1 180px;
+  }
+
+  .organizerTopbarStatus {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .organizerDashboardActions .organizerTopbarIconButton {
+    flex: 0 0 36px;
+  }
+
+  .organizerTopbarProfile {
+    min-width: 0;
   }
 
   .organizerKpiGrid,
