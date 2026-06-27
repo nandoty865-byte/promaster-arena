@@ -4279,7 +4279,7 @@ function Dashboard({ user }: any) {
         <header className="organizerDashboardTopbar">
           <div className="organizerTopbarTitle" aria-label="Caminho da página">
             <h1>Painel Organizador</h1>
-            <span>Início &gt; Dashboard</span>
+            <span>Home &gt; Dashboard</span>
           </div>
 
           <div className="organizerDashboardActions">
