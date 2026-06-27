@@ -3054,7 +3054,16 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
             type="button"
             onClick={() => navigate(item.path)}
           >
-            <span className={`organizerNavIcon ${item.icon}`} aria-hidden="true" />
+            {item.icon === 'match' ? (
+              <svg className="organizerNavSvg" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 5l13 13" />
+                <path d="M18 5L5 18" />
+                <path d="M5 4l3 3" />
+                <path d="M19 4l-3 3" />
+              </svg>
+            ) : (
+              <span className={`organizerNavIcon ${item.icon}`} aria-hidden="true" />
+            )}
             <span>{item.label}</span>
             {item.live && <em>AO VIVO</em>}
           </button>
@@ -4079,22 +4088,9 @@ function Dashboard({ user }: any) {
 
       <main className="saasMain organizerDashboardMain">
         <header className="organizerDashboardTopbar">
-          <div className="organizerTopbarBreadcrumbs" aria-label="Caminho da página">
-            <button className="organizerTopbarMenuButton" type="button" aria-label="Abrir menu">
-              <span />
-              <span />
-              <span />
-            </button>
-            <div>
-              <span>PlayFinal Arena</span>
-              <strong>Dashboard Geral</strong>
-            </div>
-          </div>
-
-          <div className="organizerTopbarStatus" aria-label="Status do painel">
-            <span>Inscrições abertas</span>
-            <span>{openRegistrationCount} torneios ativos</span>
-            {liveTournamentCount > 0 && <span className="live">{liveTournamentCount} ao vivo</span>}
+          <div className="organizerTopbarTitle" aria-label="Caminho da página">
+            <h1>Painel Organizador</h1>
+            <span>Início / Dashboard Geral</span>
           </div>
 
           <div className="organizerDashboardActions">

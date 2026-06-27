@@ -4386,6 +4386,17 @@ button:hover {
   color: currentColor;
 }
 
+.organizerNavSvg {
+  width: 22px;
+  height: 22px;
+  color: currentColor;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
 .organizerNavIcon::before,
 .organizerNavIcon::after {
   content: "";
@@ -4454,13 +4465,7 @@ button:hover {
 
 .organizerNavIcon.match::before,
 .organizerNavIcon.match::after {
-  left: 4px;
-  top: 10px;
-  width: 15px;
-  height: 2px;
-  border: 0;
-  border-radius: 999px;
-  background: currentColor;
+  display: none;
 }
 
 .organizerNavIcon.match::before {
@@ -4668,8 +4673,7 @@ button:hover {
 }
 
 .organizerDashboardActions,
-.organizerTopbarBreadcrumbs,
-.organizerTopbarStatus,
+.organizerTopbarTitle,
 .organizerPanelHeader,
 .organizerMiniRow {
   display: flex;
@@ -4691,80 +4695,34 @@ button:hover {
   font-weight: 400;
 }
 
-.organizerTopbarBreadcrumbs {
-  min-width: 230px;
-  gap: 14px;
-}
-
-.organizerTopbarMenuButton {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  align-content: center;
-  gap: 4px;
-  padding: 5px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  cursor: pointer;
-}
-
-.organizerTopbarMenuButton span {
-  display: block;
-  height: 2px;
-  border-radius: 999px;
-  background: #FFFFFF;
-}
-
-.organizerTopbarBreadcrumbs div {
+.organizerTopbarTitle {
+  min-width: 260px;
   display: grid;
   gap: 2px;
 }
 
-.organizerTopbarBreadcrumbs div span {
+.organizerTopbarTitle h1 {
+  margin: 0;
+  color: #FFFFFF;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.organizerTopbarTitle span {
   color: #8D96AA;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
 }
 
-.organizerTopbarBreadcrumbs div strong {
-  color: #FFFFFF;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.organizerTopbarStatus {
-  flex: 1 1 auto;
-  justify-content: center;
-  gap: 8px;
-}
-
-.organizerTopbarStatus span {
-  min-height: 24px;
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 9px;
-  border: 1px solid #1E2538;
-  border-radius: 999px;
-  background: #111622;
-  color: #A9B2C6;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.organizerTopbarStatus span.live {
-  border-color: rgba(255, 184, 0, .36);
-  background: rgba(58, 30, 92, .78);
-  color: #E9D5FF;
-}
-
 .organizerDashboardActions {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
-  gap: 14px;
+  align-items: center;
+  gap: 12px;
 }
 
-.organizerTopbarIconButton {
+.organizerDashboardMain .organizerTopbarIconButton {
   position: relative;
   width: 36px;
   height: 36px;
@@ -4778,14 +4736,19 @@ button:hover {
   cursor: pointer;
 }
 
-.organizerTopbarIconButton::before,
-.organizerTopbarIconButton::after {
+.organizerDashboardMain .organizerTopbarIconButton:hover {
+  background: transparent;
+  opacity: 1;
+}
+
+.organizerDashboardMain .organizerTopbarIconButton::before,
+.organizerDashboardMain .organizerTopbarIconButton::after {
   content: "";
   position: absolute;
   border-color: currentColor;
 }
 
-.organizerTopbarIconButton.bell::before {
+.organizerDashboardMain .organizerTopbarIconButton.bell::before {
   left: 10px;
   top: 8px;
   width: 14px;
@@ -4795,7 +4758,7 @@ button:hover {
   border-radius: 999px 999px 5px 5px;
 }
 
-.organizerTopbarIconButton.bell::after {
+.organizerDashboardMain .organizerTopbarIconButton.bell::after {
   left: 14px;
   bottom: 7px;
   width: 7px;
@@ -4804,7 +4767,7 @@ button:hover {
   border-radius: 999px;
 }
 
-.organizerTopbarIconButton.mail::before {
+.organizerDashboardMain .organizerTopbarIconButton.mail::before {
   left: 8px;
   top: 10px;
   width: 19px;
@@ -4813,7 +4776,7 @@ button:hover {
   border-radius: 3px;
 }
 
-.organizerTopbarIconButton.mail::after {
+.organizerDashboardMain .organizerTopbarIconButton.mail::after {
   left: 10px;
   top: 12px;
   width: 15px;
@@ -4823,7 +4786,7 @@ button:hover {
   transform: rotate(-45deg) skew(10deg, 10deg);
 }
 
-.organizerTopbarIconButton span {
+.organizerDashboardMain .organizerTopbarIconButton span {
   position: absolute;
   top: 3px;
   right: 3px;
@@ -4840,7 +4803,7 @@ button:hover {
   font-weight: 700;
 }
 
-.organizerTopbarProfile {
+.organizerDashboardMain .organizerTopbarProfile {
   min-width: 210px;
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr) 10px;
@@ -4849,8 +4812,14 @@ button:hover {
   padding: 0;
   border: 0;
   background: transparent;
+  color: #FFFFFF;
   text-align: left;
   cursor: pointer;
+}
+
+.organizerDashboardMain .organizerTopbarProfile:hover {
+  background: transparent;
+  opacity: 1;
 }
 
 .organizerTopbarAvatar {
@@ -5223,11 +5192,6 @@ button:hover {
 
   .organizerDashboardActions > * {
     flex: 1 1 180px;
-  }
-
-  .organizerTopbarStatus {
-    justify-content: flex-start;
-    flex-wrap: wrap;
   }
 
   .organizerDashboardActions .organizerTopbarIconButton {
