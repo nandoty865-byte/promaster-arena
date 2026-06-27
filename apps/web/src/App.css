@@ -4173,9 +4173,9 @@ button:hover {
 }
 
 .organizerSidebarLogoImage {
-  width: min(164px, 100%);
+  width: min(132px, 100%);
   height: auto;
-  max-height: 174px;
+  max-height: 140px;
   object-fit: contain;
   filter: drop-shadow(0 0 18px rgba(198, 255, 0, .22));
 }

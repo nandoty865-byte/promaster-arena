@@ -4330,7 +4330,7 @@ function Dashboard({ user }: any) {
                     type="button"
                     onClick={() => {
                       setProfileMenuOpen(false)
-                      navigate(profilePath(activeProfile, user))
+                      navigate('/app/perfil')
                     }}
                   >
                     <span>Meu perfil</span>
