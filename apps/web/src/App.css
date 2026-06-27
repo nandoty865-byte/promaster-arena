@@ -4163,6 +4163,26 @@ button:hover {
   padding: 22px 18px;
   border-right: 1px solid #1E2538;
   background: #0B0E14;
+  scrollbar-width: thin;
+  scrollbar-color: #2563eb #111622;
+}
+
+.organizerSidebar::-webkit-scrollbar {
+  width: 9px;
+}
+
+.organizerSidebar::-webkit-scrollbar-track {
+  background: #111622;
+}
+
+.organizerSidebar::-webkit-scrollbar-thumb {
+  border: 2px solid #111622;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+.organizerSidebar::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
 }
 
 .organizerSidebarLogo {
@@ -4843,19 +4863,14 @@ button:hover {
 }
 
 .organizerNavIcon.settings::before {
-  inset: 5px;
-  border: 2px solid currentColor;
-  border-radius: 999px;
+  inset: 1px;
+  background: #FFFFFF;
+  -webkit-mask: url('/organizer-settings-gear.png') center / contain no-repeat;
+  mask: url('/organizer-settings-gear.png') center / contain no-repeat;
 }
 
 .organizerNavIcon.settings::after {
-  left: 10px;
-  top: 1px;
-  width: 2px;
-  height: 20px;
-  background: currentColor;
-  box-shadow: 0 0 0 0 currentColor;
-  transform: rotate(45deg);
+  display: none;
 }
 
 .organizerPlanCard {
@@ -5049,7 +5064,7 @@ button:hover {
   flex-wrap: nowrap;
   justify-content: flex-end;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
 }
 
 .organizerDashboardMain .organizerTopbarIconButton {
