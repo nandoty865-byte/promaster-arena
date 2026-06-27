@@ -4991,7 +4991,7 @@ button:hover {
   justify-content: space-between;
   gap: 16px;
   min-height: 64px;
-  padding: 10px 16px;
+  padding: 10px 10px 10px 16px;
   border-radius: 0;
   background: #080B10;
   box-shadow: 0 1px 0 rgba(166, 255, 0, .35);
@@ -5044,10 +5044,12 @@ button:hover {
 }
 
 .organizerDashboardActions {
+  margin-left: auto;
+  min-width: 0;
   flex-wrap: nowrap;
   justify-content: flex-end;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .organizerDashboardMain .organizerTopbarIconButton {
@@ -5132,11 +5134,13 @@ button:hover {
 }
 
 .organizerDashboardMain .organizerTopbarProfile {
-  min-width: 210px;
+  width: max-content;
+  min-width: 0;
+  max-width: 238px;
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) 10px;
+  grid-template-columns: 38px minmax(0, max-content) 8px;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -5152,6 +5156,9 @@ button:hover {
 
 .organizerTopbarProfileWrap {
   position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .organizerTopbarProfileMenu {
@@ -5330,6 +5337,7 @@ button:hover {
 .organizerTopbarProfile strong,
 .organizerTopbarProfile small {
   display: block;
+  max-width: 168px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -5351,6 +5359,7 @@ button:hover {
 .organizerTopbarProfile i {
   width: 8px;
   height: 8px;
+  margin-left: -2px;
   border-right: 2px solid #8D96AA;
   border-bottom: 2px solid #8D96AA;
   transform: rotate(45deg) translateY(-2px);
