@@ -3278,6 +3278,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
   const activePlanInfo = profilePlanInfo(activeProfile, user)
   const profileOptions = availableProfileOptions(user)
   const isPath = (path: string) => location.pathname === path
+  const showArenaPageMenu = activeProfile === 'ARENA_OWNER'
   const menuItems = [
     { label: 'Home', icon: 'home', path: '/app', active: isPath('/app') },
     { label: 'Torneios', icon: 'trophy', path: '/app?torneios=todos', active: location.pathname === '/campeonatos' },
@@ -3295,6 +3296,13 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
   ]
   const menuPrimaryItems = menuItems.slice(0, 4)
   const cadastroItems = menuItems.slice(4, 7)
+  const arenaPageItems = [
+    { label: 'Configuração', icon: 'settings', path: '/app/perfil?gestaoPagina=configuracao', active: location.search.includes('gestaoPagina=configuracao') },
+    { label: 'Conteúdos', icon: 'document', path: '/app/perfil?gestaoPagina=conteudos', active: location.search.includes('gestaoPagina=conteudos') },
+    { label: 'Páginas', icon: 'registration', path: '/app/perfil?gestaoPagina=paginas', active: location.search.includes('gestaoPagina=paginas') },
+    { label: 'Popups', icon: 'message', path: '/app/perfil?gestaoPagina=popups', active: location.search.includes('gestaoPagina=popups') },
+    { label: 'Menu', icon: 'teams', path: '/app/perfil?gestaoPagina=menu', active: location.search.includes('gestaoPagina=menu') },
+  ]
   const settingsItem = menuItems.find(item => item.label === 'Configurações')
   const menuSecondaryItems = menuItems.slice(7).filter(item => item.label !== 'Configurações')
 
@@ -3363,7 +3371,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
         aria-label="Fechar menu"
         onClick={() => setDrawerOpen(false)}
       />
-      <aside className={`organizerSidebar appDrawerSidebar${drawerOpen ? ' open' : ''}`} aria-label="Menu do organizador">
+      <aside className={`organizerSidebar appDrawerSidebar${drawerOpen ? ' open' : ''}`} aria-label={`Menu ${activeProfileLabel}`}>
         <div className="organizerSidebarLogo" aria-label="PlayFinal Arena">
           <img className="organizerSidebarLogoImage" src="/playfinal-logo-symbol.png" alt="PlayFinal Arena" />
         </div>
@@ -3413,6 +3421,18 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
             {cadastroItems.map(renderMenuItem)}
           </div>
         </details>
+        {showArenaPageMenu && (
+          <details className="organizerNavDropdown">
+            <summary className="organizerNavDropdownSummary">
+              <span className="organizerNavIcon document" aria-hidden="true" />
+              <span>Gestão da página</span>
+              <i aria-hidden="true" />
+            </summary>
+            <div className="organizerNavDropdownItems" aria-label="Gestão da página da arena">
+              {arenaPageItems.map(renderMenuItem)}
+            </div>
+          </details>
+        )}
         {menuSecondaryItems.map(renderMenuItem)}
         </nav>
 

@@ -5285,7 +5285,8 @@ button:hover {
   gap: 14px;
 }
 
-.organizerDashboardMain .organizerTopbarIconButton {
+.organizerDashboardTopbar .organizerTopbarIconButton,
+.organizerTopbarIconButton {
   position: relative;
   width: 36px;
   height: 36px;
@@ -5299,19 +5300,20 @@ button:hover {
   cursor: pointer;
 }
 
-.organizerDashboardMain .organizerTopbarIconButton:hover {
+.organizerDashboardTopbar .organizerTopbarIconButton:hover,
+.organizerTopbarIconButton:hover {
   background: transparent;
   opacity: 1;
 }
 
-.organizerDashboardMain .organizerTopbarIconButton::before,
-.organizerDashboardMain .organizerTopbarIconButton::after {
+.organizerTopbarIconButton::before,
+.organizerTopbarIconButton::after {
   content: "";
   position: absolute;
   border-color: currentColor;
 }
 
-.organizerDashboardMain .organizerTopbarIconButton.bell::before {
+.organizerTopbarIconButton.bell::before {
   left: 10px;
   top: 8px;
   width: 14px;
@@ -5321,7 +5323,7 @@ button:hover {
   border-radius: 999px 999px 5px 5px;
 }
 
-.organizerDashboardMain .organizerTopbarIconButton.bell::after {
+.organizerTopbarIconButton.bell::after {
   left: 14px;
   bottom: 7px;
   width: 7px;
@@ -5330,7 +5332,7 @@ button:hover {
   border-radius: 999px;
 }
 
-.organizerDashboardMain .organizerTopbarIconButton.mail::before {
+.organizerTopbarIconButton.mail::before {
   left: 8px;
   top: 10px;
   width: 19px;
@@ -5339,7 +5341,7 @@ button:hover {
   border-radius: 3px;
 }
 
-.organizerDashboardMain .organizerTopbarIconButton.mail::after {
+.organizerTopbarIconButton.mail::after {
   left: 10px;
   top: 12px;
   width: 15px;
@@ -5349,7 +5351,7 @@ button:hover {
   transform: rotate(-45deg) skew(10deg, 10deg);
 }
 
-.organizerDashboardMain .organizerTopbarIconButton span {
+.organizerTopbarIconButton span {
   position: absolute;
   top: 3px;
   right: 3px;
@@ -5366,7 +5368,8 @@ button:hover {
   font-weight: 700;
 }
 
-.organizerDashboardMain .organizerTopbarProfile {
+.organizerDashboardTopbar .organizerTopbarProfile,
+.organizerTopbarProfile {
   width: max-content;
   min-width: 0;
   max-width: 238px;
@@ -5382,7 +5385,8 @@ button:hover {
   cursor: pointer;
 }
 
-.organizerDashboardMain .organizerTopbarProfile:hover {
+.organizerDashboardTopbar .organizerTopbarProfile:hover,
+.organizerTopbarProfile:hover {
   background: transparent;
   opacity: 1;
 }
@@ -5428,7 +5432,7 @@ button:hover {
   font-weight: 600;
 }
 
-.organizerDashboardMain .organizerTopbarProfileMenu button {
+.organizerTopbarProfileMenu button {
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -5446,7 +5450,7 @@ button:hover {
   cursor: pointer;
 }
 
-.organizerDashboardMain .organizerTopbarProfileMenu button::after {
+.organizerTopbarProfileMenu button::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -5458,7 +5462,7 @@ button:hover {
   transition: opacity .2s ease, transform .24s ease;
 }
 
-.organizerDashboardMain .organizerTopbarProfileMenu button::before {
+.organizerTopbarProfileMenu button::before {
   content: "";
   position: absolute;
   left: 0;
@@ -5473,31 +5477,31 @@ button:hover {
   transition: opacity .2s ease, transform .24s ease;
 }
 
-.organizerDashboardMain .organizerTopbarProfileMenu button > * {
+.organizerTopbarProfileMenu button > * {
   position: relative;
   z-index: 2;
 }
 
-.organizerDashboardMain .organizerTopbarProfileMenu button:hover,
-.organizerDashboardMain .organizerTopbarProfileMenu button.active {
+.organizerTopbarProfileMenu button:hover,
+.organizerTopbarProfileMenu button.active {
   background: transparent;
   color: #A6FF00;
   opacity: 1;
 }
 
-.organizerDashboardMain .organizerTopbarProfileMenu button:hover::after,
-.organizerDashboardMain .organizerTopbarProfileMenu button.active::after {
+.organizerTopbarProfileMenu button:hover::after,
+.organizerTopbarProfileMenu button.active::after {
   opacity: 1;
   transform: scaleX(1);
 }
 
-.organizerDashboardMain .organizerTopbarProfileMenu button:hover::before,
-.organizerDashboardMain .organizerTopbarProfileMenu button.active::before {
+.organizerTopbarProfileMenu button:hover::before,
+.organizerTopbarProfileMenu button.active::before {
   opacity: 1;
   transform: scaleY(1);
 }
 
-.organizerDashboardMain .organizerTopbarProfileMenu button small {
+.organizerTopbarProfileMenu button small {
   color: #8D96AA;
   font-size: 10px;
   font-weight: 600;
