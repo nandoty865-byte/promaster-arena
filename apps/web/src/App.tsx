@@ -3004,8 +3004,12 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
 
 function OrganizerDashboardSidebar({ user }: { user?: any }) {
   const navigate = useNavigate()
+  const [profileSelectorOpen, setProfileSelectorOpen] = useState(false)
   const organizationName = user?.organization?.name || 'Arena PlayFinal'
   const logoUrl = user?.organization?.logoUrl
+  const activeProfile = initialActiveProfile(user)
+  const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
+  const profileOptions = availableProfileOptions(user)
   const menuItems = [
     { label: 'Dashboard', icon: 'home', path: '/app', active: true },
     { label: 'Torneios', icon: 'trophy', path: '/app?torneios=todos' },
@@ -3021,6 +3025,15 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
     { label: 'Configurações', icon: 'settings', path: '/app/perfil' },
   ]
 
+  function openProfile(profile: { role: string, active: boolean, path: string }) {
+    if (profile.active) {
+      localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profile.role)
+    }
+
+    setProfileSelectorOpen(false)
+    navigate(profile.path)
+  }
+
   return (
     <aside className="organizerSidebar" aria-label="Menu do organizador">
       <div className="organizerSidebarLogo" aria-label="PlayFinal Arena">
@@ -3035,16 +3048,38 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
         </div>
       </div>
 
-      <button className="organizerSidebarProfile" type="button" onClick={() => navigate('/app/perfil')}>
-        <span className="organizerProfileAvatar">
-          {logoUrl ? <img src={logoUrl} alt="" /> : <span>{organizationName.slice(0, 2).toUpperCase()}</span>}
-        </span>
-        <span className="organizerProfileText">
-          <strong>{organizationName}</strong>
-          <small>Organizador</small>
-        </span>
-        <span className="organizerProfileChevron" aria-hidden="true" />
-      </button>
+      <div className="organizerSidebarProfileWrap">
+        <button
+          className="organizerSidebarProfile"
+          type="button"
+          aria-expanded={profileSelectorOpen}
+          onClick={() => setProfileSelectorOpen(open => !open)}
+        >
+          <span className="organizerProfileAvatar">
+            {logoUrl ? <img src={logoUrl} alt="" /> : <span>{organizationName.slice(0, 2).toUpperCase()}</span>}
+          </span>
+          <span className="organizerProfileText">
+            <strong>Acessando como</strong>
+            <small>{activeProfileLabel}</small>
+          </span>
+          <span className="organizerProfileChevron" aria-hidden="true" />
+        </button>
+        {profileSelectorOpen && (
+          <div className="organizerSidebarProfileMenu" aria-label="Selecionar perfil de acesso">
+            {profileOptions.map(profile => (
+              <button
+                key={profile.role}
+                className={profile.role === activeProfile ? 'active' : ''}
+                type="button"
+                onClick={() => openProfile(profile)}
+              >
+                <span>{profile.label}</span>
+                {!profile.active && <small>Configurar</small>}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <nav className="organizerNavList" aria-label="Navegação do painel">
         {menuItems.map(item => (
@@ -4127,7 +4162,7 @@ function Dashboard({ user }: any) {
         <header className="organizerDashboardTopbar">
           <div className="organizerTopbarTitle" aria-label="Caminho da página">
             <h1>Painel Organizador</h1>
-            <span>Início / Dashboard Geral</span>
+            <span>Início &gt; Dashboard Geral</span>
           </div>
 
           <div className="organizerDashboardActions">

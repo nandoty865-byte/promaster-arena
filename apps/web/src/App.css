@@ -4261,14 +4261,19 @@ button:hover {
   color: #FFB800;
 }
 
+.organizerSidebarProfileWrap {
+  position: relative;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #1E2538;
+}
+
 .organizerSidebarProfile {
   width: 100%;
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 0 0 17px;
+  padding: 0;
   border: 0;
-  border-bottom: 1px solid #1E2538;
   border-radius: 0;
   background: transparent;
   color: #FFFFFF;
@@ -4278,6 +4283,48 @@ button:hover {
 
 .organizerSidebarProfile:hover {
   opacity: 1;
+}
+
+.organizerSidebarProfileMenu {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px;
+  border: 1px solid #1E2538;
+  border-radius: 8px;
+  background: #0B0E14;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, .34);
+}
+
+.organizerSidebarProfileMenu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #E5E7EB;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.organizerSidebarProfileMenu button:hover,
+.organizerSidebarProfileMenu button.active {
+  border-color: rgba(255, 184, 0, .38);
+  background: rgba(255, 184, 0, .09);
+  color: #FFB800;
+}
+
+.organizerSidebarProfileMenu small {
+  color: #8D96AA;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 .organizerProfileAvatar {
@@ -4700,6 +4747,9 @@ button:hover {
   min-width: 260px;
   display: grid;
   gap: 2px;
+  justify-items: start;
+  margin-right: auto;
+  text-align: left;
 }
 
 .organizerTopbarTitle h1 {
@@ -4941,8 +4991,8 @@ button:hover {
 
 .organizerOverviewLayout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 14px;
+  grid-template-columns: 1fr;
+  gap: 12px;
   align-items: stretch;
 }
 
@@ -5003,31 +5053,35 @@ button:hover {
 
 .organizerKpiGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
+  gap: 10px;
 }
 
 .organizerKpiCard {
   position: relative;
-  min-height: 122px;
+  min-height: 104px;
   display: grid;
   align-content: start;
-  gap: 10px;
-  padding: 16px;
+  gap: 8px;
+  padding: 12px;
 }
 
 .organizerKpiCard span {
   color: #A9B2C6;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
 .organizerKpiCard strong {
   display: block;
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1;
   font-weight: 800;
+}
+
+.organizerKpiCard small {
+  font-size: 11px;
 }
 
 .organizerKpiCard em {
@@ -5043,7 +5097,7 @@ button:hover {
 
 .organizerCalendarCard {
   min-width: 0;
-  padding: 16px;
+  padding: 14px;
 }
 
 .organizerCalendarWeekdays,
