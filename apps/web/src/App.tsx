@@ -2843,7 +2843,172 @@ function ProfileSwitcher({ user }: { user: any }) {
   )
 }
 
+function loggedPageMeta(pathname: string, search: string) {
+  const params = new URLSearchParams(search)
+  const defaultPanel = params.get('painel') || ''
+
+  if (pathname === '/app/perfil') {
+    return { title: 'Meu Perfil', breadcrumb: 'Home > Conta > Meu Perfil' }
+  }
+
+  if (pathname === '/app/usuarios') {
+    return { title: 'Usuários da Equipe', breadcrumb: 'Home > Conta > Usuários' }
+  }
+
+  if (pathname === '/upgrade') {
+    return { title: 'Planos e Pagamentos', breadcrumb: 'Home > Financeiro > Planos' }
+  }
+
+  if (pathname === '/criar-torneio') {
+    return { title: 'Criar Torneio', breadcrumb: 'Home > Torneios > Criar' }
+  }
+
+  if (pathname === '/campeonatos/inscricoes') {
+    return { title: 'Inscrições', breadcrumb: 'Home > Torneios > Inscrições' }
+  }
+
+  if (pathname === '/campeonatos/pagamentos') {
+    return { title: 'Financeiro', breadcrumb: 'Home > Financeiro > Pagamentos' }
+  }
+
+  if (pathname === '/campeonatos/arenas') {
+    return { title: 'Cadastro de Arenas', breadcrumb: 'Home > Cadastro > Arenas' }
+  }
+
+  if (pathname === '/campeonatos/etapas') {
+    return { title: 'Etapas', breadcrumb: 'Home > Circuito PlayFinal > Etapas' }
+  }
+
+  if (pathname === '/campeonatos/circuito') {
+    return { title: 'Circuito', breadcrumb: 'Home > Circuito PlayFinal > Circuito' }
+  }
+
+  if (pathname === '/campeonatos') {
+    if (defaultPanel === 'arenas') return { title: 'Cadastro de Arenas', breadcrumb: 'Home > Cadastro > Arenas' }
+    if (defaultPanel === 'pagamentos') return { title: 'Pagamentos', breadcrumb: 'Home > Financeiro > Pagamentos' }
+    if (defaultPanel === 'inscricoes') return { title: 'Inscrições', breadcrumb: 'Home > Torneios > Inscrições' }
+    if (defaultPanel === 'etapas') return { title: 'Etapas', breadcrumb: 'Home > Circuito PlayFinal > Etapas' }
+    if (defaultPanel === 'circuito') return { title: 'Circuito', breadcrumb: 'Home > Circuito PlayFinal > Circuito' }
+    return { title: 'Torneios', breadcrumb: 'Home > Dashboard > Torneios' }
+  }
+
+  return { title: 'Dashboard', breadcrumb: 'Home > Dashboard' }
+}
+
+function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => void }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
+  const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Usuário'
+  const activePlanInfo = profilePlanInfo(activeProfile, user)
+  const meta = loggedPageMeta(location.pathname, location.search)
+  const activeProfileInitials = (activeProfileLabel || 'PF').slice(0, 2).toUpperCase()
+  const topbarUserName = activeProfile === 'PLAYER'
+    ? user?.playerProfile?.nickname || user?.name || 'Jogador PlayFinal'
+    : user?.organization?.name || user?.name || 'PlayFinal Arena'
+
+  useEffect(() => {
+    setActiveProfile(initialActiveProfile(user))
+  }, [user])
+
+  useEffect(() => {
+    function handleProfileChange(event: Event) {
+      const nextProfile = (event as CustomEvent<string>).detail
+      if (nextProfile) setActiveProfile(nextProfile)
+    }
+
+    window.addEventListener('playfinal:active-profile-change', handleProfileChange)
+    return () => window.removeEventListener('playfinal:active-profile-change', handleProfileChange)
+  }, [])
+
+  function logout() {
+    setProfileMenuOpen(false)
+    if (onLogout) {
+      onLogout()
+      return
+    }
+
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
+  return (
+    <header className="organizerDashboardTopbar loggedGlobalTopbar">
+      <div className="organizerTopbarTitle" aria-label="Caminho da página">
+        <h1>{meta.title}</h1>
+        <span>{meta.breadcrumb}</span>
+      </div>
+
+      <div className="organizerDashboardActions">
+        <button className="organizerTopbarIconButton bell" type="button" aria-label="Notificações">
+          <span>1</span>
+        </button>
+        <button className="organizerTopbarIconButton mail" type="button" aria-label="Mensagens">
+          <span>1</span>
+        </button>
+        <div className="organizerTopbarProfileWrap">
+          <button
+            className="organizerTopbarProfile"
+            type="button"
+            onClick={() => setProfileMenuOpen(open => !open)}
+          >
+            <span className="organizerTopbarAvatar">
+              {user?.organization?.logoUrl && activeProfile !== 'PLAYER' ? <img src={user.organization.logoUrl} alt="" /> : activeProfileInitials}
+            </span>
+            <span>
+              <strong>{topbarUserName}</strong>
+              <small>{activeProfileLabel}</small>
+            </span>
+            <i aria-hidden="true" />
+          </button>
+          {profileMenuOpen && (
+            <div className="organizerTopbarProfileMenu" aria-label="Perfil usuário">
+              <div className="organizerTopbarProfileProgress" aria-label="Preenchimento do perfil">
+                <div>
+                  <span>Preenchimento perfil</span>
+                  <strong>{activePlanInfo.progress}%</strong>
+                </div>
+                <span className="organizerTopbarProfileProgressBar">
+                  <i style={{ width: `${activePlanInfo.progress}%` }} />
+                </span>
+              </div>
+              <button
+                className={location.pathname === '/app/perfil' ? 'active' : ''}
+                type="button"
+                onClick={() => {
+                  setProfileMenuOpen(false)
+                  navigate('/app/perfil')
+                }}
+              >
+                <span>Meu perfil</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileMenuOpen(false)
+                  navigate('/upgrade')
+                }}
+              >
+                Assinatura
+              </button>
+              <button type="button" onClick={logout}>Sair</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  )
+}
+
 function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, isMasterPlan?: boolean, onLogout?: () => void }) {
+  return (
+    <>
+      <OrganizerDashboardSidebar user={user} />
+      <LoggedGlobalTopbar user={user} onLogout={onLogout} />
+    </>
+  )
+
   const navigate = useNavigate()
   const [currentPlan, setCurrentPlan] = useState('')
   const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
@@ -3103,6 +3268,7 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
 
 function OrganizerDashboardSidebar({ user }: { user?: any }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [profileSelectorOpen, setProfileSelectorOpen] = useState(false)
   const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -3111,20 +3277,21 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
   const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
   const activePlanInfo = profilePlanInfo(activeProfile, user)
   const profileOptions = availableProfileOptions(user)
+  const isPath = (path: string) => location.pathname === path
   const menuItems = [
-    { label: 'Home', icon: 'home', path: '/app', active: true },
-    { label: 'Torneios', icon: 'trophy', path: '/app?torneios=todos' },
-    { label: 'Inscrições', icon: 'clipboard', path: '/campeonatos/inscricoes' },
+    { label: 'Home', icon: 'home', path: '/app', active: isPath('/app') },
+    { label: 'Torneios', icon: 'trophy', path: '/app?torneios=todos', active: location.pathname === '/campeonatos' },
+    { label: 'Inscrições', icon: 'clipboard', path: '/campeonatos/inscricoes', active: isPath('/campeonatos/inscricoes') },
     { label: 'Partidas', icon: 'match', path: '/campeonatos', live: true },
     { label: 'Participantes', icon: 'participant', path: '/campeonatos' },
     { label: 'Times', icon: 'teams', path: '/campeonatos' },
-    { label: 'Arenas', icon: 'location', path: '/campeonatos/arenas' },
+    { label: 'Arenas', icon: 'location', path: '/campeonatos/arenas', active: isPath('/campeonatos/arenas') },
     { label: 'Ranking', icon: 'star', path: '/campeonatos' },
-    { label: 'Financeiro', icon: 'finance', path: '/campeonatos/pagamentos' },
+    { label: 'Financeiro', icon: 'finance', path: '/campeonatos/pagamentos', active: isPath('/campeonatos/pagamentos') || isPath('/upgrade') },
     { label: 'Mídia', icon: 'message', path: '/app/perfil' },
     { label: 'Relatórios', icon: 'document', path: '/campeonatos/pagamentos' },
     { label: 'Patrocinadores', icon: 'sponsors', path: '/campeonatos' },
-    { label: 'Configurações', icon: 'settings', path: '/app/perfil' },
+    { label: 'Configurações', icon: 'settings', path: '/app/perfil', active: isPath('/app/perfil') || isPath('/app/usuarios') },
   ]
   const menuPrimaryItems = menuItems.slice(0, 4)
   const cadastroItems = menuItems.slice(4, 7)
