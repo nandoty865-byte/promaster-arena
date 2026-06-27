@@ -4168,9 +4168,16 @@ button:hover {
 .organizerSidebarLogo {
   display: grid;
   justify-items: center;
-  gap: 10px;
-  padding: 2px 0 4px;
+  padding: 0 0 2px;
   text-align: center;
+}
+
+.organizerSidebarLogoImage {
+  width: min(164px, 100%);
+  height: auto;
+  max-height: 174px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(198, 255, 0, .22));
 }
 
 .organizerSidebarShield {
@@ -4189,11 +4196,19 @@ button:hover {
 }
 
 .organizerSidebarShield strong {
+  display: inline-flex;
   margin-top: 16px;
-  color: #FFB800;
   font-size: 26px;
   font-weight: 900;
   letter-spacing: 0;
+}
+
+.organizerSidebarShield strong span:first-child {
+  color: #FFFFFF;
+}
+
+.organizerSidebarShield strong span:last-child {
+  color: #C6FF00;
 }
 
 .organizerShieldCrown {
@@ -4244,6 +4259,7 @@ button:hover {
   display: grid;
   gap: 0;
   line-height: 1;
+  justify-items: center;
 }
 
 .organizerSidebarBrandText strong,
@@ -4254,11 +4270,22 @@ button:hover {
 }
 
 .organizerSidebarBrandText strong {
+  display: inline-flex;
   color: #FFFFFF;
 }
 
-.organizerSidebarBrandText span {
-  color: #FFB800;
+.organizerSidebarBrandText .brandPlay,
+.organizerSidebarBrandText .brandArena {
+  color: #FFFFFF;
+}
+
+.organizerSidebarBrandText .brandFinal {
+  color: #C6FF00;
+  text-shadow: 0 0 18px rgba(198, 255, 0, .36);
+}
+
+.organizerSidebarBrandText .brandArena {
+  display: block;
 }
 
 .organizerSidebarProfileWrap {
@@ -4698,9 +4725,9 @@ button:hover {
 }
 
 .organizerDashboardTopbar,
-.organizerOverviewSection,
 .organizerKpiCard,
 .organizerCalendarCard,
+.organizerAlertsCard,
 .organizerChartPanel,
 .organizerDataPanel {
   border: 1px solid #1E2538;
@@ -4971,7 +4998,14 @@ button:hover {
 .organizerOverviewSection {
   display: grid;
   gap: 16px;
-  padding: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.organizerOverviewHeader {
+  justify-self: start;
+  text-align: left;
 }
 
 .organizerOverviewHeader h2 {
@@ -4992,6 +5026,13 @@ button:hover {
 .organizerOverviewLayout {
   display: grid;
   grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.organizerOverviewPanels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(300px, .88fr);
   gap: 12px;
   align-items: stretch;
 }
@@ -5098,6 +5139,86 @@ button:hover {
 .organizerCalendarCard {
   min-width: 0;
   padding: 14px;
+}
+
+.organizerAlertsCard {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 14px;
+}
+
+.organizerAlertsList {
+  display: grid;
+  gap: 10px;
+}
+
+.organizerAlertRow {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px;
+  border: 1px solid #1E2538;
+  border-radius: 8px;
+  background: #0B0E14;
+}
+
+.organizerAlertRow > span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #8D96AA;
+  box-shadow: 0 0 14px rgba(141, 150, 170, .34);
+}
+
+.organizerAlertRow strong {
+  display: block;
+  color: #F8FAFC;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.organizerAlertRow small {
+  display: block;
+  margin-top: 3px;
+  color: #8D96AA;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.organizerAlertRow em {
+  align-self: start;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #111622;
+  color: #A9B2C6;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.organizerAlertRow.success > span {
+  background: #10B981;
+  box-shadow: 0 0 14px rgba(16, 185, 129, .36);
+}
+
+.organizerAlertRow.live > span {
+  background: #3A1E5C;
+  box-shadow: 0 0 14px rgba(124, 58, 237, .4);
+}
+
+.organizerAlertRow.warning > span {
+  background: #F59E0B;
+  box-shadow: 0 0 14px rgba(245, 158, 11, .36);
+}
+
+.organizerAlertRow.danger > span {
+  background: #EF4444;
+  box-shadow: 0 0 14px rgba(239, 68, 68, .36);
 }
 
 .organizerCalendarWeekdays,
@@ -5390,6 +5511,7 @@ button:hover {
 
   .organizerKpiGrid,
   .organizerOverviewLayout,
+  .organizerOverviewPanels,
   .organizerAnalyticsGrid {
     grid-template-columns: 1fr;
   }

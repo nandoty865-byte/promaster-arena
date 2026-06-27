@@ -3037,15 +3037,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
   return (
     <aside className="organizerSidebar" aria-label="Menu do organizador">
       <div className="organizerSidebarLogo" aria-label="PlayFinal Arena">
-        <div className="organizerSidebarShield">
-          <span className="organizerShieldCrown" aria-hidden="true" />
-          <span className="organizerShieldStars" aria-hidden="true" />
-          <strong>PF</strong>
-        </div>
-        <div className="organizerSidebarBrandText">
-          <strong>PLAYFINAL</strong>
-          <span>ARENA</span>
-        </div>
+        <img className="organizerSidebarLogoImage" src="/playfinal-logo-symbol.png" alt="PlayFinal Arena" />
       </div>
 
       <div className="organizerSidebarProfileWrap">
@@ -4129,6 +4121,32 @@ function Dashboard({ user }: any) {
     encerrados: 'Encerrados',
     arquivados: 'Arquivados',
   }
+  const alertHistory = [
+    {
+      title: `${openRegistrationCount} inscrições abertas`,
+      detail: 'Novas entradas aguardando acompanhamento',
+      time: 'Agora',
+      tone: 'success',
+    },
+    {
+      title: `${liveTournamentCount} partidas ao vivo`,
+      detail: 'Monitore placares e transmissões em tempo real',
+      time: 'Em andamento',
+      tone: 'live',
+    },
+    {
+      title: `${pendingCount} pagamentos pendentes`,
+      detail: 'Revise confirmações antes da próxima rodada',
+      time: 'Hoje',
+      tone: 'warning',
+    },
+    {
+      title: `${canceledCount} torneios cancelados`,
+      detail: 'Registro mantido no histórico operacional',
+      time: 'Histórico',
+      tone: 'danger',
+    },
+  ]
 
   function logout() {
     localStorage.removeItem('token')
@@ -4215,28 +4233,51 @@ function Dashboard({ user }: any) {
               ))}
             </div>
 
-            <article className="organizerCalendarCard">
-              <div className="organizerPanelHeader">
-                <div>
-                  <span>Agenda</span>
-                  <h2>{currentMonthLabel}</h2>
+            <div className="organizerOverviewPanels">
+              <article className="organizerCalendarCard">
+                <div className="organizerPanelHeader">
+                  <div>
+                    <span>Agenda</span>
+                    <h2>{currentMonthLabel}</h2>
+                  </div>
                 </div>
-              </div>
-              <div className="organizerCalendarWeekdays">
-                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((weekday, index) => <span key={`${weekday}-${index}`}>{weekday}</span>)}
-              </div>
-              <div className="organizerCalendarGrid">
-                {calendarDays.map(day => (
-                  <span
-                    key={day.key}
-                    className={`${day.day ? '' : 'empty'}${day.events ? ' hasEvent' : ''}`}
-                  >
-                    {day.day}
-                    {day.events > 0 && <i>{day.events}</i>}
-                  </span>
-                ))}
-              </div>
-            </article>
+                <div className="organizerCalendarWeekdays">
+                  {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((weekday, index) => <span key={`${weekday}-${index}`}>{weekday}</span>)}
+                </div>
+                <div className="organizerCalendarGrid">
+                  {calendarDays.map(day => (
+                    <span
+                      key={day.key}
+                      className={`${day.day ? '' : 'empty'}${day.events ? ' hasEvent' : ''}`}
+                    >
+                      {day.day}
+                      {day.events > 0 && <i>{day.events}</i>}
+                    </span>
+                  ))}
+                </div>
+              </article>
+
+              <article className="organizerAlertsCard">
+                <div className="organizerPanelHeader">
+                  <div>
+                    <span>Histórico</span>
+                    <h2>Alertas recentes</h2>
+                  </div>
+                </div>
+                <div className="organizerAlertsList">
+                  {alertHistory.map(alert => (
+                    <div className={`organizerAlertRow ${alert.tone}`} key={`${alert.tone}-${alert.title}`}>
+                      <span aria-hidden="true" />
+                      <div>
+                        <strong>{alert.title}</strong>
+                        <small>{alert.detail}</small>
+                      </div>
+                      <em>{alert.time}</em>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </div>
           </div>
         </section>
 
