@@ -3935,8 +3935,8 @@ function Dashboard({ user }: any) {
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [detailsTournament, setDetailsTournament] = useState<any>(null)
   const [openTournamentMenuId, setOpenTournamentMenuId] = useState<number | null>(null)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const tournamentFilter = new URLSearchParams(pageLocation.search).get('torneios') || 'todos'
-  const totalTournaments = tournaments.length
   const finishedCount = tournaments.filter(t => t.status === 'finished').length
   const canceledCount = tournaments.filter(t =>
     ['canceled', 'cancelled', 'cancelado'].includes(String(t.status).toLowerCase())
@@ -3952,11 +3952,22 @@ function Dashboard({ user }: any) {
   const projectedRevenue = tournaments.reduce((sum, tournament) => (
     sum + (Number(tournament.registrationFee || 0) * Number(tournament.playerCount || 0))
   ), 0)
-  const averageTicket = totalCapacity ? projectedRevenue / totalCapacity : 0
   const activeCount = tournaments.filter(tournament => {
     const status = String(tournament.status || '').toLowerCase()
     return ['running', 'playing', 'started', 'in_progress', 'em_andamento', 'confirmed'].includes(status)
   }).length
+  const allRegistrations = tournaments.flatMap(tournament => (
+    Array.isArray(tournament.registrations) ? tournament.registrations : []
+  ))
+  const totalParticipants = allRegistrations.length || totalCapacity
+  const uniquePlayers = allRegistrations.length
+    ? new Set(allRegistrations.map((registration: any) => (
+      registration.playerId || registration.email || registration.phone || registration.name
+    )).filter(Boolean)).size
+    : totalCapacity
+  const activeArenas = Math.max(1, new Set(tournaments.map(tournament => (
+    tournament.arena?.name || tournament.location || tournament.venueAddress
+  )).filter(Boolean)).size)
   const pendingCount = tournaments.filter(tournament => {
     const status = String(tournament.status || '').toLowerCase()
     return ['draft', 'rascunho', 'pending', 'pending_confirmation', 'rescheduled', 'reagendado'].includes(status)
@@ -3967,11 +3978,32 @@ function Dashboard({ user }: any) {
     if (['draft', 'rascunho', 'pending', 'pending_confirmation', 'rescheduled', 'reagendado'].includes(normalized)) return 'pending'
     return 'paid'
   }
-  const dashboardKpis = [
-    { label: 'Inscritos previstos', value: totalCapacity || 0, trend: `+${Math.max(8, openRegistrationCount * 6)}%`, helper: 'capacidade total' },
-    { label: 'Torneios ativos', value: activeCount || futureCount, trend: `+${Math.max(5, futureCount * 4)}%`, helper: `${openRegistrationCount} com inscrição aberta` },
-    { label: 'Receita projetada', value: projectedRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), trend: '+18%', helper: `ticket médio ${averageTicket.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}` },
-    { label: 'Transmissões', value: liveTournamentCount, trend: '+9%', helper: 'eventos com live ou OBS' },
+  const overviewCards = [
+    { label: 'Torneios ativos', value: activeCount || futureCount, helper: `${openRegistrationCount} com inscrições abertas` },
+    { label: 'Torneios encerrados', value: finishedCount, helper: 'histórico finalizado' },
+    { label: 'Participantes totais', value: totalParticipants, helper: 'inscritos e capacidade' },
+    { label: 'Jogadores únicos', value: uniquePlayers, helper: 'base estimada' },
+    { label: 'Partidas ao vivo', value: liveTournamentCount, helper: 'transmissões ativas' },
+    { label: 'Receitas de inscrições', value: projectedRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), helper: 'projeção do período' },
+    { label: 'Arenas ativas', value: activeArenas, helper: 'locais vinculados' },
+  ]
+  const currentMonthDate = new Date()
+  const currentMonthLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(currentMonthDate)
+  const currentYear = currentMonthDate.getFullYear()
+  const currentMonth = currentMonthDate.getMonth()
+  const firstMonthWeekday = new Date(currentYear, currentMonth, 1).getDay()
+  const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  const calendarDays = [
+    ...Array.from({ length: firstMonthWeekday }, (_, index) => ({ key: `empty-${index}`, day: null, events: 0 })),
+    ...Array.from({ length: daysInCurrentMonth }, (_, index) => {
+      const day = index + 1
+      const events = tournaments.filter(tournament => {
+        if (!tournament.eventDate) return false
+        const date = new Date(tournament.eventDate)
+        return date.getFullYear() === currentYear && date.getMonth() === currentMonth && date.getDate() === day
+      }).length
+      return { key: `day-${day}`, day, events }
+    }),
   ]
   const monthFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'short' })
   const monthBuckets = Array.from({ length: 6 }, (_, index) => {
@@ -4063,6 +4095,11 @@ function Dashboard({ user }: any) {
     arquivados: 'Arquivados',
   }
 
+  function logout() {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
   function loadMyTournaments() {
     fetch(`${API}/me/tournaments`, { headers: authHeaders() })
       .then(res => res.json())
@@ -4100,7 +4137,12 @@ function Dashboard({ user }: any) {
             <button className="organizerTopbarIconButton mail" type="button" aria-label="Mensagens">
               <span>{Math.max(1, liveTournamentCount || 1)}</span>
             </button>
-            <button className="organizerTopbarProfile" onClick={() => navigate('/app/perfil')}>
+            <div className="organizerTopbarProfileWrap">
+              <button
+                className="organizerTopbarProfile"
+                type="button"
+                onClick={() => setProfileMenuOpen(open => !open)}
+              >
               <span className="organizerTopbarAvatar">
                 {user?.organization?.logoUrl ? <img src={user.organization.logoUrl} alt="" /> : 'PF'}
               </span>
@@ -4109,35 +4151,58 @@ function Dashboard({ user }: any) {
                 <small>Organizador</small>
               </span>
               <i aria-hidden="true" />
-            </button>
+              </button>
+              {profileMenuOpen && (
+                <div className="organizerTopbarProfileMenu">
+                  <button type="button" onClick={() => navigate('/app/perfil')}>Meu perfil</button>
+                  <button type="button" onClick={() => navigate('/upgrade')}>Assinatura</button>
+                  <button type="button" onClick={logout}>Sair</button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
-        <section className="organizerDashboardHero">
-          <div>
-            <span className="organizerEyebrow">Dashboard analítico</span>
-            <h1>Gestão completa de torneios</h1>
-            <p>Operação, inscrições, transmissão e receita projetada em uma visão executiva.</p>
+        <section className="organizerOverviewSection" aria-label="Visão geral do organizador">
+          <div className="organizerOverviewHeader">
+            <h2>Visão Geral</h2>
+            <p>Desempenho da sua arena e torneios</p>
           </div>
 
-          <div className="organizerHeroSummary">
-            <span>Total de torneios</span>
-            <strong>{totalTournaments || tournaments.length}</strong>
-            <small>{futureCount} próximos • {finishedCount} finalizados</small>
-          </div>
-        </section>
+          <div className="organizerOverviewLayout">
+            <div className="organizerKpiGrid">
+              {overviewCards.map(card => (
+                <article className="organizerKpiCard" key={card.label}>
+                  <span>{card.label}</span>
+                  <strong>{card.value}</strong>
+                  <small>{card.helper}</small>
+                </article>
+              ))}
+            </div>
 
-        <section className="organizerKpiGrid" aria-label="Indicadores do organizador">
-          {dashboardKpis.map(kpi => (
-            <article className="organizerKpiCard" key={kpi.label}>
-              <div>
-                <span>{kpi.label}</span>
-                <strong>{kpi.value}</strong>
+            <article className="organizerCalendarCard">
+              <div className="organizerPanelHeader">
+                <div>
+                  <span>Agenda</span>
+                  <h2>{currentMonthLabel}</h2>
+                </div>
               </div>
-              <em>{kpi.trend}</em>
-              <small>{kpi.helper}</small>
+              <div className="organizerCalendarWeekdays">
+                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((weekday, index) => <span key={`${weekday}-${index}`}>{weekday}</span>)}
+              </div>
+              <div className="organizerCalendarGrid">
+                {calendarDays.map(day => (
+                  <span
+                    key={day.key}
+                    className={`${day.day ? '' : 'empty'}${day.events ? ' hasEvent' : ''}`}
+                  >
+                    {day.day}
+                    {day.events > 0 && <i>{day.events}</i>}
+                  </span>
+                ))}
+              </div>
             </article>
-          ))}
+          </div>
         </section>
 
         <section className="organizerAnalyticsGrid" aria-label="Gráficos do painel">

@@ -4651,8 +4651,9 @@ button:hover {
 }
 
 .organizerDashboardTopbar,
-.organizerDashboardHero,
+.organizerOverviewSection,
 .organizerKpiCard,
+.organizerCalendarCard,
 .organizerChartPanel,
 .organizerDataPanel {
   border: 1px solid #1E2538;
@@ -4822,6 +4823,42 @@ button:hover {
   opacity: 1;
 }
 
+.organizerTopbarProfileWrap {
+  position: relative;
+}
+
+.organizerTopbarProfileMenu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 30;
+  width: 180px;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #1E2538;
+  border-radius: 8px;
+  background: #111622;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .36);
+}
+
+.organizerDashboardMain .organizerTopbarProfileMenu button {
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #F8FAFC;
+  font-weight: 600;
+  text-align: left;
+}
+
+.organizerDashboardMain .organizerTopbarProfileMenu button:hover {
+  background: rgba(255, 184, 0, .1);
+  color: #FFB800;
+  opacity: 1;
+}
+
 .organizerTopbarAvatar {
   width: 38px;
   height: 38px;
@@ -4879,6 +4916,34 @@ button:hover {
   color: #0B0E14;
   font-weight: 800;
   box-shadow: 0 14px 34px rgba(255, 184, 0, .18);
+}
+
+.organizerOverviewSection {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.organizerOverviewHeader h2 {
+  margin: 0;
+  color: #FFFFFF;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.organizerOverviewHeader p {
+  margin: 5px 0 0;
+  color: #A9B2C6;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.organizerOverviewLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 14px;
+  align-items: stretch;
 }
 
 .organizerDashboardHero {
@@ -4944,17 +5009,23 @@ button:hover {
 
 .organizerKpiCard {
   position: relative;
-  min-height: 142px;
+  min-height: 122px;
   display: grid;
-  align-content: space-between;
-  gap: 14px;
+  align-content: start;
+  gap: 10px;
   padding: 16px;
+}
+
+.organizerKpiCard span {
+  color: #A9B2C6;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 .organizerKpiCard strong {
   display: block;
-  margin-top: 10px;
-  font-size: 30px;
+  font-size: 28px;
   line-height: 1;
   font-weight: 800;
 }
@@ -4967,6 +5038,67 @@ button:hover {
   color: #10B981;
   font-style: normal;
   font-size: 12px;
+  font-weight: 800;
+}
+
+.organizerCalendarCard {
+  min-width: 0;
+  padding: 16px;
+}
+
+.organizerCalendarWeekdays,
+.organizerCalendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.organizerCalendarWeekdays {
+  margin-bottom: 8px;
+}
+
+.organizerCalendarWeekdays span {
+  color: #8D96AA;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.organizerCalendarGrid span {
+  position: relative;
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #1E2538;
+  border-radius: 7px;
+  background: #0B0E14;
+  color: #F8FAFC;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.organizerCalendarGrid span.empty {
+  opacity: 0;
+}
+
+.organizerCalendarGrid span.hasEvent {
+  border-color: rgba(255, 184, 0, .62);
+  color: #FFB800;
+}
+
+.organizerCalendarGrid span i {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  min-width: 13px;
+  height: 13px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #FFB800;
+  color: #0B0E14;
+  font-size: 8px;
+  font-style: normal;
   font-weight: 800;
 }
 
@@ -5203,6 +5335,7 @@ button:hover {
   }
 
   .organizerKpiGrid,
+  .organizerOverviewLayout,
   .organizerAnalyticsGrid {
     grid-template-columns: 1fr;
   }
