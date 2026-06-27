@@ -4467,9 +4467,24 @@ button:hover {
   transition: opacity .2s ease, transform .24s ease;
 }
 
+.organizerNavButton::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  z-index: 1;
+  width: 7px;
+  background: #A6FF00;
+  opacity: 0;
+  box-shadow: 0 0 16px rgba(166, 255, 0, .46);
+  transform: scaleY(.35);
+  transition: opacity .2s ease, transform .24s ease;
+}
+
 .organizerNavButton > * {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .organizerNavButton:hover {
@@ -4487,6 +4502,12 @@ button:hover {
 .organizerNavButton:hover::after {
   opacity: 1;
   transform: scaleX(1);
+}
+
+.organizerNavButton:hover::before,
+.organizerNavButton.active::before {
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 .organizerNavButton em {
@@ -4720,17 +4741,17 @@ button:hover {
   gap: 8px;
   margin-top: auto;
   padding: 15px;
-  border: 1px solid rgba(166, 255, 0, .28);
+  border: 0;
   border-radius: 8px;
-  background: rgba(17, 22, 34, .85);
+  background: transparent;
 }
 
 .organizerPlanCrown {
   position: relative;
-  width: 38px;
+  width: 40px;
   height: 25px;
   color: #A6FF00;
-  filter: drop-shadow(0 0 12px rgba(166, 255, 0, .38));
+  filter: drop-shadow(0 0 12px rgba(166, 255, 0, .5));
 }
 
 .organizerPlanCrown::before {
@@ -4738,11 +4759,10 @@ button:hover {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 3px;
-  height: 16px;
-  border: 2px solid currentColor;
-  border-top: 0;
-  clip-path: polygon(0 100%, 0 54%, 19% 12%, 39% 55%, 50% 0, 61% 55%, 81% 12%, 100% 54%, 100% 100%);
+  bottom: 4px;
+  height: 19px;
+  background: currentColor;
+  clip-path: polygon(0 100%, 0 42%, 14% 67%, 24% 12%, 40% 64%, 50% 0, 60% 64%, 76% 12%, 86% 67%, 100% 42%, 100% 100%);
 }
 
 .organizerPlanCrown::after {
@@ -4757,13 +4777,13 @@ button:hover {
 }
 
 .organizerPlanCard strong {
-  color: #A6FF00;
+  color: #FFFFFF;
   font-size: 15px;
   font-weight: 600;
 }
 
 .organizerPlanCard small {
-  color: rgba(166, 255, 0, .82);
+  color: #FFFFFF;
   font-size: 12px;
   font-weight: 400;
 }
@@ -4773,7 +4793,7 @@ button:hover {
   margin-top: 5px;
   border: 0;
   border-radius: 8px;
-  background: rgba(166, 255, 0, .85);
+  background: rgba(166, 255, 0, .4);
   color: #0B0E14;
   font-weight: 600;
   cursor: pointer;
