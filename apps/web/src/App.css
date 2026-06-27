@@ -4188,10 +4188,10 @@ button:hover {
   place-items: center;
   color: #FFFFFF;
   background:
-    linear-gradient(145deg, rgba(255, 184, 0, .22), rgba(255, 184, 0, .02) 42%),
+    linear-gradient(145deg, rgba(166, 255, 0, .22), rgba(166, 255, 0, .02) 42%),
     #111622;
-  border: 2px solid #FFB800;
-  box-shadow: 0 0 26px rgba(255, 184, 0, .24), inset 0 0 18px rgba(255, 184, 0, .12);
+  border: 2px solid #A6FF00;
+  box-shadow: 0 0 26px rgba(166, 255, 0, .24), inset 0 0 18px rgba(166, 255, 0, .12);
   clip-path: polygon(50% 0, 92% 14%, 84% 78%, 50% 100%, 16% 78%, 8% 14%);
 }
 
@@ -4342,9 +4342,9 @@ button:hover {
 
 .organizerSidebarProfileMenu button:hover,
 .organizerSidebarProfileMenu button.active {
-  border-color: rgba(255, 184, 0, .38);
-  background: rgba(255, 184, 0, .09);
-  color: #FFB800;
+  border-color: rgba(166, 255, 0, .42);
+  background: rgba(166, 255, 0, .08);
+  color: #A6FF00;
 }
 
 .organizerSidebarProfileMenu small {
@@ -4361,10 +4361,10 @@ button:hover {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border: 1px solid #FFB800;
+  border: 1px solid #A6FF00;
   border-radius: 999px;
   background: #111622;
-  color: #FFB800;
+  color: #A6FF00;
   font-size: 12px;
   font-weight: 700;
 }
@@ -4412,6 +4412,7 @@ button:hover {
 
 .organizerNavButton {
   position: relative;
+  overflow: hidden;
   width: 100%;
   min-height: 44px;
   display: grid;
@@ -4420,7 +4421,8 @@ button:hover {
   gap: 12px;
   padding: 10px 12px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-left-width: 5px;
+  border-radius: 2px;
   background: transparent;
   color: #FFFFFF;
   font-size: 14px;
@@ -4430,13 +4432,37 @@ button:hover {
   transition: border-color .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
 }
 
+.organizerNavButton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(270deg, rgba(166, 255, 0, .18) 0%, rgba(166, 255, 0, .08) 48%, transparent 100%);
+  opacity: 0;
+  transform: scaleX(.18);
+  transform-origin: right center;
+  transition: opacity .2s ease, transform .24s ease;
+}
+
+.organizerNavButton > * {
+  position: relative;
+  z-index: 1;
+}
+
 .organizerNavButton:hover,
 .organizerNavButton.active {
-  border-color: rgba(255, 184, 0, .5);
-  background: linear-gradient(135deg, rgba(255, 184, 0, .13), rgba(255, 184, 0, .04));
-  color: #FFB800;
-  box-shadow: inset 0 0 18px rgba(255, 184, 0, .07);
+  border-color: rgba(166, 255, 0, .5);
+  border-left-color: #A6FF00;
+  background: rgba(166, 255, 0, .025);
+  color: #A6FF00;
+  box-shadow: inset 5px 0 0 rgba(166, 255, 0, .2);
   opacity: 1;
+}
+
+.organizerNavButton:hover::after,
+.organizerNavButton.active::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .organizerNavButton em {
@@ -4446,8 +4472,8 @@ button:hover {
   min-height: 21px;
   padding: 3px 8px;
   border-radius: 7px;
-  background: #3A1E5C;
-  color: #E9D5FF;
+  background: #FFB800;
+  color: #0B0E14;
   font-size: 10px;
   font-style: normal;
   font-weight: 600;
@@ -4678,7 +4704,7 @@ button:hover {
   position: relative;
   width: 34px;
   height: 22px;
-  color: #FFB800;
+  color: #A6FF00;
 }
 
 .organizerPlanCrown::before {
@@ -4710,7 +4736,7 @@ button:hover {
   margin-top: 5px;
   border: 0;
   border-radius: 8px;
-  background: #FFB800;
+  background: #A6FF00;
   color: #0B0E14;
   font-weight: 600;
   cursor: pointer;
@@ -4744,7 +4770,7 @@ button:hover {
   padding: 10px 16px;
   border-radius: 0;
   background: #080B10;
-  box-shadow: 0 1px 0 rgba(255, 184, 0, .35);
+  box-shadow: 0 1px 0 rgba(166, 255, 0, .35);
 }
 
 .organizerDashboardActions,
@@ -4931,8 +4957,8 @@ button:hover {
 }
 
 .organizerDashboardMain .organizerTopbarProfileMenu button:hover {
-  background: rgba(255, 184, 0, .1);
-  color: #FFB800;
+  background: rgba(166, 255, 0, .1);
+  color: #A6FF00;
   opacity: 1;
 }
 
@@ -4989,10 +5015,10 @@ button:hover {
 .organizerDashboardMain .organizerPrimaryButton {
   border: 0;
   border-radius: 8px;
-  background: #FFB800;
+  background: #A6FF00;
   color: #0B0E14;
   font-weight: 800;
-  box-shadow: 0 14px 34px rgba(255, 184, 0, .18);
+  box-shadow: 0 14px 34px rgba(166, 255, 0, .18);
 }
 
 .organizerOverviewSection {
@@ -5032,7 +5058,7 @@ button:hover {
 
 .organizerOverviewPanels {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(300px, .88fr);
+  grid-template-columns: minmax(260px, .78fr) minmax(0, 1.22fr);
   gap: 12px;
   align-items: stretch;
 }
@@ -5049,7 +5075,7 @@ button:hover {
 .organizerPanelHeader span,
 .organizerKpiCard span {
   display: block;
-  color: #FFB800;
+  color: #A6FF00;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -5138,7 +5164,30 @@ button:hover {
 
 .organizerCalendarCard {
   min-width: 0;
-  padding: 14px;
+  align-self: start;
+  padding: 12px;
+}
+
+.organizerCalendarCard .organizerPanelHeader {
+  display: grid;
+  justify-content: stretch;
+  gap: 6px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.organizerCalendarCard .organizerPanelHeader > div {
+  width: 100%;
+}
+
+.organizerCalendarCard .organizerPanelHeader span {
+  text-align: left;
+}
+
+.organizerCalendarCard .organizerPanelHeader h2 {
+  margin-top: 3px;
+  text-align: center;
+  font-size: 16px;
 }
 
 .organizerAlertsCard {
@@ -5207,8 +5256,8 @@ button:hover {
 }
 
 .organizerAlertRow.live > span {
-  background: #3A1E5C;
-  box-shadow: 0 0 14px rgba(124, 58, 237, .4);
+  background: #FFB800;
+  box-shadow: 0 0 14px rgba(255, 184, 0, .4);
 }
 
 .organizerAlertRow.warning > span {
@@ -5225,11 +5274,11 @@ button:hover {
 .organizerCalendarGrid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
+  gap: 4px;
 }
 
 .organizerCalendarWeekdays {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .organizerCalendarWeekdays span {
@@ -5241,14 +5290,14 @@ button:hover {
 
 .organizerCalendarGrid span {
   position: relative;
-  min-height: 34px;
+  min-height: 27px;
   display: grid;
   place-items: center;
   border: 1px solid #1E2538;
-  border-radius: 7px;
+  border-radius: 5px;
   background: #0B0E14;
   color: #F8FAFC;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -5257,22 +5306,22 @@ button:hover {
 }
 
 .organizerCalendarGrid span.hasEvent {
-  border-color: rgba(255, 184, 0, .62);
-  color: #FFB800;
+  border-color: rgba(166, 255, 0, .62);
+  color: #A6FF00;
 }
 
 .organizerCalendarGrid span i {
   position: absolute;
   right: 3px;
   bottom: 3px;
-  min-width: 13px;
-  height: 13px;
+  min-width: 11px;
+  height: 11px;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: #FFB800;
+  background: #A6FF00;
   color: #0B0E14;
-  font-size: 8px;
+  font-size: 7px;
   font-style: normal;
   font-weight: 800;
 }
@@ -5436,7 +5485,7 @@ button:hover {
 }
 
 .organizerDashboardMain .tableLinkButton:hover {
-  color: #FFB800;
+  color: #A6FF00;
 }
 
 .organizerDashboardMain .tableActionIconButton {
@@ -5447,8 +5496,8 @@ button:hover {
 }
 
 .organizerDashboardMain .tableActionIconButton:hover {
-  border-color: rgba(255, 184, 0, .5);
-  color: #FFB800;
+  border-color: rgba(166, 255, 0, .5);
+  color: #A6FF00;
   opacity: 1;
 }
 

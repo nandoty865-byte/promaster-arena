@@ -4295,15 +4295,15 @@ function Dashboard({ user }: any) {
                 <AreaChart data={registrationTrend} margin={{ top: 8, right: 8, left: -26, bottom: 0 }}>
                   <defs>
                     <linearGradient id="registrationAmberFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#FFB800" stopOpacity={0.42} />
-                      <stop offset="95%" stopColor="#FFB800" stopOpacity={0.02} />
+                      <stop offset="5%" stopColor="#A6FF00" stopOpacity={0.42} />
+                      <stop offset="95%" stopColor="#A6FF00" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="#1E2538" vertical={false} />
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#8D96AA', fontSize: 12 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8D96AA', fontSize: 12 }} />
                   <Tooltip contentStyle={{ background: '#111622', border: '1px solid #1E2538', borderRadius: 8, color: '#F8FAFC' }} />
-                  <Area type="monotone" dataKey="inscricoes" stroke="#FFB800" strokeWidth={3} fill="url(#registrationAmberFill)" />
+                  <Area type="monotone" dataKey="inscricoes" stroke="#A6FF00" strokeWidth={3} fill="url(#registrationAmberFill)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -4323,7 +4323,7 @@ function Dashboard({ user }: any) {
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8D96AA', fontSize: 12 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8D96AA', fontSize: 12 }} />
                   <Tooltip contentStyle={{ background: '#111622', border: '1px solid #1E2538', borderRadius: 8, color: '#F8FAFC' }} />
-                  <Bar dataKey="total" fill="#FFB800" radius={[8, 8, 2, 2]} />
+                  <Bar dataKey="total" fill="#A6FF00" radius={[8, 8, 2, 2]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
