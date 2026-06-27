@@ -4355,9 +4355,24 @@ button:hover {
   transition: opacity .2s ease, transform .24s ease;
 }
 
+.organizerSidebarProfileMenu button::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  z-index: 1;
+  width: 4px;
+  background: #A6FF00;
+  opacity: 0;
+  box-shadow: 0 0 12px rgba(166, 255, 0, .42);
+  transform: scaleY(.35);
+  transition: opacity .2s ease, transform .24s ease;
+}
+
 .organizerSidebarProfileMenu button > * {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .organizerSidebarProfileMenu button:hover,
@@ -4369,6 +4384,11 @@ button:hover {
 .organizerSidebarProfileMenu button:hover::after {
   opacity: 1;
   transform: scaleX(1);
+}
+
+.organizerSidebarProfileMenu button:hover::before {
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 .organizerSidebarProfileMenu small {
@@ -4474,7 +4494,7 @@ button:hover {
   top: 7px;
   bottom: 7px;
   z-index: 1;
-  width: 7px;
+  width: 4px;
   background: #A6FF00;
   opacity: 0;
   box-shadow: 0 0 16px rgba(166, 255, 0, .46);
@@ -4504,8 +4524,7 @@ button:hover {
   transform: scaleX(1);
 }
 
-.organizerNavButton:hover::before,
-.organizerNavButton.active::before {
+.organizerNavButton:hover::before {
   opacity: 1;
   transform: scaleY(1);
 }
