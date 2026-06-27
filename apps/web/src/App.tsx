@@ -3056,7 +3056,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
   const activePlanInfo = profilePlanInfo(activeProfile, user)
   const profileOptions = availableProfileOptions(user)
   const menuItems = [
-    { label: 'Dashboard', icon: 'home', path: '/app', active: true },
+    { label: 'Home', icon: 'home', path: '/app', active: true },
     { label: 'Torneios', icon: 'trophy', path: '/app?torneios=todos' },
     { label: 'Inscrições', icon: 'clipboard', path: '/campeonatos/inscricoes' },
     { label: 'Partidas', icon: 'match', path: '/campeonatos', live: true },
@@ -3065,8 +3065,9 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
     { label: 'Arenas', icon: 'location', path: '/campeonatos/arenas' },
     { label: 'Ranking', icon: 'star', path: '/campeonatos' },
     { label: 'Financeiro', icon: 'finance', path: '/campeonatos/pagamentos' },
-    { label: 'Comunicação', icon: 'message', path: '/app/perfil' },
+    { label: 'Mídia', icon: 'message', path: '/app/perfil' },
     { label: 'Relatórios', icon: 'document', path: '/campeonatos/pagamentos' },
+    { label: 'Patrocinadores', icon: 'sponsors', path: '/campeonatos' },
     { label: 'Configurações', icon: 'settings', path: '/app/perfil' },
   ]
   const menuPrimaryItems = menuItems.slice(0, 4)
@@ -3106,16 +3107,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
         type="button"
         onClick={() => navigate(item.path)}
       >
-        {item.icon === 'match' ? (
-          <svg className="organizerNavSvg" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M6 5l13 13" />
-            <path d="M18 5L5 18" />
-            <path d="M5 4l3 3" />
-            <path d="M19 4l-3 3" />
-          </svg>
-        ) : (
-          <span className={`organizerNavIcon ${item.icon}`} aria-hidden="true" />
-        )}
+        <span className={`organizerNavIcon ${item.icon}`} aria-hidden="true" />
         <span>{item.label}</span>
         {item.live && <em>AO VIVO</em>}
       </button>
@@ -4287,7 +4279,7 @@ function Dashboard({ user }: any) {
         <header className="organizerDashboardTopbar">
           <div className="organizerTopbarTitle" aria-label="Caminho da página">
             <h1>Painel Organizador</h1>
-            <span>Início &gt; Dashboard Geral</span>
+            <span>Início &gt; Dashboard</span>
           </div>
 
           <div className="organizerDashboardActions">
@@ -4343,7 +4335,7 @@ function Dashboard({ user }: any) {
 
         <section className="organizerOverviewSection" aria-label="Visão geral do organizador">
           <div className="organizerOverviewHeader">
-            <h2>Visão Geral</h2>
+            <h2>Dashboard</h2>
             <p>Desempenho da sua arena e torneios</p>
           </div>
 

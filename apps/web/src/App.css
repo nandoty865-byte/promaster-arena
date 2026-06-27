@@ -4873,14 +4873,18 @@ button:hover {
   display: none;
 }
 
+.organizerNavIcon.home::before,
 .organizerNavIcon.trophy::before,
 .organizerNavIcon.registration::before,
+.organizerNavIcon.clipboard::before,
+.organizerNavIcon.match::before,
 .organizerNavIcon.participant::before,
 .organizerNavIcon.teams::before,
 .organizerNavIcon.location::before {
   inset: 0;
   width: auto;
   height: auto;
+  display: block;
   border: 0;
   border-radius: 0;
   background: currentColor;
@@ -4889,12 +4893,20 @@ button:hover {
   transform: none;
 }
 
+.organizerNavIcon.home::after,
 .organizerNavIcon.trophy::after,
 .organizerNavIcon.registration::after,
+.organizerNavIcon.clipboard::after,
+.organizerNavIcon.match::after,
 .organizerNavIcon.participant::after,
 .organizerNavIcon.teams::after,
 .organizerNavIcon.location::after {
   display: none;
+}
+
+.organizerNavIcon.home::before {
+  -webkit-mask: url('/organizer-icon-home.png') center / contain no-repeat;
+  mask: url('/organizer-icon-home.png') center / contain no-repeat;
 }
 
 .organizerNavIcon.trophy::before {
@@ -4905,6 +4917,16 @@ button:hover {
 .organizerNavIcon.registration::before {
   -webkit-mask: url('/organizer-icon-registration.png') center / contain no-repeat;
   mask: url('/organizer-icon-registration.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.clipboard::before {
+  -webkit-mask: url('/organizer-icon-inscriptions.png') center / contain no-repeat;
+  mask: url('/organizer-icon-inscriptions.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.match::before {
+  -webkit-mask: url('/organizer-icon-matches.png') center / contain no-repeat;
+  mask: url('/organizer-icon-matches.png') center / contain no-repeat;
 }
 
 .organizerNavIcon.participant::before {
@@ -4920,6 +4942,56 @@ button:hover {
 .organizerNavIcon.location::before {
   -webkit-mask: url('/organizer-icon-arenas.png') center / contain no-repeat;
   mask: url('/organizer-icon-arenas.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.star::before,
+.organizerNavIcon.finance::before,
+.organizerNavIcon.message::before,
+.organizerNavIcon.document::before,
+.organizerNavIcon.sponsors::before {
+  inset: 0;
+  width: auto;
+  height: auto;
+  display: block;
+  border: 0;
+  border-radius: 0;
+  background: currentColor;
+  box-shadow: none;
+  clip-path: none;
+  transform: none;
+}
+
+.organizerNavIcon.star::after,
+.organizerNavIcon.finance::after,
+.organizerNavIcon.message::after,
+.organizerNavIcon.document::after,
+.organizerNavIcon.sponsors::after {
+  display: none;
+}
+
+.organizerNavIcon.star::before {
+  -webkit-mask: url('/organizer-icon-ranking.png') center / contain no-repeat;
+  mask: url('/organizer-icon-ranking.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.finance::before {
+  -webkit-mask: url('/organizer-icon-finance.png') center / contain no-repeat;
+  mask: url('/organizer-icon-finance.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.message::before {
+  -webkit-mask: url('/organizer-icon-media.png') center / contain no-repeat;
+  mask: url('/organizer-icon-media.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.document::before {
+  -webkit-mask: url('/organizer-icon-reports.png') center / contain no-repeat;
+  mask: url('/organizer-icon-reports.png') center / contain no-repeat;
+}
+
+.organizerNavIcon.sponsors::before {
+  -webkit-mask: url('/organizer-icon-sponsors.png') center / contain no-repeat;
+  mask: url('/organizer-icon-sponsors.png') center / contain no-repeat;
 }
 
 .organizerPlanCard {
