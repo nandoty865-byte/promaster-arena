@@ -4859,13 +4859,26 @@ button:hover {
 }
 
 .organizerPlanCard {
+  position: sticky;
+  bottom: -22px;
+  z-index: 5;
+  width: calc(100% + 36px);
   display: grid;
-  gap: 2px;
-  margin-top: auto;
-  padding: 10px 12px;
-  border: 1px solid #FFFFFF;
-  border-radius: 6px;
-  background: transparent;
+  gap: 3px;
+  margin: auto -18px -22px;
+  padding: 12px 18px 16px;
+  border: 0;
+  border-radius: 0;
+  background: #111622;
+  color: #FFFFFF;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 -14px 30px rgba(0, 0, 0, .22);
+}
+
+.organizerPlanCard:hover {
+  background: #111622;
+  opacity: 1;
 }
 
 .organizerPlanCrown {
@@ -4910,28 +4923,6 @@ button:hover {
   font-size: 10px;
   font-weight: 400;
   line-height: 1.25;
-}
-
-.organizerPlanCard button {
-  width: fit-content;
-  min-height: 0;
-  justify-self: center;
-  margin-top: 6px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: #A6FF00;
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  cursor: pointer;
-}
-
-.organizerPlanCard button:hover {
-  background: transparent;
-  color: #A6FF00;
-  opacity: .82;
 }
 
 .organizerDashboardMain {

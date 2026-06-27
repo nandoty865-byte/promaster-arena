@@ -3188,11 +3188,10 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
         {menuSecondaryItems.map(renderMenuItem)}
       </nav>
 
-      <div className="organizerPlanCard">
+      <button className="organizerPlanCard" type="button" onClick={() => navigate('/upgrade')}>
         <strong>{activePlanInfo.title}</strong>
         <small>{activePlanInfo.subtitle}</small>
-        <button type="button" onClick={() => navigate('/upgrade')}>Gerenciar Plano</button>
-      </div>
+      </button>
     </aside>
   )
 }
