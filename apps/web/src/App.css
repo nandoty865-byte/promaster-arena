@@ -4496,8 +4496,9 @@ button:hover {
   min-height: 21px;
   padding: 3px 8px;
   border-radius: 7px;
-  background: #FFB800;
-  color: #0B0E14;
+  border: 1px solid rgba(166, 255, 0, .7);
+  background: transparent;
+  color: #A6FF00;
   font-size: 10px;
   font-style: normal;
   font-weight: 600;
@@ -4716,19 +4717,20 @@ button:hover {
 
 .organizerPlanCard {
   display: grid;
-  gap: 7px;
+  gap: 8px;
   margin-top: auto;
   padding: 15px;
-  border: 1px solid #1E2538;
+  border: 1px solid rgba(166, 255, 0, .28);
   border-radius: 8px;
-  background: #111622;
+  background: rgba(17, 22, 34, .85);
 }
 
 .organizerPlanCrown {
   position: relative;
-  width: 34px;
-  height: 22px;
+  width: 38px;
+  height: 25px;
   color: #A6FF00;
+  filter: drop-shadow(0 0 12px rgba(166, 255, 0, .38));
 }
 
 .organizerPlanCrown::before {
@@ -4743,14 +4745,25 @@ button:hover {
   clip-path: polygon(0 100%, 0 54%, 19% 12%, 39% 55%, 50% 0, 61% 55%, 81% 12%, 100% 54%, 100% 100%);
 }
 
+.organizerPlanCrown::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
 .organizerPlanCard strong {
-  color: #FFFFFF;
+  color: #A6FF00;
   font-size: 15px;
   font-weight: 600;
 }
 
 .organizerPlanCard small {
-  color: #A9B2C6;
+  color: rgba(166, 255, 0, .82);
   font-size: 12px;
   font-weight: 400;
 }
@@ -4760,7 +4773,7 @@ button:hover {
   margin-top: 5px;
   border: 0;
   border-radius: 8px;
-  background: #A6FF00;
+  background: rgba(166, 255, 0, .85);
   color: #0B0E14;
   font-weight: 600;
   cursor: pointer;

@@ -3099,8 +3099,8 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
 
       <div className="organizerPlanCard">
         <span className="organizerPlanCrown" aria-hidden="true" />
-        <strong>Plano Premium</strong>
-        <small>Renovação em 23/06/2025</small>
+        <strong>Plano Master</strong>
+        <small>Plano ativo • recursos ao vivo</small>
         <button type="button" onClick={() => navigate('/upgrade')}>Gerenciar Plano</button>
       </div>
     </aside>
