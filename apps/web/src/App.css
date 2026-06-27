@@ -4295,21 +4295,58 @@ button:hover {
 }
 
 .organizerSidebarProfile {
+  position: relative;
+  overflow: hidden;
   width: 100%;
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 0;
+  min-height: 48px;
+  padding: 6px 8px 6px 12px;
   border: 0;
+  border-left: 5px solid transparent;
   border-radius: 0;
   background: transparent;
   color: #FFFFFF;
   text-align: left;
   cursor: pointer;
+  transition: color .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 
-.organizerSidebarProfile:hover {
+.organizerSidebarProfile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(90deg, rgba(166, 255, 0, .16) 0%, rgba(166, 255, 0, .07) 48%, transparent 100%);
+  opacity: 0;
+  transform: scaleX(.18);
+  transform-origin: left center;
+  transition: opacity .2s ease, transform .24s ease;
+}
+
+.organizerSidebarProfile > * {
+  position: relative;
+  z-index: 1;
+}
+
+.organizerSidebarProfile:hover,
+.organizerSidebarProfile[aria-expanded="true"] {
+  border-left-color: #A6FF00;
+  color: #A6FF00;
+  box-shadow: inset 5px 0 0 rgba(166, 255, 0, .18);
   opacity: 1;
+}
+
+.organizerSidebarProfile:hover .organizerProfileText strong,
+.organizerSidebarProfile[aria-expanded="true"] .organizerProfileText strong {
+  color: #A6FF00;
+}
+
+.organizerSidebarProfile:hover::after,
+.organizerSidebarProfile[aria-expanded="true"]::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .organizerSidebarProfileMenu {
@@ -4324,14 +4361,17 @@ button:hover {
 }
 
 .organizerSidebarProfileMenu button {
+  position: relative;
+  overflow: hidden;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 9px 10px;
-  border: 1px solid transparent;
-  border-radius: 6px;
+  border: 0;
+  border-left: 4px solid transparent;
+  border-radius: 2px;
   background: transparent;
   color: #E5E7EB;
   font-size: 13px;
@@ -4340,11 +4380,35 @@ button:hover {
   cursor: pointer;
 }
 
+.organizerSidebarProfileMenu button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(90deg, rgba(166, 255, 0, .16) 0%, rgba(166, 255, 0, .07) 48%, transparent 100%);
+  opacity: 0;
+  transform: scaleX(.18);
+  transform-origin: left center;
+  transition: opacity .2s ease, transform .24s ease;
+}
+
+.organizerSidebarProfileMenu button > * {
+  position: relative;
+  z-index: 1;
+}
+
 .organizerSidebarProfileMenu button:hover,
 .organizerSidebarProfileMenu button.active {
-  border-color: rgba(166, 255, 0, .42);
-  background: rgba(166, 255, 0, .08);
+  border-left-color: #A6FF00;
+  background: transparent;
   color: #A6FF00;
+  box-shadow: inset 4px 0 0 rgba(166, 255, 0, .18);
+}
+
+.organizerSidebarProfileMenu button:hover::after,
+.organizerSidebarProfileMenu button.active::after {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
 .organizerSidebarProfileMenu small {
@@ -4420,8 +4484,8 @@ button:hover {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px solid transparent;
-  border-left-width: 5px;
+  border: 0;
+  border-left: 5px solid transparent;
   border-radius: 2px;
   background: transparent;
   color: #FFFFFF;
@@ -4437,10 +4501,10 @@ button:hover {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: linear-gradient(270deg, rgba(166, 255, 0, .18) 0%, rgba(166, 255, 0, .08) 48%, transparent 100%);
+  background: linear-gradient(90deg, rgba(166, 255, 0, .18) 0%, rgba(166, 255, 0, .08) 48%, transparent 100%);
   opacity: 0;
   transform: scaleX(.18);
-  transform-origin: right center;
+  transform-origin: left center;
   transition: opacity .2s ease, transform .24s ease;
 }
 
@@ -4451,9 +4515,8 @@ button:hover {
 
 .organizerNavButton:hover,
 .organizerNavButton.active {
-  border-color: rgba(166, 255, 0, .5);
   border-left-color: #A6FF00;
-  background: rgba(166, 255, 0, .025);
+  background: transparent;
   color: #A6FF00;
   box-shadow: inset 5px 0 0 rgba(166, 255, 0, .2);
   opacity: 1;
