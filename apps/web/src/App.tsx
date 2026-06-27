@@ -2755,18 +2755,6 @@ function storeActiveProfile(role: string) {
   window.dispatchEvent(new CustomEvent('playfinal:active-profile-change', { detail: role }))
 }
 
-function profileCreatedAt(role: string, user: any) {
-  if (role === 'PLAYER') return user?.playerProfile?.createdAt || user?.createdAt
-  if (role === 'ARENA_OWNER' || role === 'ORGANIZER') return user?.organization?.createdAt || user?.createdAt
-  return user?.createdAt
-}
-
-function formatProfileCreatedAt(value: any) {
-  const date = value ? new Date(value) : null
-  if (!date || Number.isNaN(date.getTime())) return 'data pendente'
-  return date.toLocaleDateString('pt-BR')
-}
-
 function profileCompletionPercent(role: string, user: any) {
   const fieldsByRole: Record<string, any[]> = {
     PLAYER: [user?.name, user?.email, user?.playerProfile, user?.playerProfile?.nickname || user?.playerProfile?.city],
@@ -2780,26 +2768,25 @@ function profileCompletionPercent(role: string, user: any) {
 }
 
 function profilePlanInfo(role: string, user: any) {
-  const createdAt = formatProfileCreatedAt(profileCreatedAt(role, user))
   const planByRole: Record<string, { title: string, subtitle: string, progress: number }> = {
     PLAYER: {
       title: 'Plano Jogador',
-      subtitle: `Desde ${createdAt}`,
+      subtitle: '',
       progress: profileCompletionPercent(role, user),
     },
     ORGANIZER: {
       title: 'Plano Master',
-      subtitle: `Desde ${createdAt}`,
+      subtitle: '',
       progress: profileCompletionPercent(role, user),
     },
     ARENA_OWNER: {
       title: 'Plano Arena',
-      subtitle: `Desde ${createdAt}`,
+      subtitle: '',
       progress: profileCompletionPercent(role, user),
     },
     REFEREE: {
       title: 'Plano Árbitro',
-      subtitle: `Desde ${createdAt}`,
+      subtitle: '',
       progress: profileCompletionPercent(role, user),
     },
   }
@@ -3190,9 +3177,10 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
       </nav>
 
       <div className="organizerPlanCard">
+        <img className="organizerPlanCrown" src="/organizer-plan-crown.png" alt="" aria-hidden="true" />
         <button className="organizerPlanMain" type="button" onClick={() => navigate('/upgrade')}>
           <strong>{activePlanInfo.title}</strong>
-          <small>{activePlanInfo.subtitle}</small>
+          {activePlanInfo.subtitle && <small>{activePlanInfo.subtitle}</small>}
         </button>
         <button
           className="organizerPlanSettings"

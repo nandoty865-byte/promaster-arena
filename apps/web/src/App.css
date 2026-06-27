@@ -4164,7 +4164,7 @@ button:hover {
   border-right: 1px solid #1E2538;
   background: #0B0E14;
   scrollbar-width: thin;
-  scrollbar-color: #2563eb #111622;
+  scrollbar-color: #111622 #0B0E14;
 }
 
 .organizerSidebar::-webkit-scrollbar {
@@ -4172,17 +4172,17 @@ button:hover {
 }
 
 .organizerSidebar::-webkit-scrollbar-track {
-  background: #111622;
+  background: #0B0E14;
 }
 
 .organizerSidebar::-webkit-scrollbar-thumb {
-  border: 2px solid #111622;
+  border: 2px solid #0B0E14;
   border-radius: 999px;
-  background: #2563eb;
+  background: #111622;
 }
 
 .organizerSidebar::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6;
+  background: #1E2538;
 }
 
 .organizerSidebarLogo {
@@ -4879,11 +4879,11 @@ button:hover {
   z-index: 5;
   width: calc(100% + 36px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 34px;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
   align-items: center;
-  gap: 3px;
+  gap: 9px;
   margin: auto -18px -22px;
-  padding: 10px 12px 14px 18px;
+  padding: 10px 12px 14px 10px;
   border: 0;
   border-radius: 0;
   background: #111622;
@@ -4898,8 +4898,9 @@ button:hover {
 
 .organizerPlanMain {
   min-width: 0;
-  display: grid;
-  gap: 3px;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
   padding: 0;
   border: 0;
   background: transparent;
@@ -4933,38 +4934,18 @@ button:hover {
 }
 
 .organizerPlanSettings .organizerNavIcon {
-  width: 19px;
-  height: 19px;
+  width: 22px;
+  height: 22px;
 }
 
 .organizerPlanCrown {
-  position: relative;
-  width: 40px;
-  height: 25px;
-  color: #A6FF00;
-  filter: drop-shadow(0 0 12px rgba(166, 255, 0, .5));
-}
-
-.organizerPlanCrown::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 4px;
-  height: 19px;
-  background: currentColor;
-  clip-path: polygon(0 100%, 0 42%, 14% 67%, 24% 12%, 40% 64%, 50% 0, 60% 64%, 76% 12%, 86% 67%, 100% 42%, 100% 100%);
-}
-
-.organizerPlanCrown::after {
-  content: "";
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  bottom: 0;
-  height: 3px;
-  border-radius: 999px;
-  background: currentColor;
+  width: 30px;
+  height: 30px;
+  justify-self: start;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 9px rgba(255, 255, 255, .26))
+    drop-shadow(0 0 12px rgba(166, 255, 0, .18));
 }
 
 .organizerPlanCard strong {
