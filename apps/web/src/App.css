@@ -4675,17 +4675,6 @@ button:hover {
   filter: drop-shadow(0 0 3px rgba(255, 255, 255, .18));
 }
 
-.organizerNavSvg {
-  width: 22px;
-  height: 22px;
-  color: currentColor;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-}
-
 .organizerNavIcon::before,
 .organizerNavIcon::after {
   content: "";
@@ -4750,19 +4739,6 @@ button:hover {
   border-left: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: rotate(-45deg);
-}
-
-.organizerNavIcon.match::before,
-.organizerNavIcon.match::after {
-  display: none;
-}
-
-.organizerNavIcon.match::before {
-  transform: rotate(42deg);
-}
-
-.organizerNavIcon.match::after {
-  transform: rotate(-42deg);
 }
 
 .organizerNavIcon.participant::before,
@@ -4878,7 +4854,6 @@ button:hover {
 .organizerNavIcon.trophy::before,
 .organizerNavIcon.registration::before,
 .organizerNavIcon.clipboard::before,
-.organizerNavIcon.match::before,
 .organizerNavIcon.participant::before,
 .organizerNavIcon.teams::before,
 .organizerNavIcon.location::before {
@@ -4898,7 +4873,6 @@ button:hover {
 .organizerNavIcon.trophy::after,
 .organizerNavIcon.registration::after,
 .organizerNavIcon.clipboard::after,
-.organizerNavIcon.match::after,
 .organizerNavIcon.participant::after,
 .organizerNavIcon.teams::after,
 .organizerNavIcon.location::after {
@@ -4923,11 +4897,6 @@ button:hover {
 .organizerNavIcon.clipboard::before {
   -webkit-mask: url('/organizer-icon-inscriptions.png') center / contain no-repeat;
   mask: url('/organizer-icon-inscriptions.png') center / contain no-repeat;
-}
-
-.organizerNavIcon.match::before {
-  -webkit-mask: url('/organizer-icon-matches.png') center / contain no-repeat;
-  mask: url('/organizer-icon-matches.png') center / contain no-repeat;
 }
 
 .organizerNavIcon.participant::before {
@@ -4996,49 +4965,38 @@ button:hover {
 }
 
 .organizerNavButton:hover .organizerNavIcon,
+.organizerNavButton:hover .organizerNavVsIcon,
 .organizerNavButton.active .organizerNavIcon,
+.organizerNavButton.active .organizerNavVsIcon,
 .organizerNavDropdownSummary:hover .organizerNavIcon,
 .organizerNavDropdown[open] .organizerNavDropdownSummary .organizerNavIcon {
   color: #A6FF00;
   filter: drop-shadow(0 0 8px rgba(166, 255, 0, .42));
 }
 
+.organizerNavIcon.registration::before,
 .organizerNavIcon.clipboard::before,
 .organizerNavIcon.star::before,
 .organizerNavIcon.finance::before,
-.organizerNavIcon.document::before {
-  inset: -2px;
+.organizerNavIcon.message::before,
+.organizerNavIcon.document::before,
+.organizerNavIcon.sponsors::before {
+  inset: -3px;
 }
 
-.organizerNavIcon.match::before {
-  content: "VS";
-  inset: 0;
-  display: grid;
+.organizerNavVsIcon {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
   place-items: center;
-  border: 0;
-  background: transparent;
-  color: currentColor;
-  font-size: 13px;
-  font-weight: 800;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 900;
   font-style: italic;
   line-height: 1;
   letter-spacing: 0;
-  -webkit-mask: none;
-  mask: none;
-  transform: translateX(1px);
-}
-
-.organizerNavIcon.match::after {
-  content: "";
-  display: block;
-  left: 10px;
-  top: 1px;
-  width: 2px;
-  height: 22px;
-  border: 0;
-  border-radius: 999px;
-  background: currentColor;
-  transform: rotate(24deg);
+  text-shadow: 0 0 3px rgba(255, 255, 255, .22);
+  transform: skewX(-10deg);
 }
 
 .organizerPlanCard {

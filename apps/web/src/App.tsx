@@ -3107,7 +3107,11 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
         type="button"
         onClick={() => navigate(item.path)}
       >
-        <span className={`organizerNavIcon ${item.icon}`} aria-hidden="true" />
+        {item.icon === 'match' ? (
+          <span className="organizerNavVsIcon" aria-hidden="true">VS</span>
+        ) : (
+          <span className={`organizerNavIcon ${item.icon}`} aria-hidden="true" />
+        )}
         <span>{item.label}</span>
         {item.live && <em>AO VIVO</em>}
       </button>
