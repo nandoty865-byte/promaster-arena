@@ -2750,13 +2750,70 @@ function initialActiveProfile(user: any) {
   return roles[0]
 }
 
+function storeActiveProfile(role: string) {
+  localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, role)
+  window.dispatchEvent(new CustomEvent('playfinal:active-profile-change', { detail: role }))
+}
+
+function profileCreatedAt(role: string, user: any) {
+  if (role === 'PLAYER') return user?.playerProfile?.createdAt || user?.createdAt
+  if (role === 'ARENA_OWNER' || role === 'ORGANIZER') return user?.organization?.createdAt || user?.createdAt
+  return user?.createdAt
+}
+
+function formatProfileCreatedAt(value: any) {
+  const date = value ? new Date(value) : null
+  if (!date || Number.isNaN(date.getTime())) return 'data pendente'
+  return date.toLocaleDateString('pt-BR')
+}
+
+function profileCompletionPercent(role: string, user: any) {
+  const fieldsByRole: Record<string, any[]> = {
+    PLAYER: [user?.name, user?.email, user?.playerProfile, user?.playerProfile?.nickname || user?.playerProfile?.city],
+    ORGANIZER: [user?.organization?.name, user?.organization?.documentNumber, user?.organization?.city, user?.organization?.logoUrl],
+    ARENA_OWNER: [user?.organization?.name, user?.organization?.documentNumber, user?.organization?.city, user?.organization?.state],
+    REFEREE: [user?.name, user?.email, user?.phone, user?.createdAt],
+  }
+  const fields = fieldsByRole[role] || fieldsByRole.ORGANIZER
+  const completed = fields.filter(Boolean).length
+  return Math.min(100, Math.max(25, Math.round((completed / fields.length) * 100)))
+}
+
+function profilePlanInfo(role: string, user: any) {
+  const createdAt = formatProfileCreatedAt(profileCreatedAt(role, user))
+  const planByRole: Record<string, { title: string, subtitle: string, progress: number }> = {
+    PLAYER: {
+      title: 'Plano Jogador',
+      subtitle: `Jogador • criação ${createdAt}`,
+      progress: profileCompletionPercent(role, user),
+    },
+    ORGANIZER: {
+      title: 'Plano Master',
+      subtitle: `Master • criação ${createdAt}`,
+      progress: profileCompletionPercent(role, user),
+    },
+    ARENA_OWNER: {
+      title: 'Plano Arena',
+      subtitle: `Arena • criação ${createdAt}`,
+      progress: profileCompletionPercent(role, user),
+    },
+    REFEREE: {
+      title: 'Plano Árbitro',
+      subtitle: `Árbitro • criação ${createdAt}`,
+      progress: profileCompletionPercent(role, user),
+    },
+  }
+
+  return planByRole[role] || planByRole.ORGANIZER
+}
+
 function ProfileSwitcher({ user }: { user: any }) {
   const navigate = useNavigate()
   const roles = profileRoles(user)
   if (roles.length === 0) return null
 
   function openRole(role: string) {
-    localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, role)
+    storeActiveProfile(role)
     navigate(profilePath(role, user))
   }
 
@@ -2798,7 +2855,7 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
     const nextProfile = initialActiveProfile(user)
     if (!roles.includes(activeProfile) && roles.length > 0) {
       setActiveProfile(nextProfile)
-      localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, nextProfile)
+      storeActiveProfile(nextProfile)
     }
   }, [roles.join('|'), activeProfile, user])
 
@@ -2809,7 +2866,7 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
 
   function changeActiveProfile(role: string) {
     setActiveProfile(role)
-    localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, role)
+    storeActiveProfile(role)
     navigate(profilePath(role, user))
   }
 
@@ -3005,10 +3062,11 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
 function OrganizerDashboardSidebar({ user }: { user?: any }) {
   const navigate = useNavigate()
   const [profileSelectorOpen, setProfileSelectorOpen] = useState(false)
+  const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
   const organizationName = user?.organization?.name || 'Arena PlayFinal'
   const logoUrl = user?.organization?.logoUrl
-  const activeProfile = initialActiveProfile(user)
   const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
+  const activePlanInfo = profilePlanInfo(activeProfile, user)
   const profileOptions = availableProfileOptions(user)
   const menuItems = [
     { label: 'Dashboard', icon: 'home', path: '/app', active: true },
@@ -3025,9 +3083,24 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
     { label: 'Configurações', icon: 'settings', path: '/app/perfil' },
   ]
 
+  useEffect(() => {
+    setActiveProfile(initialActiveProfile(user))
+  }, [user])
+
+  useEffect(() => {
+    function handleProfileChange(event: Event) {
+      const nextProfile = (event as CustomEvent<string>).detail
+      if (nextProfile) setActiveProfile(nextProfile)
+    }
+
+    window.addEventListener('playfinal:active-profile-change', handleProfileChange)
+    return () => window.removeEventListener('playfinal:active-profile-change', handleProfileChange)
+  }, [])
+
   function openProfile(profile: { role: string, active: boolean, path: string }) {
     if (profile.active) {
-      localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profile.role)
+      setActiveProfile(profile.role)
+      storeActiveProfile(profile.role)
     }
 
     setProfileSelectorOpen(false)
@@ -3098,9 +3171,8 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
       </nav>
 
       <div className="organizerPlanCard">
-        <span className="organizerPlanCrown" aria-hidden="true" />
-        <strong>Plano Master</strong>
-        <small>Plano ativo • recursos ao vivo</small>
+        <strong>{activePlanInfo.title}</strong>
+        <small>{activePlanInfo.subtitle}</small>
         <button type="button" onClick={() => navigate('/upgrade')}>Gerenciar Plano</button>
       </div>
     </aside>
@@ -3963,6 +4035,11 @@ function Dashboard({ user }: any) {
   const [detailsTournament, setDetailsTournament] = useState<any>(null)
   const [openTournamentMenuId, setOpenTournamentMenuId] = useState<number | null>(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
+  const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
+  const activeProfileInitials = activeProfileLabel.slice(0, 2).toUpperCase()
+  const activePlanInfo = profilePlanInfo(activeProfile, user)
+  const profileOptions = availableProfileOptions(user)
   const tournamentFilter = new URLSearchParams(pageLocation.search).get('torneios') || 'todos'
   const finishedCount = tournaments.filter(t => t.status === 'finished').length
   const canceledCount = tournaments.filter(t =>
@@ -4148,6 +4225,30 @@ function Dashboard({ user }: any) {
     },
   ]
 
+  useEffect(() => {
+    setActiveProfile(initialActiveProfile(user))
+  }, [user])
+
+  useEffect(() => {
+    function handleProfileChange(event: Event) {
+      const nextProfile = (event as CustomEvent<string>).detail
+      if (nextProfile) setActiveProfile(nextProfile)
+    }
+
+    window.addEventListener('playfinal:active-profile-change', handleProfileChange)
+    return () => window.removeEventListener('playfinal:active-profile-change', handleProfileChange)
+  }, [])
+
+  function changeTopbarProfile(profile: { role: string, active: boolean, path: string }) {
+    if (profile.active) {
+      setActiveProfile(profile.role)
+      storeActiveProfile(profile.role)
+    }
+
+    setProfileMenuOpen(false)
+    navigate(profile.path)
+  }
+
   function logout() {
     localStorage.removeItem('token')
     window.location.href = '/login'
@@ -4197,17 +4298,36 @@ function Dashboard({ user }: any) {
                 onClick={() => setProfileMenuOpen(open => !open)}
               >
               <span className="organizerTopbarAvatar">
-                {user?.organization?.logoUrl ? <img src={user.organization.logoUrl} alt="" /> : 'PF'}
+                {user?.organization?.logoUrl && activeProfile !== 'PLAYER' ? <img src={user.organization.logoUrl} alt="" /> : activeProfileInitials}
               </span>
               <span>
-                <strong>{user?.organization?.name || 'Arena PlayFinal'}</strong>
-                <small>Organizador</small>
+                <strong>Acessando como</strong>
+                <small>{activeProfileLabel}</small>
               </span>
               <i aria-hidden="true" />
               </button>
               {profileMenuOpen && (
                 <div className="organizerTopbarProfileMenu">
-                  <button type="button" onClick={() => navigate('/app/perfil')}>Meu perfil</button>
+                  {profileOptions.map(profile => (
+                    <button
+                      key={profile.role}
+                      className={profile.role === activeProfile ? 'active' : ''}
+                      type="button"
+                      onClick={() => changeTopbarProfile(profile)}
+                    >
+                      <span>{profile.label}</span>
+                      {!profile.active && <small>Configurar</small>}
+                    </button>
+                  ))}
+                  <div className="organizerTopbarProfileProgress" aria-label="Preenchimento do perfil">
+                    <div>
+                      <span>Preenchimento perfil</span>
+                      <strong>{activePlanInfo.progress}%</strong>
+                    </div>
+                    <span className="organizerTopbarProfileProgressBar">
+                      <i style={{ width: `${activePlanInfo.progress}%` }} />
+                    </span>
+                  </div>
                   <button type="button" onClick={() => navigate('/upgrade')}>Assinatura</button>
                   <button type="button" onClick={logout}>Sair</button>
                 </div>

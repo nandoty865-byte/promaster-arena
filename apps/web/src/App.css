@@ -4386,7 +4386,13 @@ button:hover {
   transform: scaleX(1);
 }
 
-.organizerSidebarProfileMenu button:hover::before {
+.organizerSidebarProfileMenu button.active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.organizerSidebarProfileMenu button:hover::before,
+.organizerSidebarProfileMenu button.active::before {
   opacity: 1;
   transform: scaleY(1);
 }
@@ -4435,9 +4441,9 @@ button:hover {
 }
 
 .organizerProfileText small {
-  color: #A9B2C6;
+  color: #A6FF00;
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 .organizerProfileChevron {
@@ -4757,9 +4763,9 @@ button:hover {
 
 .organizerPlanCard {
   display: grid;
-  gap: 8px;
+  gap: 3px;
   margin-top: auto;
-  padding: 15px;
+  padding: 13px 15px;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -4799,21 +4805,23 @@ button:hover {
   color: #FFFFFF;
   font-size: 15px;
   font-weight: 600;
+  line-height: 1.1;
 }
 
 .organizerPlanCard small {
   color: #FFFFFF;
   font-size: 12px;
   font-weight: 400;
+  line-height: 1.25;
 }
 
 .organizerPlanCard button {
   min-height: 38px;
-  margin-top: 5px;
-  border: 0;
+  margin-top: 8px;
+  border: 1px solid #A6FF00;
   border-radius: 8px;
-  background: rgba(166, 255, 0, .4);
-  color: #0B0E14;
+  background: rgba(166, 255, 0, .2);
+  color: #FFFFFF;
   font-weight: 600;
   cursor: pointer;
 }
@@ -5011,7 +5019,7 @@ button:hover {
   top: calc(100% + 10px);
   right: 0;
   z-index: 30;
-  width: 180px;
+  width: 238px;
   display: grid;
   gap: 6px;
   padding: 8px;
@@ -5022,20 +5030,122 @@ button:hover {
 }
 
 .organizerDashboardMain .organizerTopbarProfileMenu button {
+  position: relative;
+  overflow: hidden;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 9px 10px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 0;
   background: transparent;
   color: #F8FAFC;
   font-weight: 600;
   text-align: left;
+  cursor: pointer;
 }
 
-.organizerDashboardMain .organizerTopbarProfileMenu button:hover {
-  background: rgba(166, 255, 0, .1);
+.organizerDashboardMain .organizerTopbarProfileMenu button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(90deg, rgba(166, 255, 0, .16) 0%, rgba(166, 255, 0, .07) 48%, transparent 100%);
+  opacity: 0;
+  transform: scaleX(.18);
+  transform-origin: left center;
+  transition: opacity .2s ease, transform .24s ease;
+}
+
+.organizerDashboardMain .organizerTopbarProfileMenu button::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  z-index: 1;
+  width: 4px;
+  background: #A6FF00;
+  opacity: 0;
+  box-shadow: 0 0 12px rgba(166, 255, 0, .42);
+  transform: scaleY(.35);
+  transition: opacity .2s ease, transform .24s ease;
+}
+
+.organizerDashboardMain .organizerTopbarProfileMenu button > * {
+  position: relative;
+  z-index: 2;
+}
+
+.organizerDashboardMain .organizerTopbarProfileMenu button:hover,
+.organizerDashboardMain .organizerTopbarProfileMenu button.active {
+  background: transparent;
   color: #A6FF00;
   opacity: 1;
+}
+
+.organizerDashboardMain .organizerTopbarProfileMenu button:hover::after,
+.organizerDashboardMain .organizerTopbarProfileMenu button.active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.organizerDashboardMain .organizerTopbarProfileMenu button:hover::before,
+.organizerDashboardMain .organizerTopbarProfileMenu button.active::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+.organizerDashboardMain .organizerTopbarProfileMenu button small {
+  color: #8D96AA;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.organizerTopbarProfileProgress {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid #1E2538;
+  border-bottom: 1px solid #1E2538;
+}
+
+.organizerTopbarProfileProgress div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.organizerTopbarProfileProgress span {
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.organizerTopbarProfileProgress strong {
+  color: #A6FF00;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.organizerTopbarProfileProgressBar {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid #1E2538;
+  border-radius: 999px;
+  background: #0B0E14;
+}
+
+.organizerTopbarProfileProgressBar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #A6FF00 0%, #10B981 100%);
 }
 
 .organizerTopbarAvatar {
