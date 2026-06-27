@@ -2784,22 +2784,22 @@ function profilePlanInfo(role: string, user: any) {
   const planByRole: Record<string, { title: string, subtitle: string, progress: number }> = {
     PLAYER: {
       title: 'Plano Jogador',
-      subtitle: `Jogador • criação ${createdAt}`,
+      subtitle: `Jogador • desde ${createdAt}`,
       progress: profileCompletionPercent(role, user),
     },
     ORGANIZER: {
       title: 'Plano Master',
-      subtitle: `Master • criação ${createdAt}`,
+      subtitle: `Master • desde ${createdAt}`,
       progress: profileCompletionPercent(role, user),
     },
     ARENA_OWNER: {
       title: 'Plano Arena',
-      subtitle: `Arena • criação ${createdAt}`,
+      subtitle: `Arena • desde ${createdAt}`,
       progress: profileCompletionPercent(role, user),
     },
     REFEREE: {
       title: 'Plano Árbitro',
-      subtitle: `Árbitro • criação ${createdAt}`,
+      subtitle: `Árbitro • desde ${createdAt}`,
       progress: profileCompletionPercent(role, user),
     },
   }
@@ -3075,13 +3075,16 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
     { label: 'Partidas', icon: 'match', path: '/campeonatos', live: true },
     { label: 'Participantes', icon: 'participant', path: '/campeonatos' },
     { label: 'Times', icon: 'teams', path: '/campeonatos' },
+    { label: 'Arenas', icon: 'location', path: '/campeonatos/arenas' },
     { label: 'Ranking', icon: 'star', path: '/campeonatos' },
     { label: 'Financeiro', icon: 'finance', path: '/campeonatos/pagamentos' },
-    { label: 'Arenas', icon: 'location', path: '/campeonatos/arenas' },
     { label: 'Comunicação', icon: 'message', path: '/app/perfil' },
     { label: 'Relatórios', icon: 'document', path: '/campeonatos/pagamentos' },
     { label: 'Configurações', icon: 'settings', path: '/app/perfil' },
   ]
+  const menuPrimaryItems = menuItems.slice(0, 4)
+  const menuGroupedItems = menuItems.slice(4, 7)
+  const menuSecondaryItems = menuItems.slice(7)
 
   useEffect(() => {
     setActiveProfile(initialActiveProfile(user))
@@ -3107,6 +3110,30 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
     navigate(profile.path)
   }
 
+  function renderMenuItem(item: { label: string, icon: string, path: string, active?: boolean, live?: boolean }) {
+    return (
+      <button
+        key={item.label}
+        className={`organizerNavButton${item.active ? ' active' : ''}`}
+        type="button"
+        onClick={() => navigate(item.path)}
+      >
+        {item.icon === 'match' ? (
+          <svg className="organizerNavSvg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 5l13 13" />
+            <path d="M18 5L5 18" />
+            <path d="M5 4l3 3" />
+            <path d="M19 4l-3 3" />
+          </svg>
+        ) : (
+          <span className={`organizerNavIcon ${item.icon}`} aria-hidden="true" />
+        )}
+        <span>{item.label}</span>
+        {item.live && <em>AO VIVO</em>}
+      </button>
+    )
+  }
+
   return (
     <aside className="organizerSidebar" aria-label="Menu do organizador">
       <div className="organizerSidebarLogo" aria-label="PlayFinal Arena">
@@ -3130,7 +3157,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
           <span className="organizerProfileChevron" aria-hidden="true" />
         </button>
         {profileSelectorOpen && (
-          <div className="organizerSidebarProfileMenu" aria-label="Selecionar perfil de acesso">
+          <div className="organizerSidebarProfileMenu" aria-label="Selecionar perfil de usuário">
             {profileOptions.map(profile => (
               <button
                 key={profile.role}
@@ -3147,27 +3174,11 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
       </div>
 
       <nav className="organizerNavList" aria-label="Navegação do painel">
-        {menuItems.map(item => (
-          <button
-            key={item.label}
-            className={`organizerNavButton${item.active ? ' active' : ''}`}
-            type="button"
-            onClick={() => navigate(item.path)}
-          >
-            {item.icon === 'match' ? (
-              <svg className="organizerNavSvg" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M6 5l13 13" />
-                <path d="M18 5L5 18" />
-                <path d="M5 4l3 3" />
-                <path d="M19 4l-3 3" />
-              </svg>
-            ) : (
-              <span className={`organizerNavIcon ${item.icon}`} aria-hidden="true" />
-            )}
-            <span>{item.label}</span>
-            {item.live && <em>AO VIVO</em>}
-          </button>
-        ))}
+        {menuPrimaryItems.map(renderMenuItem)}
+        <div className="organizerNavGroup" aria-label="Participantes, times e arenas">
+          {menuGroupedItems.map(renderMenuItem)}
+        </div>
+        {menuSecondaryItems.map(renderMenuItem)}
       </nav>
 
       <div className="organizerPlanCard">
@@ -4039,7 +4050,6 @@ function Dashboard({ user }: any) {
   const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
   const activeProfileInitials = activeProfileLabel.slice(0, 2).toUpperCase()
   const activePlanInfo = profilePlanInfo(activeProfile, user)
-  const profileOptions = availableProfileOptions(user)
   const tournamentFilter = new URLSearchParams(pageLocation.search).get('torneios') || 'todos'
   const finishedCount = tournaments.filter(t => t.status === 'finished').length
   const canceledCount = tournaments.filter(t =>
@@ -4239,16 +4249,6 @@ function Dashboard({ user }: any) {
     return () => window.removeEventListener('playfinal:active-profile-change', handleProfileChange)
   }, [])
 
-  function changeTopbarProfile(profile: { role: string, active: boolean, path: string }) {
-    if (profile.active) {
-      setActiveProfile(profile.role)
-      storeActiveProfile(profile.role)
-    }
-
-    setProfileMenuOpen(false)
-    navigate(profile.path)
-  }
-
   function logout() {
     localStorage.removeItem('token')
     window.location.href = '/login'
@@ -4307,18 +4307,11 @@ function Dashboard({ user }: any) {
               <i aria-hidden="true" />
               </button>
               {profileMenuOpen && (
-                <div className="organizerTopbarProfileMenu">
-                  {profileOptions.map(profile => (
-                    <button
-                      key={profile.role}
-                      className={profile.role === activeProfile ? 'active' : ''}
-                      type="button"
-                      onClick={() => changeTopbarProfile(profile)}
-                    >
-                      <span>{profile.label}</span>
-                      {!profile.active && <small>Configurar</small>}
-                    </button>
-                  ))}
+                <div className="organizerTopbarProfileMenu" aria-label="Perfil de usuário">
+                  <div className="organizerTopbarProfileMenuHeader">
+                    <span>Perfil de usuário</span>
+                    <strong>{activeProfileLabel}</strong>
+                  </div>
                   <div className="organizerTopbarProfileProgress" aria-label="Preenchimento do perfil">
                     <div>
                       <span>Preenchimento perfil</span>
@@ -4328,6 +4321,16 @@ function Dashboard({ user }: any) {
                       <i style={{ width: `${activePlanInfo.progress}%` }} />
                     </span>
                   </div>
+                  <button
+                    className="active"
+                    type="button"
+                    onClick={() => {
+                      setProfileMenuOpen(false)
+                      navigate(profilePath(activeProfile, user))
+                    }}
+                  >
+                    <span>Meu perfil (ativo)</span>
+                  </button>
                   <button type="button" onClick={() => navigate('/upgrade')}>Assinatura</button>
                   <button type="button" onClick={logout}>Sair</button>
                 </div>
