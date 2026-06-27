@@ -3083,7 +3083,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
     { label: 'Configurações', icon: 'settings', path: '/app/perfil' },
   ]
   const menuPrimaryItems = menuItems.slice(0, 4)
-  const menuGroupedItems = menuItems.slice(4, 7)
+  const cadastroItems = menuItems.slice(4, 7)
   const menuSecondaryItems = menuItems.slice(7)
 
   useEffect(() => {
@@ -3175,9 +3175,16 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
 
       <nav className="organizerNavList" aria-label="Navegação do painel">
         {menuPrimaryItems.map(renderMenuItem)}
-        <div className="organizerNavGroup" aria-label="Participantes, times e arenas">
-          {menuGroupedItems.map(renderMenuItem)}
-        </div>
+        <details className="organizerNavDropdown" open>
+          <summary className="organizerNavDropdownSummary">
+            <span className="organizerNavIcon participant" aria-hidden="true" />
+            <span>Cadastro</span>
+            <i aria-hidden="true" />
+          </summary>
+          <div className="organizerNavDropdownItems" aria-label="Itens de cadastro">
+            {cadastroItems.map(renderMenuItem)}
+          </div>
+        </details>
         {menuSecondaryItems.map(renderMenuItem)}
       </nav>
 

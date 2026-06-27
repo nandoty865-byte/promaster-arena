@@ -4460,14 +4460,6 @@ button:hover {
   gap: 6px;
 }
 
-.organizerNavGroup {
-  display: grid;
-  gap: 3px;
-  margin: 2px 0;
-  padding: 4px 0 4px 10px;
-  border-left: 1px solid rgba(166, 255, 0, .5);
-}
-
 .organizerNavButton {
   position: relative;
   overflow: hidden;
@@ -4541,6 +4533,60 @@ button:hover {
 .organizerNavButton:hover::before {
   opacity: 1;
   transform: scaleY(1);
+}
+
+.organizerNavDropdown {
+  display: grid;
+  gap: 3px;
+}
+
+.organizerNavDropdownSummary {
+  position: relative;
+  overflow: hidden;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 10px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.organizerNavDropdownSummary::-webkit-details-marker {
+  display: none;
+}
+
+.organizerNavDropdownSummary:hover {
+  color: #A6FF00;
+}
+
+.organizerNavDropdownSummary i {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform .18s ease;
+}
+
+.organizerNavDropdown[open] .organizerNavDropdownSummary {
+  color: #A6FF00;
+}
+
+.organizerNavDropdown[open] .organizerNavDropdownSummary i {
+  transform: rotate(225deg) translate(-1px, -1px);
+}
+
+.organizerNavDropdownItems {
+  display: grid;
+  gap: 3px;
+  margin: 0 0 2px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(166, 255, 0, .5);
 }
 
 .organizerNavButton em {
@@ -4774,7 +4820,7 @@ button:hover {
   gap: 2px;
   margin-top: auto;
   padding: 10px 12px;
-  border: 1px solid #A6FF00;
+  border: 1px solid #FFFFFF;
   border-radius: 6px;
   background: transparent;
 }
