@@ -2461,7 +2461,7 @@ fs.mkdirSync(kycDir, { recursive: true })
 
 app.use('/uploads', express.static(uploadsDir))
 
-function validateImageFile(file, cb) {
+function validateImageFile(req, file, cb) {
   if (!allowedImageMimeTypes.has(file.mimetype)) {
     return cb(new Error('Formato não aceito. Use JPG, PNG ou WebP.'))
   }
