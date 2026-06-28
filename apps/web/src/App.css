@@ -706,6 +706,171 @@ body {
   word-break: break-word;
 }
 
+.accountPhotoHint {
+  max-width: 130px;
+  color: #8f99aa;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.imageEditorBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(3, 5, 10, 0.78);
+  backdrop-filter: blur(16px);
+}
+
+.imageEditorModal {
+  width: min(520px, 100%);
+  border: 1px solid rgba(166, 255, 0, 0.22);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(166, 255, 0, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(17, 22, 34, 0.96), rgba(6, 7, 10, 0.98));
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.62),
+    0 0 34px rgba(166, 255, 0, 0.12);
+  overflow: hidden;
+}
+
+.imageEditorHeader,
+.imageEditorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(38, 48, 58, 0.88);
+}
+
+.imageEditorFooter {
+  border-top: 1px solid rgba(38, 48, 58, 0.88);
+  border-bottom: 0;
+  justify-content: flex-end;
+}
+
+.imageEditorHeader h2 {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 18px;
+}
+
+.imageEditorHeader p {
+  margin: 5px 0 0;
+  color: #9aa5b6;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.imageEditorClose,
+.imageEditorFooter button,
+.imageEditorControls button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(245, 247, 250, 0.22);
+  border-radius: 999px;
+  background: rgba(245, 247, 250, 0.06);
+  color: #f5f7fa;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.imageEditorClose {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.imageEditorFooter button:last-child {
+  border-color: transparent;
+  background: #a6ff00;
+  color: #0b0e14;
+  box-shadow: 0 0 24px rgba(166, 255, 0, 0.24);
+}
+
+.imageEditorFooter button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.imageEditorBody {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding: 22px 20px;
+}
+
+.imageEditorCrop {
+  position: relative;
+  width: min(280px, 72vw);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(166, 255, 0, 0.34);
+  border-radius: 50%;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25% 75%, rgba(255, 255, 255, 0.04) 75%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.04) 25%, transparent 25% 75%, rgba(255, 255, 255, 0.04) 75%),
+    rgba(6, 7, 10, 0.95);
+  background-position: 0 0, 10px 10px;
+  background-size: 20px 20px;
+  box-shadow:
+    inset 0 0 0 999px rgba(0, 0, 0, 0.08),
+    0 0 28px rgba(166, 255, 0, 0.12);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.imageEditorCrop.dragging {
+  cursor: grabbing;
+}
+
+.imageEditorCrop img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+.imageEditorMask {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 2px rgba(245, 247, 250, 0.16);
+  pointer-events: none;
+}
+
+.imageEditorControls {
+  width: min(360px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.imageEditorControls label {
+  display: grid;
+  gap: 8px;
+  color: #f5f7fa;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.imageEditorControls input[type="range"] {
+  accent-color: #a6ff00;
+}
+
 .accountSectionContent {
   min-width: 0;
 }

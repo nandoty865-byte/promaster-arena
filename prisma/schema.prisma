@@ -112,6 +112,7 @@ model PlayerProfile {
   firstName       String?
   lastName        String?
   nickname        String?
+  photoUrl        String?
   email           String   @unique
   password        String?
   phone           String?
@@ -263,6 +264,7 @@ model User {
   role      String   @default("admin")
   createdAt DateTime @default(now())
   phone String?
+avatarUrl String?
 emailVerified Boolean @default(false)
 emailVerifyToken String?
 whatsappVerified Boolean @default(false)

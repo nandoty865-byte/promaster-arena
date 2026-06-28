@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import {
@@ -3717,7 +3717,13 @@ function MyAccountPage() {
   const [activeSection, setActiveSection] = useState(sectionFromUrl)
   const [saving, setSaving] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
-  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null)
+  const [imageEditorOpen, setImageEditorOpen] = useState(false)
+  const [editorImageUrl, setEditorImageUrl] = useState('')
+  const [editorImageSize, setEditorImageSize] = useState({ width: 0, height: 0 })
+  const [editorZoom, setEditorZoom] = useState(1)
+  const [editorOffset, setEditorOffset] = useState({ x: 0, y: 0 })
+  const [editorDragging, setEditorDragging] = useState(false)
+  const editorDragRef = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 })
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -3906,28 +3912,74 @@ function MyAccountPage() {
       })
   }
 
-  async function uploadAccountPhoto() {
-    if (!selectedPhotoFile) {
-      alert('Selecione uma imagem para enviar.')
+  function closeImageEditor() {
+    if (editorImageUrl) {
+      URL.revokeObjectURL(editorImageUrl)
+    }
+    setImageEditorOpen(false)
+    setEditorImageUrl('')
+    setEditorImageSize({ width: 0, height: 0 })
+    setEditorZoom(1)
+    setEditorOffset({ x: 0, y: 0 })
+    setEditorDragging(false)
+  }
+
+  function openAccountPhotoEditor(file?: File | null) {
+    if (!file) return
+
+    const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!acceptedTypes.includes(file.type)) {
+      alert('Formato não aceito. Use JPG, PNG ou WebP.')
       return
     }
 
-    if (!selectedPhotoFile.type.startsWith('image/')) {
-      alert('Selecione um arquivo de imagem.')
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem é muito grande. Envie um arquivo de até 5 MB.')
       return
     }
 
-    if (selectedPhotoFile.size > 3 * 1024 * 1024) {
-      alert('A imagem deve ter no máximo 3 MB.')
-      return
+    if (editorImageUrl) {
+      URL.revokeObjectURL(editorImageUrl)
     }
 
+    setEditorImageUrl(URL.createObjectURL(file))
+    setEditorImageSize({ width: 0, height: 0 })
+    setEditorZoom(1)
+    setEditorOffset({ x: 0, y: 0 })
+    setImageEditorOpen(true)
+  }
+
+  function startEditorDrag(event: any) {
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    editorDragRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      offsetX: editorOffset.x,
+      offsetY: editorOffset.y,
+    }
+    setEditorDragging(true)
+  }
+
+  function moveEditorDrag(event: any) {
+    if (!editorDragging) return
+    const drag = editorDragRef.current
+    setEditorOffset({
+      x: drag.offsetX + event.clientX - drag.x,
+      y: drag.offsetY + event.clientY - drag.y,
+    })
+  }
+
+  function endEditorDrag() {
+    setEditorDragging(false)
+  }
+
+  async function uploadAccountPhoto(fileToUpload: File) {
     const data = new FormData()
-    data.append('logo', selectedPhotoFile)
+    data.append('avatar', fileToUpload)
     setPhotoUploading(true)
 
     try {
-      const response = await fetch(`${API}/me/logo`, {
+      const response = await fetch(`${API}/me/avatar`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -3941,19 +3993,70 @@ function MyAccountPage() {
         return
       }
 
-      setSelectedPhotoFile(null)
-      setUser((current: any) => ({
+      setUser(result.user || ((current: any) => ({
         ...current,
-        organization: {
-          ...current?.organization,
-          logoUrl: result.logoUrl,
-        },
-      }))
+        avatarUrl: result.avatarUrl,
+        playerProfile: current?.playerProfile ? { ...current.playerProfile, photoUrl: result.avatarUrl } : current?.playerProfile,
+        playerAccount: current?.playerAccount ? { ...current.playerAccount, photoUrl: result.avatarUrl } : current?.playerAccount,
+      })))
+      closeImageEditor()
       alert('Foto atualizada.')
     } catch {
       alert('Falha de conexão ao enviar a foto.')
     } finally {
       setPhotoUploading(false)
+    }
+  }
+
+  async function saveEditedAccountPhoto() {
+    if (!editorImageUrl) {
+      alert('Selecione uma imagem para enviar.')
+      return
+    }
+
+    try {
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image()
+        img.onload = () => resolve(img)
+        img.onerror = reject
+        img.src = editorImageUrl
+      })
+
+      const previewSize = 280
+      const outputSize = 800
+      const canvas = document.createElement('canvas')
+      canvas.width = outputSize
+      canvas.height = outputSize
+      const context = canvas.getContext('2d')
+
+      if (!context) {
+        alert('Não foi possível preparar a imagem.')
+        return
+      }
+
+      context.imageSmoothingEnabled = true
+      context.imageSmoothingQuality = 'high'
+      context.clearRect(0, 0, outputSize, outputSize)
+
+      const baseScale = Math.max(previewSize / image.naturalWidth, previewSize / image.naturalHeight)
+      const displayScale = baseScale * editorZoom
+      const outputRatio = outputSize / previewSize
+      const drawWidth = image.naturalWidth * displayScale * outputRatio
+      const drawHeight = image.naturalHeight * displayScale * outputRatio
+      const drawX = (outputSize - drawWidth) / 2 + editorOffset.x * outputRatio
+      const drawY = (outputSize - drawHeight) / 2 + editorOffset.y * outputRatio
+
+      context.drawImage(image, drawX, drawY, drawWidth, drawHeight)
+
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/webp', 0.9))
+      if (!blob) {
+        alert('Não foi possível otimizar a imagem.')
+        return
+      }
+
+      await uploadAccountPhoto(new File([blob], 'avatar-playfinal.webp', { type: 'image/webp' }))
+    } catch {
+      alert('Não foi possível processar a imagem. Tente enviar outra foto.')
     }
   }
 
@@ -3971,8 +4074,22 @@ function MyAccountPage() {
     setActiveSection(section)
   }, [sectionFromUrl])
 
+  useEffect(() => {
+    return () => {
+      if (editorImageUrl) {
+        URL.revokeObjectURL(editorImageUrl)
+      }
+    }
+  }, [editorImageUrl])
+
   const initials = String(`${form.firstName?.[0] || ''}${form.lastName?.[0] || ''}` || 'PF').toUpperCase()
   const avatarUrl = accountAvatarUrl(user, initialActiveProfile(user))
+  const editorPreviewSize = 280
+  const editorBaseScale = editorImageSize.width && editorImageSize.height
+    ? Math.max(editorPreviewSize / editorImageSize.width, editorPreviewSize / editorImageSize.height)
+    : 1
+  const editorDisplayWidth = editorImageSize.width ? editorImageSize.width * editorBaseScale : editorPreviewSize
+  const editorDisplayHeight = editorImageSize.height ? editorImageSize.height * editorBaseScale : editorPreviewSize
 
   function profileStatus(profile: any) {
     if (profile.active) return 'Ativo'
@@ -4051,20 +4168,15 @@ function MyAccountPage() {
               Alterar foto
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 disabled={photoUploading}
-                onChange={event => setSelectedPhotoFile(event.target.files?.[0] || null)}
+                onChange={event => {
+                  openAccountPhotoEditor(event.target.files?.[0] || null)
+                  event.target.value = ''
+                }}
               />
             </label>
-            {selectedPhotoFile && <span className="accountPhotoFile">{selectedPhotoFile.name}</span>}
-            <button
-              className="accountPhotoSaveButton"
-              type="button"
-              disabled={!selectedPhotoFile || photoUploading}
-              onClick={uploadAccountPhoto}
-            >
-              {photoUploading ? 'Enviando...' : 'Salvar foto'}
-            </button>
+            <span className="accountPhotoHint">JPG, PNG ou WebP até 5 MB.</span>
           </div>
 
           <div className="accountFormGrid">
@@ -4311,6 +4423,81 @@ function MyAccountPage() {
           </section>
         </section>
       </main>
+
+      {imageEditorOpen && (
+        <div className="imageEditorBackdrop" role="dialog" aria-modal="true" aria-label="Atualizar foto">
+          <section className="imageEditorModal">
+            <header className="imageEditorHeader">
+              <div>
+                <h2>Atualizar foto</h2>
+                <p>Mova a imagem e ajuste o zoom antes de salvar.</p>
+              </div>
+              <button className="imageEditorClose" type="button" onClick={closeImageEditor} aria-label="Fechar">
+                ×
+              </button>
+            </header>
+
+            <div className="imageEditorBody">
+              <div
+                className={editorDragging ? 'imageEditorCrop dragging' : 'imageEditorCrop'}
+                onPointerDown={startEditorDrag}
+                onPointerMove={moveEditorDrag}
+                onPointerUp={endEditorDrag}
+                onPointerCancel={endEditorDrag}
+                onPointerLeave={endEditorDrag}
+              >
+                {editorImageUrl && (
+                  <img
+                    src={editorImageUrl}
+                    alt=""
+                    draggable={false}
+                    onLoad={event => setEditorImageSize({
+                      width: event.currentTarget.naturalWidth,
+                      height: event.currentTarget.naturalHeight,
+                    })}
+                    style={{
+                      width: `${editorDisplayWidth}px`,
+                      height: `${editorDisplayHeight}px`,
+                      transform: `translate(-50%, -50%) translate(${editorOffset.x}px, ${editorOffset.y}px) scale(${editorZoom})`,
+                    }}
+                  />
+                )}
+                <span className="imageEditorMask" />
+              </div>
+
+              <div className="imageEditorControls">
+                <label>
+                  <span>Zoom</span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.01"
+                    value={editorZoom}
+                    onChange={event => setEditorZoom(Number(event.target.value))}
+                  />
+                </label>
+
+                <button type="button" onClick={() => {
+                  setEditorZoom(1)
+                  setEditorOffset({ x: 0, y: 0 })
+                }}>
+                  Centralizar
+                </button>
+              </div>
+            </div>
+
+            <footer className="imageEditorFooter">
+              <button type="button" onClick={closeImageEditor} disabled={photoUploading}>
+                Cancelar
+              </button>
+              <button type="button" onClick={saveEditedAccountPhoto} disabled={photoUploading}>
+                {photoUploading ? 'Salvando...' : 'Salvar imagem'}
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
     </div>
   )
 }

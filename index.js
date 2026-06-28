@@ -2451,12 +2451,23 @@ app.put('/admin/organization/:id/profile', auth, requireRole('superadmin'), asyn
 
 const uploadsDir = path.join(__dirname, 'uploads')
 const logosDir = path.join(uploadsDir, 'logos')
+const avatarsDir = path.join(uploadsDir, 'avatars')
 const kycDir = path.join(uploadsDir, 'kyc')
+const allowedImageMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 fs.mkdirSync(logosDir, { recursive: true })
+fs.mkdirSync(avatarsDir, { recursive: true })
 fs.mkdirSync(kycDir, { recursive: true })
 
 app.use('/uploads', express.static(uploadsDir))
+
+function validateImageFile(file, cb) {
+  if (!allowedImageMimeTypes.has(file.mimetype)) {
+    return cb(new Error('Formato não aceito. Use JPG, PNG ou WebP.'))
+  }
+
+  cb(null, true)
+}
 
 const logoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -2471,15 +2482,28 @@ const logoStorage = multer.diskStorage({
 
 const uploadLogo = multer({
   storage: logoStorage,
-  fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) {
-      return cb(new Error('Arquivo inválido. Envie uma imagem.'))
-    }
-
-    cb(null, true)
-  },
+  fileFilter: validateImageFile,
   limits: {
-    fileSize: 3 * 1024 * 1024,
+    fileSize: 5 * 1024 * 1024,
+  },
+})
+
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, avatarsDir)
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.webp'
+    const safeId = `${Date.now()}-${Math.round(Math.random() * 1e9)}`
+    cb(null, `avatar-${safeId}${ext}`)
+  },
+})
+
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  fileFilter: validateImageFile,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
   },
 })
 
@@ -6308,13 +6332,21 @@ app.get('/me', auth, async (req, res) => {
   res.json({ user: safeUser })
 })
 
-app.put('/me/profile', auth, requireRole('admin', 'operator'), async (req, res) => {
+app.put('/me/profile', auth, async (req, res) => {
   try {
     const {
       name,
       email,
       phone,
+      gender,
+      birthDate,
+      cpf,
+      zipCode,
+      neighborhood,
       organizationName,
+      documentType,
+      documentNumber,
+      supportedSports,
       street,
       number,
       complement,
@@ -6338,8 +6370,32 @@ app.put('/me/profile', auth, requireRole('admin', 'operator'), async (req, res) 
         email: email || req.user.email,
         phone: phone || null,
       },
-      include: { organization: true },
+      include: { organization: true, playerProfile: true },
     })
+
+    if (updatedUser.playerProfile) {
+      await prisma.playerProfile.update({
+        where: { id: updatedUser.playerProfile.id },
+        data: {
+          name: name || updatedUser.playerProfile.name,
+          firstName: req.body.firstName || null,
+          lastName: req.body.lastName || null,
+          email: email || updatedUser.playerProfile.email,
+          phone: phone || null,
+          gender: gender || null,
+          birthDate: birthDate ? new Date(birthDate) : null,
+          cpf: cpf || null,
+          zipCode: zipCode || null,
+          street: street || null,
+          addressNumber: number || null,
+          complement: complement || null,
+          neighborhood: neighborhood || null,
+          city: city || null,
+          state: state || null,
+          country: country || null,
+        },
+      })
+    }
 
     if (req.user.organizationId) {
       const address = [street, number, complement, city, state, country]
@@ -6366,10 +6422,16 @@ app.put('/me/profile', auth, requireRole('admin', 'operator'), async (req, res) 
 
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      include: { organization: true },
+      include: { organization: true, playerProfile: true, roles: true },
     })
 
-    const { password, ...safeUser } = user
+    const { password, emailVerifyToken, whatsappVerifyCode, signupIp, signupUserAgent, ...safeUser } = user
+    safeUser.roles = serializeUserRoles(user)
+    if (safeUser.playerProfile) {
+      const { password: playerPassword, verifyToken, ...safePlayerProfile } = safeUser.playerProfile
+      safeUser.playerProfile = safePlayerProfile
+      safeUser.playerAccount = safePlayerProfile
+    }
 
     res.json({ ok: true, user: safeUser })
   } catch (error) {
@@ -6378,7 +6440,7 @@ app.put('/me/profile', auth, requireRole('admin', 'operator'), async (req, res) 
   }
 })
 
-app.put('/me/password', auth, requireRole('admin', 'operator'), async (req, res) => {
+app.put('/me/password', auth, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body
 
@@ -7399,6 +7461,62 @@ app.post('/me/logo', auth, requireRole('admin', 'operator'), (req, res) => {
     } catch (error) {
       console.error(error)
       res.status(500).json({ error: 'Erro ao enviar logo' })
+    }
+  })
+})
+
+app.post('/me/avatar', auth, (req, res) => {
+  uploadAvatar.single('avatar')(req, res, async (uploadError) => {
+    try {
+      if (uploadError) {
+        console.error('Erro no upload do avatar:', uploadError)
+        return res.status(400).json({ error: uploadError.message || 'Erro ao processar imagem' })
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: 'Arquivo não enviado' })
+      }
+
+      const avatarUrl = `/api/uploads/avatars/${req.file.filename}`
+      const currentUser = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        include: { playerProfile: true },
+      })
+
+      if (!currentUser) {
+        return res.status(404).json({ error: 'Usuário não encontrado' })
+      }
+
+      if (currentUser.playerProfile) {
+        await prisma.playerProfile.update({
+          where: { id: currentUser.playerProfile.id },
+          data: { photoUrl: avatarUrl },
+        })
+      }
+
+      const user = await prisma.user.update({
+        where: { id: req.user.id },
+        data: { avatarUrl },
+        include: { organization: true, playerProfile: true, roles: true },
+      })
+
+      const { password, emailVerifyToken, whatsappVerifyCode, signupIp, signupUserAgent, ...safeUser } = user
+      safeUser.roles = serializeUserRoles(user)
+      if (safeUser.playerProfile) {
+        const { password: playerPassword, verifyToken, ...safePlayerProfile } = safeUser.playerProfile
+        safeUser.playerProfile = safePlayerProfile
+        safeUser.playerAccount = safePlayerProfile
+      }
+
+      res.json({
+        ok: true,
+        avatarUrl,
+        filename: req.file.filename,
+        user: safeUser,
+      })
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({ error: 'Erro ao enviar imagem' })
     }
   })
 })
