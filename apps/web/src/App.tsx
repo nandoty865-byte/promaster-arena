@@ -3257,9 +3257,9 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
 
           <details className="sidebarGroup">
             <summary>Perfil</summary>
-            <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Meu Perfil</button>
+            <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta')}>Minha conta</button>
             <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Meus Perfis</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Segurança</button>
+            <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta')}>Segurança</button>
             <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Assinatura</button>
           </details>
           {missingProfiles.length > 0 && (
@@ -3309,7 +3309,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
     { label: 'Mídia', icon: 'message', path: '/app/perfil' },
     { label: 'Relatórios', icon: 'document', path: '/campeonatos?painel=relatorios', active: isPath('/campeonatos') && activePanel === 'relatorios' },
     { label: 'Patrocinadores', icon: 'sponsors', path: '/campeonatos?painel=patrocinadores', active: isPath('/campeonatos') && activePanel === 'patrocinadores' },
-    { label: 'Configurações', icon: 'settings', path: '/app/perfil', active: isPath('/app/perfil') || isPath('/app/usuarios') },
+    { label: 'Configurações', icon: 'settings', path: '/app/minha-conta', active: isPath('/app/minha-conta') || isPath('/app/perfil') || isPath('/app/usuarios') },
   ]
   const menuPrimaryItems = menuItems.slice(0, 4)
   const cadastroItems = menuItems.slice(4, 7)
@@ -4965,14 +4965,14 @@ function Dashboard({ user }: any) {
                     </span>
                   </div>
                   <button
-                    className="active"
+                    className={pageLocation.pathname === '/app/minha-conta' ? 'active' : ''}
                     type="button"
                     onClick={() => {
                       setProfileMenuOpen(false)
-                      navigate('/app/perfil')
+                      navigate('/app/minha-conta')
                     }}
                   >
-                    <span>Meu perfil</span>
+                    <span>Minha conta</span>
                   </button>
                   <button type="button" onClick={() => navigate('/upgrade')}>Assinatura</button>
                   <button type="button" onClick={logout}>Sair</button>
