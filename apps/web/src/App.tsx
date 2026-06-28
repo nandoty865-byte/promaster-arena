@@ -406,7 +406,7 @@ export default function App() {
       <Route path="/onboarding/organizador" element={ENABLE_LEGACY_ONBOARDING ? <OrganizerSignup /> : <Navigate to="/cadastro?profile=organizer" />} />
       <Route path="/onboarding/jogador" element={ENABLE_LEGACY_ONBOARDING ? <PlayerSignup /> : <Navigate to="/cadastro?profile=player" />} />
       <Route path="/onboarding/arena" element={ENABLE_LEGACY_ONBOARDING ? <OrganizerSignup mode="arena" /> : <Navigate to="/cadastro?profile=arena" />} />
-      <Route path="/onboarding/arbitro" element={ENABLE_LEGACY_ONBOARDING ? <RefereeOnboarding /> : <Navigate to="/app/perfil?perfil=referee" />} />
+      <Route path="/onboarding/arbitro" element={ENABLE_LEGACY_ONBOARDING ? <RefereeOnboarding /> : <Navigate to="/app/minha-conta?secao=perfis&perfil=referee" />} />
       <Route path="/cadastro-organizador" element={<Navigate to="/cadastro?profile=organizer" />} />
       <Route path="/cadastro-jogador" element={<Navigate to="/cadastro?profile=player" />} />
       <Route path="/organizador" element={<PersonaLanding type="organizador" />} />
@@ -477,7 +477,7 @@ const SIGNUP_PROFILE_OPTIONS = [
     cardSubtitle: 'Quero participar de torneios',
     benefits: ['Inscrição rápido', 'Ranking pessoal', 'Histórico de partidas', 'Notificações de jogos'],
     image: '/signup/photos/card-jogador-v2.png',
-    href: '/app/perfil?perfil=player',
+    href: '/app/minha-conta?secao=perfis&perfil=player',
   },
   {
     key: 'organizer',
@@ -643,7 +643,7 @@ function SignupChoice() {
   const safeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')
     ? redirectParam
     : ''
-  const profileRedirect = selectedProfile?.href || safeRedirect || '/app/perfil'
+  const profileRedirect = selectedProfile?.href || safeRedirect || '/app/minha-conta?secao=perfis'
   const loginAfterRegisterHref = `/login?registered=1&redirect=${encodeURIComponent(profileRedirect)}`
   const [form, setForm] = useState<any>({
     firstName: '',
@@ -1051,7 +1051,7 @@ function AccountValidation() {
 
     setMessage('Conta confirmada com sucesso. Redirecionando para seu painel...')
     window.setTimeout(() => {
-      window.location.href = appUrlWithFreshVersion(data.redirectPath || '/app/perfil')
+      window.location.href = appUrlWithFreshVersion(data.redirectPath || '/app/minha-conta?secao=perfis')
     }, 900)
     return true
   }
@@ -1192,7 +1192,7 @@ function AccountValidation() {
           <button type="button" onClick={() => resend('whatsapp')} disabled={!!resending || waitSeconds > 0}>
             {waitSeconds > 0 ? `Reenviar código em ${waitSeconds}s` : resending === 'whatsapp' ? 'Reenviando...' : 'Reenviar código'}
           </button>
-          <button type="button" onClick={() => window.location.href = '/app/perfil'}>
+          <button type="button" onClick={() => window.location.href = '/app/minha-conta?secao=perfis'}>
             Alterar número depois
           </button>
         </div>
@@ -1211,7 +1211,7 @@ function AccountValidation() {
           <button type="button" onClick={() => resend('email')} disabled={!!resending}>
             {resending === 'email' ? 'Reenviando...' : 'Reenviar e-mail'}
           </button>
-          <button type="button" onClick={() => window.location.href = '/app/perfil'}>
+          <button type="button" onClick={() => window.location.href = '/app/minha-conta?secao=perfis'}>
             Alterar e-mail depois
           </button>
         </div>
@@ -1598,7 +1598,7 @@ function OrganizerSignup({ mode = 'organizador' }: any) {
         <section className="onboardingCard">
           <h2>{createdOrganizer.name}</h2>
           <p>{profileAdded ? 'Você pode voltar para Meus Perfis e trocar o acesso pelo seletor do painel.' : 'Depois de validar o cadastro, seu acesso ao painel ficará ativo.'}</p>
-          <a href={profileAdded ? '/app/perfil' : '/login'}>{profileAdded ? 'Ver meus perfis' : 'Ir para login'}</a>
+          <a href={profileAdded ? '/app/minha-conta?secao=perfis' : '/login'}>{profileAdded ? 'Ver meus perfis' : 'Ir para login'}</a>
         </section>
       </div>
     )
@@ -2761,11 +2761,11 @@ function availableProfileOptions(user: any) {
 }
 
 function profilePath(role: string, user: any) {
-  if (role === 'PLAYER') return user?.playerProfile?.id ? `/jogador/${user.playerProfile.id}` : '/app/perfil?perfil=player'
+  if (role === 'PLAYER') return user?.playerProfile?.id ? `/jogador/${user.playerProfile.id}` : '/app/minha-conta?secao=perfis&perfil=player'
   if (role === 'ORGANIZER') return '/app'
   if (role === 'ARENA_OWNER') return '/campeonatos/arenas'
-  if (role === 'REFEREE') return '/app/perfil?perfil=referee'
-  return '/app/perfil'
+  if (role === 'REFEREE') return '/app/minha-conta?secao=perfis&perfil=referee'
+  return '/app/minha-conta?secao=perfis'
 }
 
 function initialActiveProfile(user: any) {
@@ -2829,28 +2829,6 @@ function accountAvatarUrl(user: any, activeProfile?: string) {
   }
 
   return user.avatarUrl || user.photoUrl || user.profilePhotoUrl || user.organization?.logoUrl || ''
-}
-
-function ProfileSwitcher({ user }: { user: any }) {
-  const navigate = useNavigate()
-  const roles = profileRoles(user)
-  if (roles.length === 0) return null
-
-  function openRole(role: string) {
-    storeActiveProfile(role)
-    navigate(profilePath(role, user))
-  }
-
-  return (
-    <div className="profileMenu" aria-label="Trocar perfil">
-      <span>Você está acessando como:</span>
-      {roles.map(role => (
-        <button key={role} onClick={() => openRole(role)}>
-          {PROFILE_ROLE_LABELS[role]}
-        </button>
-      ))}
-    </div>
-  )
 }
 
 function loggedPageMeta(pathname: string, search: string) {
@@ -3191,7 +3169,7 @@ function ClientSidebar({
               <button className="sidebarSubButton" onClick={() => navigate('/criar-torneio')}>Criar Torneio</button>
               <button className="sidebarSubButton active" onClick={() => navigate('/campeonatos/inscricoes')}>Inscritos</button>
               <button className="sidebarSubButton" onClick={() => navigate('/campeonatos')}>Jogadores</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Árbitros</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis&perfil=referee')}>Árbitros</button>
             </details>
 
             <details className="sidebarGroup">
@@ -3251,7 +3229,7 @@ function ClientSidebar({
               <summary>Arenas</summary>
               <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Lista de Arenas</button>
               <button className="sidebarSubButton" onClick={() => navigate('/campeonatos/arenas')}>Nova Arena</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Minha Arena</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis')}>Minha Arena</button>
               <button className="sidebarSubButton" onClick={() => navigate('/app/usuarios')}>Usuários da Arena</button>
             </details>
           </section>
@@ -3262,12 +3240,12 @@ function ClientSidebar({
             <span className="sidebarSectionTitle">Árbitro</span>
             <details className="sidebarGroup">
               <summary>Arbitragem</summary>
-              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Modo Árbitro</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Minhas Partidas</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Chamada de Jogadores</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Resultados</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Ocorrências</button>
-              <button className="sidebarSubButton" onClick={() => navigate('/app/perfil?perfil=referee')}>Histórico</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis&perfil=referee')}>Modo Árbitro</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis&perfil=referee')}>Minhas Partidas</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis&perfil=referee')}>Chamada de Jogadores</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis&perfil=referee')}>Resultados</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis&perfil=referee')}>Ocorrências</button>
+              <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis&perfil=referee')}>Histórico</button>
             </details>
           </section>
         )}
@@ -3276,18 +3254,18 @@ function ClientSidebar({
           <span className="sidebarSectionTitle">Conta</span>
           <details className="sidebarGroup">
             <summary>Configurações</summary>
-            <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Organização</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Integrações</button>
+            <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis')}>Organização</button>
+            <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis')}>Integrações</button>
             <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Pagamentos</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>WhatsApp</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Notificações</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Termos e Políticas</button>
+            <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis')}>WhatsApp</button>
+            <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis')}>Notificações</button>
+            <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis')}>Termos e Políticas</button>
           </details>
 
           <details className="sidebarGroup">
             <summary>Perfil</summary>
             <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta')}>Minha conta</button>
-            <button className="sidebarSubButton" onClick={() => navigate('/app/perfil')}>Meus Perfis</button>
+            <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta?secao=perfis')}>Meus Perfis</button>
             <button className="sidebarSubButton" onClick={() => navigate('/app/minha-conta')}>Segurança</button>
             <button className="sidebarSubButton" onClick={() => navigate('/upgrade')}>Assinatura</button>
           </details>
@@ -3345,7 +3323,7 @@ function OrganizerDashboardSidebar({
     { label: 'Arenas', icon: 'location', path: '/campeonatos/arenas', active: isPath('/campeonatos/arenas') },
     { label: 'Ranking', icon: 'star', path: '/campeonatos?painel=ranking', active: isPath('/campeonatos') && activePanel === 'ranking' },
     { label: 'Financeiro', icon: 'finance', path: '/campeonatos/pagamentos', active: isPath('/campeonatos/pagamentos') || isPath('/upgrade') },
-    { label: 'Mídia', icon: 'message', path: '/app/perfil' },
+    { label: 'Mídia', icon: 'message', path: '/app/minha-conta?secao=perfis' },
     { label: 'Relatórios', icon: 'document', path: '/campeonatos?painel=relatorios', active: isPath('/campeonatos') && activePanel === 'relatorios' },
     { label: 'Patrocinadores', icon: 'sponsors', path: '/campeonatos?painel=patrocinadores', active: isPath('/campeonatos') && activePanel === 'patrocinadores' },
     { label: 'Configurações', icon: 'settings', path: '/app/minha-conta', active: isPath('/app/minha-conta') || isPath('/app/perfil') || isPath('/app/usuarios') },
@@ -3353,16 +3331,17 @@ function OrganizerDashboardSidebar({
   const menuPrimaryItems = menuItems.slice(0, 4)
   const cadastroItems = menuItems.slice(4, 7)
   const arenaPageItems = [
-    { label: 'Configuração', icon: 'settings', path: '/app/perfil?gestaoPagina=configuracao', active: location.search.includes('gestaoPagina=configuracao') },
-    { label: 'Conteúdos', icon: 'document', path: '/app/perfil?gestaoPagina=conteudos', active: location.search.includes('gestaoPagina=conteudos') },
-    { label: 'Páginas', icon: 'registration', path: '/app/perfil?gestaoPagina=paginas', active: location.search.includes('gestaoPagina=paginas') },
-    { label: 'Popups', icon: 'message', path: '/app/perfil?gestaoPagina=popups', active: location.search.includes('gestaoPagina=popups') },
-    { label: 'Menu', icon: 'teams', path: '/app/perfil?gestaoPagina=menu', active: location.search.includes('gestaoPagina=menu') },
+    { label: 'Configuração', icon: 'settings', path: '/app/minha-conta?secao=perfis', active: location.search.includes('gestaoPagina=configuracao') },
+    { label: 'Conteúdos', icon: 'document', path: '/app/minha-conta?secao=perfis', active: location.search.includes('gestaoPagina=conteudos') },
+    { label: 'Páginas', icon: 'registration', path: '/app/minha-conta?secao=perfis', active: location.search.includes('gestaoPagina=paginas') },
+    { label: 'Popups', icon: 'message', path: '/app/minha-conta?secao=perfis', active: location.search.includes('gestaoPagina=popups') },
+    { label: 'Menu', icon: 'teams', path: '/app/minha-conta?secao=perfis', active: location.search.includes('gestaoPagina=menu') },
   ]
   const settingsItem = menuItems.find(item => item.label === 'Configurações')
   const menuSecondaryItems = menuItems.slice(7).filter(item => item.label !== 'Configurações')
   const accountNavItems = [
     { id: 'dados', label: 'Dados pessoais', icon: 'participant' },
+    { id: 'seguranca', label: 'Segurança', icon: 'settings' },
     { id: 'plano', label: 'Meu plano', icon: 'finance' },
     { id: 'pagamentos', label: 'Métodos de pagamento', icon: 'registration' },
     { id: 'perfis', label: 'Meus perfis', icon: 'teams' },
@@ -3542,7 +3521,7 @@ function OrganizerDashboardSidebar({
             type="button"
             aria-label="Configurações"
             onClick={() => {
-              navigate(settingsItem?.path || '/app/perfil')
+              navigate(settingsItem?.path || '/app/minha-conta?secao=perfis')
               setDrawerOpen(false)
             }}
           >
@@ -3732,11 +3711,18 @@ function AdminSidebar() {
 
 function MyAccountPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const sectionFromUrl = new URLSearchParams(location.search).get('secao') || 'dados'
   const [user, setUser] = useState<any>(null)
-  const [activeSection, setActiveSection] = useState('dados')
+  const [activeSection, setActiveSection] = useState(sectionFromUrl)
   const [saving, setSaving] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null)
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
   const [form, setForm] = useState<any>({
     firstName: '',
     lastName: '',
@@ -3757,6 +3743,7 @@ function MyAccountPage() {
 
   const accountSectionLabels: Record<string, string> = {
     dados: 'Dados Pessoais',
+    seguranca: 'Segurança',
     plano: 'Meu plano',
     pagamentos: 'Métodos de pagamento',
     perfis: 'Meus perfis',
@@ -3806,6 +3793,16 @@ function MyAccountPage() {
     if (field === 'phone') nextValue = formatBrazilCellphone(value)
 
     setForm((current: any) => ({ ...current, [field]: nextValue }))
+  }
+
+  function updatePasswordField(field: string, value: string) {
+    setPasswordForm(current => ({ ...current, [field]: value }))
+  }
+
+  function changeAccountSection(section: string) {
+    const nextSection = accountSectionLabels[section] ? section : 'dados'
+    setActiveSection(nextSection)
+    navigate(`/app/minha-conta?secao=${nextSection}`, { replace: true })
   }
 
   async function lookupCep(value: string) {
@@ -3869,6 +3866,46 @@ function MyAccountPage() {
       .finally(() => setSaving(false))
   }
 
+  function changePassword() {
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      alert('Preencha todos os campos de senha.')
+      return
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      alert('A nova senha precisa ter pelo menos 6 caracteres.')
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('A confirmação da senha não confere.')
+      return
+    }
+
+    fetch(`${API}/me/password`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        })
+        alert('Senha alterada com sucesso.')
+      })
+  }
+
   async function uploadAccountPhoto() {
     if (!selectedPhotoFile) {
       alert('Selecione uma imagem para enviar.')
@@ -3929,8 +3966,78 @@ function MyAccountPage() {
     loadAccount()
   }, [])
 
+  useEffect(() => {
+    const section = accountSectionLabels[sectionFromUrl] ? sectionFromUrl : 'dados'
+    setActiveSection(section)
+  }, [sectionFromUrl])
+
   const initials = String(`${form.firstName?.[0] || ''}${form.lastName?.[0] || ''}` || 'PF').toUpperCase()
   const avatarUrl = accountAvatarUrl(user, initialActiveProfile(user))
+
+  function profileStatus(profile: any) {
+    if (profile.active) return 'Ativo'
+    if (profile.role === 'REFEREE') return 'Convite/aprovação necessária'
+    return 'Não configurado'
+  }
+
+  function profileActionLabel(profile: any) {
+    if (profile.active) return 'Acessar painel'
+    if (profile.role === 'REFEREE') return 'Ver solicitações'
+    return 'Ver pendências'
+  }
+
+  function openProfile(profile: any) {
+    if (profile.active) {
+      localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profile.role)
+    }
+
+    navigate(profile.path)
+  }
+
+  function profilePendingActions() {
+    if (!user) return []
+
+    const roles = profileRoles(user)
+    const pending: Array<{ title: string, description: string, action: string }> = []
+
+    if (roles.includes('PLAYER') && !user.playerProfile) {
+      pending.push({
+        title: 'Perfil de jogador',
+        description: 'Ative o perfil de jogador para inscrições, ranking e histórico de partidas.',
+        action: 'Ativar perfil',
+      })
+    }
+
+    if ((roles.includes('ORGANIZER') || roles.includes('ARENA_OWNER')) && user.organization) {
+      if (!user.organization.documentNumber) {
+        pending.push({
+          title: 'Documento da organização',
+          description: 'Informe CPF ou CNPJ para liberar validações operacionais e financeiras.',
+          action: 'Informar documento',
+        })
+      }
+
+      if (!user.organization.city || !user.organization.state) {
+        pending.push({
+          title: 'Localização',
+          description: 'Complete cidade e estado para exibir torneios e arenas corretamente.',
+          action: 'Completar endereço',
+        })
+      }
+
+      if (!user.organization.supportedSports) {
+        pending.push({
+          title: 'Modalidades atendidas',
+          description: 'Selecione os esportes que sua organização ou arena trabalha.',
+          action: 'Selecionar modalidades',
+        })
+      }
+    }
+
+    return pending
+  }
+
+  const pendingActions = profilePendingActions()
 
   function accountSectionPanel() {
     if (activeSection === 'dados') {
@@ -4054,386 +4161,42 @@ function MyAccountPage() {
       )
     }
 
-    const sectionActions: Record<string, { title: string, text: string, action?: string, onClick?: () => void }> = {
-      plano: {
-        title: 'Meu plano',
-        text: 'Acompanhe assinatura, plano atual e opções disponíveis para sua conta.',
-        action: 'Ver planos',
-        onClick: () => navigate('/upgrade'),
-      },
-      pagamentos: {
-        title: 'Métodos de pagamento',
-        text: 'Os cartões e cobranças da conta ficam organizados nesta área.',
-      },
-      perfis: {
-        title: 'Meus perfis',
-        text: 'Acesse ou complete perfis de jogador, organizador, arena e árbitro.',
-        action: 'Gerenciar perfis',
-        onClick: () => navigate('/app/perfil#meus-perfis'),
-      },
-    }
-    const panel = sectionActions[activeSection]
+    if (activeSection === 'seguranca') {
+      return (
+        <div className="panel settingsPanel accountSecurityPanel">
+          <h2>Alterar senha</h2>
 
-    return (
-      <div className="accountEmptyPanel">
-        <h2>{panel.title}</h2>
-        <p>{panel.text}</p>
-        {panel.action && (
-          <button type="button" onClick={panel.onClick}>
-            {panel.action}
+          <label>Senha atual</label>
+          <input
+            type="password"
+            value={passwordForm.currentPassword}
+            onChange={e => updatePasswordField('currentPassword', e.target.value)}
+          />
+
+          <label>Nova senha</label>
+          <input
+            type="password"
+            value={passwordForm.newPassword}
+            onChange={e => updatePasswordField('newPassword', e.target.value)}
+          />
+
+          <label>Confirmar nova senha</label>
+          <input
+            type="password"
+            value={passwordForm.confirmPassword}
+            onChange={e => updatePasswordField('confirmPassword', e.target.value)}
+          />
+
+          <button className="primaryButton" onClick={changePassword}>
+            Alterar senha
           </button>
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <div className="saasLayout">
-      <ClientSidebar
-        user={user}
-        isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'}
-        accountMode
-        activeAccountSection={activeSection}
-        onAccountSectionChange={setActiveSection}
-      />
-
-      <main className="saasMain">
-        <section className="accountPageShell accountPageContentOnly">
-          <section className="accountPagePanel">
-            <div className="accountPanelHeader">
-              <div>
-                <h1>{accountSectionLabels[activeSection] || 'Minha Conta'}</h1>
-                <p>Complete seu cadastro para deixar acesso, pagamentos e perfis prontos para uso.</p>
-              </div>
-              <span className="accountPanelStatus">Conta ativa</span>
-            </div>
-
-            <div className="accountSectionContent">
-              {accountSectionPanel()}
-            </div>
-
-            {activeSection === 'dados' && (
-              <div className="accountSaveRow">
-                <button className="accountSaveButton" type="button" onClick={saveAccount} disabled={saving}>
-                  {saving ? 'Salvando...' : 'Salvar alterações'}
-                </button>
-              </div>
-            )}
-          </section>
-        </section>
-      </main>
-    </div>
-  )
-}
-
-function ProfilePage() {
-  const navigate = useNavigate()
-  const [user, setUser] = useState<any>(null)
-  const [form, setForm] = useState<any>({
-    name: '',
-    email: '',
-    phone: '',
-    organizationName: '',
-    street: '',
-    number: '',
-    complement: '',
-    country: '',
-    state: '',
-    city: '',
-    documentType: 'CNPJ',
-    documentNumber: '',
-    supportedSports: '',
-  })
-  const [profileSports, setProfileSports] = useState<string[]>([])
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  })
-  const [logoUploading, setLogoUploading] = useState(false)
-  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null)
-
-  function loadProfile() {
-    fetch(`${API}/me`, { headers: authHeaders() })
-      .then(res => res.json())
-      .then(data => {
-        setUser(data.user)
-        const supportedSports = data.user?.organization?.supportedSports || ''
-        setProfileSports(String(supportedSports).split(',').map((item: string) => item.trim()).filter(Boolean))
-        setForm({
-          name: data.user?.name || '',
-          email: data.user?.email || '',
-          phone: data.user?.phone || '',
-          organizationName: data.user?.organization?.name || '',
-          street: data.user?.organization?.street || data.user?.organization?.address || '',
-          number: data.user?.organization?.number || '',
-          complement: data.user?.organization?.complement || '',
-          country: data.user?.organization?.country || '',
-          state: data.user?.organization?.state || '',
-          city: data.user?.organization?.city || '',
-          documentType: data.user?.organization?.documentType || 'CNPJ',
-          documentNumber: data.user?.organization?.documentNumber || '',
-          supportedSports,
-        })
-      })
-  }
-
-  function updateField(field: string, value: string | boolean) {
-    setForm((current: any) => ({ ...current, [field]: value }))
-  }
-
-  function updatePasswordField(field: string, value: string) {
-    setPasswordForm(current => ({ ...current, [field]: value }))
-  }
-
-  function toggleProfileSport(sport: string) {
-    setProfileSports(current => (
-      current.includes(sport)
-        ? current.filter(item => item !== sport)
-        : [...current, sport]
-    ))
-  }
-
-  function saveProfile() {
-    fetch(`${API}/me/profile`, {
-      method: 'PUT',
-      headers: authHeaders(),
-      body: JSON.stringify({
-        ...form,
-        supportedSports: profileSports.join(', '),
-      }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          alert(data.error)
-          return
-        }
-
-        setUser(data.user)
-        alert('Perfil atualizado.')
-      })
-  }
-
-  function changePassword() {
-    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
-      alert('Preencha todos os campos de senha.')
-      return
+        </div>
+      )
     }
 
-    if (passwordForm.newPassword.length < 6) {
-      alert('A nova senha precisa ter pelo menos 6 caracteres.')
-      return
-    }
-
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('A confirmação da senha não confere.')
-      return
-    }
-
-    fetch(`${API}/me/password`, {
-      method: 'PUT',
-      headers: authHeaders(),
-      body: JSON.stringify({
-        currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword,
-      }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          alert(data.error)
-          return
-        }
-
-        setPasswordForm({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: '',
-        })
-        alert('Senha alterada com sucesso.')
-      })
-  }
-
-  async function uploadLogo() {
-    if (!selectedLogoFile) {
-      alert('Selecione uma imagem para enviar.')
-      return
-    }
-
-    if (!selectedLogoFile.type.startsWith('image/')) {
-      alert('Selecione um arquivo de imagem.')
-      return
-    }
-
-    if (selectedLogoFile.size > 3 * 1024 * 1024) {
-      alert('A logo deve ter no máximo 3 MB.')
-      return
-    }
-
-    const data = new FormData()
-    data.append('logo', selectedLogoFile)
-    setLogoUploading(true)
-
-    try {
-      const response = await fetch(`${API}/me/logo`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: data,
-      })
-
-      const text = await response.text()
-      let result: any = {}
-
-      try {
-        result = text ? JSON.parse(text) : {}
-      } catch {
-        result = { error: text || 'Resposta inválida do servidor.' }
-      }
-
-      if (!response.ok || result.error) {
-        alert(result.error || 'Não foi possível enviar a logo.')
-        return
-      }
-
-      setSelectedLogoFile(null)
-      setUser((current: any) => ({
-        ...current,
-        organization: {
-          ...current?.organization,
-          logoUrl: result.logoUrl,
-        },
-      }))
-      loadProfile()
-      alert('Logo enviada com sucesso.')
-    } catch {
-      alert('Falha de conexão ao enviar a logo.')
-    } finally {
-      setLogoUploading(false)
-    }
-  }
-
-  function profileStatus(profile: any) {
-    if (profile.active) return 'Ativo'
-    if (profile.role === 'REFEREE') return 'Convite/aprovação necessária'
-    return 'Não configurado'
-  }
-
-  function profileActionLabel(profile: any) {
-    if (profile.active) return 'Acessar painel'
-    if (profile.role === 'REFEREE') return 'Ver solicitações'
-    return 'Ver pendências'
-  }
-
-  function openProfile(profile: any) {
-    if (profile.active) {
-      localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profile.role)
-    }
-
-    navigate(profile.path)
-  }
-
-  function profilePendingActions() {
-    if (!user) return []
-
-    const roles = profileRoles(user)
-    const pending: Array<{ title: string, description: string, action: string }> = []
-
-    if (roles.includes('PLAYER') && !user.playerProfile) {
-      pending.push({
-        title: 'Perfil de jogador',
-        description: 'Ative o perfil de jogador para inscrições, ranking e histórico de partidas.',
-        action: 'Ativar perfil',
-      })
-    }
-
-    if ((roles.includes('ORGANIZER') || roles.includes('ARENA_OWNER')) && user.organization) {
-      if (!user.organization.documentNumber) {
-        pending.push({
-          title: 'Documento da organização',
-          description: 'Informe CPF ou CNPJ para liberar validações operacionais e financeiras.',
-          action: 'Informar documento',
-        })
-      }
-
-      if (!user.organization.city || !user.organization.state) {
-        pending.push({
-          title: 'Localização',
-          description: 'Complete cidade e estado para exibir torneios e arenas corretamente.',
-          action: 'Completar endereço',
-        })
-      }
-
-      if (!user.organization.supportedSports) {
-        pending.push({
-          title: 'Modalidades atendidas',
-          description: 'Selecione os esportes que sua organização ou arena trabalha.',
-          action: 'Selecionar modalidades',
-        })
-      }
-    }
-
-    return pending
-  }
-
-  useEffect(() => {
-    if (!isLoggedIn()) {
-      goHome()
-      return
-    }
-
-    loadProfile()
-  }, [])
-
-  const pendingActions = profilePendingActions()
-
-  return (
-    <div className="saasLayout">
-      <ClientSidebar user={user} isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
-
-      <main className="saasMain">
-        <header className="hero">
-          <ProfileSwitcher user={user} />
-          <div className="badge">👤 Conta única</div>
-          <h1>Meu Perfil</h1>
-          <p>Atualize seus dados de conta, contatos e informações dos perfis vinculados.</p>
-        </header>
-
-        <div className="profileGrid">
-          <div className="panel profileLogoPanel">
-            <h2>Logo / Foto</h2>
-            {user?.organization?.logoUrl ? (
-              <img src={user.organization.logoUrl} className="profileLogoPreview" />
-            ) : (
-              <div className="profileLogoEmpty">Sem logo</div>
-            )}
-
-            <label className="fileButton">
-              Selecionar arquivo
-              <input
-                type="file"
-                accept="image/*"
-                onChange={e => setSelectedLogoFile(e.target.files?.[0] || null)}
-                disabled={logoUploading}
-              />
-            </label>
-
-            {selectedLogoFile && (
-              <p className="fileHint">{selectedLogoFile.name}</p>
-            )}
-
-            <button
-              className="primaryButton"
-              type="button"
-              onClick={uploadLogo}
-              disabled={logoUploading || !selectedLogoFile}
-            >
-              {logoUploading ? 'Enviando...' : 'Salvar logo'}
-            </button>
-          </div>
-
+    if (activeSection === 'perfis') {
+      return (
+        <div className="accountProfilesStack">
           <section className="profileProfilesPanel" id="meus-perfis">
             <div className="profileProfilesHeader">
               <div>
@@ -4474,7 +4237,7 @@ function ProfilePage() {
                       <strong>{item.title}</strong>
                       <span>{item.description}</span>
                     </div>
-                    <button type="button" onClick={() => document.getElementById('dados-perfil')?.scrollIntoView({ behavior: 'smooth' })}>
+                    <button type="button" onClick={() => changeAccountSection('dados')}>
                       {item.action}
                     </button>
                   </article>
@@ -4482,124 +4245,78 @@ function ProfilePage() {
               </div>
             </section>
           )}
-
-          <div className="panel settingsPanel" id="dados-perfil">
-            <h2>Dados do cliente</h2>
-
-            <label>Nome do responsável</label>
-            <input value={form.name} onChange={e => updateField('name', e.target.value)} />
-
-            <label>E-mail</label>
-            <input type="email" value={form.email} onChange={e => updateField('email', e.target.value)} />
-
-            <label>Telefone / WhatsApp</label>
-            <input value={form.phone} onChange={e => updateField('phone', e.target.value)} />
-
-            <label>Nome da arena / organização</label>
-            <input value={form.organizationName} onChange={e => updateField('organizationName', e.target.value)} />
-
-            <div className="profileAddressGrid">
-              <div>
-                <label>Tipo de documento</label>
-                <select value={form.documentType} onChange={e => updateField('documentType', e.target.value)}>
-                  <option value="CNPJ">CNPJ</option>
-                  <option value="CPF">CPF</option>
-                </select>
-              </div>
-
-              <div>
-                <label>Número do documento</label>
-                <input value={form.documentNumber} onChange={e => updateField('documentNumber', e.target.value)} />
-              </div>
-            </div>
-
-            <label>Esportes atendidos</label>
-            <div className="sportsPicker">
-              {SPORT_OPTIONS.map(sport => (
-                <label key={sport}>
-                  <input
-                    type="checkbox"
-                    checked={profileSports.includes(sport)}
-                    onChange={() => toggleProfileSport(sport)}
-                  />
-                  {sport}
-                </label>
-              ))}
-            </div>
-
-            <p className="helperText">
-              Validação: {user?.organization?.kycStatus || 'pending'}
-            </p>
-
-            <div className="profileAddressGrid">
-              <div>
-                <label>Logradouro</label>
-                <input value={form.street} onChange={e => updateField('street', e.target.value)} />
-              </div>
-
-              <div>
-                <label>Número</label>
-                <input value={form.number} onChange={e => updateField('number', e.target.value)} />
-              </div>
-
-              <div>
-                <label>Complemento</label>
-                <input value={form.complement} onChange={e => updateField('complement', e.target.value)} />
-              </div>
-
-              <div>
-                <label>País</label>
-                <input value={form.country} onChange={e => updateField('country', e.target.value)} />
-              </div>
-
-              <div>
-                <label>Estado</label>
-                <input value={form.state} onChange={e => updateField('state', e.target.value)} />
-              </div>
-
-              <div>
-                <label>Cidade</label>
-                <input value={form.city} onChange={e => updateField('city', e.target.value)} />
-              </div>
-            </div>
-
-            <button className="primaryButton" onClick={saveProfile}>
-              Salvar perfil
-            </button>
-          </div>
-
-          <div className="panel settingsPanel profilePasswordPanel">
-            <h2>Alterar senha</h2>
-
-            <label>Senha atual</label>
-            <input
-              type="password"
-              value={passwordForm.currentPassword}
-              onChange={e => updatePasswordField('currentPassword', e.target.value)}
-            />
-
-            <label>Nova senha</label>
-            <input
-              type="password"
-              value={passwordForm.newPassword}
-              onChange={e => updatePasswordField('newPassword', e.target.value)}
-            />
-
-            <label>Confirmar nova senha</label>
-            <input
-              type="password"
-              value={passwordForm.confirmPassword}
-              onChange={e => updatePasswordField('confirmPassword', e.target.value)}
-            />
-
-            <button className="primaryButton" onClick={changePassword}>
-              Alterar senha
-            </button>
-          </div>
         </div>
+      )
+    }
+
+    const sectionActions: Record<string, { title: string, text: string, action?: string, onClick?: () => void }> = {
+      plano: {
+        title: 'Meu plano',
+        text: 'Acompanhe assinatura, plano atual e opções disponíveis para sua conta.',
+        action: 'Ver planos',
+        onClick: () => navigate('/upgrade'),
+      },
+      pagamentos: {
+        title: 'Métodos de pagamento',
+        text: 'Os cartões e cobranças da conta ficam organizados nesta área.',
+      },
+    }
+    const panel = sectionActions[activeSection] || sectionActions.plano
+
+    return (
+      <div className="accountEmptyPanel">
+        <h2>{panel.title}</h2>
+        <p>{panel.text}</p>
+        {panel.action && (
+          <button type="button" onClick={panel.onClick}>
+            {panel.action}
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="saasLayout">
+      <ClientSidebar
+        user={user}
+        isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'}
+        accountMode
+        activeAccountSection={activeSection}
+        onAccountSectionChange={changeAccountSection}
+      />
+
+      <main className="saasMain">
+        <section className="accountPageShell accountPageContentOnly">
+          <section className="accountPagePanel">
+            <div className="accountPanelHeader">
+              <div>
+                <h1>{accountSectionLabels[activeSection] || 'Minha Conta'}</h1>
+                <p>Complete seu cadastro para deixar acesso, pagamentos e perfis prontos para uso.</p>
+              </div>
+              <span className="accountPanelStatus">Conta ativa</span>
+            </div>
+
+            <div className="accountSectionContent">
+              {accountSectionPanel()}
+            </div>
+
+            {activeSection === 'dados' && (
+              <div className="accountSaveRow">
+                <button className="accountSaveButton" type="button" onClick={saveAccount} disabled={saving}>
+                  {saving ? 'Salvando...' : 'Salvar alterações'}
+                </button>
+              </div>
+            )}
+          </section>
+        </section>
       </main>
     </div>
   )
+}
+
+function ProfilePage() {
+  return <Navigate to="/app/minha-conta?secao=perfis" replace />
 }
 
 function UsersPage() {
@@ -9199,7 +8916,7 @@ function PublicTournament({ user, loadingUser }: any) {
                     <>
                       <h2>Use um perfil de jogador</h2>
                       <p>Esta conta não possui perfil de jogador ativo para inscrição.</p>
-                      <a className="publicSignupButton" href="/app/perfil?perfil=player">
+                      <a className="publicSignupButton" href="/app/minha-conta?secao=perfis&perfil=player">
                         Criar perfil de jogador
                       </a>
                     </>
@@ -14182,3 +13899,4 @@ function Admin() {
     </div>
   )
 }
+
