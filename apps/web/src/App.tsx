@@ -2822,6 +2822,15 @@ function profilePlanInfo(role: string, user: any) {
   return planByRole[role] || planByRole.ORGANIZER
 }
 
+function accountAvatarUrl(user: any, activeProfile?: string) {
+  if (!user) return ''
+  if (activeProfile === 'PLAYER') {
+    return user.playerProfile?.photoUrl || user.playerProfile?.avatarUrl || user.avatarUrl || user.photoUrl || user.profilePhotoUrl || ''
+  }
+
+  return user.avatarUrl || user.photoUrl || user.profilePhotoUrl || user.organization?.logoUrl || ''
+}
+
 function ProfileSwitcher({ user }: { user: any }) {
   const navigate = useNavigate()
   const roles = profileRoles(user)
@@ -2918,6 +2927,7 @@ function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => v
   const activePlanInfo = profilePlanInfo(activeProfile, user)
   const meta = loggedPageMeta(location.pathname, location.search)
   const activeProfileInitials = (activeProfileLabel || 'PF').slice(0, 2).toUpperCase()
+  const topbarAvatarUrl = accountAvatarUrl(user, activeProfile)
   const topbarUserName = activeProfile === 'PLAYER'
     ? user?.playerProfile?.nickname || user?.name || 'Jogador PlayFinal'
     : user?.organization?.name || user?.name || 'PlayFinal Arena'
@@ -2968,7 +2978,7 @@ function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => v
             onClick={() => setProfileMenuOpen(open => !open)}
           >
             <span className="organizerTopbarAvatar">
-              {user?.organization?.logoUrl && activeProfile !== 'PLAYER' ? <img src={user.organization.logoUrl} alt="" /> : activeProfileInitials}
+              {topbarAvatarUrl ? <img src={topbarAvatarUrl} alt="" /> : activeProfileInitials}
             </span>
             <span>
               <strong>{topbarUserName}</strong>
@@ -3015,10 +3025,29 @@ function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => v
   )
 }
 
-function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, isMasterPlan?: boolean, onLogout?: () => void }) {
+function ClientSidebar({
+  user,
+  isMasterPlan = false,
+  onLogout,
+  accountMode = false,
+  activeAccountSection = 'dados',
+  onAccountSectionChange,
+}: {
+  user?: any,
+  isMasterPlan?: boolean,
+  onLogout?: () => void,
+  accountMode?: boolean,
+  activeAccountSection?: string,
+  onAccountSectionChange?: (section: string) => void,
+}) {
   return (
     <>
-      <OrganizerDashboardSidebar user={user} />
+      <OrganizerDashboardSidebar
+        user={user}
+        accountMode={accountMode}
+        activeAccountSection={activeAccountSection}
+        onAccountSectionChange={onAccountSectionChange}
+      />
       <LoggedGlobalTopbar user={user} onLogout={onLogout} />
     </>
   )
@@ -3280,15 +3309,25 @@ function ClientSidebar({ user, isMasterPlan = false, onLogout }: { user?: any, i
   )
 }
 
-function OrganizerDashboardSidebar({ user }: { user?: any }) {
+function OrganizerDashboardSidebar({
+  user,
+  accountMode = false,
+  activeAccountSection = 'dados',
+  onAccountSectionChange,
+}: {
+  user?: any,
+  accountMode?: boolean,
+  activeAccountSection?: string,
+  onAccountSectionChange?: (section: string) => void,
+}) {
   const navigate = useNavigate()
   const location = useLocation()
   const [profileSelectorOpen, setProfileSelectorOpen] = useState(false)
   const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
   const [drawerOpen, setDrawerOpen] = useState(false)
   const organizationName = user?.organization?.name || 'Arena PlayFinal'
-  const logoUrl = user?.organization?.logoUrl
   const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
+  const sidebarAvatarUrl = accountAvatarUrl(user, activeProfile)
   const activePlanInfo = profilePlanInfo(activeProfile, user)
   const profileOptions = availableProfileOptions(user)
   const isPath = (path: string) => location.pathname === path
@@ -3322,6 +3361,12 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
   ]
   const settingsItem = menuItems.find(item => item.label === 'Configurações')
   const menuSecondaryItems = menuItems.slice(7).filter(item => item.label !== 'Configurações')
+  const accountNavItems = [
+    { id: 'dados', label: 'Dados pessoais', icon: 'participant' },
+    { id: 'plano', label: 'Meu plano', icon: 'finance' },
+    { id: 'pagamentos', label: 'Métodos de pagamento', icon: 'registration' },
+    { id: 'perfis', label: 'Meus perfis', icon: 'teams' },
+  ]
 
   useEffect(() => {
     setActiveProfile(initialActiveProfile(user))
@@ -3374,6 +3419,23 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
     )
   }
 
+  function renderAccountMenuItem(item: { id: string, label: string, icon: string }) {
+    return (
+      <button
+        key={item.id}
+        className={`organizerNavButton${activeAccountSection === item.id ? ' active' : ''}`}
+        type="button"
+        onClick={() => {
+          onAccountSectionChange?.(item.id)
+          setDrawerOpen(false)
+        }}
+      >
+        <span className={`organizerNavIcon ${item.icon}`} aria-hidden="true" />
+        <span>{item.label}</span>
+      </button>
+    )
+  }
+
   return (
     <>
       <button
@@ -3405,7 +3467,7 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
           onClick={() => setProfileSelectorOpen(open => !open)}
         >
           <span className="organizerProfileAvatar">
-            {logoUrl ? <img src={logoUrl} alt="" /> : <span>{organizationName.slice(0, 2).toUpperCase()}</span>}
+            {sidebarAvatarUrl ? <img src={sidebarAvatarUrl} alt="" /> : <span>{organizationName.slice(0, 2).toUpperCase()}</span>}
           </span>
           <span className="organizerProfileText">
             <strong>Acessando como</strong>
@@ -3431,30 +3493,39 @@ function OrganizerDashboardSidebar({ user }: { user?: any }) {
         </div>
 
         <nav className="organizerNavList" aria-label="Navegação do painel">
-        {menuPrimaryItems.map(renderMenuItem)}
-        <details className="organizerNavDropdown">
-          <summary className="organizerNavDropdownSummary">
-            <span className="organizerNavIcon registration" aria-hidden="true" />
-            <span>Cadastro</span>
-            <i aria-hidden="true" />
-          </summary>
-          <div className="organizerNavDropdownItems" aria-label="Itens de cadastro">
-            {cadastroItems.map(renderMenuItem)}
-          </div>
-        </details>
-        {showArenaPageMenu && (
-          <details className="organizerNavDropdown">
-            <summary className="organizerNavDropdownSummary">
-              <span className="organizerNavIcon document" aria-hidden="true" />
-              <span>Gestão da página</span>
-              <i aria-hidden="true" />
-            </summary>
-            <div className="organizerNavDropdownItems" aria-label="Gestão da página da arena">
-              {arenaPageItems.map(renderMenuItem)}
-            </div>
-          </details>
+        {accountMode ? (
+          <>
+            <span className="organizerNavSectionLabel">Minha conta</span>
+            {accountNavItems.map(renderAccountMenuItem)}
+          </>
+        ) : (
+          <>
+            {menuPrimaryItems.map(renderMenuItem)}
+            <details className="organizerNavDropdown">
+              <summary className="organizerNavDropdownSummary">
+                <span className="organizerNavIcon registration" aria-hidden="true" />
+                <span>Cadastro</span>
+                <i aria-hidden="true" />
+              </summary>
+              <div className="organizerNavDropdownItems" aria-label="Itens de cadastro">
+                {cadastroItems.map(renderMenuItem)}
+              </div>
+            </details>
+            {showArenaPageMenu && (
+              <details className="organizerNavDropdown">
+                <summary className="organizerNavDropdownSummary">
+                  <span className="organizerNavIcon document" aria-hidden="true" />
+                  <span>Gestão da página</span>
+                  <i aria-hidden="true" />
+                </summary>
+                <div className="organizerNavDropdownItems" aria-label="Gestão da página da arena">
+                  {arenaPageItems.map(renderMenuItem)}
+                </div>
+              </details>
+            )}
+            {menuSecondaryItems.map(renderMenuItem)}
+          </>
         )}
-        {menuSecondaryItems.map(renderMenuItem)}
         </nav>
 
         <div className="organizerPlanCard">
@@ -3664,6 +3735,8 @@ function MyAccountPage() {
   const [user, setUser] = useState<any>(null)
   const [activeSection, setActiveSection] = useState('dados')
   const [saving, setSaving] = useState(false)
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null)
   const [form, setForm] = useState<any>({
     firstName: '',
     lastName: '',
@@ -3682,14 +3755,12 @@ function MyAccountPage() {
     country: 'Brasil',
   })
 
-  const accountMenu = [
-    { id: 'dados', label: 'Dados Pessoais' },
-    { id: 'seguranca', label: 'Segurança' },
-    { id: 'planos', label: 'Meus planos' },
-    { id: 'pagamentos', label: 'Métodos de pagamento' },
-    { id: 'foto', label: 'Alterar foto' },
-    { id: 'perfis', label: 'Meus perfis' },
-  ]
+  const accountSectionLabels: Record<string, string> = {
+    dados: 'Dados Pessoais',
+    plano: 'Meu plano',
+    pagamentos: 'Métodos de pagamento',
+    perfis: 'Meus perfis',
+  }
 
   function splitName(name?: string) {
     const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
@@ -3798,6 +3869,57 @@ function MyAccountPage() {
       .finally(() => setSaving(false))
   }
 
+  async function uploadAccountPhoto() {
+    if (!selectedPhotoFile) {
+      alert('Selecione uma imagem para enviar.')
+      return
+    }
+
+    if (!selectedPhotoFile.type.startsWith('image/')) {
+      alert('Selecione um arquivo de imagem.')
+      return
+    }
+
+    if (selectedPhotoFile.size > 3 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 3 MB.')
+      return
+    }
+
+    const data = new FormData()
+    data.append('logo', selectedPhotoFile)
+    setPhotoUploading(true)
+
+    try {
+      const response = await fetch(`${API}/me/logo`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: data,
+      })
+
+      const result = await response.json()
+      if (!response.ok || result.error) {
+        alert(result.error || 'Não foi possível enviar a foto.')
+        return
+      }
+
+      setSelectedPhotoFile(null)
+      setUser((current: any) => ({
+        ...current,
+        organization: {
+          ...current?.organization,
+          logoUrl: result.logoUrl,
+        },
+      }))
+      alert('Foto atualizada.')
+    } catch {
+      alert('Falha de conexão ao enviar a foto.')
+    } finally {
+      setPhotoUploading(false)
+    }
+  }
+
   useEffect(() => {
     if (!isLoggedIn()) {
       goHome()
@@ -3808,20 +3930,46 @@ function MyAccountPage() {
   }, [])
 
   const initials = String(`${form.firstName?.[0] || ''}${form.lastName?.[0] || ''}` || 'PF').toUpperCase()
+  const avatarUrl = accountAvatarUrl(user, initialActiveProfile(user))
 
   function accountSectionPanel() {
     if (activeSection === 'dados') {
       return (
-        <div className="accountFormGrid">
-          <label className="accountFormField">
-            <span>Nome</span>
-            <input value={form.firstName} onChange={e => updateAccountField('firstName', e.target.value)} />
-          </label>
+        <div className="accountPersonalGrid">
+          <div className="accountAvatarBlock">
+            <div className="accountAvatar">
+              {avatarUrl ? <img src={avatarUrl} alt="" /> : initials}
+            </div>
+            <label className="accountPhotoButton">
+              Alterar foto
+              <input
+                type="file"
+                accept="image/*"
+                disabled={photoUploading}
+                onChange={event => setSelectedPhotoFile(event.target.files?.[0] || null)}
+              />
+            </label>
+            {selectedPhotoFile && <span className="accountPhotoFile">{selectedPhotoFile.name}</span>}
+            <button
+              className="accountPhotoSaveButton"
+              type="button"
+              disabled={!selectedPhotoFile || photoUploading}
+              onClick={uploadAccountPhoto}
+            >
+              {photoUploading ? 'Enviando...' : 'Salvar foto'}
+            </button>
+          </div>
 
-          <label className="accountFormField">
-            <span>Sobrenome</span>
-            <input value={form.lastName} onChange={e => updateAccountField('lastName', e.target.value)} />
-          </label>
+          <div className="accountFormGrid">
+            <label className="accountFormField">
+              <span>Nome</span>
+              <input value={form.firstName} onChange={e => updateAccountField('firstName', e.target.value)} />
+            </label>
+
+            <label className="accountFormField">
+              <span>Sobrenome</span>
+              <input value={form.lastName} onChange={e => updateAccountField('lastName', e.target.value)} />
+            </label>
 
           <label className="accountFormField">
             <span>E-mail</span>
@@ -3901,19 +4049,14 @@ function MyAccountPage() {
               ))}
             </select>
           </label>
+          </div>
         </div>
       )
     }
 
     const sectionActions: Record<string, { title: string, text: string, action?: string, onClick?: () => void }> = {
-      seguranca: {
-        title: 'Segurança',
-        text: 'Gerencie senha, validações de acesso e proteção da conta.',
-        action: 'Abrir Meu Perfil',
-        onClick: () => navigate('/app/perfil'),
-      },
-      planos: {
-        title: 'Meus planos',
+      plano: {
+        title: 'Meu plano',
         text: 'Acompanhe assinatura, plano atual e opções disponíveis para sua conta.',
         action: 'Ver planos',
         onClick: () => navigate('/upgrade'),
@@ -3921,12 +4064,6 @@ function MyAccountPage() {
       pagamentos: {
         title: 'Métodos de pagamento',
         text: 'Os cartões e cobranças da conta ficam organizados nesta área.',
-      },
-      foto: {
-        title: 'Alterar foto',
-        text: 'Atualize a imagem do usuário ou a logo vinculada ao perfil ativo.',
-        action: 'Abrir Meu Perfil',
-        onClick: () => navigate('/app/perfil'),
       },
       perfis: {
         title: 'Meus perfis',
@@ -3952,50 +4089,27 @@ function MyAccountPage() {
 
   return (
     <div className="saasLayout">
-      <ClientSidebar user={user} isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+      <ClientSidebar
+        user={user}
+        isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'}
+        accountMode
+        activeAccountSection={activeSection}
+        onAccountSectionChange={setActiveSection}
+      />
 
       <main className="saasMain">
-        <section className="accountPageShell">
-          <aside className="accountPageMenu" aria-label="Menu minha conta">
-            <div>
-              <h2>Minha Conta</h2>
-              <p>Gerencie dados pessoais e preferências.</p>
-            </div>
-            <nav>
-              {accountMenu.map(item => (
-                <button
-                  key={item.id}
-                  className={activeSection === item.id ? 'active' : ''}
-                  type="button"
-                  onClick={() => setActiveSection(item.id)}
-                >
-                  <span aria-hidden="true" />
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </aside>
-
+        <section className="accountPageShell accountPageContentOnly">
           <section className="accountPagePanel">
             <div className="accountPanelHeader">
               <div>
-                <h1>{activeSection === 'dados' ? 'Dados Pessoais' : accountMenu.find(item => item.id === activeSection)?.label}</h1>
+                <h1>{accountSectionLabels[activeSection] || 'Minha Conta'}</h1>
                 <p>Complete seu cadastro para deixar acesso, pagamentos e perfis prontos para uso.</p>
               </div>
               <span className="accountPanelStatus">Conta ativa</span>
             </div>
 
-            <div className="accountPageContent">
-              <div className="accountAvatarBlock">
-                <div className="accountAvatar">
-                  {user?.organization?.logoUrl ? <img src={user.organization.logoUrl} alt="" /> : initials}
-                </div>
-                <button type="button" onClick={() => setActiveSection('foto')}>Alterar foto</button>
-              </div>
-
-              <div className="accountSectionContent">
-                {accountSectionPanel()}
-              </div>
+            <div className="accountSectionContent">
+              {accountSectionPanel()}
             </div>
 
             {activeSection === 'dados' && (
@@ -4695,6 +4809,7 @@ function Dashboard({ user }: any) {
   const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
   const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
   const activeProfileInitials = activeProfileLabel.slice(0, 2).toUpperCase()
+  const dashboardAvatarUrl = accountAvatarUrl(user, activeProfile)
   const topbarUserName = user?.name || user?.fullName || user?.organization?.name || 'Usuário PlayFinal'
   const activePlanInfo = profilePlanInfo(activeProfile, user)
   const tournamentFilter = new URLSearchParams(pageLocation.search).get('torneios') || 'todos'
@@ -4945,7 +5060,7 @@ function Dashboard({ user }: any) {
                 onClick={() => setProfileMenuOpen(open => !open)}
               >
               <span className="organizerTopbarAvatar">
-                {user?.organization?.logoUrl && activeProfile !== 'PLAYER' ? <img src={user.organization.logoUrl} alt="" /> : activeProfileInitials}
+                {dashboardAvatarUrl ? <img src={dashboardAvatarUrl} alt="" /> : activeProfileInitials}
               </span>
               <span>
                 <strong>{topbarUserName}</strong>

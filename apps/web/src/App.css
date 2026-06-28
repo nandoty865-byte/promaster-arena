@@ -525,6 +525,10 @@ body {
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35), 0 0 44px rgba(166, 255, 0, 0.05);
 }
 
+.accountPageShell.accountPageContentOnly {
+  grid-template-columns: 1fr;
+}
+
 .accountPageMenu {
   padding: 18px 10px;
   border-right: 1px solid rgba(38, 48, 58, 0.95);
@@ -628,6 +632,13 @@ body {
   align-items: start;
 }
 
+.accountPersonalGrid {
+  display: grid;
+  grid-template-columns: 136px minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+
 .accountAvatarBlock {
   display: grid;
   justify-items: center;
@@ -656,6 +667,8 @@ body {
 }
 
 .accountAvatarBlock button,
+.accountPhotoButton,
+.accountPhotoSaveButton,
 .accountEmptyPanel button {
   width: auto;
   min-height: 36px;
@@ -667,6 +680,30 @@ body {
   font-size: 12px;
   font-weight: 900;
   cursor: pointer;
+}
+
+.accountPhotoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.accountPhotoButton input {
+  display: none;
+}
+
+.accountPhotoSaveButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.accountPhotoFile {
+  max-width: 130px;
+  color: #8f99aa;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  word-break: break-word;
 }
 
 .accountSectionContent {
@@ -4850,6 +4887,15 @@ button:hover {
   gap: 6px;
 }
 
+.organizerNavSectionLabel {
+  display: block;
+  margin: 4px 12px 8px;
+  color: #8D96AA;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .organizerNavButton {
   position: relative;
   overflow: hidden;
@@ -4913,6 +4959,16 @@ button:hover {
   background: transparent;
   color: #A6FF00;
   opacity: 1;
+}
+
+.organizerNavButton.active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.organizerNavButton.active::before {
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 .organizerNavButton:hover::after {
@@ -12487,6 +12543,7 @@ button:hover {
 
   .accountPageShell,
   .accountPageContent,
+  .accountPersonalGrid,
   .accountFormGrid {
     grid-template-columns: 1fr;
   }
