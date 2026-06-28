@@ -3987,7 +3987,21 @@ function MyAccountPage() {
         body: data,
       })
 
-      const result = await response.json()
+      const responseText = await response.text()
+      let result: any = {}
+
+      try {
+        result = responseText ? JSON.parse(responseText) : {}
+      } catch {
+        result = {
+          error: response.status === 404
+            ? 'A rota de upload de avatar ainda não está ativa no servidor. Rode o deploy completo da API.'
+            : response.status === 413
+              ? 'A imagem foi recusada pelo servidor por limite de tamanho. Tente uma imagem menor.'
+              : responseText.slice(0, 160) || 'Resposta inválida do servidor.',
+        }
+      }
+
       if (!response.ok || result.error) {
         alert(result.error || 'Não foi possível enviar a foto.')
         return
@@ -4023,7 +4037,7 @@ function MyAccountPage() {
       })
 
       const previewSize = 280
-      const outputSize = 800
+      const outputSize = 512
       const canvas = document.createElement('canvas')
       canvas.width = outputSize
       canvas.height = outputSize
@@ -4048,7 +4062,7 @@ function MyAccountPage() {
 
       context.drawImage(image, drawX, drawY, drawWidth, drawHeight)
 
-      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/webp', 0.9))
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/webp', 0.82))
       if (!blob) {
         alert('Não foi possível otimizar a imagem.')
         return
