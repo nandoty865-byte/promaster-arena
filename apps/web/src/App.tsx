@@ -2918,7 +2918,7 @@ function breadcrumbPathForLabel(label: string) {
   const paths: Record<string, string> = {
     Home: '/app',
     Dashboard: '/app',
-    Torneios: '/app?torneios=todos',
+    Torneios: '/campeonatos',
     Conta: '/app/minha-conta?secao=dados',
     'Minha Conta': '/app/minha-conta?secao=dados',
     'Meu Perfil': '/app/minha-conta?secao=perfis',
@@ -3382,7 +3382,7 @@ function OrganizerDashboardSidebar({
   const showArenaPageMenu = activeProfile === 'ARENA_OWNER'
   const menuItems = [
     { label: 'Home', icon: 'home', path: '/app', active: isPath('/app') && !activeTournamentFilter },
-    { label: 'Torneios', icon: 'trophy', path: '/app?torneios=todos', active: (isPath('/app') && Boolean(activeTournamentFilter)) || (isPath('/campeonatos') && !activePanel), scrollTarget: 'meus-torneios' },
+    { label: 'Torneios', icon: 'trophy', path: '/campeonatos', active: isPath('/campeonatos') && !activePanel },
     { label: 'Inscrições', icon: 'clipboard', path: '/campeonatos/inscricoes', active: isPath('/campeonatos/inscricoes') },
     { label: 'Partidas', icon: 'match', path: '/campeonatos?painel=partidas', active: isPath('/campeonatos') && activePanel === 'partidas', live: true },
     { label: 'Participantes', icon: 'participant', path: '/campeonatos' },

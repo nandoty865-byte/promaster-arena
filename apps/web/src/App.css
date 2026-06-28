@@ -5170,7 +5170,8 @@ button:hover {
   z-index: 2;
 }
 
-.organizerNavButton:hover {
+.organizerNavButton:hover,
+.organizerNavButton:focus-visible {
   background: transparent;
   color: #A6FF00;
   opacity: 1;
@@ -5183,21 +5184,23 @@ button:hover {
 }
 
 .organizerNavButton.active::after {
-  opacity: 1;
-  transform: scaleX(1);
+  opacity: 0;
+  transform: scaleX(.18);
 }
 
 .organizerNavButton.active::before {
-  opacity: 1;
-  transform: scaleY(1);
+  opacity: 0;
+  transform: scaleY(.35);
 }
 
-.organizerNavButton:hover::after {
+.organizerNavButton:hover::after,
+.organizerNavButton:focus-visible::after {
   opacity: 1;
   transform: scaleX(1);
 }
 
-.organizerNavButton:hover::before {
+.organizerNavButton:hover::before,
+.organizerNavButton:focus-visible::before {
   opacity: 1;
   transform: scaleY(1);
 }
@@ -5613,12 +5616,18 @@ button:hover {
 
 .organizerNavButton:hover .organizerNavIcon,
 .organizerNavButton:hover .organizerNavVsIcon,
-.organizerNavButton.active .organizerNavIcon,
-.organizerNavButton.active .organizerNavVsIcon,
+.organizerNavButton:focus-visible .organizerNavIcon,
+.organizerNavButton:focus-visible .organizerNavVsIcon,
 .organizerNavDropdownSummary:hover .organizerNavIcon,
 .organizerNavDropdown[open] .organizerNavDropdownSummary .organizerNavIcon {
   color: #A6FF00;
   filter: drop-shadow(0 0 8px rgba(166, 255, 0, .42));
+}
+
+.organizerNavButton.active .organizerNavIcon,
+.organizerNavButton.active .organizerNavVsIcon {
+  color: #A6FF00;
+  filter: none;
 }
 
 .organizerNavIcon.registration::before,
@@ -5879,49 +5888,24 @@ button:hover {
   opacity: 1;
 }
 
-.organizerTopbarIconButton::before,
-.organizerTopbarIconButton::after {
+.organizerTopbarIconButton::before {
   content: "";
   position: absolute;
-  border-color: currentColor;
+  inset: 7px;
+  background: center / contain no-repeat;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.22));
+}
+
+.organizerTopbarIconButton::after {
+  content: none;
 }
 
 .organizerTopbarIconButton.bell::before {
-  left: 10px;
-  top: 8px;
-  width: 14px;
-  height: 15px;
-  border: 2px solid currentColor;
-  border-bottom: 0;
-  border-radius: 999px 999px 5px 5px;
-}
-
-.organizerTopbarIconButton.bell::after {
-  left: 14px;
-  bottom: 7px;
-  width: 7px;
-  height: 4px;
-  border-bottom: 2px solid currentColor;
-  border-radius: 999px;
+  background-image: url('/topbar-icon-bell.png');
 }
 
 .organizerTopbarIconButton.mail::before {
-  left: 8px;
-  top: 10px;
-  width: 19px;
-  height: 14px;
-  border: 2px solid currentColor;
-  border-radius: 3px;
-}
-
-.organizerTopbarIconButton.mail::after {
-  left: 10px;
-  top: 12px;
-  width: 15px;
-  height: 8px;
-  border-left: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(-45deg) skew(10deg, 10deg);
+  background-image: url('/topbar-icon-mail.png');
 }
 
 .organizerTopbarIconButton span {
