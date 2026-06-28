@@ -666,6 +666,19 @@ body {
   object-fit: cover;
 }
 
+.accountAvatarButton {
+  width: 96px;
+  height: 96px;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.accountAvatarButton:hover {
+  border-color: rgba(166, 255, 0, 0.62);
+  box-shadow: 0 0 30px rgba(166, 255, 0, 0.22);
+}
+
 .accountAvatarBlock button,
 .accountPhotoButton,
 .accountPhotoSaveButton,
@@ -690,6 +703,18 @@ body {
 
 .accountPhotoButton input {
   display: none;
+}
+
+.accountPhotoInput {
+  display: none;
+}
+
+.accountAvatarBlock .accountAvatarButton {
+  width: 96px;
+  height: 96px;
+  min-height: 96px;
+  padding: 0;
+  border-radius: 50%;
 }
 
 .accountPhotoSaveButton:disabled {
@@ -843,6 +868,22 @@ body {
   transform-origin: center;
 }
 
+.imageEditorPlaceholder {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(6, 7, 10, 0.34);
+  color: #a6ff00;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
 .imageEditorMask {
   position: absolute;
   inset: 0;
@@ -854,7 +895,7 @@ body {
 .imageEditorControls {
   width: min(360px, 100%);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 14px;
   align-items: end;
 }
@@ -5771,6 +5812,41 @@ button:hover {
   color: #8D96AA;
   font-size: 12px;
   font-weight: 400;
+}
+
+.topbarBreadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  color: #8D96AA;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.topbarBreadcrumb span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.topbarBreadcrumb em {
+  color: #5f6a7d;
+  font-style: normal;
+}
+
+.topbarBreadcrumb button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #8D96AA;
+  font: inherit;
+  cursor: pointer;
+}
+
+.topbarBreadcrumb button:hover,
+.topbarBreadcrumb button.current {
+  color: #f5f7fa;
 }
 
 .organizerDashboardActions {

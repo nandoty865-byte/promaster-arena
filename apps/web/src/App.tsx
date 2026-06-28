@@ -117,6 +117,14 @@ const COUNTRY_OPTIONS = [
   'Outro',
 ]
 
+const ACCOUNT_SECTION_LABELS: Record<string, string> = {
+  dados: 'Dados pessoais',
+  seguranca: 'Segurança',
+  plano: 'Meu plano',
+  pagamentos: 'Métodos de pagamento',
+  perfis: 'Meus perfis',
+}
+
 function youtubeEmbedUrl(url?: string) {
   if (!url) return ''
 
@@ -2835,6 +2843,7 @@ function loggedPageMeta(pathname: string, search: string) {
   const params = new URLSearchParams(search)
   const defaultPanel = params.get('painel') || ''
   const tournamentFilter = params.get('torneios') || ''
+  const accountSection = params.get('secao') || 'dados'
 
   if (pathname === '/app' && tournamentFilter) {
     return { title: 'Torneios', breadcrumb: 'Home > Torneios' }
@@ -2845,7 +2854,16 @@ function loggedPageMeta(pathname: string, search: string) {
   }
 
   if (pathname === '/app/minha-conta') {
-    return { title: 'Minha Conta', breadcrumb: 'Home > Conta > Minha Conta' }
+    const sectionLabel = ACCOUNT_SECTION_LABELS[accountSection] || ACCOUNT_SECTION_LABELS.dados
+    return {
+      title: sectionLabel,
+      breadcrumb: `Home > Minha Conta > ${sectionLabel}`,
+      breadcrumbItems: [
+        { label: 'Home', path: '/app' },
+        { label: 'Minha Conta', path: '/app/minha-conta?secao=dados' },
+        { label: sectionLabel, path: `/app/minha-conta?secao=${ACCOUNT_SECTION_LABELS[accountSection] ? accountSection : 'dados'}` },
+      ],
+    }
   }
 
   if (pathname === '/app/usuarios') {
@@ -2896,6 +2914,34 @@ function loggedPageMeta(pathname: string, search: string) {
   return { title: 'Dashboard', breadcrumb: 'Home > Dashboard' }
 }
 
+function breadcrumbPathForLabel(label: string) {
+  const paths: Record<string, string> = {
+    Home: '/app',
+    Dashboard: '/app',
+    Torneios: '/app?torneios=todos',
+    Conta: '/app/minha-conta?secao=dados',
+    'Minha Conta': '/app/minha-conta?secao=dados',
+    'Meu Perfil': '/app/minha-conta?secao=perfis',
+    Usuários: '/app/usuarios',
+    Financeiro: '/campeonatos/pagamentos',
+    Pagamentos: '/campeonatos/pagamentos',
+    Planos: '/upgrade',
+    Criar: '/criar-torneio',
+    Inscrições: '/campeonatos/inscricoes',
+    Cadastro: '/campeonatos/arenas',
+    Arenas: '/campeonatos/arenas',
+    Etapas: '/campeonatos/etapas',
+    'Circuito PlayFinal': '/campeonatos/circuito',
+    Circuito: '/campeonatos/circuito',
+    Partidas: '/campeonatos?painel=partidas',
+    Ranking: '/campeonatos?painel=ranking',
+    Relatórios: '/campeonatos?painel=relatorios',
+    Patrocinadores: '/campeonatos?painel=patrocinadores',
+  }
+
+  return paths[label] || '/app'
+}
+
 function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => void }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -2904,6 +2950,10 @@ function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => v
   const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Usuário'
   const activePlanInfo = profilePlanInfo(activeProfile, user)
   const meta = loggedPageMeta(location.pathname, location.search)
+  const breadcrumbItems = meta.breadcrumbItems || String(meta.breadcrumb || '')
+    .split(' > ')
+    .filter(Boolean)
+    .map(label => ({ label, path: breadcrumbPathForLabel(label) }))
   const activeProfileInitials = (activeProfileLabel || 'PF').slice(0, 2).toUpperCase()
   const topbarAvatarUrl = accountAvatarUrl(user, activeProfile)
   const topbarUserName = activeProfile === 'PLAYER'
@@ -2939,7 +2989,24 @@ function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => v
     <header className="organizerDashboardTopbar loggedGlobalTopbar">
       <div className="organizerTopbarTitle" aria-label="Caminho da página">
         <h1>{meta.title}</h1>
-        <span>{meta.breadcrumb}</span>
+        <nav className="topbarBreadcrumb" aria-label="Breadcrumb">
+          {breadcrumbItems.map((item, index) => {
+            const isLast = index === breadcrumbItems.length - 1
+            return (
+              <span key={`${item.label}-${index}`}>
+                {index > 0 && <em aria-hidden="true">&gt;</em>}
+                <button
+                  type="button"
+                  className={isLast ? 'current' : ''}
+                  aria-current={isLast ? 'page' : undefined}
+                  onClick={() => navigate(item.path)}
+                >
+                  {item.label}
+                </button>
+              </span>
+            )
+          })}
+        </nav>
       </div>
 
       <div className="organizerDashboardActions">
@@ -3340,6 +3407,7 @@ function OrganizerDashboardSidebar({
   const settingsItem = menuItems.find(item => item.label === 'Configurações')
   const menuSecondaryItems = menuItems.slice(7).filter(item => item.label !== 'Configurações')
   const accountNavItems = [
+    { id: 'home', label: 'Home', icon: 'home', path: '/app' },
     { id: 'dados', label: 'Dados pessoais', icon: 'participant' },
     { id: 'seguranca', label: 'Segurança', icon: 'settings' },
     { id: 'plano', label: 'Meu plano', icon: 'finance' },
@@ -3398,13 +3466,18 @@ function OrganizerDashboardSidebar({
     )
   }
 
-  function renderAccountMenuItem(item: { id: string, label: string, icon: string }) {
+  function renderAccountMenuItem(item: { id: string, label: string, icon: string, path?: string }) {
     return (
       <button
         key={item.id}
-        className={`organizerNavButton${activeAccountSection === item.id ? ' active' : ''}`}
+        className={`organizerNavButton${activeAccountSection === item.id && item.id !== 'home' ? ' active' : ''}`}
         type="button"
         onClick={() => {
+          if (item.path) {
+            navigate(item.path)
+            setDrawerOpen(false)
+            return
+          }
           onAccountSectionChange?.(item.id)
           setDrawerOpen(false)
         }}
@@ -3724,6 +3797,7 @@ function MyAccountPage() {
   const [editorOffset, setEditorOffset] = useState({ x: 0, y: 0 })
   const [editorDragging, setEditorDragging] = useState(false)
   const editorDragRef = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 })
+  const accountPhotoInputRef = useRef<HTMLInputElement | null>(null)
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -3746,14 +3820,6 @@ function MyAccountPage() {
     state: '',
     country: 'Brasil',
   })
-
-  const accountSectionLabels: Record<string, string> = {
-    dados: 'Dados Pessoais',
-    seguranca: 'Segurança',
-    plano: 'Meu plano',
-    pagamentos: 'Métodos de pagamento',
-    perfis: 'Meus perfis',
-  }
 
   function splitName(name?: string) {
     const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
@@ -3806,7 +3872,7 @@ function MyAccountPage() {
   }
 
   function changeAccountSection(section: string) {
-    const nextSection = accountSectionLabels[section] ? section : 'dados'
+    const nextSection = ACCOUNT_SECTION_LABELS[section] ? section : 'dados'
     setActiveSection(nextSection)
     navigate(`/app/minha-conta?secao=${nextSection}`, { replace: true })
   }
@@ -3922,6 +3988,10 @@ function MyAccountPage() {
     setEditorZoom(1)
     setEditorOffset({ x: 0, y: 0 })
     setEditorDragging(false)
+  }
+
+  function chooseAccountPhoto() {
+    accountPhotoInputRef.current?.click()
   }
 
   function openAccountPhotoEditor(file?: File | null) {
@@ -4084,7 +4154,7 @@ function MyAccountPage() {
   }, [])
 
   useEffect(() => {
-    const section = accountSectionLabels[sectionFromUrl] ? sectionFromUrl : 'dados'
+    const section = ACCOUNT_SECTION_LABELS[sectionFromUrl] ? sectionFromUrl : 'dados'
     setActiveSection(section)
   }, [sectionFromUrl])
 
@@ -4175,21 +4245,23 @@ function MyAccountPage() {
       return (
         <div className="accountPersonalGrid">
           <div className="accountAvatarBlock">
-            <div className="accountAvatar">
+            <button className="accountAvatar accountAvatarButton" type="button" onClick={chooseAccountPhoto} aria-label="Alterar foto do perfil">
               {avatarUrl ? <img src={avatarUrl} alt="" /> : initials}
-            </div>
-            <label className="accountPhotoButton">
+            </button>
+            <input
+              ref={accountPhotoInputRef}
+              className="accountPhotoInput"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={photoUploading}
+              onChange={event => {
+                openAccountPhotoEditor(event.target.files?.[0] || null)
+                event.target.value = ''
+              }}
+            />
+            <button className="accountPhotoButton" type="button" onClick={chooseAccountPhoto} disabled={photoUploading}>
               Alterar foto
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={photoUploading}
-                onChange={event => {
-                  openAccountPhotoEditor(event.target.files?.[0] || null)
-                  event.target.value = ''
-                }}
-              />
-            </label>
+            </button>
             <span className="accountPhotoHint">JPG, PNG ou WebP até 5 MB.</span>
           </div>
 
@@ -4417,7 +4489,7 @@ function MyAccountPage() {
           <section className="accountPagePanel">
             <div className="accountPanelHeader">
               <div>
-                <h1>{accountSectionLabels[activeSection] || 'Minha Conta'}</h1>
+                <h1>{ACCOUNT_SECTION_LABELS[activeSection] || 'Minha Conta'}</h1>
                 <p>Complete seu cadastro para deixar acesso, pagamentos e perfis prontos para uso.</p>
               </div>
               <span className="accountPanelStatus">Conta ativa</span>
@@ -4476,6 +4548,11 @@ function MyAccountPage() {
                     }}
                   />
                 )}
+                {!editorImageUrl && (
+                  <button className="imageEditorPlaceholder" type="button" onClick={chooseAccountPhoto}>
+                    Escolher foto
+                  </button>
+                )}
                 <span className="imageEditorMask" />
               </div>
 
@@ -4497,6 +4574,9 @@ function MyAccountPage() {
                   setEditorOffset({ x: 0, y: 0 })
                 }}>
                   Centralizar
+                </button>
+                <button type="button" onClick={chooseAccountPhoto}>
+                  Trocar imagem
                 </button>
               </div>
             </div>
