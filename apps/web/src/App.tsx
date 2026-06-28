@@ -2830,13 +2830,47 @@ function profilePlanInfo(role: string, user: any) {
   return planByRole[role] || planByRole.ORGANIZER
 }
 
+function initialsFromName(value: any, fallback = 'PF') {
+  const parts = String(value || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (parts.length === 0) return fallback
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+
+  return `${parts[0][0] || ''}${parts[parts.length - 1][0] || ''}`.toUpperCase() || fallback
+}
+
+function personalAvatarUrl(user: any) {
+  if (!user) return ''
+  return user.avatarUrl || user.photoUrl || user.profilePhotoUrl || user.playerProfile?.photoUrl || user.playerProfile?.avatarUrl || ''
+}
+
 function accountAvatarUrl(user: any, activeProfile?: string) {
   if (!user) return ''
   if (activeProfile === 'PLAYER') {
     return user.playerProfile?.photoUrl || user.playerProfile?.avatarUrl || user.avatarUrl || user.photoUrl || user.profilePhotoUrl || ''
   }
 
+  if (activeProfile === 'ARENA_OWNER') {
+    return user.organization?.logoUrl || user.arena?.logoUrl || ''
+  }
+
+  if (activeProfile === 'ORGANIZER') {
+    return user.avatarUrl || user.photoUrl || user.profilePhotoUrl || user.organization?.logoUrl || ''
+  }
+
   return user.avatarUrl || user.photoUrl || user.profilePhotoUrl || user.organization?.logoUrl || ''
+}
+
+function profileAvatarInitials(user: any, activeProfile?: string) {
+  if (activeProfile === 'ARENA_OWNER') return 'AR'
+  if (activeProfile === 'PLAYER') return initialsFromName(user?.playerProfile?.nickname || user?.name, 'JG')
+  if (activeProfile === 'ORGANIZER') return initialsFromName(user?.name || user?.organization?.name, 'OR')
+  if (activeProfile === 'REFEREE') return initialsFromName(user?.name, 'RF')
+
+  return initialsFromName(user?.name || user?.organization?.name, 'PF')
 }
 
 function loggedPageMeta(pathname: string, search: string) {
@@ -2954,7 +2988,7 @@ function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => v
     .split(' > ')
     .filter(Boolean)
     .map(label => ({ label, path: breadcrumbPathForLabel(label) }))
-  const activeProfileInitials = (activeProfileLabel || 'PF').slice(0, 2).toUpperCase()
+  const activeProfileInitials = profileAvatarInitials(user, activeProfile)
   const topbarAvatarUrl = accountAvatarUrl(user, activeProfile)
   const topbarUserName = activeProfile === 'PLAYER'
     ? user?.playerProfile?.nickname || user?.name || 'Jogador PlayFinal'
@@ -3370,7 +3404,6 @@ function OrganizerDashboardSidebar({
   const [profileSelectorOpen, setProfileSelectorOpen] = useState(false)
   const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const organizationName = user?.organization?.name || 'Arena PlayFinal'
   const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
   const sidebarAvatarUrl = accountAvatarUrl(user, activeProfile)
   const activePlanInfo = profilePlanInfo(activeProfile, user)
@@ -3395,10 +3428,17 @@ function OrganizerDashboardSidebar({
     { label: 'Patrocinadores', icon: 'sponsors', path: '/campeonatos?painel=patrocinadores', active: isPath('/campeonatos') && activePanel === 'patrocinadores' },
     { label: 'Configurações', icon: 'settings', path: '/app/minha-conta', active: isPath('/app/minha-conta') || isPath('/app/perfil') || isPath('/app/usuarios') },
   ]
-  const menuPrimaryItems = menuItems.slice(0, 4)
+  const createTournamentItem = { label: 'Criar Torneio', icon: 'registration', path: '/criar-torneio', active: isPath('/criar-torneio') }
+  const arenaCircuitItem = {
+    label: 'Circuito PlayFinal',
+    icon: 'trophy',
+    path: '/campeonatos/circuito',
+    active: isPath('/campeonatos/circuito') || activePanel === 'circuito',
+  }
+  const menuPrimaryItems = [...menuItems.slice(0, 2), createTournamentItem, ...menuItems.slice(2, 4)]
   const cadastroItems = menuItems.slice(4, 7)
   const arenaPageItems = [
-    { label: 'Configuração', icon: 'settings', path: '/app/minha-conta?secao=perfis', active: location.search.includes('gestaoPagina=configuracao') },
+    { label: 'Configuração', icon: 'settings', path: '/app/minha-conta?secao=dados&arenaConfig=identidade', active: location.pathname === '/app/minha-conta' && location.search.includes('arenaConfig=identidade') },
     { label: 'Conteúdos', icon: 'document', path: '/app/minha-conta?secao=perfis', active: location.search.includes('gestaoPagina=conteudos') },
     { label: 'Páginas', icon: 'registration', path: '/app/minha-conta?secao=perfis', active: location.search.includes('gestaoPagina=paginas') },
     { label: 'Popups', icon: 'message', path: '/app/minha-conta?secao=perfis', active: location.search.includes('gestaoPagina=popups') },
@@ -3519,7 +3559,7 @@ function OrganizerDashboardSidebar({
           onClick={() => setProfileSelectorOpen(open => !open)}
         >
           <span className="organizerProfileAvatar">
-            {sidebarAvatarUrl ? <img src={sidebarAvatarUrl} alt="" /> : <span>{organizationName.slice(0, 2).toUpperCase()}</span>}
+            {sidebarAvatarUrl ? <img src={sidebarAvatarUrl} alt="" /> : <span>{profileAvatarInitials(user, activeProfile)}</span>}
           </span>
           <span className="organizerProfileText">
             <strong>Acessando como</strong>
@@ -3564,16 +3604,19 @@ function OrganizerDashboardSidebar({
               </div>
             </details>
             {showArenaPageMenu && (
-              <details className="organizerNavDropdown">
-                <summary className="organizerNavDropdownSummary">
-                  <span className="organizerNavIcon document" aria-hidden="true" />
-                  <span>Gestão da página</span>
-                  <i aria-hidden="true" />
-                </summary>
-                <div className="organizerNavDropdownItems" aria-label="Gestão da página da arena">
-                  {arenaPageItems.map(renderMenuItem)}
-                </div>
-              </details>
+              <>
+                {renderMenuItem(arenaCircuitItem)}
+                <details className="organizerNavDropdown">
+                  <summary className="organizerNavDropdownSummary">
+                    <span className="organizerNavIcon document" aria-hidden="true" />
+                    <span>Gestão da página</span>
+                    <i aria-hidden="true" />
+                  </summary>
+                  <div className="organizerNavDropdownItems" aria-label="Gestão da página da arena">
+                    {arenaPageItems.map(renderMenuItem)}
+                  </div>
+                </details>
+              </>
             )}
             {menuSecondaryItems.map(renderMenuItem)}
           </>
@@ -3790,6 +3833,7 @@ function MyAccountPage() {
   const [activeSection, setActiveSection] = useState(sectionFromUrl)
   const [saving, setSaving] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
   const [imageEditorOpen, setImageEditorOpen] = useState(false)
   const [editorImageUrl, setEditorImageUrl] = useState('')
   const [editorImageSize, setEditorImageSize] = useState({ width: 0, height: 0 })
@@ -3798,6 +3842,7 @@ function MyAccountPage() {
   const [editorDragging, setEditorDragging] = useState(false)
   const editorDragRef = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 })
   const accountPhotoInputRef = useRef<HTMLInputElement | null>(null)
+  const arenaLogoInputRef = useRef<HTMLInputElement | null>(null)
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -3994,6 +4039,10 @@ function MyAccountPage() {
     accountPhotoInputRef.current?.click()
   }
 
+  function chooseArenaLogo() {
+    arenaLogoInputRef.current?.click()
+  }
+
   function openAccountPhotoEditor(file?: File | null) {
     if (!file) return
 
@@ -4092,6 +4141,69 @@ function MyAccountPage() {
     }
   }
 
+  async function uploadArenaLogo(file?: File | null) {
+    if (!file) return
+
+    const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!acceptedTypes.includes(file.type)) {
+      alert('Formato não aceito. Use JPG, PNG ou WebP.')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem é muito grande. Envie um arquivo de até 5 MB.')
+      return
+    }
+
+    const data = new FormData()
+    data.append('logo', file)
+    setLogoUploading(true)
+
+    try {
+      const response = await fetch(`${API}/me/logo`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: data,
+      })
+
+      const responseText = await response.text()
+      let result: any = {}
+
+      try {
+        result = responseText ? JSON.parse(responseText) : {}
+      } catch {
+        result = {
+          error: response.status === 404
+            ? 'A rota de upload de logo ainda não está ativa no servidor. Rode o deploy completo da API.'
+            : response.status === 413
+              ? 'A imagem foi recusada pelo servidor por limite de tamanho. Tente uma imagem menor.'
+              : responseText.slice(0, 160) || 'Resposta inválida do servidor.',
+        }
+      }
+
+      if (!response.ok || result.error) {
+        alert(result.error || 'Não foi possível enviar o logo da arena.')
+        return
+      }
+
+      setUser((current: any) => ({
+        ...current,
+        organization: {
+          ...(current?.organization || {}),
+          ...(result.organization || {}),
+          logoUrl: result.logoUrl || result.organization?.logoUrl,
+        },
+      }))
+      alert('Logo da arena atualizado.')
+    } catch {
+      alert('Falha de conexão ao enviar o logo da arena.')
+    } finally {
+      setLogoUploading(false)
+    }
+  }
+
   async function saveEditedAccountPhoto() {
     if (!editorImageUrl) {
       alert('Selecione uma imagem para enviar.')
@@ -4167,7 +4279,9 @@ function MyAccountPage() {
   }, [editorImageUrl])
 
   const initials = String(`${form.firstName?.[0] || ''}${form.lastName?.[0] || ''}` || 'PF').toUpperCase()
-  const avatarUrl = accountAvatarUrl(user, initialActiveProfile(user))
+  const avatarUrl = personalAvatarUrl(user)
+  const hasArenaProfile = profileRoles(user).includes('ARENA_OWNER')
+  const arenaLogoUrl = user?.organization?.logoUrl || ''
   const editorPreviewSize = 280
   const editorBaseScale = editorImageSize.width && editorImageSize.height
     ? Math.max(editorPreviewSize / editorImageSize.width, editorPreviewSize / editorImageSize.height)
@@ -4244,25 +4358,50 @@ function MyAccountPage() {
     if (activeSection === 'dados') {
       return (
         <div className="accountPersonalGrid">
-          <div className="accountAvatarBlock">
-            <button className="accountAvatar accountAvatarButton" type="button" onClick={chooseAccountPhoto} aria-label="Alterar foto do perfil">
-              {avatarUrl ? <img src={avatarUrl} alt="" /> : initials}
-            </button>
-            <input
-              ref={accountPhotoInputRef}
-              className="accountPhotoInput"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              disabled={photoUploading}
-              onChange={event => {
-                openAccountPhotoEditor(event.target.files?.[0] || null)
-                event.target.value = ''
-              }}
-            />
-            <button className="accountPhotoButton" type="button" onClick={chooseAccountPhoto} disabled={photoUploading}>
-              Alterar foto
-            </button>
-            <span className="accountPhotoHint">JPG, PNG ou WebP até 5 MB.</span>
+          <div className="accountMediaStack">
+            <div className="accountAvatarBlock">
+              <button className="accountAvatar accountAvatarButton" type="button" onClick={chooseAccountPhoto} aria-label="Alterar foto do perfil">
+                {avatarUrl ? <img src={avatarUrl} alt="" /> : initials}
+              </button>
+              <input
+                ref={accountPhotoInputRef}
+                className="accountPhotoInput"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={photoUploading}
+                onChange={event => {
+                  openAccountPhotoEditor(event.target.files?.[0] || null)
+                  event.target.value = ''
+                }}
+              />
+              <button className="accountPhotoButton" type="button" onClick={chooseAccountPhoto} disabled={photoUploading}>
+                Alterar foto
+              </button>
+              <span className="accountPhotoHint">Foto pessoal do usuário.</span>
+            </div>
+
+            {hasArenaProfile && (
+              <div className="accountAvatarBlock accountArenaLogoBlock">
+                <button className="accountAvatar accountAvatarButton" type="button" onClick={chooseArenaLogo} aria-label="Alterar logo da arena">
+                  {arenaLogoUrl ? <img src={arenaLogoUrl} alt="" /> : 'AR'}
+                </button>
+                <input
+                  ref={arenaLogoInputRef}
+                  className="accountPhotoInput"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={logoUploading}
+                  onChange={event => {
+                    uploadArenaLogo(event.target.files?.[0] || null)
+                    event.target.value = ''
+                  }}
+                />
+                <button className="accountPhotoButton" type="button" onClick={chooseArenaLogo} disabled={logoUploading}>
+                  Logo da arena
+                </button>
+                <span className="accountPhotoHint">Usado no painel Minha Arena.</span>
+              </div>
+            )}
           </div>
 
           <div className="accountFormGrid">
@@ -4806,7 +4945,7 @@ function Dashboard({ user }: any) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [activeProfile, setActiveProfile] = useState(() => initialActiveProfile(user))
   const activeProfileLabel = PROFILE_ROLE_LABELS[activeProfile] || 'Organizador'
-  const activeProfileInitials = activeProfileLabel.slice(0, 2).toUpperCase()
+  const activeProfileInitials = profileAvatarInitials(user, activeProfile)
   const dashboardAvatarUrl = accountAvatarUrl(user, activeProfile)
   const topbarUserName = user?.name || user?.fullName || user?.organization?.name || 'Usuário PlayFinal'
   const activePlanInfo = profilePlanInfo(activeProfile, user)

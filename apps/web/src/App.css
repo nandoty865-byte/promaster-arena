@@ -639,10 +639,20 @@ body {
   align-items: start;
 }
 
+.accountMediaStack {
+  display: grid;
+  gap: 18px;
+}
+
 .accountAvatarBlock {
   display: grid;
   justify-items: center;
   gap: 12px;
+}
+
+.accountArenaLogoBlock {
+  padding-top: 18px;
+  border-top: 1px solid rgba(38, 48, 58, 0.86);
 }
 
 .accountAvatar {
