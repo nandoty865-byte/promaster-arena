@@ -426,6 +426,7 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/planos" element={<PlansComparison />} />
       <Route path="/app" element={<Dashboard user={user} />} />
+      <Route path="/app/minha-conta" element={<MyAccountPage />} />
       <Route path="/app/perfil" element={<ProfilePage />} />
       <Route path="/app/usuarios" element={<UsersPage />} />
       <Route path="/upgrade" element={<Upgrade />} />
@@ -2856,6 +2857,10 @@ function loggedPageMeta(pathname: string, search: string) {
     return { title: 'Meu Perfil', breadcrumb: 'Home > Conta > Meu Perfil' }
   }
 
+  if (pathname === '/app/minha-conta') {
+    return { title: 'Minha Conta', breadcrumb: 'Home > Conta > Minha Conta' }
+  }
+
   if (pathname === '/app/usuarios') {
     return { title: 'Usuários da Equipe', breadcrumb: 'Home > Conta > Usuários' }
   }
@@ -2983,14 +2988,14 @@ function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => v
                 </span>
               </div>
               <button
-                className={location.pathname === '/app/perfil' ? 'active' : ''}
+                className={location.pathname === '/app/minha-conta' ? 'active' : ''}
                 type="button"
                 onClick={() => {
                   setProfileMenuOpen(false)
-                  navigate('/app/perfil')
+                  navigate('/app/minha-conta')
                 }}
               >
-                <span>Meu perfil</span>
+                <span>Minha conta</span>
               </button>
               <button
                 type="button"
@@ -3651,6 +3656,359 @@ function AdminSidebar() {
       </details>
       <button className="sidebarFooterButton" onClick={logout}>Sair</button>
     </aside>
+  )
+}
+
+function MyAccountPage() {
+  const navigate = useNavigate()
+  const [user, setUser] = useState<any>(null)
+  const [activeSection, setActiveSection] = useState('dados')
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState<any>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    gender: '',
+    birthDate: '',
+    cpf: '',
+    zipCode: '',
+    street: '',
+    number: '',
+    complement: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+    country: 'Brasil',
+  })
+
+  const accountMenu = [
+    { id: 'dados', label: 'Dados Pessoais' },
+    { id: 'seguranca', label: 'Segurança' },
+    { id: 'planos', label: 'Meus planos' },
+    { id: 'pagamentos', label: 'Métodos de pagamento' },
+    { id: 'foto', label: 'Alterar foto' },
+    { id: 'perfis', label: 'Meus perfis' },
+  ]
+
+  function splitName(name?: string) {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
+    return {
+      firstName: parts[0] || '',
+      lastName: parts.slice(1).join(' '),
+    }
+  }
+
+  function loadAccount() {
+    fetch(`${API}/me`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        const loadedUser = data.user || {}
+        const nameParts = splitName(loadedUser.name)
+        const address = loadedUser.address || loadedUser.playerProfile?.address || {}
+
+        setUser(loadedUser)
+        setForm({
+          firstName: loadedUser.firstName || nameParts.firstName,
+          lastName: loadedUser.lastName || nameParts.lastName,
+          email: loadedUser.email || '',
+          phone: loadedUser.phone ? formatBrazilCellphone(loadedUser.phone) : '',
+          gender: loadedUser.gender || loadedUser.playerProfile?.gender || '',
+          birthDate: loadedUser.birthDate || loadedUser.playerProfile?.birthDate || '',
+          cpf: loadedUser.cpf ? formatCpf(loadedUser.cpf) : loadedUser.documentNumber ? formatCpf(loadedUser.documentNumber) : '',
+          zipCode: loadedUser.zipCode ? formatCep(loadedUser.zipCode) : address.zipCode ? formatCep(address.zipCode) : '',
+          street: loadedUser.street || address.street || '',
+          number: loadedUser.number || address.number || '',
+          complement: loadedUser.complement || address.complement || '',
+          neighborhood: loadedUser.neighborhood || address.neighborhood || '',
+          city: loadedUser.city || address.city || '',
+          state: loadedUser.state || address.state || '',
+          country: loadedUser.country || address.country || 'Brasil',
+        })
+      })
+  }
+
+  function updateAccountField(field: string, value: string) {
+    let nextValue = value
+    if (field === 'cpf') nextValue = formatCpf(value)
+    if (field === 'zipCode') nextValue = formatCep(value)
+    if (field === 'phone') nextValue = formatBrazilCellphone(value)
+
+    setForm((current: any) => ({ ...current, [field]: nextValue }))
+  }
+
+  async function lookupCep(value: string) {
+    const cep = onlyDigits(value)
+    if (cep.length !== 8) return
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      const data = await response.json()
+      if (data?.erro) return
+
+      setForm((current: any) => ({
+        ...current,
+        zipCode: formatCep(cep),
+        street: data.logradouro || current.street,
+        neighborhood: data.bairro || current.neighborhood,
+        city: data.localidade || current.city,
+        state: data.uf || current.state,
+        country: current.country || 'Brasil',
+      }))
+    } catch {
+      return
+    }
+  }
+
+  function saveAccount() {
+    setSaving(true)
+    fetch(`${API}/me/profile`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        name: `${form.firstName} ${form.lastName}`.trim(),
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        phone: onlyDigits(form.phone),
+        gender: form.gender,
+        birthDate: form.birthDate,
+        cpf: onlyDigits(form.cpf),
+        zipCode: onlyDigits(form.zipCode),
+        street: form.street,
+        number: form.number,
+        complement: form.complement,
+        neighborhood: form.neighborhood,
+        city: form.city,
+        state: form.state,
+        country: form.country,
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error)
+          return
+        }
+
+        setUser(data.user || user)
+        alert('Minha conta atualizada.')
+      })
+      .catch(() => alert('Não foi possível salvar sua conta agora.'))
+      .finally(() => setSaving(false))
+  }
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      goHome()
+      return
+    }
+
+    loadAccount()
+  }, [])
+
+  const initials = String(`${form.firstName?.[0] || ''}${form.lastName?.[0] || ''}` || 'PF').toUpperCase()
+
+  function accountSectionPanel() {
+    if (activeSection === 'dados') {
+      return (
+        <div className="accountFormGrid">
+          <label className="accountFormField">
+            <span>Nome</span>
+            <input value={form.firstName} onChange={e => updateAccountField('firstName', e.target.value)} />
+          </label>
+
+          <label className="accountFormField">
+            <span>Sobrenome</span>
+            <input value={form.lastName} onChange={e => updateAccountField('lastName', e.target.value)} />
+          </label>
+
+          <label className="accountFormField">
+            <span>E-mail</span>
+            <input type="email" value={form.email} onChange={e => updateAccountField('email', e.target.value)} />
+            <strong className="accountVerifiedTag">Verificado</strong>
+          </label>
+
+          <label className="accountFormField">
+            <span>Fone / WhatsApp</span>
+            <input value={form.phone} onChange={e => updateAccountField('phone', e.target.value)} />
+            <strong className="accountVerifiedTag">Verificado</strong>
+          </label>
+
+          <label className="accountFormField">
+            <span>Sexo</span>
+            <select value={form.gender} onChange={e => updateAccountField('gender', e.target.value)}>
+              <option value="">Selecionar</option>
+              <option value="masculino">Masculino</option>
+              <option value="feminino">Feminino</option>
+            </select>
+          </label>
+
+          <label className="accountFormField">
+            <span>Data de nascimento</span>
+            <input type="date" value={form.birthDate} onChange={e => updateAccountField('birthDate', e.target.value)} />
+          </label>
+
+          <label className="accountFormField">
+            <span>CPF</span>
+            <input value={form.cpf} onChange={e => updateAccountField('cpf', e.target.value)} />
+          </label>
+
+          <label className="accountFormField">
+            <span>CEP</span>
+            <input
+              value={form.zipCode}
+              onBlur={e => lookupCep(e.target.value)}
+              onChange={e => updateAccountField('zipCode', e.target.value)}
+            />
+          </label>
+
+          <label className="accountFormField accountFieldWide">
+            <span>Endereço</span>
+            <input value={form.street} onChange={e => updateAccountField('street', e.target.value)} />
+          </label>
+
+          <label className="accountFormField">
+            <span>Número</span>
+            <input value={form.number} onChange={e => updateAccountField('number', e.target.value)} />
+          </label>
+
+          <label className="accountFormField">
+            <span>Complemento</span>
+            <input value={form.complement} onChange={e => updateAccountField('complement', e.target.value)} />
+          </label>
+
+          <label className="accountFormField">
+            <span>Bairro</span>
+            <input value={form.neighborhood} onChange={e => updateAccountField('neighborhood', e.target.value)} />
+          </label>
+
+          <label className="accountFormField">
+            <span>Cidade</span>
+            <input value={form.city} onChange={e => updateAccountField('city', e.target.value)} />
+          </label>
+
+          <label className="accountFormField">
+            <span>Estado</span>
+            <input value={form.state} onChange={e => updateAccountField('state', e.target.value)} />
+          </label>
+
+          <label className="accountFormField">
+            <span>País</span>
+            <select value={form.country} onChange={e => updateAccountField('country', e.target.value)}>
+              {COUNTRY_OPTIONS.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )
+    }
+
+    const sectionActions: Record<string, { title: string, text: string, action?: string, onClick?: () => void }> = {
+      seguranca: {
+        title: 'Segurança',
+        text: 'Gerencie senha, validações de acesso e proteção da conta.',
+        action: 'Abrir Meu Perfil',
+        onClick: () => navigate('/app/perfil'),
+      },
+      planos: {
+        title: 'Meus planos',
+        text: 'Acompanhe assinatura, plano atual e opções disponíveis para sua conta.',
+        action: 'Ver planos',
+        onClick: () => navigate('/upgrade'),
+      },
+      pagamentos: {
+        title: 'Métodos de pagamento',
+        text: 'Os cartões e cobranças da conta ficam organizados nesta área.',
+      },
+      foto: {
+        title: 'Alterar foto',
+        text: 'Atualize a imagem do usuário ou a logo vinculada ao perfil ativo.',
+        action: 'Abrir Meu Perfil',
+        onClick: () => navigate('/app/perfil'),
+      },
+      perfis: {
+        title: 'Meus perfis',
+        text: 'Acesse ou complete perfis de jogador, organizador, arena e árbitro.',
+        action: 'Gerenciar perfis',
+        onClick: () => navigate('/app/perfil#meus-perfis'),
+      },
+    }
+    const panel = sectionActions[activeSection]
+
+    return (
+      <div className="accountEmptyPanel">
+        <h2>{panel.title}</h2>
+        <p>{panel.text}</p>
+        {panel.action && (
+          <button type="button" onClick={panel.onClick}>
+            {panel.action}
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="saasLayout">
+      <ClientSidebar user={user} isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+
+      <main className="saasMain">
+        <section className="accountPageShell">
+          <aside className="accountPageMenu" aria-label="Menu minha conta">
+            <div>
+              <h2>Minha Conta</h2>
+              <p>Gerencie dados pessoais e preferências.</p>
+            </div>
+            <nav>
+              {accountMenu.map(item => (
+                <button
+                  key={item.id}
+                  className={activeSection === item.id ? 'active' : ''}
+                  type="button"
+                  onClick={() => setActiveSection(item.id)}
+                >
+                  <span aria-hidden="true" />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </aside>
+
+          <section className="accountPagePanel">
+            <div className="accountPanelHeader">
+              <div>
+                <h1>{activeSection === 'dados' ? 'Dados Pessoais' : accountMenu.find(item => item.id === activeSection)?.label}</h1>
+                <p>Complete seu cadastro para deixar acesso, pagamentos e perfis prontos para uso.</p>
+              </div>
+              <span className="accountPanelStatus">Conta ativa</span>
+            </div>
+
+            <div className="accountPageContent">
+              <div className="accountAvatarBlock">
+                <div className="accountAvatar">
+                  {user?.organization?.logoUrl ? <img src={user.organization.logoUrl} alt="" /> : initials}
+                </div>
+                <button type="button" onClick={() => setActiveSection('foto')}>Alterar foto</button>
+              </div>
+
+              <div className="accountSectionContent">
+                {accountSectionPanel()}
+              </div>
+            </div>
+
+            {activeSection === 'dados' && (
+              <div className="accountSaveRow">
+                <button className="accountSaveButton" type="button" onClick={saveAccount} disabled={saving}>
+                  {saving ? 'Salvando...' : 'Salvar alterações'}
+                </button>
+              </div>
+            )}
+          </section>
+        </section>
+      </main>
+    </div>
   )
 }
 
