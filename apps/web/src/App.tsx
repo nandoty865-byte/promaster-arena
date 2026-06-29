@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import {
@@ -10414,16 +10414,23 @@ function CreateTournament({ user }: any) {
 
   const [templates, setTemplates] = useState<any[]>([])
   const [seasons, setSeasons] = useState<any[]>([])
-  const [name, setName] = useState('Novo Torneio')
+  const [name, setName] = useState('Copa PlayFinal de Sinuca 2026')
   const [playerCount, setPlayerCount] = useState(16)
   const [tournamentFormat, setTournamentFormat] = useState('knockout')
   const [templateId, setTemplateId] = useState(1)
   const [sportSlug, setSportSlug] = useState('sinuca')
   const [sportSelectionDone, setSportSelectionDone] = useState(false)
   const [seasonId, setSeasonId] = useState('')
-  const [tableCount, setTableCount] = useState(4)
+  const [tableCount, setTableCount] = useState(12)
+  const [styleCategory, setStyleCategory] = useState('Snooker')
+  const [level, setLevel] = useState('Intermediário')
+  const [audience, setAudience] = useState('Aberto')
+  const [cityState, setCityState] = useState('São Paulo / SP')
+  const [organizerName, setOrganizerName] = useState('Arena Prime')
+  const [contactWhatsapp, setContactWhatsapp] = useState('(11) 91234-5678')
+  const [shortDescription, setShortDescription] = useState('Torneio de sinuca estilo snooker para jogadores intermediários e avançados. Competição organizada pela Arena Prime com estrutura profissional.')
 
-  const [location, setLocation] = useState('')
+  const [location, setLocation] = useState('Arena Prime – São Paulo, SP')
   const [venueAddress, setVenueAddress] = useState('')
   const [selectedArenaOption, setSelectedArenaOption] = useState('')
   const [arenas, setArenas] = useState<any[]>([])
@@ -10446,8 +10453,8 @@ function CreateTournament({ user }: any) {
     responsiblePhone: '',
   }
   const [arenaForm, setArenaForm] = useState<any>(emptyArenaForm)
-  const [eventDate, setEventDate] = useState('')
-  const [eventTime, setEventTime] = useState('')
+  const [eventDate, setEventDate] = useState('2026-03-15')
+  const [eventTime, setEventTime] = useState('10:00')
   const [prize, setPrize] = useState('')
   const [rules, setRules] = useState('')
   const [broadcastType, setBroadcastType] = useState('none')
@@ -10881,6 +10888,256 @@ function CreateTournament({ user }: any) {
               )
             })}
           </div>
+        </main>
+      </div>
+    )
+  }
+
+  const premiumDescriptionCount = Math.min(shortDescription.length, 300)
+  const premiumDateLabel = eventDate
+    ? new Date(`${eventDate}T12:00:00`).toLocaleDateString('pt-BR')
+    : '15/03/2026'
+  const premiumSummaryRows = [
+    ['Modalidade', selectedSport?.name || 'Sinuca', 'sport'],
+    ['Estilo / Categoria', styleCategory || 'Snooker', 'balls'],
+    ['Nível', level || 'Intermediário', 'level'],
+    ['Tipo de público', audience || 'Aberto', 'users'],
+    ['Local', location || 'Arena Prime – São Paulo, SP', 'pin'],
+    ['Data', `${premiumDateLabel} às ${eventTime || '10:00'}`, 'calendar'],
+    ['Mesas disponíveis', String(tableCount || 12), 'table'],
+  ]
+
+  function premiumFieldIcon(icon: string) {
+    return <span className={`premiumTournamentFieldIcon ${icon}`} aria-hidden="true" />
+  }
+
+  if (!isBingo) {
+    return (
+      <div className="saasLayout">
+        <ClientSidebar user={user} isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+
+        <main className="saasMain premiumTournamentMain">
+          <section className="premiumTournamentShell" aria-label="Criar novo torneio">
+            <div className="premiumTournamentHeader">
+              <div>
+                <span className="premiumTournamentEyebrow">Criar novo torneio</span>
+                <h1>1. Informações do Torneio</h1>
+                <p>Defina os dados principais do seu torneio de sinuca.</p>
+              </div>
+              <div className="premiumTournamentStepPill">
+                <span>Etapa 1</span>
+                <strong>Informações</strong>
+              </div>
+            </div>
+
+            <div className="premiumTournamentLayout">
+              <section className="premiumTournamentFormCard">
+                <div className="premiumTournamentFormGrid">
+                  <label className="premiumTournamentField wide">
+                    <span>Nome do torneio *</span>
+                    <div>
+                      {premiumFieldIcon('trophy')}
+                      <input value={name} onChange={e => setName(e.target.value)} />
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField">
+                    <span>Modalidade *</span>
+                    <div>
+                      {premiumFieldIcon('sport')}
+                      <select value={sportSlug} onChange={e => chooseSport(e.target.value)}>
+                        {sports.map((sport: any) => (
+                          <option key={sport.slug} value={sport.slug}>{sport.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField">
+                    <span>Estilo / Categoria *</span>
+                    <div>
+                      {premiumFieldIcon('balls')}
+                      <select value={styleCategory} onChange={e => setStyleCategory(e.target.value)}>
+                        <option>Snooker</option>
+                        <option>Bola 8</option>
+                        <option>Bola 9</option>
+                        <option>Sinuca brasileira</option>
+                      </select>
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField">
+                    <span>Nível *</span>
+                    <div>
+                      {premiumFieldIcon('level')}
+                      <select value={level} onChange={e => setLevel(e.target.value)}>
+                        <option>Iniciante</option>
+                        <option>Intermediário</option>
+                        <option>Avançado</option>
+                        <option>Profissional</option>
+                      </select>
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField">
+                    <span>Gênero / Público *</span>
+                    <div>
+                      {premiumFieldIcon('users')}
+                      <select value={audience} onChange={e => setAudience(e.target.value)}>
+                        <option>Aberto</option>
+                        <option>Masculino</option>
+                        <option>Feminino</option>
+                        <option>Misto</option>
+                      </select>
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField">
+                    <span>Data do torneio *</span>
+                    <div>
+                      {premiumFieldIcon('calendar')}
+                      <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} />
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField">
+                    <span>Horário de início *</span>
+                    <div>
+                      {premiumFieldIcon('clock')}
+                      <input type="time" value={eventTime} onChange={e => setEventTime(e.target.value)} />
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField wide">
+                    <span>Local / Arena *</span>
+                    <div>
+                      {premiumFieldIcon('pin')}
+                      <select value={selectedArenaOption} onChange={e => selectTournamentArena(e.target.value)}>
+                        <option value="">Arena Prime – São Paulo, SP</option>
+                        {hasMyArenaOption && (
+                          <option value="my-arena">Minha Arena - {user?.organization?.name}</option>
+                        )}
+                        {arenas.map(arena => (
+                          <option key={arena.id} value={`arena:${arena.id}`}>
+                            {arena.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField">
+                    <span>Cidade / Estado *</span>
+                    <div>
+                      {premiumFieldIcon('city')}
+                      <input value={cityState} onChange={e => setCityState(e.target.value)} />
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField">
+                    <span>Quantidade de mesas disponíveis *</span>
+                    <div>
+                      {premiumFieldIcon('table')}
+                      <input
+                        type="number"
+                        min="1"
+                        value={tableCount}
+                        onChange={e => setTableCount(Math.max(1, Number(e.target.value) || 1))}
+                      />
+                      <span className="premiumNumberStepper">
+                        <button type="button" onClick={() => setTableCount(current => current + 1)}>+</button>
+                        <button type="button" onClick={() => setTableCount(current => Math.max(1, current - 1))}>-</button>
+                      </span>
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField">
+                    <span>Organizador responsável *</span>
+                    <div>
+                      {premiumFieldIcon('user')}
+                      <select value={organizerName} onChange={e => setOrganizerName(e.target.value)}>
+                        <option>Arena Prime</option>
+                        {user?.organization?.name && <option>{user.organization.name}</option>}
+                      </select>
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField">
+                    <span>Contato WhatsApp *</span>
+                    <div>
+                      {premiumFieldIcon('whatsapp')}
+                      <input value={contactWhatsapp} onChange={e => setContactWhatsapp(formatBrazilCellphone(e.target.value))} />
+                    </div>
+                  </label>
+
+                  <label className="premiumTournamentField wide description">
+                    <span>Descrição curta do torneio *</span>
+                    <div>
+                      <textarea
+                        maxLength={300}
+                        value={shortDescription}
+                        onChange={e => {
+                          setShortDescription(e.target.value)
+                          setRules(e.target.value)
+                        }}
+                      />
+                      <small>{premiumDescriptionCount}/300</small>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="premiumTournamentActions">
+                  <button type="button" className="premiumSecondaryAction" onClick={() => alert('Rascunho salvo localmente.')}>
+                    <span aria-hidden="true">▣</span>
+                    Salvar rascunho
+                  </button>
+                  <button type="button" className="premiumPrimaryAction" onClick={() => alert('Próxima etapa: Formato do torneio.')}>
+                    Próximo: Formato
+                    <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </section>
+
+              <aside className="premiumTournamentAside">
+                <section className="premiumTournamentSummary">
+                  <div className="premiumAsideTitle">
+                    <span className="premiumTournamentFieldIcon summary" aria-hidden="true" />
+                    <h2>Resumo Rápido</h2>
+                  </div>
+
+                  <div className="premiumSummaryList">
+                    {premiumSummaryRows.map(([label, value, icon], index) => (
+                      <Fragment key={label}>
+                        {index === 4 && <hr />}
+                        <div>
+                          <span className={`premiumTournamentFieldIcon ${icon}`} aria-hidden="true" />
+                          <small>{label}</small>
+                          <strong>{value}</strong>
+                        </div>
+                      </Fragment>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="premiumTournamentCover">
+                  <div className="premiumAsideTitle">
+                    <div>
+                      <h2>Capa do torneio</h2>
+                      <p>Imagem que representa seu torneio</p>
+                    </div>
+                  </div>
+
+                  <div className="premiumCoverImage" aria-label="Mesa de sinuca com iluminação dramática" />
+
+                  <button type="button" className="premiumUploadBox">
+                    <span aria-hidden="true">⇧</span>
+                    <strong>Alterar imagem</strong>
+                    <small>PNG ou JPG até 5MB • 16:9 recomendado</small>
+                  </button>
+                </section>
+              </aside>
+            </div>
+          </section>
         </main>
       </div>
     )

@@ -10909,6 +10909,410 @@ button:hover {
   white-space: nowrap;
 }
 
+.premiumTournamentMain {
+  min-height: 100vh;
+  padding: 24px 32px 34px;
+  background:
+    radial-gradient(circle at 18% 2%, rgba(166, 255, 0, .1), transparent 28%),
+    radial-gradient(circle at 84% 14%, rgba(38, 99, 234, .12), transparent 34%),
+    linear-gradient(135deg, #0b0e14 0%, #070a10 48%, #0f141f 100%);
+}
+
+.premiumTournamentShell {
+  width: min(100%, 1480px);
+  min-height: min(820px, calc(100vh - 58px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 18px;
+}
+
+.premiumTournamentHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+  padding: 6px 2px 0;
+}
+
+.premiumTournamentEyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid rgba(166, 255, 0, .22);
+  border-radius: 999px;
+  background: rgba(166, 255, 0, .06);
+  color: #a6ff00;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.premiumTournamentHeader h1 {
+  margin: 12px 0 6px;
+  color: #f5f7fa;
+  font-family: var(--font-title);
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.premiumTournamentHeader p {
+  margin: 0;
+  color: #aeb8c7;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.premiumTournamentStepPill {
+  min-width: 150px;
+  padding: 14px 16px;
+  border: 1px solid rgba(38, 48, 58, .95);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(17, 22, 34, .9), rgba(8, 12, 18, .82));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+.premiumTournamentStepPill span,
+.premiumTournamentStepPill strong {
+  display: block;
+}
+
+.premiumTournamentStepPill span {
+  color: #7f8b9d;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.premiumTournamentStepPill strong {
+  margin-top: 3px;
+  color: #f5f7fa;
+  font-size: 14px;
+}
+
+.premiumTournamentLayout {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.48fr) minmax(340px, .72fr);
+  gap: 18px;
+}
+
+.premiumTournamentFormCard,
+.premiumTournamentSummary,
+.premiumTournamentCover {
+  border: 1px solid rgba(38, 48, 58, .92);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(17, 22, 34, .86), rgba(11, 14, 20, .78)),
+    rgba(17, 22, 34, .72);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, .32),
+    inset 0 1px 0 rgba(255, 255, 255, .045);
+  backdrop-filter: blur(12px);
+}
+
+.premiumTournamentFormCard {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  padding: 22px;
+}
+
+.premiumTournamentFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-content: start;
+}
+
+.premiumTournamentField {
+  display: grid;
+  gap: 7px;
+  color: #f5f7fa;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.premiumTournamentField.wide {
+  grid-column: 1 / -1;
+}
+
+.premiumTournamentField > span {
+  color: #d7dde8;
+}
+
+.premiumTournamentField > div {
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+  border: 1px solid rgba(78, 88, 104, .66);
+  border-radius: 8px;
+  background: rgba(6, 8, 12, .78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+.premiumTournamentField > div:focus-within {
+  border-color: rgba(166, 255, 0, .56);
+  box-shadow:
+    0 0 0 3px rgba(166, 255, 0, .08),
+    0 0 22px rgba(166, 255, 0, .08);
+}
+
+.premiumTournamentField input,
+.premiumTournamentField select,
+.premiumTournamentField textarea {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f5f7fa;
+  font: inherit;
+  font-size: 14px;
+}
+
+.premiumTournamentField select {
+  appearance: auto;
+}
+
+.premiumTournamentField input[type="date"],
+.premiumTournamentField input[type="time"] {
+  color-scheme: dark;
+}
+
+.premiumTournamentField textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.premiumTournamentField.description > div {
+  min-height: 124px;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 12px 14px 28px;
+  position: relative;
+}
+
+.premiumTournamentField.description small {
+  position: absolute;
+  right: 14px;
+  bottom: 8px;
+  color: #7f8b9d;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.premiumTournamentFieldIcon {
+  width: 25px;
+  height: 25px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(166, 255, 0, .18);
+  border-radius: 7px;
+  background: rgba(166, 255, 0, .06);
+  color: #a6ff00;
+  font-size: 13px;
+  font-weight: 950;
+  box-shadow: 0 0 13px rgba(166, 255, 0, .08);
+}
+
+.premiumTournamentFieldIcon.trophy::before { content: "♕"; }
+.premiumTournamentFieldIcon.sport::before { content: "S"; }
+.premiumTournamentFieldIcon.balls::before { content: "●"; }
+.premiumTournamentFieldIcon.level::before { content: "↗"; }
+.premiumTournamentFieldIcon.users::before { content: "U"; }
+.premiumTournamentFieldIcon.calendar::before { content: "15"; font-size: 10px; }
+.premiumTournamentFieldIcon.clock::before { content: "◷"; }
+.premiumTournamentFieldIcon.pin::before { content: "⌖"; }
+.premiumTournamentFieldIcon.city::before { content: "▥"; }
+.premiumTournamentFieldIcon.table::before { content: "▭"; }
+.premiumTournamentFieldIcon.user::before { content: "○"; }
+.premiumTournamentFieldIcon.whatsapp::before { content: "W"; }
+.premiumTournamentFieldIcon.summary::before { content: "✓"; }
+
+.premiumNumberStepper {
+  display: inline-grid;
+  gap: 3px;
+  justify-self: end;
+}
+
+.premiumNumberStepper button {
+  width: 22px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(166, 255, 0, .2);
+  border-radius: 5px;
+  background: rgba(166, 255, 0, .08);
+  color: #a6ff00;
+  font-size: 12px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.premiumTournamentActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding-top: 18px;
+  margin-top: 16px;
+  border-top: 1px solid rgba(38, 48, 58, .82);
+}
+
+.premiumSecondaryAction,
+.premiumPrimaryAction,
+.premiumUploadBox {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 8px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.premiumSecondaryAction {
+  padding: 0 18px;
+  border: 1px solid rgba(121, 132, 148, .52);
+  background: rgba(7, 10, 15, .82);
+  color: #f5f7fa;
+}
+
+.premiumPrimaryAction {
+  padding: 0 22px;
+  border: 1px solid rgba(166, 255, 0, .72);
+  background: linear-gradient(180deg, #b8ff2d, #8fe900);
+  color: #071000;
+  box-shadow: 0 0 26px rgba(166, 255, 0, .22);
+}
+
+.premiumTournamentAside {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 18px;
+}
+
+.premiumTournamentSummary,
+.premiumTournamentCover {
+  padding: 20px;
+}
+
+.premiumAsideTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.premiumAsideTitle h2 {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.premiumAsideTitle p {
+  margin: 4px 0 0;
+  color: #98a4b5;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.premiumSummaryList {
+  display: grid;
+  gap: 10px;
+}
+
+.premiumSummaryList div {
+  display: grid;
+  grid-template-columns: 29px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.premiumSummaryList small {
+  color: #aeb8c7;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.premiumSummaryList strong {
+  max-width: 180px;
+  color: #a6ff00;
+  font-size: 12px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.premiumSummaryList hr {
+  width: 100%;
+  height: 1px;
+  margin: 3px 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgba(121, 132, 148, .44), transparent);
+}
+
+.premiumCoverImage {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgba(166, 255, 0, .24);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(4, 7, 11, .78), rgba(4, 7, 11, .2)),
+    url('/landing-sport-sinuca.png') center / cover;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .32);
+}
+
+.premiumUploadBox {
+  width: 100%;
+  min-height: 78px;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 14px;
+  border: 1px dashed rgba(174, 184, 199, .46);
+  background: rgba(6, 8, 12, .62);
+  color: #f5f7fa;
+}
+
+.premiumUploadBox span {
+  color: #aeb8c7;
+  font-size: 18px;
+}
+
+.premiumUploadBox small {
+  color: #8a96a7;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+@media (max-width: 1180px) {
+  .premiumTournamentLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .premiumTournamentMain {
+    padding: 82px 14px 24px;
+  }
+
+  .premiumTournamentHeader,
+  .premiumTournamentActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .premiumTournamentFormGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .bingoConfigBox {
   margin-top: 18px;
   padding: 18px;
