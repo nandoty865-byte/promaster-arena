@@ -11031,9 +11031,9 @@ button:hover {
 .premiumWizardStepper {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  gap: 6px;
   min-height: 72px;
-  padding: 14px 18px;
+  padding: 12px 14px;
   border: 1px solid var(--pf-border);
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(15, 23, 32, .9), rgba(8, 14, 20, .78));
@@ -11042,9 +11042,9 @@ button:hover {
 .premiumWizardStepper button {
   min-width: 0;
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) minmax(28px, 1fr);
+  grid-template-columns: 30px minmax(0, 1fr) minmax(28px, .72fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   border: 0;
   background: transparent;
   color: var(--pf-muted);
@@ -11054,47 +11054,80 @@ button:hover {
 }
 
 .premiumWizardStepper button:last-child {
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 30px minmax(0, 1fr);
 }
 
-.premiumWizardStepper span {
-  width: 34px;
-  height: 34px;
+.premiumWizardStepper .premiumWizardDot {
+  width: 26px;
+  height: 26px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(166, 255, 0, .28);
   border-radius: 50%;
   color: var(--pf-silver);
   background: rgba(95, 107, 120, .32);
+  font-size: 12px;
+  font-weight: 850;
+  transition: all .18s ease;
 }
 
 .premiumWizardStepper strong {
-  overflow: hidden;
-  color: inherit;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
   font-size: 13px;
   font-weight: 700;
+  line-height: 1.12;
+}
+
+.premiumWizardStepper b,
+.premiumWizardStepper small {
+  overflow: hidden;
+  color: inherit;
+  font: inherit;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.premiumWizardStepper small {
+  color: var(--pf-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
 .premiumWizardStepper i {
-  height: 1px;
-  background: linear-gradient(90deg, rgba(166, 255, 0, .44), rgba(121, 132, 148, .18));
+  height: 2px;
+  border-radius: 999px;
+  background: var(--pf-lime);
+  opacity: .9;
 }
 
 .premiumWizardStepper button.active {
   color: var(--pf-lime);
 }
 
-.premiumWizardStepper button.active span {
+.premiumWizardStepper button.active .premiumWizardDot {
+  width: 34px;
+  height: 34px;
   background: var(--pf-lime);
   color: #071000;
   box-shadow: 0 0 14px rgba(166, 255, 0, .18);
 }
 
-.premiumWizardStepper button.completed span {
-  color: var(--pf-lime);
-  background: rgba(166, 255, 0, .07);
+.premiumWizardStepper button.completed {
+  color: var(--pf-white);
+}
+
+.premiumWizardStepper button.completed .premiumWizardDot {
+  border-color: rgba(166, 255, 0, .72);
+  background: var(--pf-lime);
+  color: rgba(7, 16, 0, .72);
+  box-shadow: none;
+}
+
+.premiumWizardStepper button.active small,
+.premiumWizardStepper button.completed small {
+  color: var(--pf-text);
 }
 
 .premiumTournamentLayout {
@@ -11102,6 +11135,11 @@ button:hover {
   display: grid;
   grid-template-columns: minmax(0, 1.48fr) minmax(340px, .72fr);
   gap: 18px;
+}
+
+.premiumTournamentLayout.premiumInfoLayout {
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, .62fr);
+  align-items: start;
 }
 
 .premiumTournamentFormCard,
@@ -11315,6 +11353,10 @@ button:hover {
   gap: 18px;
 }
 
+.premiumInfoLayout .premiumTournamentAside {
+  grid-template-rows: auto auto auto;
+}
+
 .premiumWizardGrid {
   display: grid;
   gap: 18px;
@@ -11402,6 +11444,113 @@ button:hover {
   margin: 3px 0;
   border: 0;
   background: linear-gradient(90deg, transparent, rgba(121, 132, 148, .44), transparent);
+}
+
+.premiumScheduleCard,
+.premiumVisibilityCard {
+  display: grid;
+  gap: 14px;
+}
+
+.premiumScheduleCard .premiumAsideTitle,
+.premiumVisibilityCard .premiumAsideTitle {
+  margin-bottom: 0;
+}
+
+.premiumInlineFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.premiumAccessCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.premiumAccessCards button {
+  min-height: 102px;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  background: rgba(10, 16, 23, .58);
+  color: var(--pf-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.premiumAccessCards button:hover,
+.premiumAccessCards button:focus-visible {
+  border-color: rgba(166, 255, 0, .5);
+  background: rgba(14, 24, 34, .88);
+  outline: 0;
+}
+
+.premiumAccessCards button.active {
+  border-color: var(--pf-lime);
+  background:
+    linear-gradient(180deg, rgba(166, 255, 0, .08), rgba(10, 16, 23, .72)),
+    rgba(10, 16, 23, .72);
+  box-shadow: 0 0 18px rgba(166, 255, 0, .12);
+}
+
+.premiumAccessCards strong {
+  color: var(--pf-white);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.premiumAccessCards button.active strong {
+  color: var(--pf-lime);
+}
+
+.premiumAccessCards small {
+  color: var(--pf-muted);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.premiumVisibilityGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, .8fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.premiumVisibilityToggle {
+  min-height: 72px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  background: rgba(10, 16, 23, .58);
+}
+
+.premiumVisibilityToggle strong,
+.premiumVisibilityToggle small {
+  display: block;
+}
+
+.premiumVisibilityToggle strong {
+  color: var(--pf-white);
+  font-size: 12px;
+}
+
+.premiumVisibilityToggle small {
+  margin-top: 4px;
+  color: var(--pf-muted);
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .premiumCoverImage {
@@ -11803,6 +11952,14 @@ button:hover {
     grid-column: auto;
   }
 
+  .premiumTournamentLayout.premiumInfoLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .premiumVisibilityGrid {
+    grid-template-columns: 1fr;
+  }
+
   .premiumWizardStepper {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -11826,7 +11983,9 @@ button:hover {
   .premiumWizardStepper,
   .premiumPriceGrid,
   .premiumPaymentGrid,
-  .premiumReviewGrid {
+  .premiumReviewGrid,
+  .premiumAccessCards,
+  .premiumInlineFields {
     grid-template-columns: 1fr;
   }
 

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { QRCodeCanvas } from 'qrcode.react'
 import {
@@ -10424,7 +10424,7 @@ function CreateTournament({ user }: any) {
   const [tableCount, setTableCount] = useState(12)
   const [styleCategory, setStyleCategory] = useState('Snooker')
   const [level, setLevel] = useState('Intermediário')
-  const [audience, setAudience] = useState('Aberto')
+  const [audience, setAudience] = useState('Todos')
   const [cityState, setCityState] = useState('São Paulo / SP')
   const [organizerName, setOrganizerName] = useState('Arena Prime')
   const [contactWhatsapp, setContactWhatsapp] = useState('(11) 91234-5678')
@@ -10468,6 +10468,9 @@ function CreateTournament({ user }: any) {
   const [matchQuantity, setMatchQuantity] = useState('')
   const [matchQuantityMode, setMatchQuantityMode] = useState('')
   const [scheduleMode, setScheduleMode] = useState('single_day')
+  const [ageRange, setAgeRange] = useState('Livre')
+  const [tournamentAccessType, setTournamentAccessType] = useState('public')
+  const [tournamentVisibility, setTournamentVisibility] = useState('Exibir na agenda pública')
   const [phaseRules, setPhaseRules] = useState<any[]>([])
   const [scheduleRows, setScheduleRows] = useState<any[]>([])
   const [scheduleDayCount, setScheduleDayCount] = useState(1)
@@ -10962,12 +10965,12 @@ function CreateTournament({ user }: any) {
   }
 
   const wizardSteps = [
-    { step: 1, label: 'Informações' },
-    { step: 2, label: 'Formato' },
-    { step: 3, label: 'Inscrições' },
-    { step: 4, label: 'Premiação' },
-    { step: 5, label: 'Configurações' },
-    { step: 6, label: 'Publicação' },
+    { step: 1, label: 'Informações', subtitle: 'Geral' },
+    { step: 2, label: 'Formato', subtitle: 'Modalidades e jogos' },
+    { step: 3, label: 'Inscrições', subtitle: 'Valores e limites' },
+    { step: 4, label: 'Premiação', subtitle: 'Prêmios e troféus' },
+    { step: 5, label: 'Configurações', subtitle: 'Regras e opções' },
+    { step: 6, label: 'Publicação', subtitle: 'Revisar e publicar' },
   ]
   const receivePerRegistration = Math.max(0, (Number(String(registrationFee).replace(',', '.')) || 0) - (Number(String(platformFee).replace(',', '.')) || 0))
   const enabledPayments = [
@@ -10995,8 +10998,11 @@ function CreateTournament({ user }: any) {
               className={`${active ? 'active' : ''}${completed ? ' completed' : ''}`}
               onClick={() => goWizardStep(item.step)}
             >
-              <span>{completed ? '✓' : item.step}</span>
-              <strong>{item.label}</strong>
+              <span className="premiumWizardDot">{completed ? '✓' : item.step}</span>
+              <strong>
+                <b>{item.label}</b>
+                <small>{item.subtitle}</small>
+              </strong>
               {index < wizardSteps.length - 1 && <i aria-hidden="true" />}
             </button>
           )
@@ -11373,7 +11379,7 @@ function CreateTournament({ user }: any) {
 
             {renderWizardStepper()}
 
-            <div className="premiumTournamentLayout">
+            <div className="premiumTournamentLayout premiumInfoLayout">
               <section className="premiumTournamentFormCard">
                 <div className="premiumTournamentFormGrid">
                   <label className="premiumTournamentField wide">
@@ -11397,7 +11403,7 @@ function CreateTournament({ user }: any) {
                   </label>
 
                   <label className="premiumTournamentField">
-                    <span>Estilo / Categoria *</span>
+                    <span>Categoria *</span>
                     <div>
                       {premiumFieldIcon('balls')}
                       <select value={styleCategory} onChange={e => setStyleCategory(e.target.value)}>
@@ -11423,11 +11429,11 @@ function CreateTournament({ user }: any) {
                   </label>
 
                   <label className="premiumTournamentField">
-                    <span>Gênero / Público *</span>
+                    <span>Sexo *</span>
                     <div>
                       {premiumFieldIcon('users')}
                       <select value={audience} onChange={e => setAudience(e.target.value)}>
-                        <option>Aberto</option>
+                        <option>Todos</option>
                         <option>Masculino</option>
                         <option>Feminino</option>
                         <option>Misto</option>
@@ -11436,18 +11442,16 @@ function CreateTournament({ user }: any) {
                   </label>
 
                   <label className="premiumTournamentField">
-                    <span>Data do torneio *</span>
+                    <span>Faixa etária *</span>
                     <div>
-                      {premiumFieldIcon('calendar')}
-                      <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} />
-                    </div>
-                  </label>
-
-                  <label className="premiumTournamentField">
-                    <span>Horário de início *</span>
-                    <div>
-                      {premiumFieldIcon('clock')}
-                      <input type="time" value={eventTime} onChange={e => setEventTime(e.target.value)} />
+                      {premiumFieldIcon('level')}
+                      <select value={ageRange} onChange={e => setAgeRange(e.target.value)}>
+                        <option>Livre</option>
+                        <option>Sub-18</option>
+                        <option>18+</option>
+                        <option>40+</option>
+                        <option>60+</option>
+                      </select>
                     </div>
                   </label>
 
@@ -11542,26 +11546,6 @@ function CreateTournament({ user }: any) {
               </section>
 
               <aside className="premiumTournamentAside">
-                <section className="premiumTournamentSummary">
-                  <div className="premiumAsideTitle">
-                    <span className="premiumTournamentFieldIcon summary" aria-hidden="true" />
-                    <h2>Resumo Rápido</h2>
-                  </div>
-
-                  <div className="premiumSummaryList">
-                    {premiumSummaryRows.map(([label, value, icon], index) => (
-                      <Fragment key={label}>
-                        {index === 4 && <hr />}
-                        <div>
-                          <span className={`premiumTournamentFieldIcon ${icon}`} aria-hidden="true" />
-                          <small>{label}</small>
-                          <strong>{value}</strong>
-                        </div>
-                      </Fragment>
-                    ))}
-                  </div>
-                </section>
-
                 <section className="premiumTournamentCover">
                   <div className="premiumAsideTitle">
                     <div>
@@ -11577,6 +11561,96 @@ function CreateTournament({ user }: any) {
                     <strong>Alterar imagem</strong>
                     <small>PNG ou JPG até 5MB • 16:9 recomendado</small>
                   </button>
+                </section>
+
+                <section className="premiumTournamentSummary premiumScheduleCard">
+                  <div className="premiumAsideTitle">
+                    {premiumFieldIcon('calendar')}
+                    <div>
+                      <h2>Programação</h2>
+                      <p>Defina quando o torneio acontece</p>
+                    </div>
+                  </div>
+
+                  <label className="premiumTournamentField wide">
+                    <span>Formato da data *</span>
+                    <div>
+                      {premiumFieldIcon('calendar')}
+                      <select value={scheduleMode} onChange={e => setScheduleMode(e.target.value)}>
+                        <option value="single_day">Data única</option>
+                        <option value="multi_day">Vários dias</option>
+                      </select>
+                    </div>
+                  </label>
+
+                  <div className="premiumInlineFields">
+                    <label className="premiumTournamentField">
+                      <span>Dia do torneio *</span>
+                      <div>
+                        {premiumFieldIcon('calendar')}
+                        <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} />
+                      </div>
+                    </label>
+
+                    <label className="premiumTournamentField">
+                      <span>Horário de início *</span>
+                      <div>
+                        {premiumFieldIcon('clock')}
+                        <input type="time" value={eventTime} onChange={e => setEventTime(e.target.value)} />
+                      </div>
+                    </label>
+                  </div>
+                </section>
+
+                <section className="premiumTournamentSummary premiumVisibilityCard">
+                  <div className="premiumAsideTitle">
+                    {premiumFieldIcon('users')}
+                    <div>
+                      <h2>Tipo e Visibilidade</h2>
+                      <p>Escolha quem poderá ver e participar do seu torneio.</p>
+                    </div>
+                  </div>
+
+                  <div className="premiumAccessCards" role="radiogroup" aria-label="Tipo do torneio">
+                    {[
+                      ['public', 'Público', 'Qualquer pessoa pode ver e se inscrever', 'users'],
+                      ['private', 'Privado', 'Apenas convidados podem se inscrever', 'summary'],
+                      ['invite', 'Por Convite', 'Somente convidados selecionados', 'user'],
+                    ].map(([value, label, description, icon]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={tournamentAccessType === value ? 'active' : ''}
+                        onClick={() => setTournamentAccessType(value)}
+                      >
+                        {premiumFieldIcon(icon)}
+                        <strong>{label}</strong>
+                        <small>{description}</small>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="premiumVisibilityGrid">
+                    <label className="premiumTournamentField">
+                      <span>Visibilidade</span>
+                      <div>
+                        {premiumFieldIcon('summary')}
+                        <select value={tournamentVisibility} onChange={e => setTournamentVisibility(e.target.value)}>
+                          <option>Exibir na agenda pública</option>
+                          <option>Ocultar da agenda pública</option>
+                          <option>Disponível apenas por link</option>
+                        </select>
+                      </div>
+                    </label>
+
+                    <div className="premiumVisibilityToggle">
+                      <div>
+                        <strong>Permitir Lista de Espera</strong>
+                        <small>Permitir jogadores entrarem na lista de espera</small>
+                      </div>
+                      {renderToggle(waitlistEnabled, setWaitlistEnabled)}
+                    </div>
+                  </div>
                 </section>
               </aside>
             </div>
