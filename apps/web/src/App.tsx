@@ -11522,6 +11522,57 @@ function CreateTournament({ user }: any) {
                       </label>
                     </div>
                   </div>
+
+                  <div className="premiumInnerCard premiumInfoCard premiumVisibilityCard">
+                    <div className="premiumAsideTitle">
+                      {premiumFieldIcon('users')}
+                      <div>
+                        <h2>Tipo e Visibilidade</h2>
+                        <p>Escolha quem poderá ver e participar do seu torneio.</p>
+                      </div>
+                    </div>
+
+                    <div className="premiumAccessCards" role="radiogroup" aria-label="Tipo do torneio">
+                      {[
+                        ['public', 'Público', 'Qualquer pessoa pode ver e se inscrever', 'users'],
+                        ['private', 'Privado', 'Apenas convidados podem se inscrever', 'summary'],
+                        ['invite', 'Por Convite', 'Somente convidados selecionados', 'user'],
+                      ].map(([value, label, description, icon]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          className={tournamentAccessType === value ? 'active' : ''}
+                          onClick={() => setTournamentAccessType(value)}
+                        >
+                          {premiumFieldIcon(icon)}
+                          <strong>{label}</strong>
+                          <small>{description}</small>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="premiumVisibilityGrid">
+                      <label className="premiumTournamentField">
+                        <span>Visibilidade</span>
+                        <div>
+                          {premiumFieldIcon('summary')}
+                          <select value={tournamentVisibility} onChange={e => setTournamentVisibility(e.target.value)}>
+                            <option>Exibir na agenda pública</option>
+                            <option>Ocultar da agenda pública</option>
+                            <option>Disponível apenas por link</option>
+                          </select>
+                        </div>
+                      </label>
+
+                      <div className="premiumVisibilityToggle">
+                        <div>
+                          <strong>Permitir Lista de Espera</strong>
+                          <small>Permitir jogadores entrarem na lista de espera</small>
+                        </div>
+                        {renderToggle(waitlistEnabled, setWaitlistEnabled)}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="premiumTournamentActions">
@@ -11593,56 +11644,6 @@ function CreateTournament({ user }: any) {
                   </div>
                 </section>
 
-                <section className="premiumTournamentSummary premiumVisibilityCard">
-                  <div className="premiumAsideTitle">
-                    {premiumFieldIcon('users')}
-                    <div>
-                      <h2>Tipo e Visibilidade</h2>
-                      <p>Escolha quem poderá ver e participar do seu torneio.</p>
-                    </div>
-                  </div>
-
-                  <div className="premiumAccessCards" role="radiogroup" aria-label="Tipo do torneio">
-                    {[
-                      ['public', 'Público', 'Qualquer pessoa pode ver e se inscrever', 'users'],
-                      ['private', 'Privado', 'Apenas convidados podem se inscrever', 'summary'],
-                      ['invite', 'Por Convite', 'Somente convidados selecionados', 'user'],
-                    ].map(([value, label, description, icon]) => (
-                      <button
-                        key={value}
-                        type="button"
-                        className={tournamentAccessType === value ? 'active' : ''}
-                        onClick={() => setTournamentAccessType(value)}
-                      >
-                        {premiumFieldIcon(icon)}
-                        <strong>{label}</strong>
-                        <small>{description}</small>
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="premiumVisibilityGrid">
-                    <label className="premiumTournamentField">
-                      <span>Visibilidade</span>
-                      <div>
-                        {premiumFieldIcon('summary')}
-                        <select value={tournamentVisibility} onChange={e => setTournamentVisibility(e.target.value)}>
-                          <option>Exibir na agenda pública</option>
-                          <option>Ocultar da agenda pública</option>
-                          <option>Disponível apenas por link</option>
-                        </select>
-                      </div>
-                    </label>
-
-                    <div className="premiumVisibilityToggle">
-                      <div>
-                        <strong>Permitir Lista de Espera</strong>
-                        <small>Permitir jogadores entrarem na lista de espera</small>
-                      </div>
-                      {renderToggle(waitlistEnabled, setWaitlistEnabled)}
-                    </div>
-                  </div>
-                </section>
               </aside>
             </div>
           </section>

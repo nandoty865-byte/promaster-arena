@@ -11301,6 +11301,42 @@ button:hover {
 .premiumTournamentFieldIcon.cover::before { content: "▧"; }
 .premiumTournamentFieldIcon.rocket::before { content: "↟"; }
 
+.premiumTournamentFieldIcon.trophy::before,
+.premiumTournamentFieldIcon.balls::before,
+.premiumTournamentFieldIcon.level::before,
+.premiumTournamentFieldIcon.calendar::before,
+.premiumTournamentFieldIcon.clock::before,
+.premiumTournamentFieldIcon.pin::before,
+.premiumTournamentFieldIcon.city::before,
+.premiumTournamentFieldIcon.table::before,
+.premiumTournamentFieldIcon.whatsapp::before,
+.premiumTournamentFieldIcon.users::before,
+.premiumTournamentFieldIcon.user::before,
+.premiumTournamentFieldIcon.summary::before,
+.premiumTournamentFieldIcon.sport::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  display: block;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.premiumTournamentFieldIcon.trophy::before { background-image: url('/create-tournament-icons/trophy-green.png'); }
+.premiumTournamentFieldIcon.balls::before,
+.premiumTournamentFieldIcon.sport::before { background-image: url('/create-tournament-icons/balls-green.png'); }
+.premiumTournamentFieldIcon.level::before { background-image: url('/create-tournament-icons/level-green.png'); }
+.premiumTournamentFieldIcon.calendar::before { background-image: url('/create-tournament-icons/calendar-green.png'); }
+.premiumTournamentFieldIcon.clock::before { background-image: url('/create-tournament-icons/clock-green.png'); }
+.premiumTournamentFieldIcon.pin::before { background-image: url('/create-tournament-icons/location-green.png'); }
+.premiumTournamentFieldIcon.city::before { background-image: url('/create-tournament-icons/city-white.png'); }
+.premiumTournamentFieldIcon.table::before { background-image: url('/create-tournament-icons/table-green.png'); }
+.premiumTournamentFieldIcon.whatsapp::before { background-image: url('/create-tournament-icons/whatsapp-green.png'); }
+.premiumTournamentFieldIcon.users::before,
+.premiumTournamentFieldIcon.user::before { background-image: url('/create-tournament-icons/city-white.png'); }
+.premiumTournamentFieldIcon.summary::before { background-image: url('/create-tournament-icons/location-white.png'); }
+
 .premiumNumberStepper {
   display: inline-grid;
   gap: 3px;
@@ -11347,17 +11383,17 @@ button:hover {
 
 .premiumSecondaryAction {
   padding: 0 18px;
-  border: 1px solid var(--pf-border-soft);
-  background: rgba(10, 16, 23, .84);
-  color: var(--pf-white);
+  border: 1px solid rgba(166, 255, 0, .38);
+  background: rgba(166, 255, 0, .2);
+  color: var(--pf-lime);
 }
 
 .premiumPrimaryAction {
   padding: 0 22px;
-  border: 1px solid rgba(166, 255, 0, .58);
-  background: linear-gradient(180deg, var(--pf-lime), var(--pf-lime-soft));
-  color: #071000;
-  box-shadow: 0 0 22px rgba(166, 255, 0, .2);
+  border: 1px solid rgba(166, 255, 0, .42);
+  background: rgba(166, 255, 0, .2);
+  color: var(--pf-lime);
+  box-shadow: 0 0 18px rgba(166, 255, 0, .12);
 }
 
 .premiumTournamentAside {
@@ -11367,7 +11403,7 @@ button:hover {
 }
 
 .premiumInfoLayout .premiumTournamentAside {
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto;
 }
 
 .premiumWizardGrid {
@@ -11483,12 +11519,12 @@ button:hover {
 }
 
 .premiumAccessCards button {
-  min-height: 102px;
+  min-height: 82px;
   display: grid;
   align-content: start;
   justify-items: start;
-  gap: 7px;
-  padding: 12px;
+  gap: 6px;
+  padding: 10px;
   border: 1px solid var(--pf-border);
   border-radius: 12px;
   background: rgba(10, 16, 23, .58);
@@ -11583,18 +11619,18 @@ button:hover {
   flex-direction: column;
   gap: 3px;
   margin-top: 14px;
-  border: 1px dashed rgba(199, 208, 218, .34);
-  background: rgba(10, 16, 23, .68);
-  color: var(--pf-white);
+  border: 1px dotted rgba(166, 255, 0, .48);
+  background: transparent;
+  color: var(--pf-lime);
 }
 
 .premiumUploadBox span {
-  color: var(--pf-text);
+  color: var(--pf-lime);
   font-size: 18px;
 }
 
 .premiumUploadBox small {
-  color: var(--pf-muted);
+  color: var(--pf-text);
   font-size: 11px;
   font-weight: 800;
 }
