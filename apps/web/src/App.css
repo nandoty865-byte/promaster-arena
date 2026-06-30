@@ -10910,21 +10910,46 @@ button:hover {
 }
 
 .premiumTournamentMain {
+  --pf-bg-main: #05080D;
+  --pf-bg-deep: #03060A;
+  --pf-bg-section: #080E14;
+  --pf-bg-card: #0B1118;
+  --pf-bg-card-soft: #0F1720;
+  --pf-bg-card-hover: #121C26;
+  --pf-input-bg: #0A1017;
+  --pf-input-active: #0E1822;
+  --pf-lime: #A6FF00;
+  --pf-lime-soft: #8FE300;
+  --pf-lime-glow: rgba(166, 255, 0, .18);
+  --pf-white: #F5F7FA;
+  --pf-silver: #D9DEE5;
+  --pf-text: #C7D0DA;
+  --pf-muted: #8D98A5;
+  --pf-muted-dark: #5F6B78;
+  --pf-border: #1F2A35;
+  --pf-border-soft: #26313D;
   min-height: 100vh;
-  padding: 24px 32px 34px;
+  padding: 20px 28px 30px;
   background:
-    radial-gradient(circle at 18% 2%, rgba(166, 255, 0, .1), transparent 28%),
-    radial-gradient(circle at 84% 14%, rgba(38, 99, 234, .12), transparent 34%),
-    linear-gradient(135deg, #0b0e14 0%, #070a10 48%, #0f141f 100%);
+    radial-gradient(circle at 18% 2%, rgba(166, 255, 0, .07), transparent 26%),
+    radial-gradient(circle at 84% 8%, rgba(84, 122, 180, .045), transparent 31%),
+    linear-gradient(180deg, var(--pf-bg-main) 0%, var(--pf-bg-deep) 100%);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.premiumTournamentMain *,
+.premiumTournamentMain *::before,
+.premiumTournamentMain *::after {
+  box-sizing: border-box;
 }
 
 .premiumTournamentShell {
-  width: min(100%, 1480px);
-  min-height: min(820px, calc(100vh - 58px));
+  width: min(100%, 1440px);
+  min-height: min(810px, calc(100vh - 50px));
   margin: 0 auto;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 18px;
+  gap: 14px;
 }
 
 .premiumTournamentHeader {
@@ -10940,37 +10965,37 @@ button:hover {
   align-items: center;
   min-height: 26px;
   padding: 0 10px;
-  border: 1px solid rgba(166, 255, 0, .22);
+  border: 1px solid rgba(166, 255, 0, .18);
   border-radius: 999px;
-  background: rgba(166, 255, 0, .06);
-  color: #a6ff00;
+  background: rgba(166, 255, 0, .045);
+  color: var(--pf-lime);
   font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
 }
 
 .premiumTournamentHeader h1 {
-  margin: 12px 0 6px;
-  color: #f5f7fa;
-  font-family: var(--font-title);
-  font-size: clamp(28px, 3vw, 42px);
-  font-weight: 950;
+  margin: 10px 0 5px;
+  color: var(--pf-white);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 850;
   letter-spacing: 0;
 }
 
 .premiumTournamentHeader p {
   margin: 0;
-  color: #aeb8c7;
-  font-size: 15px;
-  font-weight: 700;
+  color: var(--pf-muted);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .premiumTournamentStepPill {
   min-width: 150px;
   padding: 14px 16px;
-  border: 1px solid rgba(38, 48, 58, .95);
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(17, 22, 34, .9), rgba(8, 12, 18, .82));
+  border: 1px solid var(--pf-border);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(15, 23, 32, .9), rgba(8, 14, 20, .82));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
 }
 
@@ -10980,7 +11005,7 @@ button:hover {
 }
 
 .premiumTournamentStepPill span {
-  color: #7f8b9d;
+  color: var(--pf-muted);
   font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
@@ -10988,17 +11013,17 @@ button:hover {
 
 .premiumTournamentStepPill strong {
   margin-top: 3px;
-  color: #f5f7fa;
+  color: var(--pf-white);
   font-size: 14px;
 }
 
 .premiumHelpButton {
   min-height: 42px;
   padding: 0 18px;
-  border: 1px solid rgba(121, 132, 148, .42);
-  border-radius: 8px;
-  background: rgba(7, 10, 15, .72);
-  color: #f5f7fa;
+  border: 1px solid var(--pf-border-soft);
+  border-radius: 10px;
+  background: rgba(10, 16, 23, .78);
+  color: var(--pf-white);
   font-weight: 900;
   cursor: pointer;
 }
@@ -11007,10 +11032,11 @@ button:hover {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
-  padding: 16px 18px;
-  border: 1px solid rgba(38, 48, 58, .9);
-  border-radius: 10px;
-  background: linear-gradient(180deg, rgba(17, 22, 34, .82), rgba(11, 14, 20, .72));
+  min-height: 72px;
+  padding: 14px 18px;
+  border: 1px solid var(--pf-border);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(15, 23, 32, .9), rgba(8, 14, 20, .78));
 }
 
 .premiumWizardStepper button {
@@ -11021,7 +11047,7 @@ button:hover {
   gap: 10px;
   border: 0;
   background: transparent;
-  color: #aeb8c7;
+  color: var(--pf-muted);
   cursor: pointer;
   font-weight: 900;
   text-align: left;
@@ -11036,38 +11062,39 @@ button:hover {
   height: 34px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(166, 255, 0, .34);
+  border: 1px solid rgba(166, 255, 0, .28);
   border-radius: 50%;
-  color: #f5f7fa;
-  background: rgba(255, 255, 255, .1);
+  color: var(--pf-silver);
+  background: rgba(95, 107, 120, .32);
 }
 
 .premiumWizardStepper strong {
   overflow: hidden;
   color: inherit;
   font-size: 13px;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .premiumWizardStepper i {
   height: 1px;
-  background: linear-gradient(90deg, rgba(166, 255, 0, .52), rgba(121, 132, 148, .2));
+  background: linear-gradient(90deg, rgba(166, 255, 0, .44), rgba(121, 132, 148, .18));
 }
 
 .premiumWizardStepper button.active {
-  color: #a6ff00;
+  color: var(--pf-lime);
 }
 
 .premiumWizardStepper button.active span {
-  background: #a6ff00;
+  background: var(--pf-lime);
   color: #071000;
-  box-shadow: 0 0 20px rgba(166, 255, 0, .32);
+  box-shadow: 0 0 14px rgba(166, 255, 0, .18);
 }
 
 .premiumWizardStepper button.completed span {
-  color: #a6ff00;
-  background: rgba(166, 255, 0, .08);
+  color: var(--pf-lime);
+  background: rgba(166, 255, 0, .07);
 }
 
 .premiumTournamentLayout {
@@ -11080,13 +11107,13 @@ button:hover {
 .premiumTournamentFormCard,
 .premiumTournamentSummary,
 .premiumTournamentCover {
-  border: 1px solid rgba(38, 48, 58, .92);
-  border-radius: 10px;
+  border: 1px solid var(--pf-border);
+  border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(17, 22, 34, .86), rgba(11, 14, 20, .78)),
-    rgba(17, 22, 34, .72);
+    linear-gradient(180deg, rgba(15, 23, 32, .88), rgba(8, 14, 20, .84)),
+    rgba(11, 17, 24, .72);
   box-shadow:
-    0 24px 80px rgba(0, 0, 0, .32),
+    0 22px 60px rgba(0, 0, 0, .32),
     inset 0 1px 0 rgba(255, 255, 255, .045);
   backdrop-filter: blur(12px);
 }
@@ -11094,7 +11121,7 @@ button:hover {
 .premiumTournamentFormCard {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  padding: 22px;
+  padding: 20px;
 }
 
 .premiumTournamentFormGrid {
@@ -11107,9 +11134,9 @@ button:hover {
 .premiumTournamentField {
   display: grid;
   gap: 7px;
-  color: #f5f7fa;
+  color: var(--pf-white);
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .premiumTournamentField.wide {
@@ -11117,27 +11144,28 @@ button:hover {
 }
 
 .premiumTournamentField > span {
-  color: #d7dde8;
+  color: var(--pf-silver);
 }
 
 .premiumTournamentField > div {
-  min-height: 46px;
+  min-height: 48px;
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   padding: 0 11px;
-  border: 1px solid rgba(78, 88, 104, .66);
-  border-radius: 8px;
-  background: rgba(6, 8, 12, .78);
+  border: 1px solid var(--pf-border-soft);
+  border-radius: 10px;
+  background: rgba(10, 16, 23, .88);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
 }
 
 .premiumTournamentField > div:focus-within {
-  border-color: rgba(166, 255, 0, .56);
+  border-color: rgba(166, 255, 0, .52);
+  background: var(--pf-input-active);
   box-shadow:
     0 0 0 3px rgba(166, 255, 0, .08),
-    0 0 22px rgba(166, 255, 0, .08);
+    0 0 16px rgba(166, 255, 0, .06);
 }
 
 .premiumTournamentField input,
@@ -11148,9 +11176,10 @@ button:hover {
   border: 0;
   outline: 0;
   background: transparent;
-  color: #f5f7fa;
+  color: var(--pf-white);
   font: inherit;
   font-size: 14px;
+  font-weight: 500;
 }
 
 .premiumTournamentField select {
@@ -11179,23 +11208,24 @@ button:hover {
   position: absolute;
   right: 14px;
   bottom: 8px;
-  color: #7f8b9d;
+  color: var(--pf-muted);
   font-size: 11px;
   font-weight: 900;
 }
 
 .premiumTournamentFieldIcon {
-  width: 25px;
-  height: 25px;
+  width: 26px;
+  height: 26px;
   display: inline-grid;
   place-items: center;
-  border: 1px solid rgba(166, 255, 0, .18);
-  border-radius: 7px;
-  background: rgba(166, 255, 0, .06);
-  color: #a6ff00;
-  font-size: 13px;
-  font-weight: 950;
-  box-shadow: 0 0 13px rgba(166, 255, 0, .08);
+  border: 1px solid rgba(166, 255, 0, .16);
+  border-radius: 8px;
+  background: rgba(166, 255, 0, .045);
+  color: var(--pf-lime);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1;
+  box-shadow: 0 0 10px rgba(166, 255, 0, .06);
 }
 
 .premiumTournamentFieldIcon.trophy::before { content: "♕"; }
@@ -11231,10 +11261,10 @@ button:hover {
   height: 18px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(166, 255, 0, .2);
+  border: 1px solid rgba(166, 255, 0, .18);
   border-radius: 5px;
-  background: rgba(166, 255, 0, .08);
-  color: #a6ff00;
+  background: rgba(166, 255, 0, .06);
+  color: var(--pf-lime);
   font-size: 12px;
   font-weight: 950;
   cursor: pointer;
@@ -11247,35 +11277,36 @@ button:hover {
   gap: 14px;
   padding-top: 18px;
   margin-top: 16px;
-  border-top: 1px solid rgba(38, 48, 58, .82);
+  border-top: 1px solid var(--pf-border);
 }
 
 .premiumSecondaryAction,
 .premiumPrimaryAction,
 .premiumUploadBox {
-  min-height: 44px;
+  min-height: 48px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
-  border-radius: 8px;
-  font-weight: 950;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
   cursor: pointer;
 }
 
 .premiumSecondaryAction {
   padding: 0 18px;
-  border: 1px solid rgba(121, 132, 148, .52);
-  background: rgba(7, 10, 15, .82);
-  color: #f5f7fa;
+  border: 1px solid var(--pf-border-soft);
+  background: rgba(10, 16, 23, .84);
+  color: var(--pf-white);
 }
 
 .premiumPrimaryAction {
   padding: 0 22px;
-  border: 1px solid rgba(166, 255, 0, .72);
-  background: linear-gradient(180deg, #b8ff2d, #8fe900);
+  border: 1px solid rgba(166, 255, 0, .58);
+  background: linear-gradient(180deg, var(--pf-lime), var(--pf-lime-soft));
   color: #071000;
-  box-shadow: 0 0 26px rgba(166, 255, 0, .22);
+  box-shadow: 0 0 22px rgba(166, 255, 0, .2);
 }
 
 .premiumTournamentAside {
@@ -11315,7 +11346,7 @@ button:hover {
 
 .premiumTournamentSummary,
 .premiumTournamentCover {
-  padding: 20px;
+  padding: 18px;
 }
 
 .premiumAsideTitle {
@@ -11327,14 +11358,14 @@ button:hover {
 
 .premiumAsideTitle h2 {
   margin: 0;
-  color: #f5f7fa;
-  font-size: 18px;
-  font-weight: 950;
+  color: var(--pf-white);
+  font-size: 16px;
+  font-weight: 800;
 }
 
 .premiumAsideTitle p {
   margin: 4px 0 0;
-  color: #98a4b5;
+  color: var(--pf-muted);
   font-size: 12px;
   font-weight: 800;
 }
@@ -11352,14 +11383,14 @@ button:hover {
 }
 
 .premiumSummaryList small {
-  color: #aeb8c7;
+  color: var(--pf-text);
   font-size: 12px;
   font-weight: 800;
 }
 
 .premiumSummaryList strong {
   max-width: 180px;
-  color: #a6ff00;
+  color: var(--pf-lime);
   font-size: 12px;
   font-weight: 950;
   text-align: right;
@@ -11376,8 +11407,8 @@ button:hover {
 .premiumCoverImage {
   width: 100%;
   aspect-ratio: 16 / 9;
-  border: 1px solid rgba(166, 255, 0, .24);
-  border-radius: 8px;
+  border: 1px solid rgba(166, 255, 0, .18);
+  border-radius: 12px;
   background:
     linear-gradient(90deg, rgba(4, 7, 11, .78), rgba(4, 7, 11, .2)),
     url('/landing-sport-sinuca.png') center / cover;
@@ -11390,18 +11421,18 @@ button:hover {
   flex-direction: column;
   gap: 3px;
   margin-top: 14px;
-  border: 1px dashed rgba(174, 184, 199, .46);
-  background: rgba(6, 8, 12, .62);
-  color: #f5f7fa;
+  border: 1px dashed rgba(199, 208, 218, .34);
+  background: rgba(10, 16, 23, .68);
+  color: var(--pf-white);
 }
 
 .premiumUploadBox span {
-  color: #aeb8c7;
+  color: var(--pf-text);
   font-size: 18px;
 }
 
 .premiumUploadBox small {
-  color: #8a96a7;
+  color: var(--pf-muted);
   font-size: 11px;
   font-weight: 800;
 }
@@ -11415,14 +11446,14 @@ button:hover {
 
 .premiumCardTitle h2 {
   margin: 0;
-  color: #f5f7fa;
+  color: var(--pf-white);
   font-size: 22px;
-  font-weight: 950;
+  font-weight: 850;
 }
 
 .premiumCardTitle p {
   margin: 5px 0 0;
-  color: #aeb8c7;
+  color: var(--pf-text);
   font-size: 13px;
   font-weight: 700;
 }
@@ -11430,14 +11461,14 @@ button:hover {
 .premiumInnerCard {
   margin-top: 14px;
   padding: 16px;
-  border: 1px solid rgba(78, 88, 104, .44);
-  border-radius: 9px;
-  background: rgba(6, 8, 12, .46);
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  background: rgba(10, 16, 23, .52);
 }
 
 .premiumInnerCard h3 {
   margin: 0 0 13px;
-  color: #f5f7fa;
+  color: var(--pf-white);
   font-size: 15px;
 }
 
@@ -11459,10 +11490,10 @@ button:hover {
   gap: 12px;
   align-items: center;
   padding: 9px 10px;
-  border: 1px solid rgba(78, 88, 104, .44);
-  border-radius: 8px;
-  background: rgba(6, 8, 12, .42);
-  color: #d7dde8;
+  border: 1px solid var(--pf-border);
+  border-radius: 10px;
+  background: rgba(10, 16, 23, .5);
+  color: var(--pf-silver);
   font-size: 13px;
   font-weight: 800;
 }
@@ -11470,10 +11501,10 @@ button:hover {
 .premiumOptionGrid select,
 .premiumOptionGrid input {
   min-height: 34px;
-  border: 1px solid rgba(78, 88, 104, .55);
-  border-radius: 7px;
-  background: rgba(6, 8, 12, .84);
-  color: #f5f7fa;
+  border: 1px solid var(--pf-border-soft);
+  border-radius: 9px;
+  background: rgba(10, 16, 23, .9);
+  color: var(--pf-white);
   padding: 0 10px;
 }
 
@@ -11498,8 +11529,8 @@ button:hover {
 
 .premiumToggle.on {
   border-color: rgba(166, 255, 0, .65);
-  background: #a6ff00;
-  box-shadow: 0 0 16px rgba(166, 255, 0, .18);
+  background: var(--pf-lime);
+  box-shadow: 0 0 12px rgba(166, 255, 0, .14);
 }
 
 .premiumToggle.on span {
@@ -11509,7 +11540,7 @@ button:hover {
 
 .premiumBracketPreview p,
 .premiumBracketPreview small {
-  color: #aeb8c7;
+  color: var(--pf-text);
   font-weight: 800;
 }
 
@@ -11524,10 +11555,11 @@ button:hover {
 
 .premiumBracketLines span {
   height: 22px;
-  border: 1px solid rgba(166, 255, 0, .42);
-  border-left-color: rgba(121, 132, 148, .34);
+  border: 1px solid rgba(166, 255, 0, .3);
+  border-left-color: rgba(121, 132, 148, .24);
   border-radius: 4px;
-  box-shadow: 16px 0 0 rgba(166, 255, 0, .38);
+  background: linear-gradient(90deg, rgba(166, 255, 0, .12), rgba(166, 255, 0, .03));
+  box-shadow: 10px 0 0 rgba(166, 255, 0, .16);
 }
 
 .premiumPriceGrid {
@@ -11545,22 +11577,22 @@ button:hover {
 }
 
 .premiumPriceGrid span {
-  color: #aeb8c7;
+  color: var(--pf-text);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .premiumPriceGrid input,
 .premiumPriceGrid strong {
   border: 0;
   background: transparent;
-  color: #f5f7fa;
+  color: var(--pf-white);
   font-size: 28px;
-  font-weight: 950;
+  font-weight: 850;
 }
 
 .premiumPriceGrid strong {
-  color: #a6ff00;
+  color: var(--pf-lime);
 }
 
 .premiumPaymentGrid {
@@ -11574,9 +11606,9 @@ button:hover {
   display: grid;
   place-items: center;
   gap: 8px;
-  border: 1px solid rgba(78, 88, 104, .44);
-  border-radius: 9px;
-  background: rgba(6, 8, 12, .52);
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  background: rgba(10, 16, 23, .56);
   text-align: center;
 }
 
@@ -11590,18 +11622,18 @@ button:hover {
   grid-template-columns: minmax(140px, 1fr) 148px 92px;
   gap: 8px;
   align-items: center;
-  color: #f5f7fa;
+  color: var(--pf-white);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .premiumDeadlineGrid input,
 .premiumPriceGrid input {
-  min-height: 38px;
-  border: 1px solid rgba(78, 88, 104, .55);
-  border-radius: 8px;
-  background: rgba(6, 8, 12, .76);
-  color: #f5f7fa;
+  min-height: 40px;
+  border: 1px solid var(--pf-border-soft);
+  border-radius: 10px;
+  background: rgba(10, 16, 23, .82);
+  color: var(--pf-white);
   padding: 0 10px;
 }
 
@@ -11614,16 +11646,16 @@ button:hover {
   display: grid;
   gap: 5px;
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(78, 88, 104, .35);
+  border-bottom: 1px solid var(--pf-border);
 }
 
 .premiumKpiStack span {
-  color: #aeb8c7;
-  font-weight: 800;
+  color: var(--pf-text);
+  font-weight: 700;
 }
 
 .premiumKpiStack strong {
-  color: #a6ff00;
+  color: var(--pf-lime);
   font-size: 16px;
 }
 
@@ -11635,22 +11667,22 @@ button:hover {
   display: grid;
   gap: 8px;
   padding: 16px;
-  border: 1px solid rgba(78, 88, 104, .44);
-  border-radius: 9px;
-  background: rgba(6, 8, 12, .52);
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  background: rgba(10, 16, 23, .56);
 }
 
 .premiumPrizeValue span {
-  color: #aeb8c7;
-  font-weight: 800;
+  color: var(--pf-text);
+  font-weight: 700;
 }
 
 .premiumPrizeValue input {
   border: 0;
   background: transparent;
-  color: #a6ff00;
+  color: var(--pf-lime);
   font-size: 30px;
-  font-weight: 950;
+  font-weight: 850;
 }
 
 .premiumPrizeTable,
@@ -11671,39 +11703,40 @@ button:hover {
   gap: 12px;
   align-items: center;
   padding: 12px;
-  border: 1px solid rgba(78, 88, 104, .38);
-  border-radius: 8px;
-  background: rgba(6, 8, 12, .46);
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  background: rgba(10, 16, 23, .52);
 }
 
 .premiumPrizeTable strong,
 .premiumTrophyRows strong,
 .premiumPrizeTotal strong {
-  color: #a6ff00;
+  color: var(--pf-lime);
 }
 
 .premiumPrizeTotal {
   display: grid;
   gap: 10px;
   padding: 18px;
-  border: 1px solid rgba(78, 88, 104, .44);
-  border-radius: 9px;
-  background: rgba(6, 8, 12, .52);
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  background: rgba(10, 16, 23, .56);
 }
 
 .premiumPrizeTotal strong {
-  font-size: 34px;
+  font-size: 32px;
+  font-weight: 850;
 }
 
 .premiumDocList button {
   min-height: 44px;
-  border: 1px solid rgba(78, 88, 104, .44);
-  border-radius: 8px;
-  background: rgba(6, 8, 12, .52);
-  color: #d7dde8;
+  border: 1px solid var(--pf-border);
+  border-radius: 10px;
+  background: rgba(10, 16, 23, .56);
+  color: var(--pf-silver);
   text-align: left;
   padding: 0 14px;
-  font-weight: 900;
+  font-weight: 750;
 }
 
 .premiumReviewGrid {
@@ -11718,12 +11751,12 @@ button:hover {
 
 .premiumReviewCard h3 {
   margin: 0;
-  color: #f5f7fa;
+  color: var(--pf-white);
 }
 
 .premiumReviewCard p {
   margin: 0;
-  color: #aeb8c7;
+  color: var(--pf-text);
   line-height: 1.5;
 }
 
@@ -11743,12 +11776,13 @@ button:hover {
 .premiumPublishCard h3 {
   max-width: 330px;
   margin: 0 auto;
-  color: #f5f7fa;
-  font-size: 24px;
+  color: var(--pf-white);
+  font-size: 22px;
+  font-weight: 850;
 }
 
 .premiumPublishCard p {
-  color: #aeb8c7;
+  color: var(--pf-text);
   line-height: 1.5;
 }
 
