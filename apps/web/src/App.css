@@ -12043,6 +12043,24 @@ button:hover {
   }
 }
 
+.premiumTournamentMain .premiumTournamentActions .premiumSecondaryAction,
+.premiumTournamentMain .premiumTournamentActions .premiumPrimaryAction {
+  border-color: rgba(166, 255, 0, .42);
+  background: rgba(166, 255, 0, .2);
+  color: var(--pf-lime);
+  box-shadow: 0 0 18px rgba(166, 255, 0, .12);
+}
+
+.premiumTournamentMain .premiumTournamentActions .premiumSecondaryAction:hover,
+.premiumTournamentMain .premiumTournamentActions .premiumPrimaryAction:hover,
+.premiumTournamentMain .premiumTournamentActions .premiumSecondaryAction:focus-visible,
+.premiumTournamentMain .premiumTournamentActions .premiumPrimaryAction:focus-visible {
+  border-color: rgba(166, 255, 0, .68);
+  background: rgba(166, 255, 0, .24);
+  color: var(--pf-white);
+  outline: 0;
+}
+
 .bingoConfigBox {
   margin-top: 18px;
   padding: 18px;
