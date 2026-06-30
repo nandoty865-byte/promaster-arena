@@ -10426,8 +10426,6 @@ function CreateTournament({ user }: any) {
   const [level, setLevel] = useState('Intermediário')
   const [audience, setAudience] = useState('Todos')
   const [cityState, setCityState] = useState('São Paulo / SP')
-  const [organizerName, setOrganizerName] = useState('Arena Prime')
-  const [contactWhatsapp, setContactWhatsapp] = useState('(11) 91234-5678')
   const [shortDescription, setShortDescription] = useState('Torneio de sinuca estilo snooker para jogadores intermediários e avançados. Competição organizada pela Arena Prime com estrutura profissional.')
 
   const [location, setLocation] = useState('Arena Prime – São Paulo, SP')
@@ -11381,156 +11379,149 @@ function CreateTournament({ user }: any) {
 
             <div className="premiumTournamentLayout premiumInfoLayout">
               <section className="premiumTournamentFormCard">
-                <div className="premiumTournamentFormGrid">
-                  <label className="premiumTournamentField wide">
-                    <span>Nome do torneio *</span>
-                    <div>
-                      {premiumFieldIcon('trophy')}
-                      <input value={name} onChange={e => setName(e.target.value)} />
+                <div className="premiumInfoCards">
+                  <div className="premiumInnerCard premiumInfoCard">
+                    <div className="premiumAsideTitle">
+                      {premiumFieldIcon('summary')}
+                      <div>
+                        <h2>Informações Gerais</h2>
+                        <p>Dados principais para identificar o torneio.</p>
+                      </div>
                     </div>
-                  </label>
 
-                  <label className="premiumTournamentField">
-                    <span>Modalidade *</span>
-                    <div>
-                      {premiumFieldIcon('sport')}
-                      <select value={sportSlug} onChange={e => chooseSport(e.target.value)}>
-                        {sports.map((sport: any) => (
-                          <option key={sport.slug} value={sport.slug}>{sport.name}</option>
-                        ))}
-                      </select>
+                    <div className="premiumTournamentFormGrid">
+                      <label className="premiumTournamentField wide">
+                        <span>Nome do torneio *</span>
+                        <div>
+                          {premiumFieldIcon('trophy')}
+                          <input value={name} onChange={e => setName(e.target.value)} />
+                        </div>
+                      </label>
+
+                      <label className="premiumTournamentField">
+                        <span>Categoria *</span>
+                        <div>
+                          {premiumFieldIcon('balls')}
+                          <select value={styleCategory} onChange={e => setStyleCategory(e.target.value)}>
+                            <option>Snooker</option>
+                            <option>Bola 8</option>
+                            <option>Bola 9</option>
+                            <option>Sinuca brasileira</option>
+                          </select>
+                        </div>
+                      </label>
+
+                      <label className="premiumTournamentField">
+                        <span>Sexo *</span>
+                        <div>
+                          {premiumFieldIcon('users')}
+                          <select value={audience} onChange={e => setAudience(e.target.value)}>
+                            <option>Todos</option>
+                            <option>Masculino</option>
+                            <option>Feminino</option>
+                            <option>Misto</option>
+                          </select>
+                        </div>
+                      </label>
+
+                      <label className="premiumTournamentField">
+                        <span>Nível *</span>
+                        <div>
+                          {premiumFieldIcon('level')}
+                          <select value={level} onChange={e => setLevel(e.target.value)}>
+                            <option>Iniciante</option>
+                            <option>Intermediário</option>
+                            <option>Avançado</option>
+                            <option>Profissional</option>
+                          </select>
+                        </div>
+                      </label>
+
+                      <label className="premiumTournamentField">
+                        <span>Faixa etária *</span>
+                        <div>
+                          {premiumFieldIcon('level')}
+                          <select value={ageRange} onChange={e => setAgeRange(e.target.value)}>
+                            <option>Livre</option>
+                            <option>Sub-18</option>
+                            <option>18+</option>
+                            <option>40+</option>
+                            <option>60+</option>
+                          </select>
+                        </div>
+                      </label>
+
+                      <label className="premiumTournamentField wide description">
+                        <span>Descrição curta do torneio *</span>
+                        <div>
+                          <textarea
+                            maxLength={300}
+                            value={shortDescription}
+                            onChange={e => {
+                              setShortDescription(e.target.value)
+                              setRules(e.target.value)
+                            }}
+                          />
+                          <small>{premiumDescriptionCount}/300</small>
+                        </div>
+                      </label>
                     </div>
-                  </label>
+                  </div>
 
-                  <label className="premiumTournamentField">
-                    <span>Categoria *</span>
-                    <div>
-                      {premiumFieldIcon('balls')}
-                      <select value={styleCategory} onChange={e => setStyleCategory(e.target.value)}>
-                        <option>Snooker</option>
-                        <option>Bola 8</option>
-                        <option>Bola 9</option>
-                        <option>Sinuca brasileira</option>
-                      </select>
-                    </div>
-                  </label>
-
-                  <label className="premiumTournamentField">
-                    <span>Nível *</span>
-                    <div>
-                      {premiumFieldIcon('level')}
-                      <select value={level} onChange={e => setLevel(e.target.value)}>
-                        <option>Iniciante</option>
-                        <option>Intermediário</option>
-                        <option>Avançado</option>
-                        <option>Profissional</option>
-                      </select>
-                    </div>
-                  </label>
-
-                  <label className="premiumTournamentField">
-                    <span>Sexo *</span>
-                    <div>
-                      {premiumFieldIcon('users')}
-                      <select value={audience} onChange={e => setAudience(e.target.value)}>
-                        <option>Todos</option>
-                        <option>Masculino</option>
-                        <option>Feminino</option>
-                        <option>Misto</option>
-                      </select>
-                    </div>
-                  </label>
-
-                  <label className="premiumTournamentField">
-                    <span>Faixa etária *</span>
-                    <div>
-                      {premiumFieldIcon('level')}
-                      <select value={ageRange} onChange={e => setAgeRange(e.target.value)}>
-                        <option>Livre</option>
-                        <option>Sub-18</option>
-                        <option>18+</option>
-                        <option>40+</option>
-                        <option>60+</option>
-                      </select>
-                    </div>
-                  </label>
-
-                  <label className="premiumTournamentField wide">
-                    <span>Local / Arena *</span>
-                    <div>
+                  <div className="premiumInnerCard premiumInfoCard">
+                    <div className="premiumAsideTitle">
                       {premiumFieldIcon('pin')}
-                      <select value={selectedArenaOption} onChange={e => selectTournamentArena(e.target.value)}>
-                        <option value="">Arena Prime – São Paulo, SP</option>
-                        {hasMyArenaOption && (
-                          <option value="my-arena">Minha Arena - {user?.organization?.name}</option>
-                        )}
-                        {arenas.map(arena => (
-                          <option key={arena.id} value={`arena:${arena.id}`}>
-                            {arena.name}
-                          </option>
-                        ))}
-                      </select>
+                      <div>
+                        <h2>Local</h2>
+                        <p>Defina a arena e estrutura disponível.</p>
+                      </div>
                     </div>
-                  </label>
 
-                  <label className="premiumTournamentField">
-                    <span>Cidade / Estado *</span>
-                    <div>
-                      {premiumFieldIcon('city')}
-                      <input value={cityState} onChange={e => setCityState(e.target.value)} />
-                    </div>
-                  </label>
+                    <div className="premiumTournamentFormGrid">
+                      <label className="premiumTournamentField wide">
+                        <span>Local / Arena *</span>
+                        <div>
+                          {premiumFieldIcon('pin')}
+                          <select value={selectedArenaOption} onChange={e => selectTournamentArena(e.target.value)}>
+                            <option value="">Arena Prime – São Paulo, SP</option>
+                            {hasMyArenaOption && (
+                              <option value="my-arena">Minha Arena - {user?.organization?.name}</option>
+                            )}
+                            {arenas.map(arena => (
+                              <option key={arena.id} value={`arena:${arena.id}`}>
+                                {arena.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </label>
 
-                  <label className="premiumTournamentField">
-                    <span>Quantidade de mesas disponíveis *</span>
-                    <div>
-                      {premiumFieldIcon('table')}
-                      <input
-                        type="number"
-                        min="1"
-                        value={tableCount}
-                        onChange={e => setTableCount(Math.max(1, Number(e.target.value) || 1))}
-                      />
-                      <span className="premiumNumberStepper">
-                        <button type="button" onClick={() => setTableCount(current => current + 1)}>+</button>
-                        <button type="button" onClick={() => setTableCount(current => Math.max(1, current - 1))}>-</button>
-                      </span>
-                    </div>
-                  </label>
+                      <label className="premiumTournamentField">
+                        <span>Cidade / Estado *</span>
+                        <div>
+                          {premiumFieldIcon('city')}
+                          <input value={cityState} onChange={e => setCityState(e.target.value)} />
+                        </div>
+                      </label>
 
-                  <label className="premiumTournamentField">
-                    <span>Organizador responsável *</span>
-                    <div>
-                      {premiumFieldIcon('user')}
-                      <select value={organizerName} onChange={e => setOrganizerName(e.target.value)}>
-                        <option>Arena Prime</option>
-                        {user?.organization?.name && <option>{user.organization.name}</option>}
-                      </select>
+                      <label className="premiumTournamentField">
+                        <span>Quantidade de mesas disponíveis *</span>
+                        <div>
+                          {premiumFieldIcon('table')}
+                          <input
+                            type="number"
+                            min="1"
+                            value={tableCount}
+                            onChange={e => setTableCount(Math.max(1, Number(e.target.value) || 1))}
+                          />
+                          <span className="premiumNumberStepper">
+                            <button type="button" onClick={() => setTableCount(current => current + 1)}>+</button>
+                            <button type="button" onClick={() => setTableCount(current => Math.max(1, current - 1))}>-</button>
+                          </span>
+                        </div>
+                      </label>
                     </div>
-                  </label>
-
-                  <label className="premiumTournamentField">
-                    <span>Contato WhatsApp *</span>
-                    <div>
-                      {premiumFieldIcon('whatsapp')}
-                      <input value={contactWhatsapp} onChange={e => setContactWhatsapp(formatBrazilCellphone(e.target.value))} />
-                    </div>
-                  </label>
-
-                  <label className="premiumTournamentField wide description">
-                    <span>Descrição curta do torneio *</span>
-                    <div>
-                      <textarea
-                        maxLength={300}
-                        value={shortDescription}
-                        onChange={e => {
-                          setShortDescription(e.target.value)
-                          setRules(e.target.value)
-                        }}
-                      />
-                      <small>{premiumDescriptionCount}/300</small>
-                    </div>
-                  </label>
+                  </div>
                 </div>
 
                 <div className="premiumTournamentActions">

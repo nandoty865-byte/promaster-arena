@@ -10946,7 +10946,7 @@ button:hover {
 .premiumTournamentShell {
   width: min(100%, 1440px);
   min-height: min(810px, calc(100vh - 50px));
-  margin: 0 auto;
+  margin: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 14px;
@@ -11140,6 +11140,19 @@ button:hover {
 .premiumTournamentLayout.premiumInfoLayout {
   grid-template-columns: minmax(0, 1.08fr) minmax(360px, .62fr);
   align-items: start;
+}
+
+.premiumInfoCards {
+  display: grid;
+  gap: 16px;
+}
+
+.premiumInfoCard {
+  margin-top: 0;
+}
+
+.premiumInfoCard .premiumAsideTitle {
+  margin-bottom: 14px;
 }
 
 .premiumTournamentFormCard,
