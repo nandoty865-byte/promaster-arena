@@ -10455,13 +10455,13 @@ function CreateTournament({ user }: any) {
   const [arenaForm, setArenaForm] = useState<any>(emptyArenaForm)
   const [eventDate, setEventDate] = useState('2026-03-15')
   const [eventTime, setEventTime] = useState('10:00')
-  const [prize, setPrize] = useState('')
+  const [prize, setPrize] = useState('R$ 4.000,00')
   const [rules, setRules] = useState('')
   const [broadcastType, setBroadcastType] = useState('none')
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [obsStreamUrl, setObsStreamUrl] = useState('')
   const [registrationOpen, setRegistrationOpen] = useState(true)
-  const [registrationFee, setRegistrationFee] = useState('')
+  const [registrationFee, setRegistrationFee] = useState('120.00')
   const [paymentCollectionMode, setPaymentCollectionMode] = useState('manual')
   const [paymentLink, setPaymentLink] = useState('')
   const [showTournamentReview, setShowTournamentReview] = useState(false)
@@ -10478,6 +10478,56 @@ function CreateTournament({ user }: any) {
   const [bingoMaxNumber, setBingoMaxNumber] = useState(75)
   const [bingoCardPrice, setBingoCardPrice] = useState('')
   const [bingoCardsPerParticipant, setBingoCardsPerParticipant] = useState(1)
+  const [createStep, setCreateStep] = useState(1)
+  const [disputeSystem, setDisputeSystem] = useState('Dupla eliminação')
+  const [matchModel, setMatchModel] = useState('Melhor de 5 frames')
+  const [averageMatchTime, setAverageMatchTime] = useState('45 min')
+  const [matchInterval, setMatchInterval] = useState('10 min')
+  const [groupStage, setGroupStage] = useState(false)
+  const [gameOrder, setGameOrder] = useState('Automática por chave')
+  const [seedByRanking, setSeedByRanking] = useState(true)
+  const [thirdPlaceMatch, setThirdPlaceMatch] = useState(true)
+  const [tiebreaker, setTiebreaker] = useState('Saldo de frames')
+  const [formatRules, setFormatRules] = useState('WO após 15 min, faltas conforme regra oficial, árbitro opcional')
+  const [formatNotes, setFormatNotes] = useState('')
+  const [registrationStartDate, setRegistrationStartDate] = useState('2026-02-20')
+  const [registrationStartTime, setRegistrationStartTime] = useState('08:00')
+  const [registrationEndDate, setRegistrationEndDate] = useState('2026-03-12')
+  const [registrationEndTime, setRegistrationEndTime] = useState('23:59')
+  const [groupPublishDate, setGroupPublishDate] = useState('2026-03-13')
+  const [checkInDate, setCheckInDate] = useState('2026-03-15')
+  const [checkInTime, setCheckInTime] = useState('09:00')
+  const [platformFee, setPlatformFee] = useState('6,00')
+  const [waitlistEnabled, setWaitlistEnabled] = useState(true)
+  const [reserveLimit, setReserveLimit] = useState(8)
+  const [pixEnabled, setPixEnabled] = useState(true)
+  const [creditCardEnabled, setCreditCardEnabled] = useState(true)
+  const [boletoEnabled, setBoletoEnabled] = useState(false)
+  const [cashEnabled, setCashEnabled] = useState(true)
+  const [autoApproval, setAutoApproval] = useState(true)
+  const [manualReceipt, setManualReceipt] = useState(false)
+  const [refundAllowed, setRefundAllowed] = useState(true)
+  const [registrationPolicy, setRegistrationPolicy] = useState('Ao realizar a inscrição, o jogador declara estar ciente e de acordo com o regulamento do torneio. A taxa de inscrição não é reembolsável, salvo em caso de cancelamento do torneio por parte da organização. A substituição de atletas só será permitida dentro do prazo de check-in.')
+  const [moneyPrizeEnabled, setMoneyPrizeEnabled] = useState(true)
+  const [individualPrizeBestBreak, setIndividualPrizeBestBreak] = useState(true)
+  const [individualPrizeHighlight, setIndividualPrizeHighlight] = useState(true)
+  const [individualPrizeAverage, setIndividualPrizeAverage] = useState(true)
+  const [individualPrizeFairPlay, setIndividualPrizeFairPlay] = useState(false)
+  const [extraPrizeDescription, setExtraPrizeDescription] = useState('Cue premium, brindes dos patrocinadores, voucher da arena.')
+  const [substitutionsAllowed, setSubstitutionsAllowed] = useState(true)
+  const [woLimit, setWoLimit] = useState('1')
+  const [toleranceTime, setToleranceTime] = useState('15 min')
+  const [gameReportMode, setGameReportMode] = useState('Obrigatório')
+  const [cardUsageEnabled, setCardUsageEnabled] = useState(true)
+  const [onlineScoresheet, setOnlineScoresheet] = useState('Obrigatório')
+  const [refereeRequired, setRefereeRequired] = useState(false)
+  const [displayBracketOnScreen, setDisplayBracketOnScreen] = useState(true)
+  const [cancellationAllowed, setCancellationAllowed] = useState(true)
+  const [cancellationLimit, setCancellationLimit] = useState('Até 48 horas antes do início')
+  const [refundPolicy, setRefundPolicy] = useState('Reembolso 70% do valor da inscrição')
+  const [officialChannel, setOfficialChannel] = useState('WhatsApp')
+  const [officialContact, setOfficialContact] = useState('(11) 99999-9999')
+  const [autoNotifications, setAutoNotifications] = useState(true)
   const templateSports = Array.from(
     new Map(
       templates
@@ -10911,6 +10961,400 @@ function CreateTournament({ user }: any) {
     return <span className={`premiumTournamentFieldIcon ${icon}`} aria-hidden="true" />
   }
 
+  const wizardSteps = [
+    { step: 1, label: 'Informações' },
+    { step: 2, label: 'Formato' },
+    { step: 3, label: 'Inscrições' },
+    { step: 4, label: 'Premiação' },
+    { step: 5, label: 'Configurações' },
+    { step: 6, label: 'Publicação' },
+  ]
+  const receivePerRegistration = Math.max(0, (Number(String(registrationFee).replace(',', '.')) || 0) - (Number(String(platformFee).replace(',', '.')) || 0))
+  const enabledPayments = [
+    pixEnabled ? 'Pix' : '',
+    creditCardEnabled ? 'Cartão de crédito' : '',
+    boletoEnabled ? 'Boleto' : '',
+    cashEnabled ? 'Dinheiro no local' : '',
+  ].filter(Boolean).join(', ')
+
+  function goWizardStep(nextStep: number) {
+    setCreateStep(Math.min(6, Math.max(1, nextStep)))
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 20)
+  }
+
+  function renderWizardStepper() {
+    return (
+      <div className="premiumWizardStepper" aria-label="Etapas da criação do torneio">
+        {wizardSteps.map((item, index) => {
+          const completed = item.step < createStep
+          const active = item.step === createStep
+          return (
+            <button
+              key={item.step}
+              type="button"
+              className={`${active ? 'active' : ''}${completed ? ' completed' : ''}`}
+              onClick={() => goWizardStep(item.step)}
+            >
+              <span>{completed ? '✓' : item.step}</span>
+              <strong>{item.label}</strong>
+              {index < wizardSteps.length - 1 && <i aria-hidden="true" />}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
+  function renderToggle(checked: boolean, onChange: (value: boolean) => void) {
+    return (
+      <button
+        type="button"
+        className={`premiumToggle${checked ? ' on' : ''}`}
+        aria-pressed={checked}
+        onClick={() => onChange(!checked)}
+      >
+        <span />
+      </button>
+    )
+  }
+
+  function renderActions(previousLabel: string, nextLabel: string, nextAction?: () => void) {
+    return (
+      <div className="premiumTournamentActions premiumWizardActions">
+        <button type="button" className="premiumSecondaryAction" onClick={() => goWizardStep(createStep - 1)}>
+          <span aria-hidden="true">←</span>
+          Voltar: {previousLabel}
+        </button>
+        <button type="button" className="premiumSecondaryAction" onClick={() => alert('Rascunho salvo localmente.')}>
+          <span aria-hidden="true">▣</span>
+          Salvar rascunho
+        </button>
+        <button type="button" className="premiumPrimaryAction" onClick={nextAction || (() => goWizardStep(createStep + 1))}>
+          {nextLabel}
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+    )
+  }
+
+  function renderValueRow(label: string, value: any, icon = 'summary') {
+    return (
+      <div>
+        <span className={`premiumTournamentFieldIcon ${icon}`} aria-hidden="true" />
+        <small>{label}</small>
+        <strong>{value}</strong>
+      </div>
+    )
+  }
+
+  function renderPaymentCard(label: string, enabled: boolean, onChange: (value: boolean) => void, icon: string) {
+    return (
+      <div className="premiumPaymentCard">
+        <span className={`premiumTournamentFieldIcon ${icon}`} aria-hidden="true" />
+        <strong>{label}</strong>
+        {renderToggle(enabled, onChange)}
+      </div>
+    )
+  }
+
+  function renderWizardHeaderTitle() {
+    const titles: Record<number, [string, string]> = {
+      1: ['1. Informações do Torneio', 'Defina os dados principais do seu torneio de sinuca.'],
+      2: ['2. Formato do Torneio', 'Defina a estrutura das partidas e o modelo de disputa.'],
+      3: ['3. Inscrições', 'Configure valores, vagas e prazos para participação.'],
+      4: ['4. Premiação', 'Defina os prêmios, troféus e benefícios do torneio.'],
+      5: ['5. Configurações', 'Defina regras, documentos e opções adicionais do torneio.'],
+      6: ['6. Publicação', 'Revise as informações e publique seu torneio.'],
+    }
+
+    return titles[createStep] || titles[1]
+  }
+
+  function renderWizardStep() {
+    if (createStep === 2) {
+      return (
+        <div className="premiumWizardGrid twoColumns">
+          <section className="premiumTournamentFormCard">
+            <div className="premiumCardTitle">
+              {premiumFieldIcon('bracket')}
+              <div>
+                <h2>2. Formato do Torneio</h2>
+                <p>Defina a estrutura das partidas e o modelo de disputa.</p>
+              </div>
+            </div>
+
+            <div className="premiumTournamentFormGrid">
+              <label className="premiumTournamentField">
+                <span>Sistema de disputa *</span>
+                <div>{premiumFieldIcon('bracket')}<select value={disputeSystem} onChange={e => setDisputeSystem(e.target.value)}><option>Dupla eliminação</option><option>Mata-mata</option><option>Todos contra todos</option><option>Grupos + mata-mata</option></select></div>
+              </label>
+              <label className="premiumTournamentField">
+                <span>Modelo de confronto *</span>
+                <div>{premiumFieldIcon('sport')}<select value={matchModel} onChange={e => setMatchModel(e.target.value)}><option>Melhor de 3 frames</option><option>Melhor de 5 frames</option><option>Melhor de 7 frames</option></select></div>
+              </label>
+              <label className="premiumTournamentField">
+                <span>Tempo médio por partida *</span>
+                <div>{premiumFieldIcon('clock')}<select value={averageMatchTime} onChange={e => setAverageMatchTime(e.target.value)}><option>30 min</option><option>45 min</option><option>60 min</option></select></div>
+              </label>
+              <label className="premiumTournamentField">
+                <span>Intervalo entre partidas *</span>
+                <div>{premiumFieldIcon('clock')}<select value={matchInterval} onChange={e => setMatchInterval(e.target.value)}><option>5 min</option><option>10 min</option><option>15 min</option></select></div>
+              </label>
+              <label className="premiumTournamentField">
+                <span>Quantidade prevista de jogadores *</span>
+                <div>{premiumFieldIcon('users')}<input type="number" min="2" value={playerCount} onChange={e => setPlayerCount(Math.max(2, Number(e.target.value) || 2))} /></div>
+              </label>
+              <label className="premiumTournamentField">
+                <span>Mesas simultâneas *</span>
+                <div>{premiumFieldIcon('table')}<select value={tableCount} onChange={e => setTableCount(Number(e.target.value))}><option value={4}>4</option><option value={8}>8</option><option value={12}>12</option></select></div>
+              </label>
+            </div>
+
+            <div className="premiumOptionGrid">
+              <div><span>Classificação por grupos</span>{renderToggle(groupStage, setGroupStage)}</div>
+              <div><span>Seed por ranking</span>{renderToggle(seedByRanking, setSeedByRanking)}</div>
+              <div><span>Partida de 3º lugar</span>{renderToggle(thirdPlaceMatch, setThirdPlaceMatch)}</div>
+            </div>
+
+            <div className="premiumTournamentFormGrid">
+              <label className="premiumTournamentField">
+                <span>Definição de ordem de jogos *</span>
+                <div>{premiumFieldIcon('bracket')}<select value={gameOrder} onChange={e => setGameOrder(e.target.value)}><option>Automática por chave</option><option>Manual pelo organizador</option><option>Por disponibilidade de mesa</option></select></div>
+              </label>
+              <label className="premiumTournamentField">
+                <span>Critério de desempate *</span>
+                <div>{premiumFieldIcon('level')}<select value={tiebreaker} onChange={e => setTiebreaker(e.target.value)}><option>Saldo de frames</option><option>Confronto direto</option><option>Melhor campanha</option></select></div>
+              </label>
+              <label className="premiumTournamentField wide description">
+                <span>Regras especiais</span>
+                <div><textarea maxLength={300} value={formatRules} onChange={e => setFormatRules(e.target.value)} /><small>{formatRules.length}/300</small></div>
+              </label>
+              <label className="premiumTournamentField wide description">
+                <span>Observações do formato</span>
+                <div><textarea maxLength={300} value={formatNotes} onChange={e => setFormatNotes(e.target.value)} placeholder="Adicione informações adicionais sobre o formato (opcional)" /><small>{formatNotes.length}/300</small></div>
+              </label>
+            </div>
+
+            {renderActions('Informações', 'Próximo: Inscrições')}
+          </section>
+
+          <aside className="premiumTournamentAside">
+            <section className="premiumTournamentSummary premiumBracketPreview">
+              <div className="premiumAsideTitle">{premiumFieldIcon('bracket')}<h2>Visual do chaveamento</h2></div>
+              <p>{disputeSystem} • {playerCount} jogadores</p>
+              <div className="premiumBracketLines" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <span key={index} />)}</div>
+              <small>{playerCount} jogadores • 5 rodadas estimado</small>
+            </section>
+            <section className="premiumTournamentSummary">
+              <div className="premiumAsideTitle">{premiumFieldIcon('summary')}<h2>Resumo do formato</h2></div>
+              <div className="premiumSummaryList">
+                {renderValueRow('Modalidade', 'Sinuca', 'sport')}
+                {renderValueRow('Categoria', styleCategory, 'balls')}
+                {renderValueRow('Sistema', disputeSystem, 'bracket')}
+                {renderValueRow('Partidas', matchModel, 'calendar')}
+                {renderValueRow('Jogadores', playerCount, 'users')}
+                {renderValueRow('Mesas simultâneas', tableCount, 'table')}
+              </div>
+            </section>
+          </aside>
+        </div>
+      )
+    }
+
+    if (createStep === 3) {
+      return (
+        <div className="premiumWizardGrid threeColumns">
+          <section className="premiumTournamentFormCard spanTwo">
+            <div className="premiumCardTitle">{premiumFieldIcon('registration')}<div><h2>3. Inscrições</h2><p>Configure valores, vagas e prazos para participação.</p></div></div>
+            <div className="premiumInnerCard">
+              <h3>Valores de inscrição</h3>
+              <div className="premiumPriceGrid">
+                <label><span>Valor por jogador</span><input value={registrationFee} onChange={e => setRegistrationFee(e.target.value)} /></label>
+                <label><span>Taxa da plataforma</span><input value={platformFee} onChange={e => setPlatformFee(e.target.value)} /></label>
+                <div><span>Você recebe por inscrição</span><strong>R$ {receivePerRegistration.toFixed(2).replace('.', ',')}</strong></div>
+              </div>
+            </div>
+            <div className="premiumInnerCard">
+              <h3>Formas de pagamento</h3>
+              <div className="premiumPaymentGrid">
+                {renderPaymentCard('Pix', pixEnabled, setPixEnabled, 'pix')}
+                {renderPaymentCard('Cartão de crédito', creditCardEnabled, setCreditCardEnabled, 'card')}
+                {renderPaymentCard('Boleto', boletoEnabled, setBoletoEnabled, 'barcode')}
+                {renderPaymentCard('Dinheiro no local', cashEnabled, setCashEnabled, 'money')}
+              </div>
+            </div>
+            <div className="premiumTournamentFormGrid">
+              <label className="premiumTournamentField"><span>Nº máximo de inscrições *</span><div>{premiumFieldIcon('users')}<input type="number" value={playerCount} onChange={e => setPlayerCount(Number(e.target.value))} /></div></label>
+              <label className="premiumTournamentField"><span>Nº máximo de reservas</span><div>{premiumFieldIcon('users')}<input type="number" value={reserveLimit} onChange={e => setReserveLimit(Number(e.target.value))} /></div></label>
+            </div>
+            <div className="premiumOptionGrid">
+              <div><span>Lista de espera</span>{renderToggle(waitlistEnabled, setWaitlistEnabled)}</div>
+              <div><span>Inscrição por equipe</span><em>Não aplicável</em></div>
+            </div>
+            {renderActions('Formato', 'Próximo: Premiação')}
+          </section>
+
+          <section className="premiumTournamentSummary">
+            <div className="premiumAsideTitle">{premiumFieldIcon('calendar')}<h2>Prazos</h2></div>
+            <div className="premiumDeadlineGrid">
+              <label>Início das inscrições<input type="date" value={registrationStartDate} onChange={e => setRegistrationStartDate(e.target.value)} /><input type="time" value={registrationStartTime} onChange={e => setRegistrationStartTime(e.target.value)} /></label>
+              <label>Término das inscrições<input type="date" value={registrationEndDate} onChange={e => setRegistrationEndDate(e.target.value)} /><input type="time" value={registrationEndTime} onChange={e => setRegistrationEndTime(e.target.value)} /></label>
+              <label>Divulgação dos grupos<input type="date" value={groupPublishDate} onChange={e => setGroupPublishDate(e.target.value)} /></label>
+              <label>Check-in no local<input type="date" value={checkInDate} onChange={e => setCheckInDate(e.target.value)} /><input type="time" value={checkInTime} onChange={e => setCheckInTime(e.target.value)} /></label>
+            </div>
+            <div className="premiumOptionGrid compact">
+              <div><span>Aprovação automática após pagamento</span>{renderToggle(autoApproval, setAutoApproval)}</div>
+              <div><span>Comprovante manual</span>{renderToggle(manualReceipt, setManualReceipt)}</div>
+              <div><span>Reembolso permitido</span>{renderToggle(refundAllowed, setRefundAllowed)}</div>
+            </div>
+            <label className="premiumTournamentField description"><span>Política da inscrição</span><div><textarea maxLength={1000} value={registrationPolicy} onChange={e => setRegistrationPolicy(e.target.value)} /><small>{registrationPolicy.length}/1000</small></div></label>
+          </section>
+
+          <aside className="premiumTournamentAside">
+            <section className="premiumTournamentSummary">
+              <div className="premiumAsideTitle">{premiumFieldIcon('summary')}<h2>Resumo rápido</h2></div>
+              <div className="premiumKpiStack"><div><span>Vagas</span><strong>{playerCount}</strong></div><div><span>Confirmadas</span><strong>0</strong></div><div><span>Lista de espera</span><strong>{waitlistEnabled ? 'Habilitada' : 'Desativada'}</strong></div><div><span>Formas de pagamento</span><strong>{enabledPayments}</strong></div></div>
+            </section>
+            <section className="premiumTournamentCover compactCover"><div className="premiumAsideTitle">{premiumFieldIcon('cover')}<h2>Capa do torneio</h2></div><div className="premiumCoverImage" /><button type="button" className="premiumUploadBox"><span>⇧</span><strong>Alterar imagem</strong><small>PNG ou JPG até 5MB</small></button></section>
+          </aside>
+        </div>
+      )
+    }
+
+    if (createStep === 4) {
+      return (
+        <div className="premiumWizardGrid threeColumns">
+          <section className="premiumTournamentFormCard spanTwo">
+            <div className="premiumCardTitle">{premiumFieldIcon('trophy')}<div><h2>4. Premiação</h2><p>Defina os prêmios, troféus e benefícios do torneio.</p></div></div>
+            <div className="premiumOptionGrid"><div><span>Premiação em dinheiro</span>{renderToggle(moneyPrizeEnabled, setMoneyPrizeEnabled)}</div></div>
+            <div className="premiumPrizeValue"><span>Valor total da premiação</span><input value={prize} onChange={e => setPrize(e.target.value)} /></div>
+            <div className="premiumPrizeTable">
+              {['1º Lugar|R$ 2.000,00|50%', '2º Lugar|R$ 1.200,00|30%', '3º Lugar|R$ 600,00|15%', '4º Lugar|R$ 200,00|5%'].map(row => {
+                const [pos, value, percent] = row.split('|')
+                return <div key={pos}><span>{pos}</span><strong>{value}</strong><em>{percent}</em></div>
+              })}
+            </div>
+            <div className="premiumInnerCard">
+              <h3>Premiações individuais</h3>
+              <div className="premiumOptionGrid compact">
+                <div><span>Melhor break</span>{renderToggle(individualPrizeBestBreak, setIndividualPrizeBestBreak)}</div>
+                <div><span>Jogador destaque</span>{renderToggle(individualPrizeHighlight, setIndividualPrizeHighlight)}</div>
+                <div><span>Melhor média</span>{renderToggle(individualPrizeAverage, setIndividualPrizeAverage)}</div>
+                <div><span>Troféu de Fair Play</span>{renderToggle(individualPrizeFairPlay, setIndividualPrizeFairPlay)}</div>
+              </div>
+            </div>
+            {renderActions('Inscrições', 'Próximo: Configurações')}
+          </section>
+
+          <section className="premiumTournamentSummary">
+            <div className="premiumAsideTitle">{premiumFieldIcon('trophy')}<h2>Troféus e medalhas</h2></div>
+            <div className="premiumTrophyRows">{['🏆 Campeão', '🏆 Vice-campeão', '🏆 3º Lugar'].map(item => <div key={item}><strong>{item}</strong><span>Troféu</span><em>− 1 +</em></div>)}</div>
+            <label className="premiumTournamentField description"><span>Outros prêmios</span><div><textarea maxLength={500} value={extraPrizeDescription} onChange={e => setExtraPrizeDescription(e.target.value)} /><small>{extraPrizeDescription.length}/500</small></div></label>
+          </section>
+
+          <aside className="premiumTournamentSummary">
+            <div className="premiumAsideTitle">{premiumFieldIcon('trophy')}<h2>Resumo da Premiação</h2></div>
+            <div className="premiumPrizeTotal"><span>Total da premiação</span><strong>{prize}</strong></div>
+            <div className="premiumSummaryList">{renderValueRow('Número de premiados', 4, 'users')}{renderValueRow('Troféus', 3, 'trophy')}{renderValueRow('Medalhas', 0, 'summary')}{renderValueRow('Prêmios extras', 3, 'money')}</div>
+          </aside>
+        </div>
+      )
+    }
+
+    if (createStep === 5) {
+      return (
+        <div className="premiumWizardGrid fourColumns">
+          <section className="premiumTournamentFormCard">
+            <div className="premiumCardTitle"><div><h2>5. Configurações</h2><p>Defina regras, documentos e opções adicionais do torneio.</p></div></div>
+            <div className="premiumInnerCard"><h3>Regras do Torneio</h3><div className="premiumFileRows"><div><strong>Regulamento_Sinuca_PlayFinal.pdf</strong><small>1.2 MB</small><span>⇩ 🗑</span></div><div><strong>Código_Conduta.pdf</strong><small>856 KB</small><span>⇩ 🗑</span></div></div><div className="premiumOptionGrid compact"><div><span>Jogadores aceitam as regras</span>{renderToggle(true, () => null)}</div></div></div>
+            <div className="premiumInnerCard"><h3>Política de cancelamento e reembolso</h3><div className="premiumOptionGrid compact"><div><span>Permitir cancelamento</span>{renderToggle(cancellationAllowed, setCancellationAllowed)}</div></div><label className="premiumTournamentField"><span>Até quando permitir cancelamento?</span><div><select value={cancellationLimit} onChange={e => setCancellationLimit(e.target.value)}><option>Até 48 horas antes do início</option><option>Até 24 horas antes do início</option><option>Não permitir</option></select></div></label><label className="premiumTournamentField"><span>Política de reembolso</span><div><select value={refundPolicy} onChange={e => setRefundPolicy(e.target.value)}><option>Reembolso 70% do valor da inscrição</option><option>Reembolso integral</option><option>Sem reembolso</option></select></div></label></div>
+          </section>
+          <section className="premiumTournamentSummary">
+            <div className="premiumAsideTitle"><h2>Opções do torneio</h2></div>
+            <div className="premiumOptionGrid compact">
+              <div><span>Permitir substituições</span>{renderToggle(substitutionsAllowed, setSubstitutionsAllowed)}</div>
+              <label>Limite de WO<select value={woLimit} onChange={e => setWoLimit(e.target.value)}><option>1</option><option>2</option></select></label>
+              <label>Tempo de tolerância<select value={toleranceTime} onChange={e => setToleranceTime(e.target.value)}><option>10 min</option><option>15 min</option><option>20 min</option></select></label>
+              <label>Relatório de jogo<select value={gameReportMode} onChange={e => setGameReportMode(e.target.value)}><option>Obrigatório</option><option>Opcional</option></select></label>
+              <div><span>Uso de cartão</span>{renderToggle(cardUsageEnabled, setCardUsageEnabled)}</div>
+              <label>Súmula online<select value={onlineScoresheet} onChange={e => setOnlineScoresheet(e.target.value)}><option>Obrigatório</option><option>Opcional</option></select></label>
+              <div><span>Árbitro obrigatório</span>{renderToggle(refereeRequired, setRefereeRequired)}</div>
+              <div><span>Exibir chaves em telão</span>{renderToggle(displayBracketOnScreen, setDisplayBracketOnScreen)}</div>
+            </div>
+          </section>
+          <section className="premiumTournamentSummary">
+            <div className="premiumAsideTitle"><h2>Documentos e anexos</h2></div>
+            <div className="premiumDocList"><button>Tabela base / chaveamento ›</button><button>Mapa / localização ›</button><button>Termo de participação ›</button><button>Outros documentos ›</button></div>
+            <div className="premiumAsideTitle"><h2>Comunicação</h2></div>
+            <label className="premiumTournamentField"><span>Canal oficial</span><div><select value={officialChannel} onChange={e => setOfficialChannel(e.target.value)}><option>WhatsApp</option><option>E-mail</option></select></div></label>
+            <label className="premiumTournamentField"><span>Número de contato</span><div><input value={officialContact} onChange={e => setOfficialContact(formatBrazilCellphone(e.target.value))} /></div></label>
+            <div className="premiumOptionGrid compact"><div><span>Enviar avisos automáticos</span>{renderToggle(autoNotifications, setAutoNotifications)}</div></div>
+          </section>
+          <aside className="premiumTournamentSummary">
+            <div className="premiumAsideTitle">{premiumFieldIcon('summary')}<h2>Resumo Rápido</h2></div>
+            <div className="premiumSummaryList">{premiumSummaryRows.map(([label, value, icon]) => renderValueRow(label, value, icon))}<hr />{renderValueRow('Limite de WO', woLimit)}{renderValueRow('Tempo de tolerância', toleranceTime)}{renderValueRow('Relatório de jogo', gameReportMode)}{renderValueRow('Súmula online', onlineScoresheet)}</div>
+          </aside>
+          <div className="spanAll">{renderActions('Premiação', 'Próximo: Publicação')}</div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="premiumWizardGrid publishGrid">
+        <section className="premiumTournamentFormCard">
+          <div className="premiumCardTitle"><div><h2>6. Publicação</h2><p>Revise as informações e publique seu torneio.</p></div></div>
+          <div className="premiumReviewGrid">
+            {['Informações Gerais', 'Formato', 'Inscrições', 'Premiação', 'Configurações', 'Documentos'].map(section => (
+              <div className="premiumReviewCard" key={section}>
+                <h3>{section}</h3>
+                <p>{section === 'Informações Gerais' ? name : section === 'Formato' ? `${disputeSystem} • ${matchModel}` : section === 'Inscrições' ? `R$ ${registrationFee} • ${playerCount} vagas` : section === 'Premiação' ? prize : section === 'Configurações' ? 'Regras e avisos configurados' : 'Regulamento enviado'}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+        <aside className="premiumTournamentSummary premiumPublishCard">
+          <div className="premiumAsideTitle">{premiumFieldIcon('rocket')}<h2>Publicar Torneio</h2></div>
+          <div className="premiumCoverImage publish" />
+          <h3>Seu torneio está pronto para ser publicado!</h3>
+          <button className="premiumPrimaryAction" type="button" onClick={createTournament}>Publicar Torneio</button>
+          <button className="premiumSecondaryAction" type="button" onClick={() => alert('Rascunho salvo localmente.')}>Salvar rascunho</button>
+          <p>Após a publicação, os jogadores já poderão ver e se inscrever no seu torneio.</p>
+        </aside>
+        <div className="spanAll">
+          <div className="premiumTournamentActions">
+            <button type="button" className="premiumSecondaryAction" onClick={() => goWizardStep(5)}><span aria-hidden="true">←</span> Voltar: Configurações</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isBingo && createStep > 1) {
+    const [currentTitle, currentSubtitle] = renderWizardHeaderTitle()
+
+    return (
+      <div className="saasLayout">
+        <ClientSidebar user={user} isMasterPlan={user?.organization?.plan === 'master' || user?.organization?.plan === 'free'} />
+
+        <main className="saasMain premiumTournamentMain">
+          <section className="premiumTournamentShell" aria-label="Criar novo torneio">
+            <div className="premiumTournamentHeader">
+              <div>
+                <span className="premiumTournamentEyebrow">Criar Novo Torneio</span>
+                <h1>{currentTitle}</h1>
+                <p>{currentSubtitle}</p>
+              </div>
+              <button className="premiumHelpButton" type="button">? Ajuda</button>
+            </div>
+
+            {renderWizardStepper()}
+            {renderWizardStep()}
+          </section>
+        </main>
+      </div>
+    )
+  }
+
   if (!isBingo) {
     return (
       <div className="saasLayout">
@@ -10920,15 +11364,14 @@ function CreateTournament({ user }: any) {
           <section className="premiumTournamentShell" aria-label="Criar novo torneio">
             <div className="premiumTournamentHeader">
               <div>
-                <span className="premiumTournamentEyebrow">Criar novo torneio</span>
+                <span className="premiumTournamentEyebrow">Criar Novo Torneio</span>
                 <h1>1. Informações do Torneio</h1>
                 <p>Defina os dados principais do seu torneio de sinuca.</p>
               </div>
-              <div className="premiumTournamentStepPill">
-                <span>Etapa 1</span>
-                <strong>Informações</strong>
-              </div>
+              <button className="premiumHelpButton" type="button">? Ajuda</button>
             </div>
+
+            {renderWizardStepper()}
 
             <div className="premiumTournamentLayout">
               <section className="premiumTournamentFormCard">
@@ -11091,7 +11534,7 @@ function CreateTournament({ user }: any) {
                     <span aria-hidden="true">▣</span>
                     Salvar rascunho
                   </button>
-                  <button type="button" className="premiumPrimaryAction" onClick={() => alert('Próxima etapa: Formato do torneio.')}>
+                  <button type="button" className="premiumPrimaryAction" onClick={() => goWizardStep(2)}>
                     Próximo: Formato
                     <span aria-hidden="true">→</span>
                   </button>

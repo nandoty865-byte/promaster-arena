@@ -10992,6 +10992,84 @@ button:hover {
   font-size: 14px;
 }
 
+.premiumHelpButton {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid rgba(121, 132, 148, .42);
+  border-radius: 8px;
+  background: rgba(7, 10, 15, .72);
+  color: #f5f7fa;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.premiumWizardStepper {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  padding: 16px 18px;
+  border: 1px solid rgba(38, 48, 58, .9);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(17, 22, 34, .82), rgba(11, 14, 20, .72));
+}
+
+.premiumWizardStepper button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) minmax(28px, 1fr);
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  color: #aeb8c7;
+  cursor: pointer;
+  font-weight: 900;
+  text-align: left;
+}
+
+.premiumWizardStepper button:last-child {
+  grid-template-columns: 34px minmax(0, 1fr);
+}
+
+.premiumWizardStepper span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(166, 255, 0, .34);
+  border-radius: 50%;
+  color: #f5f7fa;
+  background: rgba(255, 255, 255, .1);
+}
+
+.premiumWizardStepper strong {
+  overflow: hidden;
+  color: inherit;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.premiumWizardStepper i {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(166, 255, 0, .52), rgba(121, 132, 148, .2));
+}
+
+.premiumWizardStepper button.active {
+  color: #a6ff00;
+}
+
+.premiumWizardStepper button.active span {
+  background: #a6ff00;
+  color: #071000;
+  box-shadow: 0 0 20px rgba(166, 255, 0, .32);
+}
+
+.premiumWizardStepper button.completed span {
+  color: #a6ff00;
+  background: rgba(166, 255, 0, .08);
+}
+
 .premiumTournamentLayout {
   min-height: 0;
   display: grid;
@@ -11133,6 +11211,14 @@ button:hover {
 .premiumTournamentFieldIcon.user::before { content: "○"; }
 .premiumTournamentFieldIcon.whatsapp::before { content: "W"; }
 .premiumTournamentFieldIcon.summary::before { content: "✓"; }
+.premiumTournamentFieldIcon.bracket::before { content: "⌘"; }
+.premiumTournamentFieldIcon.registration::before { content: "▤"; }
+.premiumTournamentFieldIcon.pix::before { content: "◆"; }
+.premiumTournamentFieldIcon.card::before { content: "▰"; }
+.premiumTournamentFieldIcon.barcode::before { content: "▥"; }
+.premiumTournamentFieldIcon.money::before { content: "$"; }
+.premiumTournamentFieldIcon.cover::before { content: "▧"; }
+.premiumTournamentFieldIcon.rocket::before { content: "↟"; }
 
 .premiumNumberStepper {
   display: inline-grid;
@@ -11196,6 +11282,35 @@ button:hover {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 18px;
+}
+
+.premiumWizardGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.premiumWizardGrid.twoColumns {
+  grid-template-columns: minmax(0, 1.45fr) minmax(360px, .72fr);
+}
+
+.premiumWizardGrid.threeColumns {
+  grid-template-columns: minmax(420px, 1.1fr) minmax(360px, .86fr) minmax(300px, .62fr);
+}
+
+.premiumWizardGrid.fourColumns {
+  grid-template-columns: minmax(350px, .95fr) minmax(300px, .82fr) minmax(300px, .82fr) minmax(280px, .62fr);
+}
+
+.premiumWizardGrid.publishGrid {
+  grid-template-columns: minmax(0, 1.45fr) minmax(360px, .62fr);
+}
+
+.premiumWizardGrid .spanTwo {
+  grid-column: span 2;
+}
+
+.premiumWizardGrid .spanAll {
+  grid-column: 1 / -1;
 }
 
 .premiumTournamentSummary,
@@ -11291,9 +11406,371 @@ button:hover {
   font-weight: 800;
 }
 
+.premiumCardTitle {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.premiumCardTitle h2 {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.premiumCardTitle p {
+  margin: 5px 0 0;
+  color: #aeb8c7;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.premiumInnerCard {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid rgba(78, 88, 104, .44);
+  border-radius: 9px;
+  background: rgba(6, 8, 12, .46);
+}
+
+.premiumInnerCard h3 {
+  margin: 0 0 13px;
+  color: #f5f7fa;
+  font-size: 15px;
+}
+
+.premiumOptionGrid {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.premiumOptionGrid.compact {
+  margin: 12px 0;
+}
+
+.premiumOptionGrid > div,
+.premiumOptionGrid label {
+  min-height: 42px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid rgba(78, 88, 104, .44);
+  border-radius: 8px;
+  background: rgba(6, 8, 12, .42);
+  color: #d7dde8;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.premiumOptionGrid select,
+.premiumOptionGrid input {
+  min-height: 34px;
+  border: 1px solid rgba(78, 88, 104, .55);
+  border-radius: 7px;
+  background: rgba(6, 8, 12, .84);
+  color: #f5f7fa;
+  padding: 0 10px;
+}
+
+.premiumToggle {
+  width: 48px;
+  height: 26px;
+  padding: 3px;
+  border: 1px solid rgba(121, 132, 148, .45);
+  border-radius: 999px;
+  background: rgba(121, 132, 148, .28);
+  cursor: pointer;
+}
+
+.premiumToggle span {
+  width: 18px;
+  height: 18px;
+  display: block;
+  border-radius: 50%;
+  background: #f5f7fa;
+  transition: transform .18s ease;
+}
+
+.premiumToggle.on {
+  border-color: rgba(166, 255, 0, .65);
+  background: #a6ff00;
+  box-shadow: 0 0 16px rgba(166, 255, 0, .18);
+}
+
+.premiumToggle.on span {
+  background: #f5f7fa;
+  transform: translateX(21px);
+}
+
+.premiumBracketPreview p,
+.premiumBracketPreview small {
+  color: #aeb8c7;
+  font-weight: 800;
+}
+
+.premiumBracketLines {
+  min-height: 240px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin: 18px 0;
+}
+
+.premiumBracketLines span {
+  height: 22px;
+  border: 1px solid rgba(166, 255, 0, .42);
+  border-left-color: rgba(121, 132, 148, .34);
+  border-radius: 4px;
+  box-shadow: 16px 0 0 rgba(166, 255, 0, .38);
+}
+
+.premiumPriceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.premiumPriceGrid label,
+.premiumPriceGrid div {
+  display: grid;
+  gap: 7px;
+  padding: 14px;
+  border-right: 1px solid rgba(78, 88, 104, .42);
+}
+
+.premiumPriceGrid span {
+  color: #aeb8c7;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.premiumPriceGrid input,
+.premiumPriceGrid strong {
+  border: 0;
+  background: transparent;
+  color: #f5f7fa;
+  font-size: 28px;
+  font-weight: 950;
+}
+
+.premiumPriceGrid strong {
+  color: #a6ff00;
+}
+
+.premiumPaymentGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.premiumPaymentCard {
+  min-height: 112px;
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  border: 1px solid rgba(78, 88, 104, .44);
+  border-radius: 9px;
+  background: rgba(6, 8, 12, .52);
+  text-align: center;
+}
+
+.premiumDeadlineGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.premiumDeadlineGrid label {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 148px 92px;
+  gap: 8px;
+  align-items: center;
+  color: #f5f7fa;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.premiumDeadlineGrid input,
+.premiumPriceGrid input {
+  min-height: 38px;
+  border: 1px solid rgba(78, 88, 104, .55);
+  border-radius: 8px;
+  background: rgba(6, 8, 12, .76);
+  color: #f5f7fa;
+  padding: 0 10px;
+}
+
+.premiumKpiStack {
+  display: grid;
+  gap: 15px;
+}
+
+.premiumKpiStack div {
+  display: grid;
+  gap: 5px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(78, 88, 104, .35);
+}
+
+.premiumKpiStack span {
+  color: #aeb8c7;
+  font-weight: 800;
+}
+
+.premiumKpiStack strong {
+  color: #a6ff00;
+  font-size: 16px;
+}
+
+.compactCover .premiumCoverImage {
+  aspect-ratio: 16 / 7;
+}
+
+.premiumPrizeValue {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(78, 88, 104, .44);
+  border-radius: 9px;
+  background: rgba(6, 8, 12, .52);
+}
+
+.premiumPrizeValue span {
+  color: #aeb8c7;
+  font-weight: 800;
+}
+
+.premiumPrizeValue input {
+  border: 0;
+  background: transparent;
+  color: #a6ff00;
+  font-size: 30px;
+  font-weight: 950;
+}
+
+.premiumPrizeTable,
+.premiumTrophyRows,
+.premiumFileRows,
+.premiumDocList,
+.premiumReviewGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.premiumPrizeTable div,
+.premiumTrophyRows div,
+.premiumFileRows div,
+.premiumReviewCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(78, 88, 104, .38);
+  border-radius: 8px;
+  background: rgba(6, 8, 12, .46);
+}
+
+.premiumPrizeTable strong,
+.premiumTrophyRows strong,
+.premiumPrizeTotal strong {
+  color: #a6ff00;
+}
+
+.premiumPrizeTotal {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid rgba(78, 88, 104, .44);
+  border-radius: 9px;
+  background: rgba(6, 8, 12, .52);
+}
+
+.premiumPrizeTotal strong {
+  font-size: 34px;
+}
+
+.premiumDocList button {
+  min-height: 44px;
+  border: 1px solid rgba(78, 88, 104, .44);
+  border-radius: 8px;
+  background: rgba(6, 8, 12, .52);
+  color: #d7dde8;
+  text-align: left;
+  padding: 0 14px;
+  font-weight: 900;
+}
+
+.premiumReviewGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.premiumReviewCard {
+  min-height: 150px;
+  grid-template-columns: 1fr;
+  align-content: start;
+}
+
+.premiumReviewCard h3 {
+  margin: 0;
+  color: #f5f7fa;
+}
+
+.premiumReviewCard p {
+  margin: 0;
+  color: #aeb8c7;
+  line-height: 1.5;
+}
+
+.premiumPublishCard {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  text-align: center;
+}
+
+.premiumPublishCard .premiumCoverImage.publish {
+  background:
+    linear-gradient(90deg, rgba(4, 7, 11, .35), rgba(4, 7, 11, .1)),
+    url('/landing-sport-sinuca.png') center / cover;
+}
+
+.premiumPublishCard h3 {
+  max-width: 330px;
+  margin: 0 auto;
+  color: #f5f7fa;
+  font-size: 24px;
+}
+
+.premiumPublishCard p {
+  color: #aeb8c7;
+  line-height: 1.5;
+}
+
 @media (max-width: 1180px) {
   .premiumTournamentLayout {
     grid-template-columns: 1fr;
+  }
+
+  .premiumWizardGrid.twoColumns,
+  .premiumWizardGrid.threeColumns,
+  .premiumWizardGrid.fourColumns,
+  .premiumWizardGrid.publishGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .premiumWizardGrid .spanTwo,
+  .premiumWizardGrid .spanAll {
+    grid-column: auto;
+  }
+
+  .premiumWizardStepper {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -11309,6 +11786,17 @@ button:hover {
   }
 
   .premiumTournamentFormGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .premiumWizardStepper,
+  .premiumPriceGrid,
+  .premiumPaymentGrid,
+  .premiumReviewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .premiumDeadlineGrid label {
     grid-template-columns: 1fr;
   }
 }
