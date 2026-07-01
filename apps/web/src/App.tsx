@@ -3548,7 +3548,7 @@ function OrganizerDashboardSidebar({
       />
       <aside className={`organizerSidebar appDrawerSidebar${drawerOpen ? ' open' : ''}`} aria-label={`Menu ${activeProfileLabel}`}>
         <div className="organizerSidebarLogo" aria-label="PlayFinal Arena">
-          <img className="organizerSidebarLogoImage" src="/playfinal-sidebar-global-logo.png" alt="PlayFinal Arena" />
+          <img className="organizerSidebarLogoImage" src="/playfinal-sidebar-global-logo-v2.png" alt="PlayFinal Arena" />
         </div>
 
         <div className="organizerSidebarProfileWrap">
@@ -11019,7 +11019,8 @@ function CreateTournament({ user }: any) {
         aria-pressed={checked}
         onClick={() => onChange(!checked)}
       >
-        <span />
+        <span className="premiumToggleKnob" />
+        <b className="premiumToggleText">{checked ? 'ON' : 'OFF'}</b>
       </button>
     )
   }

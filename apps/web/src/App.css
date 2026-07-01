@@ -4810,7 +4810,7 @@ button:hover {
   position: relative;
   display: grid;
   justify-items: center;
-  min-height: 104px;
+  min-height: 108px;
   align-items: start;
   padding: 0;
   text-align: center;
@@ -4831,9 +4831,9 @@ button:hover {
 .organizerSidebarLogoImage {
   position: relative;
   z-index: 1;
-  width: min(236px, calc(100% + 22px));
-  height: 104px;
-  max-height: 104px;
+  width: min(248px, calc(100% + 28px));
+  height: 108px;
+  max-height: 108px;
   object-fit: contain;
   filter:
     drop-shadow(0 0 12px rgba(166, 255, 0, .30))
@@ -11801,61 +11801,68 @@ button:hover {
 .premiumToggle {
   position: relative;
   width: 92px;
-  height: 40px;
+  height: 38px;
   padding: 4px;
   border: 0;
   border-radius: 999px;
   background: #808080;
   color: #fff;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
   box-shadow:
-    inset 0 2px 6px rgba(0, 0, 0, .22),
-    0 1px 0 rgba(255, 255, 255, .1);
+    inset 0 2px 5px rgba(0, 0, 0, .22),
+    0 1px 0 rgba(255, 255, 255, .12);
   transition: background .2s ease, box-shadow .2s ease, color .2s ease;
 }
 
-.premiumToggle::after {
-  content: "OFF";
+.premiumToggleKnob {
   position: absolute;
-  right: 15px;
+  left: 4px;
   top: 50%;
-  transform: translateY(-50%);
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: .2px;
-  line-height: 1;
-}
-
-.premiumToggle span {
-  position: relative;
+  width: 30px;
+  height: 30px;
   z-index: 1;
-  width: 32px;
-  height: 32px;
-  display: block;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .28);
-  transition: transform .22s ease, background .18s ease;
+  transform: translateY(-50%);
+  box-shadow: 0 2px 7px rgba(0, 0, 0, .28);
+  transition: left .22s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.premiumToggleText {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  z-index: 2;
+  transform: translateY(-50%);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .1px;
+  line-height: 1;
+  color: #fff;
+  pointer-events: none;
 }
 
 .premiumToggle.on {
-  background: #21d318;
+  background: #24d313;
   color: #fff;
   box-shadow:
-    0 0 12px rgba(33, 211, 24, .22),
+    0 0 12px rgba(36, 211, 19, .18),
     inset 0 1px 4px rgba(255, 255, 255, .16);
 }
 
-.premiumToggle.on::after {
-  content: "ON";
-  left: 16px;
+.premiumToggle.on .premiumToggleText {
+  left: 14px;
   right: auto;
 }
 
-.premiumToggle.on span {
+.premiumToggle.on .premiumToggleKnob {
+  left: 58px;
   background: #fff;
-  transform: translateX(52px);
 }
 
 .premiumBracketPreview p,
