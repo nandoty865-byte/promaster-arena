@@ -4827,9 +4827,7 @@ button:hover {
   height: 108px;
   max-height: 108px;
   object-fit: contain;
-  filter:
-    drop-shadow(0 0 2px rgba(255, 255, 255, .54))
-    drop-shadow(0 0 7px rgba(166, 255, 0, .26));
+  filter: none;
 }
 
 .organizerSidebarShield {
@@ -10948,10 +10946,15 @@ button:hover {
 
 .premiumTournamentHeader {
   display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  align-items: end;
-  padding: 6px 2px 0;
+  justify-content: flex-end;
+  gap: 12px;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 2px;
+}
+
+.premiumTournamentHeader > div {
+  display: none;
 }
 
 .premiumTournamentEyebrow {
@@ -11019,8 +11022,10 @@ button:hover {
   padding: 0 18px;
   border: 1px solid var(--pf-border-soft);
   border-radius: 10px;
-  background: transparent;
+  appearance: none;
+  background: transparent !important;
   color: var(--pf-white);
+  box-shadow: none !important;
   font-weight: 900;
   cursor: pointer;
 }
@@ -11790,12 +11795,12 @@ button:hover {
 
 .premiumToggle {
   position: relative;
-  width: 74px;
-  height: 30px;
+  width: 62px;
+  height: 24px;
   padding: 3px;
   border: 0;
   border-radius: 999px;
-  background: rgba(128, 128, 128, .48);
+  background: rgba(128, 128, 128, .42) !important;
   color: #fff;
   cursor: pointer;
   display: inline-flex;
@@ -11803,8 +11808,8 @@ button:hover {
   flex-shrink: 0;
   overflow: hidden;
   box-shadow:
-    inset 0 2px 5px rgba(0, 0, 0, .22),
-    0 1px 0 rgba(255, 255, 255, .12);
+    inset 0 1px 4px rgba(0, 0, 0, .24),
+    0 1px 0 rgba(255, 255, 255, .08);
   transition: background .2s ease, box-shadow .2s ease, color .2s ease;
 }
 
@@ -11812,24 +11817,24 @@ button:hover {
   position: absolute;
   left: 3px;
   top: 50%;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   z-index: 1;
   border-radius: 50%;
   background: #fff;
   transform: translateY(-50%);
-  box-shadow: 0 2px 7px rgba(0, 0, 0, .28);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .28);
   transition: left .22s ease, background .18s ease, box-shadow .18s ease;
 }
 
 .premiumToggleText {
   position: absolute;
-  right: 11px;
+  right: 8px;
   top: 50%;
   z-index: 2;
   transform: translateY(-50%);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: .1px;
   line-height: 1;
@@ -11838,7 +11843,7 @@ button:hover {
 }
 
 .premiumToggle.on {
-  background: #70E600;
+  background: #70E600 !important;
   color: #fff;
   box-shadow:
     0 0 10px rgba(112, 230, 0, .18),
@@ -11846,12 +11851,12 @@ button:hover {
 }
 
 .premiumToggle.on .premiumToggleText {
-  left: 11px;
+  left: 8px;
   right: auto;
 }
 
 .premiumToggle.on .premiumToggleKnob {
-  left: 47px;
+  left: 41px;
   background: #fff;
 }
 
