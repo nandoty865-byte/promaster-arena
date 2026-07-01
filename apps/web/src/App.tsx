@@ -3548,7 +3548,7 @@ function OrganizerDashboardSidebar({
       />
       <aside className={`organizerSidebar appDrawerSidebar${drawerOpen ? ' open' : ''}`} aria-label={`Menu ${activeProfileLabel}`}>
         <div className="organizerSidebarLogo" aria-label="PlayFinal Arena">
-          <img className="organizerSidebarLogoImage" src="/playfinal-logo-symbol.png" alt="PlayFinal Arena" />
+          <img className="organizerSidebarLogoImage" src="/playfinal-sidebar-global-logo.png" alt="PlayFinal Arena" />
         </div>
 
         <div className="organizerSidebarProfileWrap">
@@ -11080,7 +11080,6 @@ function CreateTournament({ user }: any) {
         <div className="premiumWizardGrid twoColumns">
           <section className="premiumTournamentFormCard">
             <div className="premiumCardTitle">
-              {premiumFieldIcon('bracket')}
               <div>
                 <h2>2. Formato do Torneio</h2>
                 <p>Defina a estrutura das partidas e o modelo de disputa.</p>
@@ -11090,27 +11089,27 @@ function CreateTournament({ user }: any) {
             <div className="premiumTournamentFormGrid">
               <label className="premiumTournamentField">
                 <span>Sistema de disputa *</span>
-                <div>{premiumFieldIcon('bracket')}<select value={disputeSystem} onChange={e => setDisputeSystem(e.target.value)}><option>Dupla eliminação</option><option>Mata-mata</option><option>Todos contra todos</option><option>Grupos + mata-mata</option></select></div>
+                <div><select value={disputeSystem} onChange={e => setDisputeSystem(e.target.value)}><option>Dupla eliminação</option><option>Mata-mata</option><option>Todos contra todos</option><option>Grupos + mata-mata</option></select></div>
               </label>
               <label className="premiumTournamentField">
                 <span>Modelo de confronto *</span>
-                <div>{premiumFieldIcon('sport')}<select value={matchModel} onChange={e => setMatchModel(e.target.value)}><option>Melhor de 3 frames</option><option>Melhor de 5 frames</option><option>Melhor de 7 frames</option></select></div>
+                <div><select value={matchModel} onChange={e => setMatchModel(e.target.value)}><option>Melhor de 3 frames</option><option>Melhor de 5 frames</option><option>Melhor de 7 frames</option></select></div>
               </label>
               <label className="premiumTournamentField">
                 <span>Tempo médio por partida *</span>
-                <div>{premiumFieldIcon('clock')}<select value={averageMatchTime} onChange={e => setAverageMatchTime(e.target.value)}><option>30 min</option><option>45 min</option><option>60 min</option></select></div>
+                <div><select value={averageMatchTime} onChange={e => setAverageMatchTime(e.target.value)}><option>30 min</option><option>45 min</option><option>60 min</option></select></div>
               </label>
               <label className="premiumTournamentField">
                 <span>Intervalo entre partidas *</span>
-                <div>{premiumFieldIcon('clock')}<select value={matchInterval} onChange={e => setMatchInterval(e.target.value)}><option>5 min</option><option>10 min</option><option>15 min</option></select></div>
+                <div><select value={matchInterval} onChange={e => setMatchInterval(e.target.value)}><option>5 min</option><option>10 min</option><option>15 min</option></select></div>
               </label>
               <label className="premiumTournamentField">
                 <span>Quantidade prevista de jogadores *</span>
-                <div>{premiumFieldIcon('users')}<input type="number" min="2" value={playerCount} onChange={e => setPlayerCount(Math.max(2, Number(e.target.value) || 2))} /></div>
+                <div><input type="number" min="2" value={playerCount} onChange={e => setPlayerCount(Math.max(2, Number(e.target.value) || 2))} /></div>
               </label>
               <label className="premiumTournamentField">
                 <span>Mesas simultâneas *</span>
-                <div>{premiumFieldIcon('table')}<select value={tableCount} onChange={e => setTableCount(Number(e.target.value))}><option value={4}>4</option><option value={8}>8</option><option value={12}>12</option></select></div>
+                <div><select value={tableCount} onChange={e => setTableCount(Number(e.target.value))}><option value={4}>4</option><option value={8}>8</option><option value={12}>12</option></select></div>
               </label>
             </div>
 
@@ -11123,11 +11122,11 @@ function CreateTournament({ user }: any) {
             <div className="premiumTournamentFormGrid">
               <label className="premiumTournamentField">
                 <span>Definição de ordem de jogos *</span>
-                <div>{premiumFieldIcon('bracket')}<select value={gameOrder} onChange={e => setGameOrder(e.target.value)}><option>Automática por chave</option><option>Manual pelo organizador</option><option>Por disponibilidade de mesa</option></select></div>
+                <div><select value={gameOrder} onChange={e => setGameOrder(e.target.value)}><option>Automática por chave</option><option>Manual pelo organizador</option><option>Por disponibilidade de mesa</option></select></div>
               </label>
               <label className="premiumTournamentField">
                 <span>Critério de desempate *</span>
-                <div>{premiumFieldIcon('level')}<select value={tiebreaker} onChange={e => setTiebreaker(e.target.value)}><option>Saldo de frames</option><option>Confronto direto</option><option>Melhor campanha</option></select></div>
+                <div><select value={tiebreaker} onChange={e => setTiebreaker(e.target.value)}><option>Saldo de frames</option><option>Confronto direto</option><option>Melhor campanha</option></select></div>
               </label>
               <label className="premiumTournamentField wide description">
                 <span>Regras especiais</span>
@@ -11144,14 +11143,14 @@ function CreateTournament({ user }: any) {
 
           <aside className="premiumTournamentAside">
             <section className="premiumTournamentSummary premiumBracketPreview">
-              <div className="premiumAsideTitle">{premiumFieldIcon('bracket')}<h2>Visual do chaveamento</h2></div>
+              <div className="premiumAsideTitle"><h2>Visual do chaveamento</h2></div>
               <p>{disputeSystem} • {playerCount} jogadores</p>
               <div className="premiumBracketLines" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <span key={index} />)}</div>
               <small>{playerCount} jogadores • 5 rodadas estimado</small>
             </section>
             <section className="premiumTournamentSummary">
-              <div className="premiumAsideTitle">{premiumFieldIcon('summary')}<h2>Resumo do formato</h2></div>
-              <div className="premiumSummaryList">
+              <div className="premiumAsideTitle"><h2>Resumo do formato</h2></div>
+              <div className="premiumSummaryList noIcons">
                 {renderValueRow('Modalidade', 'Sinuca', 'sport')}
                 {renderValueRow('Categoria', styleCategory, 'balls')}
                 {renderValueRow('Sistema', disputeSystem, 'bracket')}
@@ -11348,7 +11347,7 @@ function CreateTournament({ user }: any) {
                 <h1>{currentTitle}</h1>
                 <p>{currentSubtitle}</p>
               </div>
-              <button className="premiumHelpButton" type="button">? Ajuda</button>
+              <button className="premiumHelpButton" type="button"><span className="premiumHelpIcon" aria-hidden="true">?</span> Ajuda</button>
             </div>
 
             {renderWizardStepper()}
@@ -11371,7 +11370,7 @@ function CreateTournament({ user }: any) {
                 <h1>1. Informações do Torneio</h1>
                 <p>Defina os dados principais do seu torneio de sinuca.</p>
               </div>
-              <button className="premiumHelpButton" type="button">? Ajuda</button>
+              <button className="premiumHelpButton" type="button"><span className="premiumHelpIcon" aria-hidden="true">?</span> Ajuda</button>
             </div>
 
             {renderWizardStepper()}
@@ -11381,7 +11380,6 @@ function CreateTournament({ user }: any) {
                 <div className="premiumInfoCards">
                   <div className="premiumInnerCard premiumInfoCard">
                     <div className="premiumAsideTitle">
-                      {premiumFieldIcon('summary')}
                       <div>
                         <h2>Informações Gerais</h2>
                         <p>Dados principais para identificar o torneio.</p>
@@ -11481,7 +11479,6 @@ function CreateTournament({ user }: any) {
 
                   <div className="premiumInnerCard premiumInfoCard">
                     <div className="premiumAsideTitle">
-                      {premiumFieldIcon('pin')}
                       <div>
                         <h2>Local</h2>
                         <p>Defina a arena e estrutura disponível.</p>
@@ -11511,7 +11508,6 @@ function CreateTournament({ user }: any) {
 
                   <div className="premiumInnerCard premiumInfoCard premiumVisibilityCard">
                     <div className="premiumAsideTitle">
-                      {premiumFieldIcon('users')}
                       <div>
                         <h2>Tipo e Visibilidade</h2>
                         <p>Escolha quem poderá ver e participar do seu torneio.</p>
@@ -11531,7 +11527,7 @@ function CreateTournament({ user }: any) {
                             onClick={() => setTournamentAccessType(value as string)}
                           >
                             <span className="premiumAccessCardHeader">
-                              {premiumFieldIcon('lock')}
+                              {premiumFieldIcon('lockWhite')}
                               <strong>{label as string}</strong>
                             </span>
                             <small>
@@ -11544,17 +11540,10 @@ function CreateTournament({ user }: any) {
                       </div>
 
                       <div className="premiumVisibilityGrid">
-                        <label className="premiumTournamentField">
-                          <span className="srOnly">Visibilidade</span>
-                          <div>
-                            {premiumFieldIcon('summary')}
-                            <select value={tournamentVisibility} onChange={e => setTournamentVisibility(e.target.value)} aria-label="Visibilidade">
-                              <option>Exibir na agenda pública</option>
-                              <option>Ocultar da agenda pública</option>
-                              <option>Disponível apenas por link</option>
-                            </select>
-                          </div>
-                        </label>
+                        <div className="premiumVisibilityToggle">
+                          <strong>Exibir na agenda pública</strong>
+                          {renderToggle(tournamentVisibility === 'Exibir na agenda pública', checked => setTournamentVisibility(checked ? 'Exibir na agenda pública' : 'Ocultar da agenda pública'))}
+                        </div>
 
                         <div className="premiumVisibilityToggle">
                           <strong>Permitir Lista de Espera</strong>

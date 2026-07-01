@@ -4817,7 +4817,7 @@ button:hover {
 .organizerSidebarLogo::before {
   content: "";
   position: absolute;
-  inset: 5px 34px 0;
+  inset: 12px 16px 0;
   z-index: 0;
   border-radius: 999px;
   background: radial-gradient(circle, rgba(166, 255, 0, .34), rgba(166, 255, 0, .12) 42%, transparent 72%);
@@ -4829,9 +4829,9 @@ button:hover {
 .organizerSidebarLogoImage {
   position: relative;
   z-index: 1;
-  width: min(112px, 100%);
-  height: auto;
-  max-height: 118px;
+  width: min(190px, 100%);
+  height: 82px;
+  max-height: 82px;
   object-fit: contain;
   filter:
     drop-shadow(0 0 12px rgba(166, 255, 0, .30))
@@ -11019,6 +11019,9 @@ button:hover {
 
 .premiumHelpButton {
   min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 0 18px;
   border: 1px solid var(--pf-border-soft);
   border-radius: 10px;
@@ -11026,6 +11029,20 @@ button:hover {
   color: var(--pf-white);
   font-weight: 900;
   cursor: pointer;
+}
+
+.premiumHelpIcon {
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  border: 1.5px solid #f5f7fa;
+  border-radius: 50%;
+  background: transparent;
+  color: #f5f7fa;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1;
 }
 
 .premiumWizardStepper {
@@ -11042,7 +11059,7 @@ button:hover {
 .premiumWizardStepper button {
   min-width: 0;
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) minmax(28px, .72fr);
+  grid-template-columns: 42px minmax(0, 1fr) minmax(28px, .72fr);
   align-items: center;
   gap: 8px;
   border: 0;
@@ -11054,7 +11071,7 @@ button:hover {
 }
 
 .premiumWizardStepper button:last-child {
-  grid-template-columns: 30px minmax(0, 1fr);
+  grid-template-columns: 42px minmax(0, 1fr);
 }
 
 .premiumWizardStepper .premiumWizardDot {
@@ -11107,10 +11124,12 @@ button:hover {
 }
 
 .premiumWizardStepper button.active .premiumWizardDot {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   background: var(--pf-lime);
   color: #071000;
+  font-size: 17px;
+  font-weight: 950;
   box-shadow: 0 0 14px rgba(166, 255, 0, .18);
 }
 
@@ -11217,6 +11236,11 @@ button:hover {
   border-radius: 10px;
   background: rgba(10, 16, 23, .88);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+.premiumTournamentField > div:has(> input:first-child),
+.premiumTournamentField > div:has(> select:first-child) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .premiumTournamentField > div:focus-within {
@@ -11329,7 +11353,8 @@ button:hover {
 .premiumTournamentFieldIcon.sex::before,
 .premiumTournamentFieldIcon.age::before,
 .premiumTournamentFieldIcon.mode::before,
-.premiumTournamentFieldIcon.lock::before {
+.premiumTournamentFieldIcon.lock::before,
+.premiumTournamentFieldIcon.lockWhite::before {
   content: "";
   width: 18px;
   height: 18px;
@@ -11355,6 +11380,7 @@ button:hover {
 .premiumTournamentFieldIcon.sex::before { background-image: url('/create-tournament-icons/sex-green.png'); }
 .premiumTournamentFieldIcon.mode::before { background-image: url('/create-tournament-icons/trophy-green.png'); }
 .premiumTournamentFieldIcon.lock::before { background-image: url('/create-tournament-icons/lock-green.png'); }
+.premiumTournamentFieldIcon.lockWhite::before { background-image: url('/create-tournament-icons/lock-white.png'); }
 .premiumTournamentFieldIcon.summary::before { background-image: url('/create-tournament-icons/location-green.png'); }
 
 .srOnly {
@@ -11503,6 +11529,14 @@ button:hover {
   grid-template-columns: 29px minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
+}
+
+.premiumSummaryList.noIcons div {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.premiumSummaryList.noIcons .premiumTournamentFieldIcon {
+  display: none;
 }
 
 .premiumSummaryList small {
@@ -11656,9 +11690,10 @@ button:hover {
   flex-direction: column;
   gap: 3px;
   margin-top: 14px;
-  border: 1px dotted rgba(166, 255, 0, .48);
-  background: transparent;
+  border: 1.5px dashed rgba(166, 255, 0, .48);
+  background: transparent !important;
   color: var(--pf-lime);
+  box-shadow: none;
 }
 
 .premiumUploadBox span {
@@ -11744,33 +11779,57 @@ button:hover {
 }
 
 .premiumToggle {
-  width: 48px;
-  height: 26px;
+  position: relative;
+  width: 74px;
+  height: 30px;
   padding: 3px;
-  border: 1px solid rgba(121, 132, 148, .45);
+  border: 1px solid rgba(121, 132, 148, .5);
   border-radius: 999px;
-  background: rgba(121, 132, 148, .28);
+  background: rgba(95, 107, 120, .22);
+  color: var(--pf-muted);
   cursor: pointer;
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, color .18s ease;
+}
+
+.premiumToggle::after {
+  content: "Não";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
 }
 
 .premiumToggle span {
-  width: 18px;
-  height: 18px;
+  position: relative;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
   display: block;
   border-radius: 50%;
   background: #f5f7fa;
-  transition: transform .18s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .28);
+  transition: transform .18s ease, background .18s ease;
 }
 
 .premiumToggle.on {
   border-color: rgba(166, 255, 0, .65);
-  background: var(--pf-lime);
+  background: rgba(166, 255, 0, .18);
+  color: var(--pf-lime);
   box-shadow: 0 0 12px rgba(166, 255, 0, .14);
 }
 
+.premiumToggle.on::after {
+  content: "Sim";
+  left: 11px;
+  right: auto;
+}
+
 .premiumToggle.on span {
-  background: #f5f7fa;
-  transform: translateX(21px);
+  background: var(--pf-lime);
+  transform: translateX(44px);
 }
 
 .premiumBracketPreview p,
