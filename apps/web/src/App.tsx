@@ -11338,7 +11338,6 @@ function CreateTournament({ user }: any) {
           <section className="premiumTournamentShell" aria-label="Criar novo torneio">
             <div className="premiumTournamentHeader">
               <div>
-                <span className="premiumTournamentEyebrow">Criar Novo Torneio</span>
                 <h1>{currentTitle}</h1>
                 <p>{currentSubtitle}</p>
               </div>

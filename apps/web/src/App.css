@@ -4781,7 +4781,7 @@ button:hover {
   flex-direction: column;
   gap: 18px;
   overflow-y: auto;
-  padding: 22px 18px;
+  padding: 14px 18px 22px;
   border-right: 1px solid #1E2538;
   background: #0B0E14;
   scrollbar-width: thin;
@@ -4810,14 +4810,16 @@ button:hover {
   position: relative;
   display: grid;
   justify-items: center;
-  padding: 0 0 4px;
+  min-height: 104px;
+  align-items: start;
+  padding: 0;
   text-align: center;
 }
 
 .organizerSidebarLogo::before {
   content: "";
   position: absolute;
-  inset: 18px 8px 0;
+  inset: 20px -8px 2px;
   z-index: 0;
   border-radius: 999px;
   background: radial-gradient(circle, rgba(166, 255, 0, .34), rgba(166, 255, 0, .12) 42%, transparent 72%);
@@ -4829,9 +4831,9 @@ button:hover {
 .organizerSidebarLogoImage {
   position: relative;
   z-index: 1;
-  width: min(212px, 100%);
-  height: 86px;
-  max-height: 86px;
+  width: min(236px, calc(100% + 22px));
+  height: 104px;
+  max-height: 104px;
   object-fit: contain;
   filter:
     drop-shadow(0 0 12px rgba(166, 255, 0, .30))
@@ -11049,11 +11051,11 @@ button:hover {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
-  min-height: 72px;
-  padding: 12px 14px;
-  border: 1px solid var(--pf-border);
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(15, 23, 32, .9), rgba(8, 14, 20, .78));
+  min-height: 58px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .premiumWizardStepper button {
@@ -11798,56 +11800,59 @@ button:hover {
 
 .premiumToggle {
   position: relative;
-  width: 82px;
-  height: 34px;
+  width: 102px;
+  height: 46px;
   padding: 4px;
-  border: 1px solid rgba(121, 132, 148, .58);
+  border: 0;
   border-radius: 999px;
-  background: #5f6874;
+  background: #808080;
   color: #f5f7fa;
   cursor: pointer;
-  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, color .18s ease;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .22);
+  transition: background .2s ease, box-shadow .2s ease, color .2s ease;
 }
 
 .premiumToggle::after {
   content: "OFF";
   position: absolute;
-  right: 10px;
+  right: 16px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 11px;
-  font-weight: 950;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
   line-height: 1;
 }
 
 .premiumToggle span {
   position: relative;
   z-index: 1;
-  width: 26px;
-  height: 26px;
+  width: 38px;
+  height: 38px;
   display: block;
   border-radius: 50%;
   background: #f5f7fa;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .28);
-  transition: transform .18s ease, background .18s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .26);
+  transition: transform .22s ease, background .18s ease;
 }
 
 .premiumToggle.on {
-  border-color: rgba(166, 255, 0, .65);
   background: #A6FF00;
   color: #071000;
-  box-shadow: 0 0 14px rgba(166, 255, 0, .18);
+  box-shadow:
+    0 0 18px rgba(166, 255, 0, .24),
+    inset 0 1px 5px rgba(255, 255, 255, .16);
 }
 
 .premiumToggle.on::after {
   content: "ON";
-  left: 12px;
+  left: 18px;
   right: auto;
 }
 
 .premiumToggle.on span {
   background: #f5f7fa;
-  transform: translateX(48px);
+  transform: translateX(56px);
 }
 
 .premiumBracketPreview p,
