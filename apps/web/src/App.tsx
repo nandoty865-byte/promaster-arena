@@ -10415,6 +10415,7 @@ function CreateTournament({ user }: any) {
   const [templates, setTemplates] = useState<any[]>([])
   const [seasons, setSeasons] = useState<any[]>([])
   const [name, setName] = useState('Copa PlayFinal de Sinuca 2026')
+  const [tournamentMode, setTournamentMode] = useState('Individual')
   const [playerCount, setPlayerCount] = useState(16)
   const [tournamentFormat, setTournamentFormat] = useState('knockout')
   const [templateId, setTemplateId] = useState(1)
@@ -10425,7 +10426,6 @@ function CreateTournament({ user }: any) {
   const [styleCategory, setStyleCategory] = useState('Snooker')
   const [level, setLevel] = useState('Intermediário')
   const [audience, setAudience] = useState('Todos')
-  const [cityState, setCityState] = useState('São Paulo / SP')
   const [shortDescription, setShortDescription] = useState('Torneio de sinuca estilo snooker para jogadores intermediários e avançados. Competição organizada pela Arena Prime com estrutura profissional.')
 
   const [location, setLocation] = useState('Arena Prime – São Paulo, SP')
@@ -11368,7 +11368,6 @@ function CreateTournament({ user }: any) {
           <section className="premiumTournamentShell" aria-label="Criar novo torneio">
             <div className="premiumTournamentHeader">
               <div>
-                <span className="premiumTournamentEyebrow">Criar Novo Torneio</span>
                 <h1>1. Informações do Torneio</h1>
                 <p>Defina os dados principais do seu torneio de sinuca.</p>
               </div>
@@ -11390,11 +11389,23 @@ function CreateTournament({ user }: any) {
                     </div>
 
                     <div className="premiumTournamentFormGrid">
-                      <label className="premiumTournamentField wide">
+                      <label className="premiumTournamentField">
                         <span>Nome do torneio *</span>
                         <div>
                           {premiumFieldIcon('trophy')}
                           <input value={name} onChange={e => setName(e.target.value)} />
+                        </div>
+                      </label>
+
+                      <label className="premiumTournamentField">
+                        <span>Modo *</span>
+                        <div>
+                          {premiumFieldIcon('mode')}
+                          <select value={tournamentMode} onChange={e => setTournamentMode(e.target.value)}>
+                            <option>Individual</option>
+                            <option>Dupla</option>
+                            <option>Equipe</option>
+                          </select>
                         </div>
                       </label>
 
@@ -11414,7 +11425,7 @@ function CreateTournament({ user }: any) {
                       <label className="premiumTournamentField">
                         <span>Sexo *</span>
                         <div>
-                          {premiumFieldIcon('users')}
+                          {premiumFieldIcon('sex')}
                           <select value={audience} onChange={e => setAudience(e.target.value)}>
                             <option>Todos</option>
                             <option>Masculino</option>
@@ -11440,7 +11451,7 @@ function CreateTournament({ user }: any) {
                       <label className="premiumTournamentField">
                         <span>Faixa etária *</span>
                         <div>
-                          {premiumFieldIcon('level')}
+                          {premiumFieldIcon('age')}
                           <select value={ageRange} onChange={e => setAgeRange(e.target.value)}>
                             <option>Livre</option>
                             <option>Sub-18</option>
@@ -11495,31 +11506,6 @@ function CreateTournament({ user }: any) {
                           </select>
                         </div>
                       </label>
-
-                      <label className="premiumTournamentField">
-                        <span>Cidade / Estado *</span>
-                        <div>
-                          {premiumFieldIcon('city')}
-                          <input value={cityState} onChange={e => setCityState(e.target.value)} />
-                        </div>
-                      </label>
-
-                      <label className="premiumTournamentField">
-                        <span>Quantidade de mesas disponíveis *</span>
-                        <div>
-                          {premiumFieldIcon('table')}
-                          <input
-                            type="number"
-                            min="1"
-                            value={tableCount}
-                            onChange={e => setTableCount(Math.max(1, Number(e.target.value) || 1))}
-                          />
-                          <span className="premiumNumberStepper">
-                            <button type="button" onClick={() => setTableCount(current => current + 1)}>+</button>
-                            <button type="button" onClick={() => setTableCount(current => Math.max(1, current - 1))}>-</button>
-                          </span>
-                        </div>
-                      </label>
                     </div>
                   </div>
 
@@ -11532,44 +11518,48 @@ function CreateTournament({ user }: any) {
                       </div>
                     </div>
 
-                    <div className="premiumAccessCards" role="radiogroup" aria-label="Tipo do torneio">
-                      {[
-                        ['public', 'Público', 'Qualquer pessoa pode ver e se inscrever', 'users'],
-                        ['private', 'Privado', 'Apenas convidados podem se inscrever', 'summary'],
-                        ['invite', 'Por Convite', 'Somente convidados selecionados', 'user'],
-                      ].map(([value, label, description, icon]) => (
-                        <button
-                          key={value}
-                          type="button"
-                          className={tournamentAccessType === value ? 'active' : ''}
-                          onClick={() => setTournamentAccessType(value)}
-                        >
-                          {premiumFieldIcon(icon)}
-                          <strong>{label}</strong>
-                          <small>{description}</small>
-                        </button>
-                      ))}
-                    </div>
+                    <div className="premiumAccessControlGrid">
+                      <div className="premiumAccessCards" role="radiogroup" aria-label="Tipo do torneio">
+                        {[
+                          ['public', 'Público', ['Qualquer pessoa pode', 'ver e se inscrever']],
+                          ['private', 'Privado', ['Apenas convidados', 'podem se inscrever']],
+                        ].map(([value, label, description]) => (
+                          <button
+                            key={value as string}
+                            type="button"
+                            className={tournamentAccessType === value ? 'active' : ''}
+                            onClick={() => setTournamentAccessType(value as string)}
+                          >
+                            <span className="premiumAccessCardHeader">
+                              {premiumFieldIcon('lock')}
+                              <strong>{label as string}</strong>
+                            </span>
+                            <small>
+                              {(description as string[]).map(line => (
+                                <span key={line}>{line}</span>
+                              ))}
+                            </small>
+                          </button>
+                        ))}
+                      </div>
 
-                    <div className="premiumVisibilityGrid">
-                      <label className="premiumTournamentField">
-                        <span>Visibilidade</span>
-                        <div>
-                          {premiumFieldIcon('summary')}
-                          <select value={tournamentVisibility} onChange={e => setTournamentVisibility(e.target.value)}>
-                            <option>Exibir na agenda pública</option>
-                            <option>Ocultar da agenda pública</option>
-                            <option>Disponível apenas por link</option>
-                          </select>
-                        </div>
-                      </label>
+                      <div className="premiumVisibilityGrid">
+                        <label className="premiumTournamentField">
+                          <span className="srOnly">Visibilidade</span>
+                          <div>
+                            {premiumFieldIcon('summary')}
+                            <select value={tournamentVisibility} onChange={e => setTournamentVisibility(e.target.value)} aria-label="Visibilidade">
+                              <option>Exibir na agenda pública</option>
+                              <option>Ocultar da agenda pública</option>
+                              <option>Disponível apenas por link</option>
+                            </select>
+                          </div>
+                        </label>
 
-                      <div className="premiumVisibilityToggle">
-                        <div>
+                        <div className="premiumVisibilityToggle">
                           <strong>Permitir Lista de Espera</strong>
-                          <small>Permitir jogadores entrarem na lista de espera</small>
+                          {renderToggle(waitlistEnabled, setWaitlistEnabled)}
                         </div>
-                        {renderToggle(waitlistEnabled, setWaitlistEnabled)}
                       </div>
                     </div>
                   </div>

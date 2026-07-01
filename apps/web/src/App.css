@@ -11175,6 +11175,14 @@ button:hover {
   padding: 20px;
 }
 
+.premiumInfoLayout .premiumTournamentFormCard {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
 .premiumTournamentFormGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -11269,14 +11277,14 @@ button:hover {
   height: 26px;
   display: inline-grid;
   place-items: center;
-  border: 1px solid rgba(166, 255, 0, .16);
-  border-radius: 8px;
-  background: rgba(166, 255, 0, .045);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--pf-lime);
   font-size: 12px;
   font-weight: 850;
   line-height: 1;
-  box-shadow: 0 0 10px rgba(166, 255, 0, .06);
+  box-shadow: none;
 }
 
 .premiumTournamentFieldIcon.trophy::before { content: "♕"; }
@@ -11284,6 +11292,10 @@ button:hover {
 .premiumTournamentFieldIcon.balls::before { content: "●"; }
 .premiumTournamentFieldIcon.level::before { content: "↗"; }
 .premiumTournamentFieldIcon.users::before { content: "U"; }
+.premiumTournamentFieldIcon.sex::before { content: "S"; }
+.premiumTournamentFieldIcon.age::before { content: "18"; font-size: 10px; }
+.premiumTournamentFieldIcon.mode::before { content: "I"; }
+.premiumTournamentFieldIcon.lock::before { content: "L"; }
 .premiumTournamentFieldIcon.calendar::before { content: "15"; font-size: 10px; }
 .premiumTournamentFieldIcon.clock::before { content: "◷"; }
 .premiumTournamentFieldIcon.pin::before { content: "⌖"; }
@@ -11313,7 +11325,11 @@ button:hover {
 .premiumTournamentFieldIcon.users::before,
 .premiumTournamentFieldIcon.user::before,
 .premiumTournamentFieldIcon.summary::before,
-.premiumTournamentFieldIcon.sport::before {
+.premiumTournamentFieldIcon.sport::before,
+.premiumTournamentFieldIcon.sex::before,
+.premiumTournamentFieldIcon.age::before,
+.premiumTournamentFieldIcon.mode::before,
+.premiumTournamentFieldIcon.lock::before {
   content: "";
   width: 18px;
   height: 18px;
@@ -11334,8 +11350,24 @@ button:hover {
 .premiumTournamentFieldIcon.table::before { background-image: url('/create-tournament-icons/table-green.png'); }
 .premiumTournamentFieldIcon.whatsapp::before { background-image: url('/create-tournament-icons/whatsapp-green.png'); }
 .premiumTournamentFieldIcon.users::before,
-.premiumTournamentFieldIcon.user::before { background-image: url('/create-tournament-icons/city-white.png'); }
-.premiumTournamentFieldIcon.summary::before { background-image: url('/create-tournament-icons/location-white.png'); }
+.premiumTournamentFieldIcon.user::before,
+.premiumTournamentFieldIcon.age::before { background-image: url('/create-tournament-icons/sex-green.png'); }
+.premiumTournamentFieldIcon.sex::before { background-image: url('/create-tournament-icons/sex-green.png'); }
+.premiumTournamentFieldIcon.mode::before { background-image: url('/create-tournament-icons/trophy-green.png'); }
+.premiumTournamentFieldIcon.lock::before { background-image: url('/create-tournament-icons/lock-green.png'); }
+.premiumTournamentFieldIcon.summary::before { background-image: url('/create-tournament-icons/location-green.png'); }
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .premiumNumberStepper {
   display: inline-grid;
@@ -11514,7 +11546,7 @@ button:hover {
 
 .premiumAccessCards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -11532,6 +11564,12 @@ button:hover {
   text-align: left;
   cursor: pointer;
   transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+.premiumAccessCardHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .premiumAccessCards button:hover,
@@ -11566,40 +11604,39 @@ button:hover {
   line-height: 1.35;
 }
 
+.premiumAccessCards small span {
+  display: block;
+}
+
+.premiumAccessControlGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(250px, .72fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
 .premiumVisibilityGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, .8fr);
-  gap: 12px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
 }
 
 .premiumVisibilityToggle {
-  min-height: 72px;
+  min-height: 48px;
   display: flex;
   justify-content: space-between;
   gap: 14px;
   align-items: center;
-  padding: 12px;
+  padding: 0 12px;
   border: 1px solid var(--pf-border);
   border-radius: 12px;
   background: rgba(10, 16, 23, .58);
 }
 
-.premiumVisibilityToggle strong,
-.premiumVisibilityToggle small {
-  display: block;
-}
-
 .premiumVisibilityToggle strong {
   color: var(--pf-white);
   font-size: 12px;
-}
-
-.premiumVisibilityToggle small {
-  margin-top: 4px;
-  color: var(--pf-muted);
-  font-size: 11px;
-  line-height: 1.35;
 }
 
 .premiumCoverImage {
