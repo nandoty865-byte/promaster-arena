@@ -10452,6 +10452,7 @@ function CreateTournament({ user }: any) {
   }
   const [arenaForm, setArenaForm] = useState<any>(emptyArenaForm)
   const [eventDate, setEventDate] = useState('2026-03-15')
+  const [eventEndDate, setEventEndDate] = useState('2026-03-15')
   const [eventTime, setEventTime] = useState('10:00')
   const [prize, setPrize] = useState('R$ 4.000,00')
   const [rules, setRules] = useState('')
@@ -10484,6 +10485,7 @@ function CreateTournament({ user }: any) {
   const [matchModel, setMatchModel] = useState('Melhor de 5 frames')
   const [averageMatchTime, setAverageMatchTime] = useState('45 min')
   const [matchInterval, setMatchInterval] = useState('10 min')
+  const [initialDrawMode, setInitialDrawMode] = useState('Aleatório')
   const [groupStage, setGroupStage] = useState(false)
   const [gameOrder, setGameOrder] = useState('Automática por chave')
   const [seedByRanking, setSeedByRanking] = useState(true)
@@ -11111,6 +11113,10 @@ function CreateTournament({ user }: any) {
                 <span>Mesas simultâneas *</span>
                 <div><select value={tableCount} onChange={e => setTableCount(Number(e.target.value))}><option value={4}>4</option><option value={8}>8</option><option value={12}>12</option></select></div>
               </label>
+              <label className="premiumTournamentField">
+                <span>Sorteio inicial *</span>
+                <div><select value={initialDrawMode} onChange={e => setInitialDrawMode(e.target.value)}><option>Aleatório</option><option>Manual</option><option>Seed</option></select></div>
+              </label>
             </div>
 
             <div className="premiumOptionGrid">
@@ -11147,17 +11153,6 @@ function CreateTournament({ user }: any) {
               <p>{disputeSystem} • {playerCount} jogadores</p>
               <div className="premiumBracketLines" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <span key={index} />)}</div>
               <small>{playerCount} jogadores • 5 rodadas estimado</small>
-            </section>
-            <section className="premiumTournamentSummary">
-              <div className="premiumAsideTitle"><h2>Resumo do formato</h2></div>
-              <div className="premiumSummaryList noIcons">
-                {renderValueRow('Modalidade', 'Sinuca', 'sport')}
-                {renderValueRow('Categoria', styleCategory, 'balls')}
-                {renderValueRow('Sistema', disputeSystem, 'bracket')}
-                {renderValueRow('Partidas', matchModel, 'calendar')}
-                {renderValueRow('Jogadores', playerCount, 'users')}
-                {renderValueRow('Mesas simultâneas', tableCount, 'table')}
-              </div>
             </section>
           </aside>
         </div>
@@ -11487,7 +11482,7 @@ function CreateTournament({ user }: any) {
 
                     <div className="premiumTournamentFormGrid">
                       <label className="premiumTournamentField wide">
-                        <span>Local / Arena *</span>
+                        <span className="srOnly">Local / Arena *</span>
                         <div>
                           {premiumFieldIcon('pin')}
                           <select value={selectedArenaOption} onChange={e => selectTournamentArena(e.target.value)}>
@@ -11593,18 +11588,7 @@ function CreateTournament({ user }: any) {
                     </div>
                   </div>
 
-                  <label className="premiumTournamentField wide">
-                    <span>Formato da data *</span>
-                    <div>
-                      {premiumFieldIcon('calendar')}
-                      <select value={scheduleMode} onChange={e => setScheduleMode(e.target.value)}>
-                        <option value="single_day">Data única</option>
-                        <option value="multi_day">Vários dias</option>
-                      </select>
-                    </div>
-                  </label>
-
-                  <div className="premiumInlineFields">
+                  <div className="premiumInlineFields premiumDateRangeFields">
                     <label className="premiumTournamentField">
                       <span>Dia do torneio *</span>
                       <div>
@@ -11612,7 +11596,17 @@ function CreateTournament({ user }: any) {
                         <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} />
                       </div>
                     </label>
+                    <span className="premiumDateRangeSeparator">a</span>
+                    <label className="premiumTournamentField">
+                      <span>Dia do torneio</span>
+                      <div>
+                        {premiumFieldIcon('calendar')}
+                        <input type="date" value={eventEndDate} onChange={e => setEventEndDate(e.target.value)} />
+                      </div>
+                    </label>
+                  </div>
 
+                  <div className="premiumInlineFields">
                     <label className="premiumTournamentField">
                       <span>Horário de início *</span>
                       <div>
