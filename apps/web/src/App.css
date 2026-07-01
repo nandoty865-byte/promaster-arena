@@ -4817,15 +4817,7 @@ button:hover {
 }
 
 .organizerSidebarLogo::before {
-  content: "";
-  position: absolute;
-  inset: 20px -8px 2px;
-  z-index: 0;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(166, 255, 0, .34), rgba(166, 255, 0, .12) 42%, transparent 72%);
-  filter: blur(14px);
-  opacity: .9;
-  pointer-events: none;
+  content: none;
 }
 
 .organizerSidebarLogoImage {
@@ -4836,8 +4828,8 @@ button:hover {
   max-height: 108px;
   object-fit: contain;
   filter:
-    drop-shadow(0 0 12px rgba(166, 255, 0, .30))
-    drop-shadow(0 0 24px rgba(166, 255, 0, .18));
+    drop-shadow(0 0 2px rgba(255, 255, 255, .54))
+    drop-shadow(0 0 7px rgba(166, 255, 0, .26));
 }
 
 .organizerSidebarShield {
@@ -5761,7 +5753,7 @@ button:hover {
   display: grid;
   gap: 18px;
   padding: 22px;
-  background: #0B0E14;
+  background: #0B0F19;
 }
 
 .organizerDashboardTopbar,
@@ -5770,9 +5762,9 @@ button:hover {
 .organizerAlertsCard,
 .organizerChartPanel,
 .organizerDataPanel {
-  border: 1px solid #1E2538;
+  border: 1px solid #1F2937;
   border-radius: 8px;
-  background: #111622;
+  background: #111827;
 }
 
 .organizerDashboardTopbar {
@@ -5783,9 +5775,9 @@ button:hover {
   min-height: 64px;
   padding: 10px 10px 10px 16px;
   border: 0;
-  border-bottom: 1px solid #1E2538;
+  border-bottom: 1px solid #1F2937;
   border-radius: 0;
-  background: #080B10;
+  background: #0B0F19;
   box-shadow: none;
 }
 
@@ -5824,8 +5816,8 @@ button:hover {
 .organizerTopbarTitle h1 {
   margin: 0;
   color: #FFFFFF;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: clamp(24px, 1.55vw, 28px);
+  font-weight: 800;
   letter-spacing: 0;
 }
 
@@ -10912,28 +10904,28 @@ button:hover {
 }
 
 .premiumTournamentMain {
-  --pf-bg-main: #05080D;
-  --pf-bg-deep: #03060A;
-  --pf-bg-section: #080E14;
-  --pf-bg-card: #0B1118;
-  --pf-bg-card-soft: #0F1720;
-  --pf-bg-card-hover: #121C26;
-  --pf-input-bg: #0A1017;
-  --pf-input-active: #0E1822;
-  --pf-lime: #A6FF00;
-  --pf-lime-soft: #8FE300;
-  --pf-lime-glow: rgba(166, 255, 0, .18);
+  --pf-bg-main: #0B0F19;
+  --pf-bg-deep: #070B12;
+  --pf-bg-section: #0B0F19;
+  --pf-bg-card: #111827;
+  --pf-bg-card-soft: #151E2D;
+  --pf-bg-card-hover: #182233;
+  --pf-input-bg: #0B0F19;
+  --pf-input-active: #101827;
+  --pf-lime: #70E600;
+  --pf-lime-soft: #7FFF00;
+  --pf-lime-glow: rgba(112, 230, 0, .18);
   --pf-white: #F5F7FA;
   --pf-silver: #D9DEE5;
-  --pf-text: #C7D0DA;
-  --pf-muted: #8D98A5;
-  --pf-muted-dark: #5F6B78;
-  --pf-border: #1F2A35;
-  --pf-border-soft: #26313D;
+  --pf-text: #9CA3AF;
+  --pf-muted: #6B7280;
+  --pf-muted-dark: #4B5563;
+  --pf-border: #1F2937;
+  --pf-border-soft: #263243;
   min-height: 100vh;
   padding: 20px 28px 30px;
   background:
-    radial-gradient(circle at 18% 2%, rgba(166, 255, 0, .07), transparent 26%),
+    radial-gradient(circle at 18% 2%, rgba(112, 230, 0, .055), transparent 26%),
     radial-gradient(circle at 84% 8%, rgba(84, 122, 180, .045), transparent 31%),
     linear-gradient(180deg, var(--pf-bg-main) 0%, var(--pf-bg-deep) 100%);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
@@ -10977,11 +10969,11 @@ button:hover {
 }
 
 .premiumTournamentHeader h1 {
-  margin: 10px 0 5px;
+  margin: 0 0 5px;
   color: var(--pf-white);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
-  font-size: 28px;
-  font-weight: 850;
+  font-size: clamp(24px, 1.6vw, 28px);
+  font-weight: 800;
   letter-spacing: 0;
 }
 
@@ -11170,7 +11162,7 @@ button:hover {
 
 .premiumInfoCard {
   margin-top: 0;
-  background: var(--pf-bg-card);
+  background: rgba(17, 24, 39, .92);
   border-color: var(--pf-border);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
 }
@@ -11184,13 +11176,11 @@ button:hover {
 .premiumTournamentCover {
   border: 1px solid var(--pf-border);
   border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(15, 23, 32, .88), rgba(8, 14, 20, .84)),
-    rgba(11, 17, 24, .72);
+  background: rgba(17, 24, 39, .9);
   box-shadow:
-    0 22px 60px rgba(0, 0, 0, .32),
+    0 18px 44px rgba(0, 0, 0, .28),
     inset 0 1px 0 rgba(255, 255, 255, .045);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
 }
 
 .premiumTournamentFormCard {
@@ -11218,8 +11208,8 @@ button:hover {
   display: grid;
   gap: 7px;
   color: var(--pf-white);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 650;
 }
 
 .premiumTournamentField.wide {
@@ -11227,7 +11217,7 @@ button:hover {
 }
 
 .premiumTournamentField > span {
-  color: var(--pf-silver);
+  color: var(--pf-white);
 }
 
 .premiumTournamentField > div {
@@ -11238,8 +11228,8 @@ button:hover {
   gap: 8px;
   padding: 0 11px;
   border: 1px solid var(--pf-border-soft);
-  border-radius: 10px;
-  background: rgba(10, 16, 23, .88);
+  border-radius: 8px;
+  background: rgba(11, 15, 25, .92);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
 }
 
@@ -11249,11 +11239,11 @@ button:hover {
 }
 
 .premiumTournamentField > div:focus-within {
-  border-color: rgba(166, 255, 0, .52);
+  border-color: rgba(112, 230, 0, .72);
   background: var(--pf-input-active);
   box-shadow:
-    0 0 0 3px rgba(166, 255, 0, .08),
-    0 0 16px rgba(166, 255, 0, .06);
+    0 0 0 3px rgba(112, 230, 0, .08),
+    0 0 16px rgba(112, 230, 0, .06);
 }
 
 .premiumTournamentField input,
@@ -11446,17 +11436,17 @@ button:hover {
 
 .premiumSecondaryAction {
   padding: 0 18px;
-  border: 1px solid rgba(166, 255, 0, .38);
-  background: rgba(166, 255, 0, .2);
+  border: 1px solid var(--pf-border);
+  background: rgba(11, 15, 25, .82);
   color: var(--pf-lime);
 }
 
 .premiumPrimaryAction {
   padding: 0 22px;
-  border: 1px solid rgba(166, 255, 0, .42);
-  background: rgba(166, 255, 0, .2);
-  color: var(--pf-lime);
-  box-shadow: 0 0 18px rgba(166, 255, 0, .12);
+  border: 1px solid rgba(127, 255, 0, .72);
+  background: linear-gradient(180deg, #7FFF00, #70E600);
+  color: #071000;
+  box-shadow: 0 0 18px rgba(112, 230, 0, .18);
 }
 
 .premiumTournamentAside {
@@ -11513,7 +11503,7 @@ button:hover {
 .premiumAsideTitle h2 {
   margin: 0;
   color: var(--pf-white);
-  font-size: 16px;
+  font-size: clamp(18px, 1.2vw, 20px);
   font-weight: 800;
 }
 
@@ -11613,7 +11603,7 @@ button:hover {
   padding: 10px;
   border: 1px solid var(--pf-border);
   border-radius: 12px;
-  background: rgba(10, 16, 23, .58);
+  background: rgba(17, 24, 39, .72);
   color: var(--pf-text);
   text-align: left;
   cursor: pointer;
@@ -11636,9 +11626,9 @@ button:hover {
 .premiumAccessCards button.active {
   border-color: var(--pf-lime);
   background:
-    linear-gradient(180deg, rgba(166, 255, 0, .08), rgba(10, 16, 23, .72)),
-    rgba(10, 16, 23, .72);
-  box-shadow: 0 0 18px rgba(166, 255, 0, .12);
+    linear-gradient(180deg, rgba(112, 230, 0, .08), rgba(17, 24, 39, .72)),
+    rgba(17, 24, 39, .72);
+  box-shadow: 0 0 18px rgba(112, 230, 0, .12);
 }
 
 .premiumAccessCards strong {
@@ -11685,7 +11675,7 @@ button:hover {
   padding: 0 12px;
   border: 1px solid var(--pf-border);
   border-radius: 12px;
-  background: rgba(10, 16, 23, .58);
+  background: rgba(17, 24, 39, .72);
 }
 
 .premiumVisibilityToggle strong {
@@ -11737,8 +11727,8 @@ button:hover {
 .premiumCardTitle h2 {
   margin: 0;
   color: var(--pf-white);
-  font-size: 22px;
-  font-weight: 850;
+  font-size: clamp(18px, 1.2vw, 20px);
+  font-weight: 800;
 }
 
 .premiumCardTitle p {
@@ -11753,7 +11743,7 @@ button:hover {
   padding: 16px;
   border: 1px solid var(--pf-border);
   border-radius: 12px;
-  background: rgba(10, 16, 23, .52);
+  background: rgba(17, 24, 39, .88);
 }
 
 .premiumInnerCard h3 {
@@ -11782,7 +11772,7 @@ button:hover {
   padding: 9px 10px;
   border: 1px solid var(--pf-border);
   border-radius: 10px;
-  background: rgba(10, 16, 23, .5);
+  background: rgba(17, 24, 39, .72);
   color: var(--pf-silver);
   font-size: 13px;
   font-weight: 800;
@@ -11793,19 +11783,19 @@ button:hover {
   min-height: 34px;
   border: 1px solid var(--pf-border-soft);
   border-radius: 9px;
-  background: rgba(10, 16, 23, .9);
+  background: rgba(11, 15, 25, .92);
   color: var(--pf-white);
   padding: 0 10px;
 }
 
 .premiumToggle {
   position: relative;
-  width: 92px;
-  height: 38px;
-  padding: 4px;
+  width: 74px;
+  height: 30px;
+  padding: 3px;
   border: 0;
   border-radius: 999px;
-  background: #808080;
+  background: rgba(128, 128, 128, .48);
   color: #fff;
   cursor: pointer;
   display: inline-flex;
@@ -11820,10 +11810,10 @@ button:hover {
 
 .premiumToggleKnob {
   position: absolute;
-  left: 4px;
+  left: 3px;
   top: 50%;
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   z-index: 1;
   border-radius: 50%;
   background: #fff;
@@ -11834,12 +11824,12 @@ button:hover {
 
 .premiumToggleText {
   position: absolute;
-  right: 14px;
+  right: 11px;
   top: 50%;
   z-index: 2;
   transform: translateY(-50%);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: .1px;
   line-height: 1;
@@ -11848,20 +11838,20 @@ button:hover {
 }
 
 .premiumToggle.on {
-  background: #24d313;
+  background: #70E600;
   color: #fff;
   box-shadow:
-    0 0 12px rgba(36, 211, 19, .18),
+    0 0 10px rgba(112, 230, 0, .18),
     inset 0 1px 4px rgba(255, 255, 255, .16);
 }
 
 .premiumToggle.on .premiumToggleText {
-  left: 14px;
+  left: 11px;
   right: auto;
 }
 
 .premiumToggle.on .premiumToggleKnob {
-  left: 58px;
+  left: 47px;
   background: #fff;
 }
 
@@ -12174,19 +12164,37 @@ button:hover {
 
 .premiumTournamentMain .premiumTournamentActions .premiumSecondaryAction,
 .premiumTournamentMain .premiumTournamentActions .premiumPrimaryAction {
-  border-color: rgba(166, 255, 0, .42);
-  background: rgba(166, 255, 0, .2);
-  color: var(--pf-lime);
-  box-shadow: 0 0 18px rgba(166, 255, 0, .12);
+  min-height: 48px;
+  border-radius: 8px;
+}
+
+.premiumTournamentMain .premiumTournamentActions .premiumSecondaryAction {
+  border-color: var(--pf-border);
+  background: rgba(11, 15, 25, .82);
+  color: var(--pf-white);
+  box-shadow: none;
+}
+
+.premiumTournamentMain .premiumTournamentActions .premiumPrimaryAction {
+  border-color: rgba(127, 255, 0, .72);
+  background: linear-gradient(180deg, #7FFF00, #70E600);
+  color: #071000;
+  box-shadow: 0 0 18px rgba(112, 230, 0, .18);
 }
 
 .premiumTournamentMain .premiumTournamentActions .premiumSecondaryAction:hover,
-.premiumTournamentMain .premiumTournamentActions .premiumPrimaryAction:hover,
-.premiumTournamentMain .premiumTournamentActions .premiumSecondaryAction:focus-visible,
-.premiumTournamentMain .premiumTournamentActions .premiumPrimaryAction:focus-visible {
-  border-color: rgba(166, 255, 0, .68);
-  background: rgba(166, 255, 0, .24);
+.premiumTournamentMain .premiumTournamentActions .premiumSecondaryAction:focus-visible {
+  border-color: rgba(112, 230, 0, .68);
+  background: rgba(112, 230, 0, .1);
   color: var(--pf-white);
+  outline: 0;
+}
+
+.premiumTournamentMain .premiumTournamentActions .premiumPrimaryAction:hover,
+.premiumTournamentMain .premiumTournamentActions .premiumPrimaryAction:focus-visible {
+  border-color: rgba(127, 255, 0, .9);
+  background: linear-gradient(180deg, #91ff24, #7FFF00);
+  color: #071000;
   outline: 0;
 }
 
