@@ -11800,59 +11800,62 @@ button:hover {
 
 .premiumToggle {
   position: relative;
-  width: 102px;
-  height: 46px;
+  width: 92px;
+  height: 40px;
   padding: 4px;
   border: 0;
   border-radius: 999px;
   background: #808080;
-  color: #f5f7fa;
+  color: #fff;
   cursor: pointer;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .22);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, .22),
+    0 1px 0 rgba(255, 255, 255, .1);
   transition: background .2s ease, box-shadow .2s ease, color .2s ease;
 }
 
 .premiumToggle::after {
   content: "OFF";
   position: absolute;
-  right: 16px;
+  right: 15px;
   top: 50%;
   transform: translateY(-50%);
   font-family: Inter, "Segoe UI", Arial, sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
+  letter-spacing: .2px;
   line-height: 1;
 }
 
 .premiumToggle span {
   position: relative;
   z-index: 1;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   display: block;
   border-radius: 50%;
-  background: #f5f7fa;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .26);
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .28);
   transition: transform .22s ease, background .18s ease;
 }
 
 .premiumToggle.on {
-  background: #A6FF00;
-  color: #071000;
+  background: #21d318;
+  color: #fff;
   box-shadow:
-    0 0 18px rgba(166, 255, 0, .24),
-    inset 0 1px 5px rgba(255, 255, 255, .16);
+    0 0 12px rgba(33, 211, 24, .22),
+    inset 0 1px 4px rgba(255, 255, 255, .16);
 }
 
 .premiumToggle.on::after {
   content: "ON";
-  left: 18px;
+  left: 16px;
   right: auto;
 }
 
 .premiumToggle.on span {
-  background: #f5f7fa;
-  transform: translateX(56px);
+  background: #fff;
+  transform: translateX(52px);
 }
 
 .premiumBracketPreview p,
