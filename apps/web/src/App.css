@@ -4414,6 +4414,10 @@ button:hover {
   font-family: 'Inter', 'Plus Jakarta Sans', Arial, sans-serif;
 }
 
+.saasLayout:has(> .organizerSidebar.collapsed) {
+  grid-template-columns: 82px minmax(0, 1fr);
+}
+
 .saasLayout > .organizerSidebar {
   grid-column: 1;
   grid-row: 1 / -1;
@@ -4779,13 +4783,14 @@ button:hover {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   overflow-y: auto;
-  padding: 14px 18px 22px;
+  padding: 10px 18px 22px;
   border-right: 1px solid #1E2538;
   background: #0B0E14;
   scrollbar-width: thin;
   scrollbar-color: #111622 #0B0E14;
+  transition: padding .22s ease;
 }
 
 .organizerSidebar::-webkit-scrollbar {
@@ -4810,8 +4815,8 @@ button:hover {
   position: relative;
   display: grid;
   justify-items: center;
-  min-height: 108px;
-  align-items: start;
+  min-height: 74px;
+  align-items: center;
   padding: 0;
   text-align: center;
 }
@@ -4823,11 +4828,58 @@ button:hover {
 .organizerSidebarLogoImage {
   position: relative;
   z-index: 1;
-  width: min(248px, calc(100% + 28px));
-  height: 108px;
-  max-height: 108px;
+  width: min(226px, calc(100% + 18px));
+  height: 66px;
+  max-height: 66px;
   object-fit: contain;
   filter: none;
+}
+
+.organizerSidebar.collapsed {
+  gap: 14px;
+  padding: 10px 10px 18px;
+  overflow-x: hidden;
+}
+
+.organizerSidebar.collapsed .organizerSidebarLogo {
+  min-height: 74px;
+}
+
+.organizerSidebar.collapsed .organizerSidebarLogoImage {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  object-position: left center;
+}
+
+.organizerSidebar.collapsed .organizerSidebarProfileWrap,
+.organizerSidebar.collapsed .organizerPlanCard,
+.organizerSidebar.collapsed .organizerNavSectionLabel,
+.organizerSidebar.collapsed .organizerNavDropdownItems {
+  display: none;
+}
+
+.organizerSidebar.collapsed .organizerNavList {
+  justify-items: center;
+  gap: 8px;
+}
+
+.organizerSidebar.collapsed .organizerNavButton,
+.organizerSidebar.collapsed .organizerNavDropdownSummary {
+  width: 50px;
+  min-height: 48px;
+  grid-template-columns: 24px;
+  justify-content: center;
+  justify-items: center;
+  gap: 0;
+  padding: 12px;
+}
+
+.organizerSidebar.collapsed .organizerNavButton > span:not(.organizerNavIcon):not(.organizerNavVsIcon),
+.organizerSidebar.collapsed .organizerNavDropdownSummary > span:not(.organizerNavIcon),
+.organizerSidebar.collapsed .organizerNavButton em,
+.organizerSidebar.collapsed .organizerNavDropdownSummary i {
+  display: none;
 }
 
 .organizerSidebarShield {
@@ -5770,8 +5822,8 @@ button:hover {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 64px;
-  padding: 10px 10px 10px 16px;
+  min-height: 84px;
+  padding: 14px 18px;
   border: 0;
   border-bottom: 1px solid #1F2937;
   border-radius: 0;
@@ -5804,11 +5856,18 @@ button:hover {
 
 .organizerTopbarTitle {
   min-width: 260px;
-  display: grid;
-  gap: 2px;
-  justify-items: start;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   margin-right: auto;
   text-align: left;
+}
+
+.organizerTopbarTitleText {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  justify-items: start;
 }
 
 .organizerTopbarTitle h1 {
@@ -5823,6 +5882,64 @@ button:hover {
   color: #8D96AA;
   font-size: 12px;
   font-weight: 400;
+}
+
+.organizerTopbarTitle p {
+  margin: 0;
+  color: #D9DEE5;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.globalSidebarToggle {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: color .18s ease, background .18s ease;
+}
+
+.globalSidebarToggle:hover,
+.globalSidebarToggle:focus-visible {
+  background: rgba(166, 255, 0, .08);
+  color: #A6FF00;
+  outline: 0;
+}
+
+.globalSidebarToggle span,
+.globalSidebarToggle span::before,
+.globalSidebarToggle span::after {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+}
+
+.globalSidebarToggle span {
+  position: relative;
+}
+
+.globalSidebarToggle span::before,
+.globalSidebarToggle span::after {
+  position: absolute;
+  left: 0;
+}
+
+.globalSidebarToggle span::before {
+  top: -7px;
+}
+
+.globalSidebarToggle span::after {
+  top: 7px;
 }
 
 .topbarBreadcrumb {
@@ -6663,6 +6780,14 @@ button:hover {
     grid-template-rows: auto minmax(0, 1fr);
   }
 
+  .saasLayout:has(> .organizerSidebar.collapsed) {
+    grid-template-columns: 1fr;
+  }
+
+  .globalSidebarToggle {
+    display: none;
+  }
+
   .appDrawerToggle {
     display: inline-flex;
   }
@@ -6693,6 +6818,59 @@ button:hover {
     transform: translateX(calc(-100% - 22px));
     transition: transform .24s ease, box-shadow .24s ease;
     box-shadow: 22px 0 70px rgba(0, 0, 0, .46);
+  }
+
+  .organizerSidebar.appDrawerSidebar.collapsed {
+    gap: 18px;
+    padding: 14px 18px 22px;
+  }
+
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerSidebarLogo {
+    min-height: 108px;
+  }
+
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerSidebarLogoImage {
+    width: min(248px, calc(100% + 28px));
+    height: 108px;
+    max-height: 108px;
+    object-fit: contain;
+  }
+
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerSidebarProfileWrap,
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerPlanCard,
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerNavSectionLabel {
+    display: block;
+  }
+
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerPlanCard {
+    display: grid;
+  }
+
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerNavDropdownItems {
+    display: grid;
+  }
+
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerNavList {
+    justify-items: stretch;
+    gap: 6px;
+  }
+
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerNavButton,
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerNavDropdownSummary {
+    width: 100%;
+    min-height: 44px;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    justify-content: stretch;
+    justify-items: stretch;
+    gap: 12px;
+    padding: 10px 12px;
+  }
+
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerNavButton > span:not(.organizerNavIcon):not(.organizerNavVsIcon),
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerNavDropdownSummary > span:not(.organizerNavIcon),
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerNavButton em,
+  .organizerSidebar.appDrawerSidebar.collapsed .organizerNavDropdownSummary i {
+    display: inline-flex;
   }
 
   .sidebar.appDrawerSidebar.open,
@@ -10921,7 +11099,7 @@ button:hover {
   --pf-border: #1F2937;
   --pf-border-soft: #263243;
   min-height: 100vh;
-  padding: 20px 28px 30px;
+  padding: 10px 28px 30px;
   background:
     radial-gradient(circle at 18% 2%, rgba(112, 230, 0, .055), transparent 26%),
     radial-gradient(circle at 84% 8%, rgba(84, 122, 180, .045), transparent 31%),
@@ -10937,15 +11115,15 @@ button:hover {
 
 .premiumTournamentShell {
   width: min(100%, 1440px);
-  min-height: min(810px, calc(100vh - 50px));
+  min-height: min(810px, calc(100vh - 28px));
   margin: 0;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 14px;
+  gap: 10px;
 }
 
 .premiumTournamentHeader {
-  display: flex;
+  display: none;
   justify-content: flex-end;
   gap: 12px;
   align-items: center;
@@ -11048,8 +11226,8 @@ button:hover {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
-  min-height: 58px;
-  padding: 4px 0;
+  min-height: 50px;
+  padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -11346,13 +11524,8 @@ button:hover {
 .premiumTournamentFieldIcon.city::before,
 .premiumTournamentFieldIcon.table::before,
 .premiumTournamentFieldIcon.whatsapp::before,
-.premiumTournamentFieldIcon.users::before,
-.premiumTournamentFieldIcon.user::before,
-.premiumTournamentFieldIcon.summary::before,
 .premiumTournamentFieldIcon.sport::before,
 .premiumTournamentFieldIcon.sex::before,
-.premiumTournamentFieldIcon.age::before,
-.premiumTournamentFieldIcon.mode::before,
 .premiumTournamentFieldIcon.lock::before,
 .premiumTournamentFieldIcon.lockWhite::before {
   content: "";
@@ -11374,14 +11547,9 @@ button:hover {
 .premiumTournamentFieldIcon.city::before { background-image: url('/create-tournament-icons/city-white.png'); }
 .premiumTournamentFieldIcon.table::before { background-image: url('/create-tournament-icons/table-green.png'); }
 .premiumTournamentFieldIcon.whatsapp::before { background-image: url('/create-tournament-icons/whatsapp-green.png'); }
-.premiumTournamentFieldIcon.users::before,
-.premiumTournamentFieldIcon.user::before,
-.premiumTournamentFieldIcon.age::before { background-image: url('/create-tournament-icons/sex-green.png'); }
 .premiumTournamentFieldIcon.sex::before { background-image: url('/create-tournament-icons/sex-green.png'); }
-.premiumTournamentFieldIcon.mode::before { background-image: url('/create-tournament-icons/trophy-green.png'); }
 .premiumTournamentFieldIcon.lock::before { background-image: url('/create-tournament-icons/lock-green.png'); }
 .premiumTournamentFieldIcon.lockWhite::before { background-image: url('/create-tournament-icons/lock-white.png'); }
-.premiumTournamentFieldIcon.summary::before { background-image: url('/create-tournament-icons/location-green.png'); }
 
 .srOnly {
   position: absolute;
@@ -11461,7 +11629,17 @@ button:hover {
 }
 
 .premiumInfoLayout .premiumTournamentAside {
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
+}
+
+.premiumHelpSlot {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.premiumHelpSlot .premiumHelpButton {
+  min-height: 40px;
+  padding: 0 14px;
 }
 
 .premiumWizardGrid {

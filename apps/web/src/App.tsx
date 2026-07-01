@@ -2909,7 +2909,11 @@ function loggedPageMeta(pathname: string, search: string) {
   }
 
   if (pathname === '/criar-torneio') {
-    return { title: 'Criar Torneio', breadcrumb: 'Home > Torneios > Criar' }
+    return {
+      title: 'Criar Novo Torneio',
+      subtitle: 'Passo a passo para publicar seu torneio com sucesso',
+      breadcrumb: 'Home > Torneios > Criar',
+    }
   }
 
   if (pathname === '/campeonatos/inscricoes') {
@@ -2976,7 +2980,17 @@ function breadcrumbPathForLabel(label: string) {
   return paths[label] || '/app'
 }
 
-function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => void }) {
+function LoggedGlobalTopbar({
+  user,
+  onLogout,
+  sidebarCollapsed = false,
+  onToggleSidebar,
+}: {
+  user?: any,
+  onLogout?: () => void,
+  sidebarCollapsed?: boolean,
+  onToggleSidebar?: () => void,
+}) {
   const navigate = useNavigate()
   const location = useLocation()
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
@@ -3022,25 +3036,42 @@ function LoggedGlobalTopbar({ user, onLogout }: { user?: any, onLogout?: () => v
   return (
     <header className="organizerDashboardTopbar loggedGlobalTopbar">
       <div className="organizerTopbarTitle" aria-label="Caminho da página">
-        <h1>{meta.title}</h1>
-        <nav className="topbarBreadcrumb" aria-label="Breadcrumb">
-          {breadcrumbItems.map((item, index) => {
-            const isLast = index === breadcrumbItems.length - 1
-            return (
-              <span key={`${item.label}-${index}`}>
-                {index > 0 && <em aria-hidden="true">&gt;</em>}
-                <button
-                  type="button"
-                  className={isLast ? 'current' : ''}
-                  aria-current={isLast ? 'page' : undefined}
-                  onClick={() => navigate(item.path)}
-                >
-                  {item.label}
-                </button>
-              </span>
-            )
-          })}
-        </nav>
+        {onToggleSidebar && (
+          <button
+            className="globalSidebarToggle"
+            type="button"
+            aria-label={sidebarCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+            aria-pressed={sidebarCollapsed}
+            onClick={onToggleSidebar}
+          >
+            <span aria-hidden="true" />
+          </button>
+        )}
+        <div className="organizerTopbarTitleText">
+          <h1>{meta.title}</h1>
+          {'subtitle' in meta && meta.subtitle ? (
+            <p>{meta.subtitle}</p>
+          ) : (
+            <nav className="topbarBreadcrumb" aria-label="Breadcrumb">
+              {breadcrumbItems.map((item, index) => {
+                const isLast = index === breadcrumbItems.length - 1
+                return (
+                  <span key={`${item.label}-${index}`}>
+                    {index > 0 && <em aria-hidden="true">&gt;</em>}
+                    <button
+                      type="button"
+                      className={isLast ? 'current' : ''}
+                      aria-current={isLast ? 'page' : undefined}
+                      onClick={() => navigate(item.path)}
+                    >
+                      {item.label}
+                    </button>
+                  </span>
+                )
+              })}
+            </nav>
+          )}
+        </div>
       </div>
 
       <div className="organizerDashboardActions">
@@ -3119,6 +3150,8 @@ function ClientSidebar({
   activeAccountSection?: string,
   onAccountSectionChange?: (section: string) => void,
 }) {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
   return (
     <>
       <OrganizerDashboardSidebar
@@ -3126,8 +3159,14 @@ function ClientSidebar({
         accountMode={accountMode}
         activeAccountSection={activeAccountSection}
         onAccountSectionChange={onAccountSectionChange}
+        collapsed={sidebarCollapsed}
       />
-      <LoggedGlobalTopbar user={user} onLogout={onLogout} />
+      <LoggedGlobalTopbar
+        user={user}
+        onLogout={onLogout}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={() => setSidebarCollapsed(collapsed => !collapsed)}
+      />
     </>
   )
 
@@ -3393,11 +3432,13 @@ function OrganizerDashboardSidebar({
   accountMode = false,
   activeAccountSection = 'dados',
   onAccountSectionChange,
+  collapsed = false,
 }: {
   user?: any,
   accountMode?: boolean,
   activeAccountSection?: string,
   onAccountSectionChange?: (section: string) => void,
+  collapsed?: boolean,
 }) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -3546,7 +3587,7 @@ function OrganizerDashboardSidebar({
         aria-label="Fechar menu"
         onClick={() => setDrawerOpen(false)}
       />
-      <aside className={`organizerSidebar appDrawerSidebar${drawerOpen ? ' open' : ''}`} aria-label={`Menu ${activeProfileLabel}`}>
+      <aside className={`organizerSidebar appDrawerSidebar${drawerOpen ? ' open' : ''}${collapsed ? ' collapsed' : ''}`} aria-label={`Menu ${activeProfileLabel}`}>
         <div className="organizerSidebarLogo" aria-label="PlayFinal Arena">
           <img className="organizerSidebarLogoImage" src="/playfinal-sidebar-global-logo-v2.png" alt="PlayFinal Arena" />
         </div>
@@ -11342,7 +11383,6 @@ function CreateTournament({ user }: any) {
                 <h1>{currentTitle}</h1>
                 <p>{currentSubtitle}</p>
               </div>
-              <button className="premiumHelpButton" type="button"><span className="premiumHelpIcon" aria-hidden="true">?</span> Ajuda</button>
             </div>
 
             {renderWizardStepper()}
@@ -11365,7 +11405,6 @@ function CreateTournament({ user }: any) {
                 <h1>1. Informações do Torneio</h1>
                 <p>Defina os dados principais do seu torneio de sinuca.</p>
               </div>
-              <button className="premiumHelpButton" type="button"><span className="premiumHelpIcon" aria-hidden="true">?</span> Ajuda</button>
             </div>
 
             {renderWizardStepper()}
@@ -11616,6 +11655,10 @@ function CreateTournament({ user }: any) {
                     </label>
                   </div>
                 </section>
+
+                <div className="premiumHelpSlot">
+                  <button className="premiumHelpButton" type="button"><span className="premiumHelpIcon" aria-hidden="true">?</span> Ajuda</button>
+                </div>
 
               </aside>
             </div>
