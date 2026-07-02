@@ -40,12 +40,12 @@ fi
 git fetch origin "$BRANCH"
 git pull --ff-only origin "$BRANCH"
 
-npm install
+npm ci
 npx prisma generate
 npx prisma migrate deploy
 
 cd "$WEB_DIR"
-npm install
+npm ci
 npm run build
 
 mkdir -p "$PUBLIC_DIR"
