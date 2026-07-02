@@ -21,9 +21,11 @@ O lint esta como informativo porque atualmente existem erros antigos no frontend
 
 ## Deploy automatico de homologacao
 
-O workflow `.github/workflows/deploy-homologacao.yml` publica a homologacao quando o workflow de verificacoes termina com sucesso na branch `homologacao`.
+O workflow `.github/workflows/ci.yml` publica a homologacao depois que as verificacoes passam em um push na branch `homologacao`.
 
-Ele tambem pode ser executado manualmente pelo GitHub Actions.
+Tambem existe o workflow `.github/workflows/deploy-homologacao.yml` preparado para disparo separado quando ele estiver disponivel na branch principal do reposititorio.
+
+O deploy separado tambem pode ser executado manualmente pelo GitHub Actions.
 
 Enquanto os segredos SSH nao estiverem cadastrados, o workflow apenas registra um aviso e ignora o deploy.
 
