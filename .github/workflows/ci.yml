@@ -95,5 +95,27 @@ jobs:
       - name: Rodar deploy na VPS de homologacao
         if: steps.segredos.outputs.pronto == 'true'
         run: |
-          ssh -i ~/.ssh/homologacao "$HOMOLOG_SSH_USER@$HOMOLOG_SSH_HOST" \
-            "set -euo pipefail; cd '$HOMOLOG_APP_DIR'; pwd; git status --short; git branch --show-current; git log --oneline --decorate -5; ./deploy-staging.sh"
+          ssh -i ~/.ssh/homologacao "$HOMOLOG_SSH_USER@$HOMOLOG_SSH_HOST" "HOMOLOG_APP_DIR='$HOMOLOG_APP_DIR' bash -s" <<'REMOTE_DEPLOY'
+          set -euo pipefail
+
+          APP_DIR="${HOMOLOG_APP_DIR:-/opt/promaster-arena-homolog}"
+
+          echo "Usuario remoto: $(whoami)"
+          echo "Diretorio do app: $APP_DIR"
+
+          if [ ! -d "$APP_DIR/.git" ]; then
+            echo "Deploy bloqueado: diretorio Git nao encontrado em $APP_DIR."
+            exit 1
+          fi
+
+          cd "$APP_DIR"
+
+          echo "Branch atual: $(git branch --show-current)"
+          echo "Ultimos commits:"
+          git log --oneline --decorate -5
+
+          echo "Status antes do deploy:"
+          git status --short
+
+          ./deploy-staging.sh
+          REMOTE_DEPLOY
