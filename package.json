@@ -1,4 +1,11 @@
 {
+  "scripts": {
+    "check": "npm run check:api && npm run check:prisma && npm run check:web",
+    "check:api": "node --check index.js",
+    "check:prisma": "prisma validate",
+    "check:web": "npm --prefix apps/web run build",
+    "lint:web": "npm --prefix apps/web run lint"
+  },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",

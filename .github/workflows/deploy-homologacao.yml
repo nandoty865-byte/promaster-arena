@@ -1,0 +1,57 @@
+name: Deploy homologacao
+
+on:
+  workflow_run:
+    workflows:
+      - Verificacoes
+    types:
+      - completed
+    branches:
+      - homologacao
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-homologacao
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publicar homologacao
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: homologacao
+
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    env:
+      HOMOLOG_SSH_HOST: ${{ secrets.HOMOLOG_SSH_HOST }}
+      HOMOLOG_SSH_USER: ${{ secrets.HOMOLOG_SSH_USER }}
+      HOMOLOG_SSH_KEY: ${{ secrets.HOMOLOG_SSH_KEY }}
+      HOMOLOG_APP_DIR: ${{ secrets.HOMOLOG_APP_DIR || '/opt/promaster-arena-homolog' }}
+
+    steps:
+      - name: Conferir segredos obrigatorios
+        id: segredos
+        run: |
+          if [ -z "$HOMOLOG_SSH_HOST" ] || [ -z "$HOMOLOG_SSH_USER" ] || [ -z "$HOMOLOG_SSH_KEY" ]; then
+            echo "pronto=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Deploy de homologacao ignorado: cadastre HOMOLOG_SSH_HOST, HOMOLOG_SSH_USER e HOMOLOG_SSH_KEY nos segredos do GitHub."
+          else
+            echo "pronto=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Preparar acesso SSH
+        if: steps.segredos.outputs.pronto == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$HOMOLOG_SSH_KEY" > ~/.ssh/homologacao
+          chmod 600 ~/.ssh/homologacao
+          ssh-keyscan -H "$HOMOLOG_SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Rodar deploy na VPS de homologacao
+        if: steps.segredos.outputs.pronto == 'true'
+        run: |
+          ssh -i ~/.ssh/homologacao "$HOMOLOG_SSH_USER@$HOMOLOG_SSH_HOST" \
+            "set -euo pipefail; cd '$HOMOLOG_APP_DIR'; pwd; git status --short; git branch --show-current; git log --oneline --decorate -5; ./deploy-staging.sh"

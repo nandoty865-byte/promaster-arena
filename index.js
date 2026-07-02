@@ -44,6 +44,7 @@ const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || ''
 const EVOLUTION_INSTANCE = process.env.EVOLUTION_INSTANCE || ''
 const PAYMENT_CONFIRM_SECRET = process.env.PAYMENT_CONFIRM_SECRET || ''
 const INTEGRATION_DEFINITIONS = [
+  { provider: 'cloudflare_r2', label: 'Cloudflare R2 / CDN' },
   { provider: 'evolution', label: 'Evolution API / WhatsApp' },
   { provider: 'resend', label: 'Resend / E-mail transacional' },
   { provider: 'gmail', label: 'Gmail / Google Workspace' },
@@ -68,6 +69,108 @@ function sanitizeIntegrationConfig(config = {}) {
     Object.entries(config)
       .filter(([key]) => /^[a-zA-Z0-9_]+$/.test(key))
       .map(([key, value]) => [key, String(value || '').slice(0, 2000)])
+  )
+}
+
+function isSecretConfigKey(key) {
+  return /key|secret|token|password|private|credential/i.test(String(key || ''))
+}
+
+function integrationEncryptionKey() {
+  return crypto
+    .createHash('sha256')
+    .update(process.env.INTEGRATION_ENCRYPTION_KEY || JWT_SECRET)
+    .digest()
+}
+
+function isEncryptedSecret(value) {
+  return Boolean(value && typeof value === 'object' && value.__encrypted === true && value.v === 1)
+}
+
+function encryptIntegrationSecret(value) {
+  const plainText = String(value || '')
+  if (!plainText) return ''
+
+  const iv = crypto.randomBytes(12)
+  const cipher = crypto.createCipheriv('aes-256-gcm', integrationEncryptionKey(), iv)
+  const encrypted = Buffer.concat([cipher.update(plainText, 'utf8'), cipher.final()])
+
+  return {
+    __encrypted: true,
+    v: 1,
+    alg: 'aes-256-gcm',
+    iv: iv.toString('base64'),
+    tag: cipher.getAuthTag().toString('base64'),
+    data: encrypted.toString('base64'),
+  }
+}
+
+function decryptIntegrationSecret(value) {
+  if (!isEncryptedSecret(value)) {
+    return typeof value === 'string' ? value : ''
+  }
+
+  try {
+    const decipher = crypto.createDecipheriv(
+      'aes-256-gcm',
+      integrationEncryptionKey(),
+      Buffer.from(value.iv, 'base64')
+    )
+    decipher.setAuthTag(Buffer.from(value.tag, 'base64'))
+
+    return Buffer.concat([
+      decipher.update(Buffer.from(value.data, 'base64')),
+      decipher.final(),
+    ]).toString('utf8')
+  } catch (error) {
+    console.warn('Falha ao descriptografar integração:', error.message)
+    return ''
+  }
+}
+
+function maskIntegrationSecret(value) {
+  const plainText = decryptIntegrationSecret(value)
+  if (!plainText) return ''
+  return `********${plainText.slice(-4)}`
+}
+
+function isMaskedIntegrationSecret(value) {
+  return /^\*{6,}/.test(String(value || ''))
+}
+
+function serializeIntegrationConfig(config = {}) {
+  if (!config || typeof config !== 'object' || Array.isArray(config)) return {}
+
+  return Object.fromEntries(
+    Object.entries(config).map(([key, value]) => [
+      key,
+      isSecretConfigKey(key) ? maskIntegrationSecret(value) : String(value || ''),
+    ])
+  )
+}
+
+function prepareIntegrationConfigForStorage(nextConfig = {}, previousConfig = {}) {
+  const sanitized = sanitizeIntegrationConfig(nextConfig)
+
+  return Object.fromEntries(
+    Object.entries(sanitized).map(([key, value]) => {
+      if (!isSecretConfigKey(key)) {
+        return [key, value]
+      }
+
+      const previousValue = previousConfig?.[key]
+
+      if (isMaskedIntegrationSecret(value) && previousValue) {
+        return [
+          key,
+          isEncryptedSecret(previousValue)
+            ? previousValue
+            : encryptIntegrationSecret(previousValue),
+        ]
+      }
+
+      return [key, value ? encryptIntegrationSecret(value) : '']
+    })
   )
 }
 
@@ -7746,7 +7849,7 @@ app.get('/admin/integrations', auth, requireRole('superadmin'), async (req, res)
           provider: definition.provider,
           label: saved?.label || definition.label,
           enabled: saved?.enabled || false,
-          config: saved?.config || {},
+          config: serializeIntegrationConfig(saved?.config || {}),
           notes: saved?.notes || '',
           updatedAt: saved?.updatedAt || null,
         }
@@ -7766,7 +7869,13 @@ app.put('/admin/integrations/:provider', auth, requireRole('superadmin'), async 
       return res.status(400).json({ error: 'Integração inválida' })
     }
 
-    const config = sanitizeIntegrationConfig(req.body?.config || {})
+    const previousSetting = await prisma.integrationSetting.findUnique({
+      where: { provider },
+    })
+    const config = prepareIntegrationConfigForStorage(
+      req.body?.config || {},
+      previousSetting?.config || {}
+    )
     const notes = String(req.body?.notes || '').slice(0, 4000)
     const enabled = Boolean(req.body?.enabled)
 
@@ -7787,7 +7896,40 @@ app.put('/admin/integrations/:provider', auth, requireRole('superadmin'), async 
       },
     })
 
-    res.json({ ok: true, integration: setting })
+    await recordAuditEvent(req, {
+      action: 'INTEGRATION_SETTING_UPDATED',
+      category: 'security',
+      entityType: 'IntegrationSetting',
+      entityId: provider,
+      severity: 'high',
+      beforeData: previousSetting
+        ? {
+            provider,
+            enabled: previousSetting.enabled,
+            config: serializeIntegrationConfig(previousSetting.config || {}),
+          }
+        : null,
+      afterData: {
+        provider,
+        enabled: setting.enabled,
+        config: serializeIntegrationConfig(setting.config || {}),
+      },
+      metadata: {
+        label: INTEGRATION_LABELS[provider],
+      },
+    })
+
+    res.json({
+      ok: true,
+      integration: {
+        provider: setting.provider,
+        label: setting.label,
+        enabled: setting.enabled,
+        config: serializeIntegrationConfig(setting.config || {}),
+        notes: setting.notes || '',
+        updatedAt: setting.updatedAt,
+      },
+    })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Erro ao salvar integração' })

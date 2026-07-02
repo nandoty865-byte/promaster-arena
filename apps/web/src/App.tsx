@@ -13899,6 +13899,19 @@ function TelaoTV() {
 
 const ADMIN_INTEGRATION_FORMS = [
   {
+    provider: 'cloudflare_r2',
+    label: 'Cloudflare R2 / CDN',
+    description: 'Buckets publico/privado, dominio de assets e credenciais S3 compativeis.',
+    fields: [
+      { key: 'accountId', label: 'Account ID' },
+      { key: 'accessKeyId', label: 'Access key ID', type: 'password' },
+      { key: 'secretAccessKey', label: 'Secret access key', type: 'password' },
+      { key: 'publicBucket', label: 'Bucket publico', placeholder: 'playfinal-public' },
+      { key: 'privateBucket', label: 'Bucket privado', placeholder: 'playfinal-private' },
+      { key: 'publicBaseUrl', label: 'URL publica', placeholder: 'https://assets.playfinal.com.br' },
+    ],
+  },
+  {
     provider: 'evolution',
     label: 'Evolution API',
     description: 'WhatsApp, mensagens automáticas e avisos de torneio.',

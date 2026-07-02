@@ -1,0 +1,60 @@
+name: Verificacoes
+
+on:
+  pull_request:
+    branches:
+      - homologacao
+      - main
+  push:
+    branches:
+      - homologacao
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: verificacoes-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validar:
+    name: Validar projeto
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/playfinal_ci
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/web/package-lock.json
+
+      - name: Instalar dependencias da API
+        run: npm ci
+
+      - name: Checar sintaxe da API
+        run: node --check index.js
+
+      - name: Validar Prisma
+        run: npx prisma validate
+
+      - name: Instalar dependencias do frontend
+        run: npm ci
+        working-directory: apps/web
+
+      - name: Build do frontend
+        run: npm run build
+        working-directory: apps/web
+
+      - name: Lint do frontend em modo informativo
+        run: npm run lint
+        working-directory: apps/web
+        continue-on-error: true
