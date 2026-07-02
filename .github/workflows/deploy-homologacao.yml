@@ -29,7 +29,7 @@ jobs:
       HOMOLOG_SSH_HOST: ${{ secrets.HOMOLOG_SSH_HOST }}
       HOMOLOG_SSH_USER: ${{ secrets.HOMOLOG_SSH_USER }}
       HOMOLOG_SSH_KEY: ${{ secrets.HOMOLOG_SSH_KEY }}
-      HOMOLOG_APP_DIR: ${{ secrets.HOMOLOG_APP_DIR || '/opt/promaster-arena-homolog' }}
+      HOMOLOG_APP_DIR: /opt/promaster-arena-homolog
 
     steps:
       - name: Conferir segredos obrigatorios

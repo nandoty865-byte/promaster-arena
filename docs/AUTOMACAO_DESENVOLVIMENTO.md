@@ -34,7 +34,8 @@ Segredos necessarios no GitHub:
 - `HOMOLOG_SSH_HOST`: IP ou host da VPS;
 - `HOMOLOG_SSH_USER`: usuario SSH;
 - `HOMOLOG_SSH_KEY`: chave privada SSH;
-- `HOMOLOG_APP_DIR`: normalmente `/opt/promaster-arena-homolog`.
+
+O diretorio de homologacao fica fixo no workflow como `/opt/promaster-arena-homolog`.
 
 Com esses segredos, o deploy de homologacao pode executar:
 
